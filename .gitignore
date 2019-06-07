@@ -10,6 +10,7 @@
 
 !.bash_profile
 !.bashrc
+!.gtkrc-2.0
 
 !.sway/config
 !.newsboat/config
