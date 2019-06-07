@@ -1,0 +1,15 @@
+# Set the default browser to my script
+browser rss_open
+
+# Automatically reload all feeds on startup
+auto-reload yes
+
+# Arrow key navigation
+bind-key LEFT quit
+bind-key RIGHT open
+unbind-key ENTER
+bind-key ENTER open-in-browser-and-mark-read
+
+# Sort by newest
+feed-sort-order lastupdated
+

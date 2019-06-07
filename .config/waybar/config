@@ -1,0 +1,56 @@
+{
+    "position": "top",
+    "height": 20,
+
+    // Choose the order of the modules
+    "modules-left": ["sway/workspaces", "custom/block0", "custom/arrow0", "sway/mode"],
+    "modules-center": [],
+    "modules-right": ["custom/arrow1", "pulseaudio", "custom/arrow2", "cpu", "custom/arrow3", "memory", "custom/arrow4", "tray", "custom/arrow5", "clock"],
+
+    // Modules configuration
+    "sway/workspaces": {
+        "format": "{name}"
+    },
+    "sway/mode": {
+        "format": "!"
+    },
+    "tray": {
+        // "icon-size": 21,
+        "spacing": 10
+    },
+    "clock": {
+	"format": "{:%a, %b %-d %-I:%M %p}"
+    },
+    "cpu": {
+        "format": "CPU: {usage}%",
+        "tooltip": false
+    },
+    "memory": {
+        "format": "RAM: {}%"
+    },
+    "pulseaudio": {
+        "format": "VOL: {volume}%",
+        "on-click": "pavucontrol"
+    },
+    "custom/block0": {
+        "format": "█"
+    },
+    "custom/arrow0": {
+        "format": ""
+    },
+    "custom/arrow1": {
+        "format": ""
+    },
+    "custom/arrow2": {
+        "format": ""
+    },
+    "custom/arrow3": {
+        "format": ""
+    },
+    "custom/arrow4": {
+        "format": ""
+    },
+    "custom/arrow5": {
+        "format": ""
+    }
+}

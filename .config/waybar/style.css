@@ -1,0 +1,125 @@
+/* Thank you to u/Krudjan for sharing their dotfiles, I used
+   https://gitlab.com/Krudjan/dotfiles/tree/master/waybar/.config/waybar
+   as a reference when writing this */
+
+* {
+    border: none;
+    border-radius: 0;
+    font-family: Dejavu Sans Mono for Powerline;
+    font-size: 13px;
+    min-height: 0;
+}
+
+window#waybar {
+    background-color: #2F3D44;
+    border-bottom: 3px solid #1ABC9C;
+    color: #1ABC9C;
+    transition-property: background-color;
+    transition-duration: 1s;
+}
+
+window#waybar.hidden {
+    opacity: 0.2;
+}
+
+#workspaces button {
+    padding: 0 5px;
+    background-color: #0a2929;
+}
+
+#workspaces button.focused {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-bottom: 3px solid rgba(0, 0, 0, 0.3);
+}
+
+#workspaces button.urgent {
+    background-color: #eb4d4b;
+}
+
+#clock, #battery, #cpu, #memory, #temperature, #backlight, #network, #pulseaudio, #custom-media, #tray, #mode, #idle_inhibitor {
+    padding: 0 10px;
+    margin: 0;
+}
+
+#mode {
+    background: rgba(255, 0, 0, 0.8); /* pure red is a bit hard on the eyes */
+    color: #ffffff;
+    margin: 0 10px;
+    padding: 0 7px;
+    font-weight: bolder;
+    border-radius: 100%;
+}
+
+@keyframes blink {
+    to {
+        background-color: #ffffff;
+        color: #000000;
+    }
+}
+
+label:focus {
+    background-color: #000000;
+}
+
+#pulseaudio {
+    background-color: #196767;
+}
+
+#cpu {
+    background-color: #145252;
+}
+
+#memory {
+    background-color: #0f3e3e;
+}
+
+#tray {
+    background-color: #0a2929;
+}
+
+#clock {
+    background-color: #051515;
+}
+
+/* If the font size for the arrows is too big, it will resize
+the bar in a problematic way */
+#custom-block0 {
+	color: #0a2929;
+	background: #0a2929;
+}
+
+#custom-arrow0 {
+	font-size: 130%;
+	color: #0a2929;
+	background: transparent;
+}
+
+#custom-arrow1 {
+	font-size: 130%;
+	color: #196767;
+	background: transparent;
+}
+
+#custom-arrow2 {
+	font-size: 130%;
+	color: #145252;
+	background: #196767;
+}
+
+#custom-arrow3 {
+	font-size: 130%;
+	color: #0f3e3e;
+	background: #145252;
+}
+
+#custom-arrow4 {
+	font-size: 130%;
+	color: #0a2929;
+	background: #0f3e3e;
+}
+
+#custom-arrow5 {
+	font-size: 130%;
+	color: #051515;
+	background: #0a2929;
+}
