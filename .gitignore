@@ -1,7 +1,8 @@
-*
+**
 !.sway
 !.newsboat
 !.config
+
 !.config/alacritty
 !.config/dunst
 !.config/waybar
