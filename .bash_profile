@@ -29,6 +29,7 @@ if [[ ! $DISPLAY && $XDG_VTNR -eq 1 ]]; then
 			#export SDL_VIDEODRIVER=wayland # causes issues with lots of games
 			export CLUTTER_BACKEND=wayland
 			export BEMENU_BACKEND=wayland
+			#export MOZ_ENABLE_WAYLAND=1 # only enable if you hate your life
 			export KITTY_ENABLE_WAYLAND=1
 			sway
 			;;
