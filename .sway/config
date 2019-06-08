@@ -56,7 +56,7 @@ set $red   #CB4B16
 
 # Launching applications
 bindsym Mod4+w        exec glinks
-bindsym Mod4+Shift+w  exec firefox
+bindsym Mod4+Shift+w  exec firefox-nightly
 bindsym Mod4+f        exec $termexec ranger
 bindsym Mod4+n        exec $termexec newsboat
 bindsym Mod4+r        exec $termexec rtv
@@ -227,6 +227,7 @@ bindsym $mod+r mode "resize"
 #
 # Resizes Mastodon to nice size
 for_window [title="LinuxRocks.Online - Mozilla Firefox"] resize set width 20 ppt
+for_window [title="LinuxRocks.Online - Firefox Nightly"] resize set width 20 ppt
 for_window [title="American Truck Simulator"]            fullscreen toggle
 for_window [class="Links"]                               opacity 0.85
 
