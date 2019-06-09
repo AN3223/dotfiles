@@ -7,8 +7,13 @@ auto-reload yes
 # Arrow key navigation
 bind-key LEFT quit
 bind-key RIGHT open
-unbind-key ENTER
 bind-key ENTER open-in-browser-and-mark-read
+
+# Vim-like navigation
+bind-key h quit
+bind-key j down
+bind-key k up
+bind-key l open
 
 # Sort by newest
 feed-sort-order lastupdated
