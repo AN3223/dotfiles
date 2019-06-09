@@ -7,6 +7,7 @@
 !.config/dunst
 !.config/waybar
 !.config/gtk-3.0
+!.config/mpv
 
 !.bash_profile
 !.bashrc
@@ -19,4 +20,4 @@
 !.config/waybar/config
 !.config/waybar/style.css
 !.config/gtk-3.0/settings.ini
-
+!.config/mpv/mpv.conf
