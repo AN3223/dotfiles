@@ -58,11 +58,7 @@ set $red   #CB4B16
 bindsym Mod4+w        exec glinks
 bindsym Mod4+Shift+w  exec firefox-nightly
 bindsym Mod4+f        exec $termexec ranger
-bindsym Mod4+n        exec $termexec newsboat
-bindsym Mod4+r        exec $termexec rtv
-bindsym Mod4+c        exec cantata
 
-bindsym Mod4+Shift+S  exec systemctl suspend
 bindsym Mod4+l        exec blurlock
 
 # Screenshots
