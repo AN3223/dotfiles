@@ -85,7 +85,6 @@ bindsym $mod+Shift+q kill
 
 # start application launcher
 bindsym $mod+d exec $menu
-bindsym $mod+Shift+d exec i3-dmenu-desktop
 
 # Drag floating windows by holding down $mod and left mouse button.
 # Resize them with right mouse button + $mod.
