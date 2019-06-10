@@ -24,13 +24,7 @@ if [[ ! $DISPLAY && $XDG_VTNR -eq 1 ]]; then
 		q)
 			;;
 		*)
-			export QT_QPA_PLATFORM=wayland-egl
-			export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
-			#export SDL_VIDEODRIVER=wayland # causes issues with lots of games
-			export CLUTTER_BACKEND=wayland
-			export BEMENU_BACKEND=wayland
-			#export MOZ_ENABLE_WAYLAND=1 # only enable if you hate your life
-			export KITTY_ENABLE_WAYLAND=1
+			source wayenv
 			sway
 			;;
 	esac
