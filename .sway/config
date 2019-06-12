@@ -20,8 +20,8 @@ font xft:URWGothic-Book 9
 
 # Border style
 hide_edge_borders none
-new_window pixel 5
-new_float normal
+default_border pixel 5
+default_floating_border normal
 smart_borders on
 
 # Preferred terminal emulator
