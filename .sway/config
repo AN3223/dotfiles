@@ -56,7 +56,7 @@ set $red   #CB4B16
 
 # Launching applications
 bindsym Mod4+i        exec glinks
-bindsym Mod4+Shift+i  exec firefox-nightly
+bindsym Mod4+Shift+i  exec firefox
 bindsym Mod4+f        exec $termexec ranger
 
 bindsym Mod4+l        exec blurlock
