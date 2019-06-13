@@ -21,3 +21,4 @@
 !.config/waybar/style.css
 !.config/gtk-3.0/settings.ini
 !.config/mpv/mpv.conf
+!.config/mpv/input.conf
