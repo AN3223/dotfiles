@@ -1,5 +1,5 @@
-# Set the default browser to my script
-browser rss_open
+# Open everything with mpv, I've dedicated newsboat to YouTube now
+browser mpv
 
 # Automatically reload all feeds on startup
 auto-reload yes
