@@ -169,8 +169,10 @@ bindsym $mod+Shift+space floating toggle
 # Swap focus between the tiling area and the floating area
 bindsym $mod+space focus mode_toggle
 
-# move focus to the parent container
+# move focus to the parent/child container
 bindsym $mod+a focus parent
+bindsym $mod+z focus child
+
 #
 # Scratchpad:
 #
