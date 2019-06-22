@@ -60,6 +60,7 @@ bindsym Mod4+Shift+i  exec firefox
 bindsym Mod4+f        exec $termexec ranger
 
 bindsym Mod4+l        exec blurlock
+bindsym Mod4+q        exec qutebrowser
 
 # Screenshots
 bindsym Print exec grim \"$HOME/Pictures/Screenshots/$(date +%c).png"
