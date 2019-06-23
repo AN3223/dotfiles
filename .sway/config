@@ -31,7 +31,7 @@ set $term kitty
 set $termexec kitty bash -ic
 
 # Application launcher
-set $menu dmenu_path | dmenu_recency | xargs swaymsg exec
+set $menu dmenu_recency
 
 # Set GTK theme
 set $gnome-schema org.gnome.desktop.interface
