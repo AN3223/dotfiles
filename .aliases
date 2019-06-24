@@ -24,3 +24,5 @@ alias restart_compton="killall -s SIGUSR1 -e compton"
 alias su="su -p"
 
 alias vim="nvim"
+
+alias internet?="ping 8.8.8.8"
