@@ -8,11 +8,13 @@
 !.config/waybar
 !.config/gtk-3.0
 !.config/mpv
+!.config/kitty
 
 !.bash_profile
 !.bashrc
 !.aliases
 !.gtkrc-2.0
+!.vimrc
 
 !.sway/config
 !.newsboat/config
@@ -23,3 +25,4 @@
 !.config/gtk-3.0/settings.ini
 !.config/mpv/mpv.conf
 !.config/mpv/input.conf
+!.config/kitty/kitty.conf
