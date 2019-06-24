@@ -5,6 +5,6 @@ let g:airline_theme='serene'
 " Use Esc normally in terminal mode
 tnoremap <Esc> <C-\><C-n>
 
-" qq for Escape in Insert mode 
-imap qq <Esc>
+" jj for Escape
+imap jj <Esc>
 
