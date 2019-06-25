@@ -1,0 +1,32 @@
+#
+# ~/.dmenurc
+#
+
+## define the font for dmenu to be used
+DMENU_FN="Noto-11"
+
+## background colour for unselected menu-items
+DMENU_NB="#222D31"
+
+## textcolour for unselected menu-items
+DMENU_NF="#F9FAF9"
+
+## background colour for selected menu-items
+DMENU_SB="#16A085"
+
+## textcolour for selected menu-items
+DMENU_SF="#F9FAF9"
+
+## command for the terminal application to be used:
+TERMINAL_CMD="$TERMINAL -e bash -ic"
+
+## alternative dmenu
+#DMENU="bemenu"
+
+## export our variables
+if [ "$DMENU" = "bemenu" ]; then
+	DMENU_OPTIONS="--fn $DMENU_FN --nb $DMENU_NB --nf $DMENU_NF --sf $DMENU_SF --sb $DMENU_SB"
+else
+	DMENU_OPTIONS="-fn $DMENU_FN -nb $DMENU_NB -nf $DMENU_NF -sf $DMENU_SF -sb $DMENU_SB"
+fi
+
