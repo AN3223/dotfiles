@@ -25,10 +25,8 @@ default_floating_border normal
 smart_borders on
 
 # Preferred terminal emulator
-set $term kitty
-
-# Executes a command in the terminal within an interactive shell
-set $termexec kitty bash -ic
+set $term termite
+set $termexec kitty bash -i
 
 # Application launcher
 set $menu dmenu_recency
