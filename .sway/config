@@ -241,6 +241,5 @@ input * {
 
 exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 exec dunst
-exec kdeconnect-indicator
 exec transmission-gtk --minimized
 
