@@ -18,7 +18,7 @@ DMENU_SB="#16A085"
 DMENU_SF="#F9FAF9"
 
 ## command for the terminal application to be used:
-TERMINAL_CMD="$TERMINAL -e bash -i"
+TERMINAL_CMD="$TERMINAL -e bash -ic "
 
 ## alternative dmenu
 #DMENU="bemenu"

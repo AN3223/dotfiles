@@ -26,7 +26,7 @@ smart_borders on
 
 # Preferred terminal emulator
 set $term termite
-set $termexec kitty bash -i
+set $termexec kitty bash -ic 
 
 # Application launcher
 set $menu dmenu_recency
