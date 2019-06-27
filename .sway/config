@@ -26,7 +26,12 @@ smart_borders on
 
 # Preferred terminal emulator
 set $term termite
-set $termexec kitty bash -ic 
+
+# Execute command in preferred terminal emulator
+set $termexec termite_exec
+
+# Execute command in the kitty terminal emulator
+set $kittyexec kitty bash -ic 
 
 # Application launcher
 set $menu dmenu_recency
@@ -55,7 +60,7 @@ set $red   #CB4B16
 # Launching applications
 bindsym Mod4+i        exec glinks
 bindsym Mod4+Shift+i  exec firefox
-bindsym Mod4+f        exec $termexec ranger
+bindsym Mod4+f        exec $kittyexec ranger
 
 bindsym Mod4+l        exec blurlock
 bindsym Mod4+q        exec qutebrowser

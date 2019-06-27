@@ -6,7 +6,7 @@ export PATH="/var/lib/snapd/snap/bin/:$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/
 
 export WINDOWMANAGER="i3"
 
-export TERMINAL="kitty"
+export TERMINAL="termite"
 
 export EDITOR="nvim"
 
