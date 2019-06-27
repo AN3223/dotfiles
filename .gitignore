@@ -9,6 +9,7 @@
 !.config/gtk-3.0
 !.config/mpv
 !.config/kitty
+!.config/termite
 
 !.bash_profile
 !.bashrc
@@ -27,3 +28,4 @@
 !.config/mpv/mpv.conf
 !.config/mpv/input.conf
 !.config/kitty/kitty.conf
+!.config/termite/config
