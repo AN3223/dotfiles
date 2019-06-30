@@ -221,8 +221,11 @@ include /etc/sway/config.d/*
 
 # man 5 sway-input
 input * {
-	repeat_delay 300            # make the keyboard human-usable
-	xkb_options grp:menu_toggle # disable context key
+	# make the keyboard human-usable
+	repeat_delay 300
+	
+	# disable context key
+	xkb_options grp:menu_toggle
 }
 
 exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
