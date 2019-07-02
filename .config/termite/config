@@ -52,7 +52,8 @@ foreground = #B0C5C8
 #foreground_bold = #ffffff
 #background = #3f3f3f
 
-background = rgba(37, 50, 56, 0.8) # This does not come from the theme
+# This does not come from the theme
+background = rgba(37, 50, 56, 0.8)
 
 # If unset, will reverse foreground and background
 #highlight = #2f2f2f
