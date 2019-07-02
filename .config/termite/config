@@ -41,38 +41,39 @@ hyperlinks = true
 scrollbar = off
 
 [colors]
+####----These colors are taken from pywal's base16-brushtrees theme!----#####
+
 # If both of these are unset, cursor falls back to the foreground color,
 # and cursor_foreground falls back to the background color.
-#cursor = #dcdccc
+#cursor = #B0C5C8
 #cursor_foreground = #dcdccc
 
-#foreground = #dcdccc
+foreground = #B0C5C8
 #foreground_bold = #ffffff
 #background = #3f3f3f
 
-# transparency
-background = rgba(0, 0, 0, 0.8)
+background = rgba(37, 50, 56, 0.8)
 
 # If unset, will reverse foreground and background
-highlight = #2f2f2f
+#highlight = #2f2f2f
 
 # Colors from color0 to color254 can be set
-color0 = #3f3f3f
-color1 = #705050
-color2 = #60b48a
-color3 = #dfaf8f
-color4 = #506070
-color5 = #dc8cc3
-color6 = #8cd0d3
-color7 = #dcdccc
-color8 = #709080
-color9 = #dca3a3
-color10 = #c3bf9f
-color11 = #f0dfaf
-color12 = #94bff3
-color13 = #ec93d3
-color14 = #93e0e3
-color15 = #ffffff
+color0 = #485867
+color1 = #B38686
+color2 = #87B386
+color3 = #AAB386
+color4 = #868CB3
+color5 = #B386B2
+color6 = #86B3B3
+color7 = #B0C5C8
+color8 = #8299A1
+color9 = #B38686
+color10 = #87B386
+color11 = #AAB386
+color12 = #868CB3
+color13 = #B386B2
+color14 = #86B3B3
+color15 = #E3EFEF
 
 [hints]
 #font = Monospace 12
