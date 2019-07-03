@@ -14,7 +14,8 @@ nmap #  I#<Esc><C-0><Down>
 nmap // I//<Esc><C-0><Down>
 
 " Autocomplete braces/parenthesis/quotation marks/brackets
-inoremap { {}<Esc>i
-inoremap ( ()<Esc>i
-inoremap " ""<Esc>i
-inoremap [ []<Esc>i
+inoremap { {}<Left>
+inoremap ( ()<Left>
+inoremap " ""<Left>
+inoremap [ []<Left>
+
