@@ -11,7 +11,6 @@ set $right l
 # Terminal stuff :)
 set $term termite
 set $termexec termite_exec
-set $kittyexec kitty bash -ic 
 
 set $menu dmenu_recency
 
@@ -56,7 +55,7 @@ output * bg "/home/user/Pictures/icons and stuff/bluemountain.png" fill
 # Launching applications
 bindsym Mod4+i        exec glinks
 bindsym Mod4+Shift+i  exec firefox
-bindsym Mod4+f        exec $kittyexec ranger
+bindsym Mod4+f        exec kitty ranger
 bindsym Mod4+l        exec blurlock
 bindsym Mod4+q        exec qutebrowser
 
