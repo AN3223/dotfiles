@@ -4,7 +4,6 @@
 #bold_is_bright = true
 #cell_height_scale = 1.0
 #cell_width_scale = 1.0
-clickable_url = true
 #dynamic_title = true
 font = Fira Mono 11
 #fullscreen = true
@@ -17,7 +16,8 @@ scroll_on_keystroke = true
 scrollback_lines = 10000
 #search_wrap = true
 #urgent_on_bell = true
-hyperlinks = true
+hyperlinks = false
+clickable_url = false
 
 # $BROWSER is used by default if set, with xdg-open as a fallback
 #browser = xdg-open
