@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Updates packages
-alias update="sudo pacman -Syu && flatpak update"
+alias update="yay -Syu && flatpak update"
 
 # Copied from Stackoverflow, it's supposed to allow output | xclip
 alias xclip="xclip -selection c"
