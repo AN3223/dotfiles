@@ -9,8 +9,8 @@ set $up k
 set $right l
 
 # Terminal stuff :)
-set $term st
-set $termexec st
+set $term sakura
+set $termexec sakura -e
 
 set $menu dmenu_recency
 
