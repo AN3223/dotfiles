@@ -18,7 +18,7 @@ DMENU_SB="#16A085"
 DMENU_SF="#F9FAF9"
 
 ## command for the terminal application to be used:
-TERMINAL_CMD="termite_exec"
+TERMINAL_CMD="st"
 
 ## alternative dmenu
 #DMENU="bemenu"
