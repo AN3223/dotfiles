@@ -12,7 +12,13 @@ export EDITOR="nvim"
 
 export QT_QPA_PLATFORMTHEME="gtk2"
 
-export XDG_RUNTIME_DIR="/tmp/"
+if [ -z "$XDG_RUNTIME_DIR" ]; then
+	export XDG_RUNTIME_DIR="/tmp/${UID}-runtime-dir"
+	if [ ! -d "$XDG_RUNTIME_DIR" ]; then
+		mkdir "$XDG_RUNTIME_DIR"
+		chmod 0700 "$XDG_RUNTIME_DIR"
+	fi
+fi
 
 if [[ ! $DISPLAY ]]; then
 	echo "Enter '1' for lightdm, '2' for startx, 'q' for nothing, or anything else for sway"
