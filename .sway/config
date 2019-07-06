@@ -53,7 +53,7 @@ output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
 
 # Launching applications
 bindsym Mod4+i        exec xlinks -g
-bindsym Mod4+Shift+i  exec firefox
+bindsym Mod4+Shift+i  exec firefox-wayland
 bindsym Mod4+f        exec kitty ranger
 bindsym Mod4+l        exec blurlock
 bindsym Mod4+q        exec qutebrowser
