@@ -9,8 +9,8 @@ set $up k
 set $right l
 
 # Terminal stuff :)
-set $term termite
-set $termexec termite_exec
+set $term st
+set $termexec st
 
 set $menu dmenu_recency
 
@@ -47,8 +47,7 @@ set $red   #CB4B16
   client.unfocused        $gray   $gray   $green  $gray    $gray
   client.urgent           $red    $red    $green  $black   $black 
 
-# Wallpaper
-output * bg "/home/user/Pictures/icons and stuff/bluemountain.png" fill
+output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
 
 #######################################################################
 
@@ -212,11 +211,19 @@ for_window [title="LinuxRocks.Online - Firefox Nightly"] resize set width 20 ppt
 for_window [title="American Truck Simulator"]            fullscreen toggle
 for_window [class="Links"]                               opacity 0.85
 
-bar {
-	swaybar_command waybar
-}
-
 include /etc/sway/config.d/*
+
+bar {
+    position top
+
+    status_command while date +'%b %-d %-I:%M %p'; do sleep 1; done
+
+    colors {
+        statusline #ffffff
+	background #323232
+	inactive_workspace #32323200 #32323200 #5c5c5c
+    }
+}
 
 # man 5 sway-input
 input * {
@@ -229,5 +236,4 @@ input * {
 
 exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 exec dunst
-exec transmission-gtk --minimized
 
