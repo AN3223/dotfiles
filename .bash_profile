@@ -10,6 +10,8 @@ export TERMINAL="termite"
 
 export EDITOR="nvim"
 
+export WWW_HOME="https://duckduckgo.com/lite"
+
 export QT_QPA_PLATFORMTHEME="gtk2"
 
 if [ -z "$XDG_RUNTIME_DIR" ]; then
