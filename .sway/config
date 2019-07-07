@@ -49,6 +49,18 @@ set $red   #CB4B16
 
 output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
 
+bar {
+    position top
+
+    status_command while date +'%b %-d %-I:%M %p'; do sleep 1; done
+
+    colors {
+        statusline #ffffff
+	background #323232
+	inactive_workspace #32323200 #32323200 #5c5c5c
+    }
+}
+
 #######################################################################
 
 # Launching applications
@@ -212,18 +224,6 @@ for_window [title="American Truck Simulator"]            fullscreen toggle
 for_window [class="Links"]                               opacity 0.85
 
 include /etc/sway/config.d/*
-
-bar {
-    position top
-
-    status_command while date +'%b %-d %-I:%M %p'; do sleep 1; done
-
-    colors {
-        statusline #ffffff
-	background #323232
-	inactive_workspace #32323200 #32323200 #5c5c5c
-    }
-}
 
 # man 5 sway-input
 input * {
