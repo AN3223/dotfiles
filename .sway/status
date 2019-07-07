@@ -1,0 +1,12 @@
+#!/bin/sh
+
+battery=$(acpi -b | awk '{print $4+0}')
+
+charging=$(acpi -b | awk '{print $3}' | cut -d, -f1)
+
+date=$(date +'%a, %b %-d %-I:%M %p')
+
+# Seperator
+sep='  |  '
+
+printf '%s' "BATTERY: ${battery}% (${charging}) ${sep} ${date}"

@@ -20,6 +20,7 @@
 !.dmenurc
 
 !.sway/config
+!.sway/status
 !.newsboat/config
 !.config/alacritty/alacritty.yml
 !.config/dunst/dunstrc
