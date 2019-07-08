@@ -66,9 +66,7 @@ bar {
 # Launching applications
 bindsym Mod4+i        exec links -g
 bindsym Mod4+Shift+i  exec firefox-wayland
-bindsym Mod4+f        exec kitty ranger
 bindsym Mod4+l        exec blurlock
-bindsym Mod4+q        exec qutebrowser
 
 # Screenshots
 bindsym Print exec grim \"$HOME/Pictures/Screenshots/$(date +%c).png"
@@ -235,5 +233,4 @@ input * {
 }
 
 exec /usr/libexec/polkit-gnome-authentication-agent-1
-exec dunst
 
