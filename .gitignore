@@ -10,6 +10,7 @@
 !.config/mpv
 !.config/kitty
 !.config/termite
+!.config/mako
 
 !.bash_profile
 !.bashrc
@@ -29,3 +30,4 @@
 !.config/mpv/input.conf
 !.config/kitty/kitty.conf
 !.config/termite/config
+!.config/mako/config

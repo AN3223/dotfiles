@@ -1,0 +1,15 @@
+# Functionality
+default-timeout=4000
+ignore-timeout=1
+
+# Aesthetics
+background-color=#00000055
+border-size=0
+width=400
+font=Noto Sans Regular 12
+format=<b>%s</b>\n%b\n<i>From %a</i>
+
+# Groups
+group-by=app-name
+[grouped=true]
+format=(%g) <b>%s</b>\n%b\n<i>From %a</i>
