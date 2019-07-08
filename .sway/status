@@ -1,12 +1,10 @@
 #!/bin/sh
 
-battery_percent=$(acpi -b | awk '{print $4+0}')
-
-battery_status=$(acpi -b | awk '{print $3}' | cut -d, -f1)
+battery_info=$(acpi -b | awk '{printf "%d%% (%s %s %s)", $4, $3, $5, $6}')
 
 date=$(date +'%a, %b %-d %-I:%M %p')
 
 # Seperator
 sep='  |  '
 
-printf '%s' "BATTERY: ${battery_percent}% (${battery_status}) ${sep} ${date}"
+printf '%s' "BATTERY: ${battery_info} ${sep} ${date}"
