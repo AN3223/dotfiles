@@ -1,17 +1,4 @@
 **
-!.sway
-!.newsboat
-!.config
-
-!.config/alacritty
-!.config/dunst
-!.config/waybar
-!.config/gtk-3.0
-!.config/mpv
-!.config/kitty
-!.config/termite
-!.config/sakura
-
 !.bash_profile
 !.bashrc
 !.aliases
@@ -32,3 +19,4 @@
 !.config/kitty/kitty.conf
 !.config/termite/config
 !.config/sakura/sakura.conf
+!.config/mako/config
