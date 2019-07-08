@@ -1,17 +1,4 @@
 **
-!.sway
-!.newsboat
-!.config
-
-!.config/alacritty
-!.config/dunst
-!.config/waybar
-!.config/gtk-3.0
-!.config/mpv
-!.config/kitty
-!.config/termite
-!.config/mako
-
 !.bash_profile
 !.bashrc
 !.aliases
