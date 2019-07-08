@@ -232,5 +232,7 @@ input * {
 	xkb_options grp:menu_toggle
 }
 
+exec dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus
+exec mako
 exec /usr/libexec/polkit-gnome-authentication-agent-1
 
