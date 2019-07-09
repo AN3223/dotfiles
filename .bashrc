@@ -16,3 +16,7 @@ else
 	PS1="[${GREEN}\w${RESET}] ${GREEN}\$${RESET} "
 fi
 
+if [[ "$SSH_CONNECTION" ]]; then
+	PS1="(SSH) ${PS1}"
+fi
+
