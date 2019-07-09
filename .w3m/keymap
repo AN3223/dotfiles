@@ -1,5 +1,7 @@
 keymap C-f NULL
 keymap C-b NULL
+keymap C-d NULL
+keymap C-v NULL
 keymap h NULL
 keymap j NULL
 keymap k NULL
@@ -24,6 +26,8 @@ keymap :h NULL
 
 keymap C-f NEXT_PAGE
 keymap C-b PREV_PAGE
+keymap C-d ADD_BOOKMARK
+keymap C-v VIEW_BOOKMARK
 
 keymap h SHIFT_LEFT
 keymap j UP
