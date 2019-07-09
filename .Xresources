@@ -1,0 +1,4 @@
+XTerm.vt100.foreground: white
+XTerm.vt100.background: black
+XTerm.vt100.faceName: Fira Mono:size=11:antialias=true
+XTerm.vt100.font: 7x13
