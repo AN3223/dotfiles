@@ -231,4 +231,5 @@ input * {
 exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 exec mako
 exec transmission-gtk --minimized
+exec xrdb ~/.Xresources
 
