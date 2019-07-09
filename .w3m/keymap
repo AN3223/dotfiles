@@ -22,6 +22,7 @@ keymap yy NULL
 keymap yl NULL
 keymap r NULL
 keymap :h NULL
+keymap :o NULL
 
 
 keymap C-f NEXT_PAGE
@@ -58,3 +59,4 @@ keymap yl EXTERN_LINK
 keymap r RELOAD
 
 keymap :h HELP
+keymap :o OPTIONS
