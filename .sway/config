@@ -53,9 +53,9 @@ output * bg "/home/user/Pictures/icons and stuff/bluemountain.png" fill
 #######################################################################
 
 # Launching applications
-bindsym Mod4+i        exec xlinks -g
 bindsym Mod4+Shift+i  exec firefox
 bindsym Mod4+f        exec kitty ranger
+bindsym Mod4+i        exec xterm -e w3m
 bindsym Mod4+l        exec blurlock
 bindsym Mod4+q        exec qutebrowser
 
@@ -211,6 +211,7 @@ for_window [title="LinuxRocks.Online - Mozilla Firefox"] resize set width 20 ppt
 for_window [title="LinuxRocks.Online - Firefox Nightly"] resize set width 20 ppt
 for_window [title="American Truck Simulator"]            fullscreen toggle
 for_window [class="Links"]                               opacity 0.85
+for_window [class="XTerm"]                               opacity 0.85
 
 bar {
 	swaybar_command waybar

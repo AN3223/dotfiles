@@ -1,0 +1,56 @@
+keymap C-f NULL
+keymap C-b NULL
+keymap h NULL
+keymap j NULL
+keymap k NULL
+keymap l NULL
+keymap LEFT NULL
+keymap DOWN NULL
+keymap UP NULL
+keymap RIGHT NULL
+keymap H NULL
+keymap J NULL
+keymap K NULL
+keymap L NULL
+keymap d NULL
+keymap f NULL
+keymap o NULL
+keymap O NULL
+keymap yy NULL
+keymap yl NULL
+keymap r NULL
+keymap :h NULL
+
+
+keymap C-f NEXT_PAGE
+keymap C-b PREV_PAGE
+
+keymap h SHIFT_LEFT
+keymap j UP
+keymap k DOWN
+keymap l SHIFT_RIGHT
+
+keymap LEFT SHIFT_LEFT
+keymap UP DOWN
+keymap DOWN UP
+keymap RIGHT SHIFT_RIGHT
+
+keymap H PREV
+keymap J NEXT_TAB
+keymap K PREV_TAB
+keymap L NEXT
+keymap d CLOSE_TAB
+
+keymap f LIST_MENU
+keymap F MOVE_LIST_MENU
+
+keymap o GOTO
+keymap O TAB_GOTO
+keymap C-o TAB_LINK
+
+keymap yy EXTERN
+keymap yl EXTERN_LINK
+
+keymap r RELOAD
+
+keymap :h HELP

@@ -7,6 +7,8 @@
 !.dmenurc
 
 !.sway/config
+!.w3m/config
+!.w3m/keymap
 !.newsboat/config
 !.config/alacritty/alacritty.yml
 !.config/dunst/dunstrc
