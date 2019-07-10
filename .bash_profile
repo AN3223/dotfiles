@@ -26,7 +26,7 @@ if [ -z "$XDG_RUNTIME_DIR" ]; then
 	fi
 fi
 
-if [ ! $DISPLAY ]; then
+if [ ! "$DISPLAY" ]; then
 	echo "Enter '1' for lightdm, '2' for startx, 'q' for nothing, or anything else for sway"
 	read selection && case $selection in
 		1)
