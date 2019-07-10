@@ -1,6 +1,9 @@
 let g:airline_theme='serene'
 syntax on
 
+set ignorecase
+set smartcase
+
 set spelllang=en
 nmap s :setlocal spell<CR>
 
