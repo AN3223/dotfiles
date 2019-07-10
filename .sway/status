@@ -1,6 +1,12 @@
 #!/bin/sh
 
-battery_info=$(acpi -b | awk '{printf "%d%% (%s %s %s)", $4, $3, $5, $6}' | sed 's/,  )/)/')
+filter_battery_info() {
+	less <&0 | 
+		sed 's/,  )/)/' | # Remove comma when fully charged
+		sed 's/ 00:/ /'   # Remove redundant part of timestamp
+}
+
+battery_info=$(acpi -b | awk '{printf "%d%% (%s %s)", $4, $3, $5}' | filter_battery_info)
 
 date=$(date +'%a, %b %-d %-I:%M %p')
 
