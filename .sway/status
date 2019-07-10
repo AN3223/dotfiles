@@ -2,7 +2,7 @@
 
 filter_battery_info() {
 	less | 
-		sed 's/,  )/)/' | # Remove comma when fully charged
+		sed 's/, )/)/' |  # Remove comma when fully charged
 		sed 's/ 00:/ /'   # Remove redundant part of timestamp
 }
 
