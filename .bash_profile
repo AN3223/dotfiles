@@ -14,6 +14,8 @@ export WWW_HOME="https://duckduckgo.com/lite"
 
 export QT_QPA_PLATFORMTHEME="gtk2"
 
+export GTK_THEME="Adwaita:dark"
+
 export LESS="-Ri"
 
 if [ -z "$XDG_RUNTIME_DIR" ]; then
