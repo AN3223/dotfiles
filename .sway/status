@@ -13,4 +13,4 @@ date=$(date +'%a, %b %-d %-I:%M %p')
 # Seperator
 sep='  |  '
 
-printf '%s' "BATTERY: ${battery_info} ${sep} ${date}"
+printf '%s\n' "BATTERY: ${battery_info} ${sep} ${date}"
