@@ -1,23 +1,23 @@
 #!/bin/sh
 
-cpu_percent=$(mpstat 3 1 --dec=1 | awk '$12 != "" {print 100 - $12}' | tail -n1)
+cpu_pcnt=$(mpstat 3 1 --dec=1 | awk '$12 != "" {print 100 - $12}' | tail -n1)
 
 # May require modification on other PCs
 cpu_temp=$(acpi -t | awk '{print $4}')
 
-net_connectivity=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf Connected || printf Disconnected)
+net=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf Connected || printf Disconnected)
 
-mem_percent=$(free | awk '$1 == "Mem:" {printf "%2.1f", 100 / ($2 / $3)}')
+ram=$(free | awk '$1 == "Mem:" {printf "%2.1f", 100 / ($2 / $3)}')
 
 filter_battery_info() {
 	sed 's/, )/)/' |  # Remove comma when fully charged
 	sed 's/ 00:/ /'   # Remove redundant part of timestamp
 }
 
-battery_info=$(acpi -b | awk '{printf "%d%% (%s %s)", $4, $3, $5}' | filter_battery_info)
+battery=$(acpi -b | awk '{printf "%d%% (%s %s)", $4, $3, $5}' | filter_battery_info)
 
 date=$(date +'%a, %b %-d %-I:%M %p')
 
 sep='  |  ' # Seperator
 
-printf '%s\n' "BATTERY: ${battery_info} ${sep} NET: ${net_connectivity} ${sep} CPU: ${cpu_percent}% ${cpu_temp}°C ${sep} RAM: ${mem_percent}% ${sep} ${date}"
+printf '%s\n' "BATTERY: ${battery} ${sep} NET: ${net} ${sep} CPU: ${cpu_pcnt}% ${cpu_temp}°C ${sep} RAM: ${ram}% ${sep} ${date}"
