@@ -18,4 +18,4 @@ date=$(date +'%a, %b %-d %-I:%M %p')
 
 sep='  |  ' # Seperator
 
-printf '%s\n' "BATTERY: ${battery_info} ${sep} CPU: ${cpu_percent}% ${cpu_temp}C ${sep} RAM: ${mem_percent}% ${sep} ${date}"
+printf '%s\n' "BATTERY: ${battery_info} ${sep} CPU: ${cpu_percent}% ${cpu_temp}°C ${sep} RAM: ${mem_percent}% ${sep} ${date}"
