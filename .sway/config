@@ -233,7 +233,7 @@ input * {
 	xkb_options grp:menu_toggle
 }
 
-seat * hide_cursor 5
+seat * hide_cursor 5000
 
 exec dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus
 exec mako
