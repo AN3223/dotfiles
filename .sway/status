@@ -1,5 +1,12 @@
 #!/bin/sh
 
+cpu_percent=$(mpstat 1 1 --dec=1 | awk '$12 != "" {print 100 - $12}' | tail -n1)
+
+# May require modification on other PCs
+cpu_temp=$(acpi -t | awk '{print $4}')
+
+mem_percent=$(free | awk '$1 == "Mem:" {printf "%2.1f", 100 / ($2 / $3)}')
+
 filter_battery_info() {
 	sed 's/, )/)/' |  # Remove comma when fully charged
 	sed 's/ 00:/ /'   # Remove redundant part of timestamp
@@ -9,7 +16,6 @@ battery_info=$(acpi -b | awk '{printf "%d%% (%s %s)", $4, $3, $5}' | filter_batt
 
 date=$(date +'%a, %b %-d %-I:%M %p')
 
-# Seperator
-sep='  |  '
+sep='  |  ' # Seperator
 
-printf '%s\n' "BATTERY: ${battery_info} ${sep} ${date}"
+printf '%s\n' "BATTERY: ${battery_info} ${sep} CPU: ${cpu_percent}% ${cpu_temp}C ${sep} RAM: ${mem_percent}% ${sep} ${date}"
