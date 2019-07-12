@@ -1,9 +1,8 @@
 #!/bin/sh
 
 filter_battery_info() {
-	less | 
-		sed 's/, )/)/' |  # Remove comma when fully charged
-		sed 's/ 00:/ /'   # Remove redundant part of timestamp
+	sed 's/, )/)/' |  # Remove comma when fully charged
+	sed 's/ 00:/ /'   # Remove redundant part of timestamp
 }
 
 battery_info=$(acpi -b | awk '{printf "%d%% (%s %s)", $4, $3, $5}' | filter_battery_info)
