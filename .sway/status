@@ -5,6 +5,7 @@ filter_battery_info() {
 	sed 's/ 00:/ /'   # Remove redundant part of timestamp
 }
 
+# Maybe be glitchy when plugging/unplugging
 battery=$(acpi -b | awk '{printf "%d%% (%s %s)", $4, $3, $5}' | filter_battery_info)
 
 net=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf ✔️  || printf ❌)
