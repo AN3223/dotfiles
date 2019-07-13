@@ -9,6 +9,19 @@ net=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf Connected || printf Disconnecte
 
 ram=$(free | awk '$1 == "Mem:" {printf "%2.1f", 100 / ($2 / $3)}')
 
+# audio_info is parsed weirdly b/c amixer's output is not easily parse-able, since
+# the number of fields may vary, and even the number of [bracketed] fields may vary.
+# TODO: Simplify this (amixer may not be the tool for the job?).
+audio_info=$(amixer get Master | tail -n1 | tr ' ' '\n' | awk '/\[.+\]/ {print $1}')
+audio_on=$(printf %s "$audio_info" | tail -n1)
+audio_level=$(printf %s "$audio_info" | head -n1)
+
+if [ "$audio_on" = '[on]' ]; then
+	audio="$audio_level"
+else
+	audio="[muted]"
+fi
+
 filter_battery_info() {
 	sed 's/, )/)/' |  # Remove comma when fully charged
 	sed 's/ 00:/ /'   # Remove redundant part of timestamp
@@ -20,4 +33,4 @@ date=$(date +'%a, %b %-d %-I:%M %p')
 
 sep='  |  ' # Seperator
 
-printf '%s\n' "BATTERY: ${battery} ${sep} NET: ${net} ${sep} CPU: ${cpu_pcnt}% ${cpu_temp}°C ${sep} RAM: ${ram}% ${sep} ${date}"
+printf '%s\n' "BATTERY: ${battery} ${sep} NET: ${net} ${sep} AUDIO: ${audio} ${sep} CPU: ${cpu_pcnt}% ${cpu_temp}°C ${sep} RAM: ${ram}% ${sep} ${date}"
