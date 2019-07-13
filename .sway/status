@@ -24,7 +24,7 @@ else
 fi
 
 cpu_temp=$(acpi -t | awk '{printf "%d", $4}') # May require modification on other PCs
-cpu_pcnt=$(mpstat 1 1 --dec=0 | awk '$12 != "" {print 100 - $12}' | tail -n1)
+cpu_pcnt=$(mpstat 1 1 --dec=0 | tail -n1 | awk '{printf "%02d", 100 - $12}')
 
 ram=$(free | awk '$1 == "Mem:" {printf "%2.1f", 100 / ($2 / $3)}')
 
