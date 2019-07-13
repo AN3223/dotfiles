@@ -7,7 +7,7 @@ filter_battery_info() {
 
 battery=$(acpi -b | awk '{printf "%d%% (%s %s)", $4, $3, $5}' | filter_battery_info)
 
-net=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf Connected || printf Disconnected)
+net=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf ✔️  || printf ❌)
 
 # audio_info is parsed weirdly b/c amixer's output is not easily parse-able, since
 # the number of fields may vary, and even the number of [bracketed] fields may vary.
@@ -19,7 +19,7 @@ audio_level=$(printf %s "$audio_info" | head -n1)
 if [ "$audio_on" = '[on]' ]; then
 	audio="$audio_level"
 else
-	audio="[muted]"
+	audio="$audio_on"
 fi
 
 cpu_temp=$(acpi -t | awk '{print $4}') # May require modification on other PCs
@@ -31,4 +31,4 @@ date=$(date +'%a, %b %-d %-I:%M %p')
 
 sep='  |  ' # Seperator
 
-printf '%s\n' "BATTERY: ${battery} ${sep} NET: ${net} ${sep} AUDIO: ${audio} ${sep} CPU: ${cpu_pcnt}% ${cpu_temp}°C ${sep} RAM: ${ram}% ${sep} ${date}"
+printf '%s\n' "⚡ ${battery} ${sep} 📡 ${net} ${sep} 🔉 ${audio} ${sep} CPU: ${cpu_pcnt}% ${cpu_temp}°C ${sep} RAM: ${ram}% ${sep} ${date}"
