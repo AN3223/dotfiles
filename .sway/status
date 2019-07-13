@@ -1,13 +1,13 @@
 #!/bin/sh
 
-cpu_pcnt=$(mpstat 3 1 --dec=1 | awk '$12 != "" {print 100 - $12}' | tail -n1)
+filter_battery_info() {
+	sed 's/, )/)/' |  # Remove comma when fully charged
+	sed 's/ 00:/ /'   # Remove redundant part of timestamp
+}
 
-# May require modification on other PCs
-cpu_temp=$(acpi -t | awk '{print $4}')
+battery=$(acpi -b | awk '{printf "%d%% (%s %s)", $4, $3, $5}' | filter_battery_info)
 
 net=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf Connected || printf Disconnected)
-
-ram=$(free | awk '$1 == "Mem:" {printf "%2.1f", 100 / ($2 / $3)}')
 
 # audio_info is parsed weirdly b/c amixer's output is not easily parse-able, since
 # the number of fields may vary, and even the number of [bracketed] fields may vary.
@@ -22,12 +22,10 @@ else
 	audio="[muted]"
 fi
 
-filter_battery_info() {
-	sed 's/, )/)/' |  # Remove comma when fully charged
-	sed 's/ 00:/ /'   # Remove redundant part of timestamp
-}
+cpu_temp=$(acpi -t | awk '{print $4}') # May require modification on other PCs
+cpu_pcnt=$(mpstat 3 1 --dec=1 | awk '$12 != "" {print 100 - $12}' | tail -n1)
 
-battery=$(acpi -b | awk '{printf "%d%% (%s %s)", $4, $3, $5}' | filter_battery_info)
+ram=$(free | awk '$1 == "Mem:" {printf "%2.1f", 100 / ($2 / $3)}')
 
 date=$(date +'%a, %b %-d %-I:%M %p')
 
