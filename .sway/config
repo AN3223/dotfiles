@@ -20,7 +20,7 @@ gaps inner 14
 gaps outer -2
 smart_gaps on
 
-font xft:URWGothic-Book 9
+font Fira Mono 9
 
 hide_edge_borders none
 default_border pixel 5
