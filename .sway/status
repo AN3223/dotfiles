@@ -8,7 +8,7 @@ filter_battery_info() {
 # Maybe be glitchy when plugging/unplugging
 battery=$(acpi -b | awk '{printf "%d%% (%s %s)", $4, $3, $5}' | filter_battery_info)
 
-net=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf ✔️  || printf ❌)
+net=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf 📶  || printf ❌)
 
 # audio_info is parsed weirdly b/c amixer's output is not easily parse-able, since
 # the number of fields may vary, and even the number of [bracketed] fields may vary.
@@ -32,4 +32,4 @@ date=$(date +'%a, %b %-d %-I:%M %p')
 
 sep=' | ' # Seperator
 
-printf '%s\n' "⚡ ${battery} ${sep} 📡 ${net} ${sep} 🔉 ${audio} ${sep} CPU: ${cpu_pcnt}% ${cpu_temp}°C ${sep} RAM: ${ram}% ${sep} ${date} "
+printf '%s\n' "⚡ ${battery} ${sep} ${net} ${sep} 🔉 ${audio} ${sep} CPU: ${cpu_pcnt}% ${cpu_temp}°C ${sep} RAM: ${ram}% ${sep} ${date} "
