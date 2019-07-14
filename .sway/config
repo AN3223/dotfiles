@@ -47,6 +47,18 @@ set $red   #CB4B16
   client.unfocused        $gray   $gray   $green  $gray    $gray
   client.urgent           $red    $red    $green  $black   $black 
 
+bar {
+    position top
+
+    status_command while "$HOME/.sway/status"; do true; done
+
+    colors {
+        statusline #ffffff
+        background #2F3D44
+        inactive_workspace #32323200 #32323200 #5c5c5c
+    }
+}
+
 # Wallpaper
 output * bg "/home/user/Pictures/icons and stuff/bluemountain.png" fill
 
@@ -212,10 +224,6 @@ for_window [title="LinuxRocks.Online - Firefox Nightly"] resize set width 20 ppt
 for_window [title="American Truck Simulator"]            fullscreen toggle
 for_window [class="Links"]                               opacity 0.85
 for_window [class="XTerm"]                               opacity 0.85
-
-bar {
-	swaybar_command waybar
-}
 
 include /etc/sway/config.d/*
 
