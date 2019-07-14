@@ -30,6 +30,6 @@ ram=$(free | awk '$1 == "Mem:" {printf "%2.1f", 100 / ($2 / $3)}')
 
 date=$(date +'%a, %b %-d %-I:%M %p')
 
-sep='  |  ' # Seperator
+sep=' | ' # Seperator
 
 printf '%s\n' "⚡ ${battery} ${sep} 📡 ${net} ${sep} 🔉 ${audio} ${sep} CPU: ${cpu_pcnt}% ${cpu_temp}°C ${sep} RAM: ${ram}% ${sep} ${date}"
