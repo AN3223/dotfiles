@@ -5,7 +5,7 @@ set ignorecase
 set smartcase
 
 set spelllang=en
-nmap s :setlocal spell<CR>
+nmap s :setlocal spell!<CR>
 
 " Use Esc to exit terminal mode
 tnoremap <Esc> <C-\><C-n>
