@@ -53,9 +53,10 @@ bar {
     status_command while "$HOME/.sway/status"; do true; done
 
     colors {
-        statusline #ffffff
+        statusline #1ABC9C
         background #2F3D44
-        inactive_workspace #32323200 #32323200 #5c5c5c
+        inactive_workspace #323232 #323232 #5c5c5c
+        focused_workspace #323232 #1ABC9C #323232
     }
 }
 
@@ -229,11 +230,11 @@ include /etc/sway/config.d/*
 
 # man 5 sway-input
 input * {
-	# make the keyboard human-usable
-	repeat_delay 300
-	
-	# disable context key
-	xkb_options grp:menu_toggle
+    # make the keyboard human-usable
+    repeat_delay 300
+    
+    # disable context key
+    xkb_options grp:menu_toggle
 }
 
 seat * hide_cursor 5000
