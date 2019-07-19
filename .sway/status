@@ -5,7 +5,13 @@ filter_battery_info() {
 	sed 's/ 00:/ /'   # Remove redundant part of timestamp
 }
 
-net=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf 📶  || printf ❌)
+net=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf 📶 || printf ❌)
+
+vpn=$(ip address | awk '$1 ~ /[0-9]:/ && $2 ~ /tun[0-9]+:/ {print "✔️"}')
+
+if [ ! "$vpn" ]; then
+	vpn=❌
+fi
 
 # audio_info is parsed weirdly b/c amixer's output is not easily parse-able, since
 # the number of fields may vary, and even the number of [bracketed] fields may vary.
@@ -28,4 +34,4 @@ date=$(date +'%a, %b %-d %-I:%M %p')
 
 sep=' | ' # Seperator
 
-printf '%s\n' "${net} ${sep} 🔉 ${audio} ${sep} CPU: ${cpu_pcnt}% ${sep} RAM: ${ram}% ${sep} ${date} "
+printf '%s\n' "${net} ${sep} VPN: ${vpn} ${sep} 🔉 ${audio} ${sep} CPU: ${cpu_pcnt}% ${sep} RAM: ${ram}% ${sep} ${date} "
