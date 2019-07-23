@@ -50,7 +50,7 @@ set $red   #CB4B16
 bar {
     position top
 
-    status_command while "$HOME/.sway/status"; do true; done
+    status_command "$HOME/.sway/status"
 
     colors {
         statusline #1ABC9C
