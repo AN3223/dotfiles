@@ -237,7 +237,8 @@ input * {
     xkb_options grp:menu_toggle
 }
 
-seat * hide_cursor 9000
+bindsym $mod+m seat * hide_cursor 5000
+bindsym $mod+Shift+m seat * hide_cursor 0
 
 exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
 exec mako
