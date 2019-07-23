@@ -1,35 +1,37 @@
 #!/bin/sh
 
-filter_battery_info() {
-	sed 's/, )/)/' |  # Remove comma when fully charged
-	sed 's/ 00:/ /'   # Remove redundant part of timestamp
-}
-
-# Maybe be glitchy when plugging/unplugging
-battery=$(acpi -b | awk '{printf "%d%% (%s %s)", $4, $3, $5}' | filter_battery_info)
-
-net=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf 📶  || printf ❌)
-
-# audio_info is parsed weirdly b/c amixer's output is not easily parse-able, since
-# the number of fields may vary, and even the number of [bracketed] fields may vary.
-# TODO: Simplify this (amixer may not be the tool for the job?).
-audio_info=$(amixer get Master | tail -n1 | tr ' ' '\n' | awk '/\[.+\]/ {print $1}')
-audio_on=$(printf %s "$audio_info" | tail -n1)
-audio_level=$(printf %s "$audio_info" | head -n1)
-
-if [ "$audio_on" = '[on]' ]; then
-	audio="$audio_level"
-else
-	audio="$audio_on"
-fi
-
-cpu_temp=$(acpi -t | awk '{printf "%d", $4}') # May require modification on other PCs
-cpu_pcnt=$(mpstat 1 1 --dec=0 | tail -n1 | awk '{printf "%02d", 100 - $12}')
-
-ram=$(free | awk '$1 == "Mem:" {printf "%2.1f", 100 / ($2 / $3)}')
-
-date=$(date +'%a, %b %-d %-I:%M %p')
-
-sep=' | ' # Seperator
-
-printf '%s\n' "⚡ ${battery} ${sep} ${net} ${sep} 🔉 ${audio} ${sep} CPU: ${cpu_pcnt}% ${cpu_temp}°C ${sep} RAM: ${ram}% ${sep} ${date} "
+while :; do
+	filter_battery_info() {
+		sed 's/, )/)/' |  # Remove comma when fully charged
+		sed 's/ 00:/ /'   # Remove redundant part of timestamp
+	}
+	
+	# Maybe be glitchy when plugging/unplugging
+	battery=$(acpi -b | awk '{printf "%d%% (%s %s)", $4, $3, $5}' | filter_battery_info)
+	
+	net=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf 📶  || printf ❌)
+	
+	# audio_info is parsed weirdly b/c amixer's output is not easily parse-able, since
+	# the number of fields may vary, and even the number of [bracketed] fields may vary.
+	# TODO: Simplify this (amixer may not be the tool for the job?).
+	audio_info=$(amixer get Master | tail -n1 | tr ' ' '\n' | awk '/\[.+\]/ {print $1}')
+	audio_on=$(printf %s "$audio_info" | tail -n1)
+	audio_level=$(printf %s "$audio_info" | head -n1)
+	
+	if [ "$audio_on" = '[on]' ]; then
+		audio="$audio_level"
+	else
+		audio="$audio_on"
+	fi
+	
+	cpu_temp=$(acpi -t | awk '{printf "%d", $4}') # May require modification on other PCs
+	cpu_pcnt=$(mpstat 1 1 --dec=0 | tail -n1 | awk '{printf "%02d", 100 - $12}')
+	
+	ram=$(free | awk '$1 == "Mem:" {printf "%2.1f", 100 / ($2 / $3)}')
+	
+	date=$(date +'%a, %b %-d %-I:%M %p')
+	
+	sep=' | ' # Seperator
+	
+	printf '%s\n' "⚡ ${battery} ${sep} ${net} ${sep} 🔉 ${audio} ${sep} CPU: ${cpu_pcnt}% ${cpu_temp}°C ${sep} RAM: ${ram}% ${sep} ${date} "
+done
