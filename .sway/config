@@ -235,6 +235,9 @@ input * {
     
     # disable context key
     xkb_options grp:menu_toggle
+
+    accel_profile flat
+    pointer_accel -0.4
 }
 
 bindsym $mod+m seat * hide_cursor 5000
