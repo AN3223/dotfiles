@@ -7,10 +7,10 @@ set smartcase
 set spelllang=en
 nnoremap s :setlocal spell!<cr>
 
+inoremap jj <Esc>
+
 " Use Esc to exit terminal mode
 tnoremap <Esc> <C-\><C-n>
-
-inoremap jj <Esc>
 
 " Comment out a line
 nnoremap #  I#<Esc><C-0><Down>
@@ -24,3 +24,8 @@ inoremap [ []<Left>
 
 " Copy unnamed register into Wayland clipboard
 nnoremap w :call system('wl-copy', @")<cr>
+
+" Different cursor shapes in different modes
+let &t_SI = "\<Esc>[4 q"
+let &t_SR = "\<Esc>[4 q"
+let &t_EI = "\<Esc>[2 q"
