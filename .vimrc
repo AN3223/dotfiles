@@ -1,11 +1,11 @@
-let g:airline_theme='serene'
+let g:airline_theme='tomorrow'
 syntax on
 
 set ignorecase
 set smartcase
 
 set spelllang=en
-nnoremap s :setlocal spell!<CR>
+nnoremap s :setlocal spell!<cr>
 
 " Use Esc to exit terminal mode
 tnoremap <Esc> <C-\><C-n>
@@ -22,3 +22,5 @@ inoremap ( ()<Left>
 inoremap " ""<Left>
 inoremap [ []<Left>
 
+" Copy unnamed register into Wayland clipboard
+nnoremap w :call system('wl-copy', @")<cr>
