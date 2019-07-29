@@ -23,6 +23,4 @@ alias restart_compton="killall -s SIGUSR1 -e compton"
 # causes any unwanted behavior.
 alias su="su -p"
 
-alias vim="nvim"
-
 alias internet?="ping 8.8.8.8"

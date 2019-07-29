@@ -8,7 +8,7 @@ export WINDOWMANAGER="i3"
 
 export TERMINAL="termite"
 
-export EDITOR="nvim"
+export EDITOR="vim"
 
 export QT_QPA_PLATFORMTHEME="gtk2"
 
