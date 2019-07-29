@@ -1,8 +1,7 @@
-let g:airline_theme='tomorrow'
+let g:airline_theme = 'tomorrow'
 syntax on
 
-set ignorecase
-set smartcase
+set ignorecase | set smartcase
 
 set spelllang=en
 nnoremap s :setlocal spell!<cr>
@@ -29,3 +28,4 @@ nnoremap w :call system('wl-copy', @")<cr>
 let &t_SI = "\<Esc>[4 q"
 let &t_SR = "\<Esc>[4 q"
 let &t_EI = "\<Esc>[2 q"
+
