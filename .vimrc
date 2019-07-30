@@ -1,5 +1,5 @@
 let g:airline_theme = 'tomorrow'
-syntax on
+syntax enable
 set number
 
 " Different cursor shapes in different modes
