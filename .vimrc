@@ -35,3 +35,8 @@ let mapleader = ","
 nnoremap <leader>e :vsplit ~/.vimrc<cr>
 nnoremap <leader>s :source $MYVIMRC<cr>
 
+" Shortcuts for switching between windows
+nnoremap H <C-w>h
+nnoremap J <C-w>j
+nnoremap K <C-w>k
+nnoremap L <C-w>l
