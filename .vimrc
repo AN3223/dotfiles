@@ -33,7 +33,7 @@ nnoremap "+ :call system('wl-copy', @")<cr>
 let mapleader = ","
 
 " Commands for quickly editing this file
-nnoremap <leader>e :vsplit ~/.vimrc<cr>
+nnoremap <leader>e :vsplit $MYVIMRC<cr>
 nnoremap <leader>s :source $MYVIMRC<cr>
 
 " Shortcuts for switching between windows
