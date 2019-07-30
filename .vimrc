@@ -22,7 +22,7 @@ inoremap " ""<Left>
 inoremap [ []<Left>
 
 " Copy unnamed register into Wayland clipboard
-nnoremap w :call system('wl-copy', @")<cr>
+nnoremap "+ :call system('wl-copy', @")<cr>
 
 " Different cursor shapes in different modes
 let &t_SI = "\<Esc>[4 q"
