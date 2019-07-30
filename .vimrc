@@ -13,9 +13,6 @@ nnoremap s :setlocal spell!<cr>
 
 inoremap jj <Esc>
 
-" Use Esc to exit terminal mode
-tnoremap <Esc> <C-\><C-n>
-
 " Comment out a line
 nnoremap #  I#<Esc><C-0><Down>
 nnoremap // I//<Esc><C-0><Down>
@@ -40,3 +37,4 @@ nnoremap H <C-w>h
 nnoremap J <C-w>j
 nnoremap K <C-w>k
 nnoremap L <C-w>l
+
