@@ -1,5 +1,6 @@
 let g:airline_theme = 'tomorrow'
 syntax on
+set number
 
 " Different cursor shapes in different modes
 let &t_SI = "\<Esc>[4 q"
