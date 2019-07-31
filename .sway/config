@@ -61,7 +61,7 @@ bar {
 }
 
 # Wallpaper
-output * bg "/home/user/Pictures/icons and stuff/bluemountain.png" fill
+output * bg "/home/user/bluemountain.png" fill
 
 #######################################################################
 
