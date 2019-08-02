@@ -1,0 +1,229 @@
+# Some of my scripts are referenced here, one may find them here https://github.com/AN3223/scripts
+
+set $mod Mod1
+
+set $left h
+set $down j
+set $up k
+set $right l
+
+# Terminal stuff :)
+set $term termite
+set $termexec termite_exec
+
+set $menu dmenu_recency
+
+################----------------THEMING----------------################
+
+gaps inner 14
+gaps outer -2
+smart_gaps on
+
+font pango:Fira Mono 9
+
+hide_edge_borders none
+default_border pixel 5
+default_floating_border normal
+smart_borders on
+
+set $gray  #556064
+set $green #1ABC9C
+set $bg    #2F3D44
+set $black #900000
+set $red   #CB4B16
+
+# i3 theme
+# class                   border  backgr. text    indic.   child_border
+  client.focused          $bg     $bg     $green  $bg      $bg
+  client.focused_inactive $gray   $gray   $green  $gray    $gray
+  client.unfocused        $gray   $gray   $green  $gray    $gray
+  client.urgent           $red    $red    $green  $black   $black 
+
+bar {
+    position top
+
+    status_command "$HOME/.sway/status"
+
+    colors {
+        statusline #1ABC9C
+        background #2F3D44
+        inactive_workspace #323232 #323232 #5c5c5c
+        focused_workspace #323232 #1ABC9C #323232
+    }
+}
+
+#######################################################################
+
+# Launching applications
+bindsym Mod4+Shift+i  exec firefox
+bindsym Mod4+f        exec kitty ranger
+bindsym Mod4+i        exec $termexec w3m
+bindsym Mod4+l        exec blurlock
+bindsym Mod4+q        exec qutebrowser
+
+# Screenshots
+bindsym Print exec grim \"$HOME/Pictures/Screenshots/$(date +%c).png"
+
+# Media keys
+bindsym XF86AudioLowerVolume exec amixer -q set Master 5%- unmute
+bindsym XF86AudioRaiseVolume exec amixer -q set Master 5%+ unmute
+bindsym XF86AudioMute        exec amixer -q set Master toggle
+
+bindsym XF86AudioStop exec playerctl stop
+#bindsym XF86AudioPrev exec playerctl previous
+bindsym XF86AudioPlay exec playerctl play-pause
+bindsym XF86AudioNext exec playerctl next
+
+# terminal
+bindsym $mod+Return exec $term
+
+# kill focused window
+bindsym $mod+Shift+q kill
+
+# start application launcher
+bindsym $mod+d exec $menu
+
+# resizing
+floating_modifier $mod
+
+# reload the configuration file
+bindsym $mod+Shift+c reload
+# restart i3 inplace
+bindsym $mod+Shift+r restart
+
+# exit i3 (logs you out of your X session)
+bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -B 'Yes, exit i3' 'i3-msg exit'"
+
+# Moving around:
+#
+# Move your focus around
+bindsym $mod+$left focus left
+bindsym $mod+$down focus down
+bindsym $mod+$up focus up
+bindsym $mod+$right focus right
+# or use $mod+[up|down|left|right]
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+# _move_ the focused window with the same, but add Shift
+bindsym $mod+Shift+$left move left
+bindsym $mod+Shift+$down move down
+bindsym $mod+Shift+$up move up
+bindsym $mod+Shift+$right move right
+# ditto, with arrow keys
+bindsym $mod+Shift+Left move left
+bindsym $mod+Shift+Down move down
+bindsym $mod+Shift+Up move up
+bindsym $mod+Shift+Right move right
+#
+# Workspaces:
+#
+# switch to workspace
+bindsym $mod+1 workspace 1
+bindsym $mod+2 workspace 2
+bindsym $mod+3 workspace 3
+bindsym $mod+4 workspace 4
+bindsym $mod+5 workspace 5
+bindsym $mod+6 workspace 6
+bindsym $mod+7 workspace 7
+bindsym $mod+8 workspace 8
+bindsym $mod+9 workspace 9
+bindsym $mod+0 workspace 10
+# move focused container to workspace
+bindsym $mod+Shift+1 move container to workspace 1
+bindsym $mod+Shift+2 move container to workspace 2
+bindsym $mod+Shift+3 move container to workspace 3
+bindsym $mod+Shift+4 move container to workspace 4
+bindsym $mod+Shift+5 move container to workspace 5
+bindsym $mod+Shift+6 move container to workspace 6
+bindsym $mod+Shift+7 move container to workspace 7
+bindsym $mod+Shift+8 move container to workspace 8
+bindsym $mod+Shift+9 move container to workspace 9
+bindsym $mod+Shift+0 move container to workspace 10
+
+#
+# Layout stuff:
+#
+bindsym $mod+v splitv
+
+# Switch the current container between different layout styles
+bindsym $mod+s layout stacking
+bindsym $mod+t layout tabbed
+bindsym $mod+e layout toggle split
+
+# Make the current focus fullscreen
+bindsym $mod+f fullscreen
+
+# Toggle the current focus between tiling and floating mode
+bindsym $mod+Shift+space floating toggle
+
+# Toggle focus between the tiling area and the floating area
+bindsym $mod+space focus mode_toggle
+
+# move focus to the parent/child container
+bindsym $mod+a focus parent
+bindsym $mod+z focus child
+
+# move window to scratchpad
+bindsym $mod+Shift+minus move scratchpad
+
+# Show the next scratchpad window or hide the focused scratchpad window.
+# If there are multiple scratchpad windows, this command cycles through them.
+bindsym $mod+minus scratchpad show
+
+#
+# Resizing containers:
+#
+mode "resize" {
+    # left will shrink the containers width
+    # right will grow the containers width
+    # up will shrink the containers height
+    # down will grow the containers height
+    bindsym $left resize shrink width 10px
+    bindsym $down resize grow height 10px
+    bindsym $up resize shrink height 10px
+    bindsym $right resize grow width 10px
+
+    # ditto, with arrow keys
+    bindsym Left resize shrink width 10px
+    bindsym Down resize grow height 10px
+    bindsym Up resize shrink height 10px
+    bindsym Right resize grow width 10px
+
+    # Same as above, but more fine-grained control
+    bindsym Mod1+$left       resize shrink width  1 px
+    bindsym Mod1+$down       resize grow height   1 px
+    bindsym Mod1+$up         resize shrink height 1 px
+    bindsym Mod1+$right      resize grow width    1 px
+    bindsym Mod1+Left        resize shrink width  1 px
+    bindsym Mod1+Down        resize grow height   1 px
+    bindsym Mod1+Up          resize shrink height 1 px
+    bindsym Mod1+Right       resize grow width    1 px
+
+    # return to default mode
+    bindsym Return mode "default"
+    bindsym Escape mode "default"
+}
+bindsym $mod+r mode "resize"
+
+#
+# Window settings:
+#
+for_window [title="LinuxRocks.Online - Mozilla Firefox"] resize set width 20 ppt
+for_window [title="LinuxRocks.Online - Firefox Nightly"] resize set width 20 ppt
+for_window [class="Links"]                               opacity 0.85
+for_window [class="XTerm"]                               opacity 0.85
+
+exec compton -b
+exec nitrogen --restore
+exec xrdb ~/.Xresources
+
+exec xset r rate 300
+exec xinput set-prop 14 'libinput Accel Speed' -1
+
+exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+exec dunst
+exec transmission-gtk --minimized
+
