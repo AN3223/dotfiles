@@ -62,7 +62,7 @@ bindsym Mod4+l        exec blurlock
 bindsym Mod4+q        exec qutebrowser
 
 # Screenshots
-bindsym Print exec grim \"$HOME/Pictures/Screenshots/$(date +%c).png"
+bindsym Print exec scrot '%c.png' -e 'mv "$f" ~/Pictures/Screenshots/'
 
 # Media keys
 bindsym XF86AudioLowerVolume exec amixer -q set Master 5%- unmute
