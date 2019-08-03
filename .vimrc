@@ -27,14 +27,14 @@ inoremap ( ()<Left>
 inoremap " ""<Left>
 inoremap [ []<Left>
 
-" Copy unnamed register into Wayland clipboard
-nnoremap "+ :call system('wl-copy', @")<cr>
-
 let mapleader = ","
 
 " Commands for quickly editing this file
 nnoremap <leader>e :vsplit $MYVIMRC<cr>
 nnoremap <leader>s :source $MYVIMRC<cr>
+
+" Copy unnamed register into Wayland clipboard
+nnoremap <leader>w :call system('wl-copy', @")<cr>
 
 " Shortcuts for switching between windows
 nnoremap H <C-w>h
