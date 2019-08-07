@@ -36,6 +36,8 @@ nnoremap <leader>s :source $MYVIMRC<cr>
 " Copy unnamed register into Wayland clipboard
 nnoremap <leader>w :call system('wl-copy', @")<cr>
 
+nnoremap <leader>8 :set encoding=utf-8<cr>
+
 " Shortcuts for switching between windows
 nnoremap H <C-w>h
 nnoremap J <C-w>j
