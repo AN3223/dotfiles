@@ -28,3 +28,8 @@ alias vim="vim"
 alias internet?="ping 8.8.8.8"
 
 alias startsway=". wayenv && sway"
+
+# Conveniently view logs (not an alias but close enough)
+llog() { 
+	[ "$1" ] && less /var/log/socklog/$1/current || ls /var/log/socklog
+}
