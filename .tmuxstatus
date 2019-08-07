@@ -1,19 +1,11 @@
 #!/bin/sh
 
 while :; do
-	net=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf YES || printf NO)
-	
-	vpn=$(ip address | awk '$1 ~ /[0-9]:/ && $2 ~ /tun[0-9]+:/ {print "YES"}')
-	
-	if [ ! "$vpn" ]; then
-		vpn=NO
-	fi
-	
-	cpu_pcnt=$(mpstat 1 1 --dec=0 | tail -n1 | awk '{printf "%02d", 100 - $12}')
-	
-	ram=$(free | awk '$1 == "Mem:" {printf "%2.1f", 100 / ($2 / $3)}')
-	
+	. ~/.sway/status_vars
+
 	sep='|' # Seperator
-	
-	printf '%s\n' "NET: ${net} ${sep} VPN: ${vpn} ${sep} CPU: ${cpu_pcnt}% ${sep} RAM: ${ram}%"
+	[ "$NET" ] && NET=YES || NET=NO
+	[ "$VPN" ] && VPN=YES || VPN=NO
+
+	printf '%s\n' "NET: ${NET} ${sep} VPN: ${VPN} ${sep} CPU: ${CPU_PCNT}% ${sep} RAM: ${RAM}%"
 done
