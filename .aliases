@@ -24,3 +24,5 @@ alias restart_compton="killall -s SIGUSR1 -e compton"
 alias su="su -p"
 
 alias internet?="ping 8.8.8.8"
+
+alias startsway=". wayenv && sway"
