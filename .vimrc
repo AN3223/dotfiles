@@ -1,4 +1,3 @@
-let g:airline_theme = 'tomorrow'
 syntax enable
 set number
 
@@ -16,6 +15,8 @@ set spelllang=en
 nnoremap s :setlocal spell!<cr>
 
 inoremap jj <Esc>
+
+tnoremap <Esc> <C-\><C-n>
 
 " Comment out a line
 nnoremap #  I#<Esc><C-0><Down>
