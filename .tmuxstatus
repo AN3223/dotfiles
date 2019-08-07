@@ -1,0 +1,26 @@
+#!/bin/sh
+# This is just a slimmed down version of the script used for my status bar
+
+# TODO: Come up with a more elegant solution than just maintaining multiple
+# versions of the same script
+
+while :; do
+	filter_battery_info() {
+		sed 's/, )/)/' |  # Remove comma when fully charged
+		sed 's/ 00:/ /'   # Remove redundant part of timestamp
+	}
+	
+	# Maybe be glitchy when plugging/unplugging
+	battery=$(acpi -b | awk '{printf "%d%% (%s %s)", $4, $3, $5}' | filter_battery_info)
+	
+	net=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf YES || printf NO)
+
+	cpu_temp=$(acpi -t | awk '{printf "%d", $4}') # May require modification on other PCs
+	cpu_pcnt=$(mpstat 1 1 --dec=0 | tail -n1 | awk '{printf "%02d", 100 - $12}')
+	
+	ram=$(free | awk '$1 == "Mem:" {printf "%2.1f", 100 / ($2 / $3)}')
+	
+	sep='|' # Seperator
+	
+	printf '%s\n' "BAT: ${battery} ${sep} NET: ${net} ${sep} CPU: ${cpu_pcnt}% ${cpu_temp}°C ${sep} RAM: ${ram}%"
+done
