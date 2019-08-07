@@ -241,7 +241,7 @@ input type:touchpad {
 seat * hide_cursor 5000
 
 exec dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus
-exec mako
+exec_always mako
 exec /usr/libexec/polkit-gnome-authentication-agent-1
 exec xrdb ~/.Xresources
 

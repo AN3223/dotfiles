@@ -8,7 +8,7 @@ export WINDOWMANAGER="i3"
 
 export TERMINAL="sakura"
 
-export EDITOR="nvim"
+export EDITOR="vim"
 
 export WWW_HOME="https://duckduckgo.com/lite"
 
@@ -24,23 +24,5 @@ if [ -z "$XDG_RUNTIME_DIR" ]; then
 		mkdir "$XDG_RUNTIME_DIR"
 		chmod 0700 "$XDG_RUNTIME_DIR"
 	fi
-fi
-
-if [ ! "$DISPLAY" ]; then
-	echo "Enter '1' for lightdm, '2' for startx, 'q' for nothing, or anything else for sway"
-	read selection && case $selection in
-		1)
-			sudo systemctl start lightdm
-			;;
-		2)
-			startx
-			;;
-		q)
-			;;
-		*)
-			. wayenv
-			sway
-			;;
-	esac
 fi
 
