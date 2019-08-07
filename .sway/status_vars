@@ -1,0 +1,34 @@
+#!/bin/sh
+
+filter_battery_info() {
+	sed 's/, )/)/' |  # Remove comma when fully charged
+	sed 's/ 00:/ /'   # Remove redundant part of timestamp
+}
+
+# Maybe be glitchy when plugging/unplugging
+BATTERY=$(acpi -b | awk '{printf "%d%% (%s %s)", $4, $3, $5}' | filter_battery_info)
+
+NET=$(ping -c1 -w1 1.1.1.1 > /dev/null && printf 1)
+
+VPN=$(ip address | awk '$1 ~ /[0-9]:/ && $2 ~ /tun[0-9]+:/ {print 1}')
+
+# audio_info is parsed weirdly b/c amixer's output is not easily parse-able, since
+# the number of fields may vary, and even the number of [bracketed] fields may vary.
+# TODO: Simplify this (amixer may not be the tool for the job?).
+audio_info=$(amixer get Master | tail -n1 | tr ' ' '\n' | awk '/\[.+\]/ {print $1}')
+audio_on=$(printf %s "$audio_info" | tail -n1)
+audio_level=$(printf %s "$audio_info" | head -n1)
+
+if [ "$audio_on" = '[on]' ]; then
+	AUDIO="$audio_level"
+else
+	AUDIO="$audio_on"
+fi
+
+CPU_TEMP=$(acpi -t | awk '{printf "%d", $4}') # May require modification on other PCs
+CPU_PCNT=$(mpstat 1 1 --dec=0 | tail -n1 | awk '{printf "%02d", 100 - $12}')
+
+RAM=$(free | awk '$1 == "Mem:" {printf "%2.1f", 100 / ($2 / $3)}')
+
+DATE=$(date +'%a, %b %-d %-I:%M %p')
+
