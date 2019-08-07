@@ -244,7 +244,7 @@ bindsym $mod+m seat * hide_cursor 5000
 bindsym $mod+Shift+m seat * hide_cursor 0
 
 exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
-exec mako
+exec_always mako
 exec transmission-gtk --minimized
 exec xrdb ~/.Xresources
 
