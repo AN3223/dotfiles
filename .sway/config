@@ -16,15 +16,9 @@ set $menu dmenu_recency
 
 ################----------------THEMING----------------################
 
-gaps inner 14
-gaps outer -2
-smart_gaps on
-
 font Fira Mono 9
 
-hide_edge_borders none
-default_border pixel 5
-default_floating_border normal
+default_border pixel 3
 smart_borders on
 
 set $gnome-schema org.gnome.desktop.interface

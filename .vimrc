@@ -1,4 +1,3 @@
-let g:airline_theme = 'tomorrow'
 syntax enable
 set number
 
@@ -16,6 +15,8 @@ set spelllang=en
 nnoremap s :setlocal spell!<cr>
 
 inoremap jj <Esc>
+
+tnoremap <Esc> <C-\><C-n>
 
 " Comment out a line
 nnoremap #  I#<Esc><C-0><Down>
@@ -35,6 +36,8 @@ nnoremap <leader>s :source $MYVIMRC<cr>
 
 " Copy unnamed register into Wayland clipboard
 nnoremap <leader>w :call system('wl-copy', @")<cr>
+
+nnoremap <leader>8 :set encoding=utf-8<cr>
 
 " Shortcuts for switching between windows
 nnoremap H <C-w>h
