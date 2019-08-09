@@ -7,7 +7,7 @@ layer=overlay
 background-color=#00000055
 border-size=0
 width=400
-font=Noto Sans Regular 12
+font=Fira Sans 11
 format=<b>%s</b>\n%b\n<i>From %a</i>
 
 # Groups
