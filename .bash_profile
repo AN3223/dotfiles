@@ -2,6 +2,9 @@
 
 [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc"
 
+xdg-user-dirs-update
+. ~/.config/user-dirs.dirs
+
 export PATH="$HOME/.firejail/:$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:/var/lib/snapd/snap/bin/:$PATH"
 
 export WINDOWMANAGER="i3"
