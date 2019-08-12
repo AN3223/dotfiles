@@ -1,6 +1,6 @@
 include "/home/user/.gtkrc-2.0.mine"
-gtk-theme-name="Mint-Y-Dark-Teal"
-gtk-icon-theme-name="Adwaita"
+gtk-theme-name="Breeze-Dark"
+gtk-icon-theme-name="breeze-dark"
 gtk-font-name="Fira Sans 11"
 gtk-cursor-theme-name="Vanilla-DMZ"
 gtk-cursor-theme-size=0
