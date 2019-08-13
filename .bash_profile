@@ -10,6 +10,9 @@ export PATH="$HOME/.firejail/:$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:/va
 export WINDOWMANAGER="i3"
 
 export TERMINAL="termite"
+export TERMCMD="termite_exec"
+
+export RANGER_LOAD_DEFAULT_RC="FALSE"
 
 export EDITOR="vim"
 
