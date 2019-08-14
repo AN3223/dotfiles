@@ -69,7 +69,7 @@ bindsym Mod4+l        exec blurlock
 bindsym Mod4+Shift+s  exec systemctl suspend & blurlock
 
 # Screenshots
-bindsym Print exec grim \"$HOME/Pictures/Screenshots/$(date +%c).png"
+bindsym Print exec grim \"$HOME/shots/$(date +%c).png"
 
 # Media keys
 bindsym XF86AudioLowerVolume exec amixer -q set Master 5%- unmute
