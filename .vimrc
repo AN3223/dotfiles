@@ -40,6 +40,13 @@ nnoremap <leader>s :source $MYVIMRC<cr>
 " Copy unnamed register into Wayland clipboard
 nnoremap <leader>w :call system('wl-copy', @")<cr>
 
+" Kinda like autocompleting braces/brackets/etc but for visual mode
+vnoremap <leader>{ xi{}<Left><Esc>p
+vnoremap <leader>( xi()<Left><Esc>p
+vnoremap <leader>" xi""<Left><Esc>p
+vnoremap <leader>[ xi[]<Left><Esc>p
+vnoremap <leader>' xi''<Left><Esc>p
+
 " Shortcuts for switching between windows
 nnoremap H <C-w>h
 nnoremap J <C-w>j
