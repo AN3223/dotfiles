@@ -12,7 +12,7 @@ set $right l
 set $term termite
 set $termcmd termite_exec
 
-set $menu dmenu_recency
+set $menu termite -t fzf_recent -e fzf_recent_sway
 
 ################----------------THEMING----------------################
 
@@ -66,7 +66,7 @@ bindsym Mod4+i        exec xterm -e w3m
 bindsym Mod4+q        exec qutebrowser
 
 bindsym Mod4+l        exec blurlock
-bindsym Mod4+Shift+s  exec systemctl suspend
+bindsym Mod4+Shift+s  exec systemctl suspend & blurlock
 
 # Screenshots
 bindsym Print exec grim \"$HOME/Pictures/Screenshots/$(date +%c).png"
@@ -221,6 +221,7 @@ for_window [title="LinuxRocks.Online - Firefox Nightly"] resize set width 20 ppt
 for_window [title="American Truck Simulator"]            fullscreen toggle
 for_window [class="Links"]                               opacity 0.85
 for_window [class="XTerm"]                               opacity 0.85
+for_window [title="fzf_recent"]                          floating enable
 
 include /etc/sway/config.d/*
 
