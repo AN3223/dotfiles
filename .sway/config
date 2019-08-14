@@ -28,18 +28,19 @@ exec_always {
     gsettings set $gnome-schema cursor-theme 'Vanilla-DMZ'
 }
 
-set $gray  #556064
-set $green #1ABC9C
-set $bg    #2F3D44
-set $black #900000
-set $red   #CB4B16
+set $grey      #323232
+set $lightgrey #5c5c5c
+set $white     #eff0f1
+set $bg        #31363b
+set $black     #900000
+set $red       #CB4B16
 
 # Sway theme
-# class                   border  backgr. text    indic.   child_border
-  client.focused          $bg     $bg     $green  $bg      $bg
-  client.focused_inactive $gray   $gray   $green  $gray    $gray
-  client.unfocused        $gray   $gray   $green  $gray    $gray
-  client.urgent           $red    $red    $green  $black   $black 
+# class                   border     backgr.    text    indic.     child_border
+  client.focused          $bg        $bg        $white  $bg        $bg
+  client.focused_inactive $grey      $grey      $white  $grey      $grey
+  client.unfocused        $lightgrey $lightgrey $white  $lightgrey $lightgrey
+  client.urgent           $red       $red       $white  $black     $black 
 
 bar {
     position top
@@ -47,10 +48,10 @@ bar {
     status_command "$HOME/.sway/status"
 
     colors {
-        statusline #1ABC9C
-        background #2F3D44
-        inactive_workspace #323232 #323232 #5c5c5c
-        focused_workspace #323232 #1ABC9C #323232
+        statusline $white
+        background $bg
+        inactive_workspace $grey $grey $lightgrey
+        focused_workspace $grey $white $grey
     }
 }
 
