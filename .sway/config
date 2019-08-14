@@ -12,7 +12,7 @@ set $right l
 set $term sakura
 set $termexec sakura -e
 
-set $menu dmenu_recency
+set $menu sakura -t fzf_recent -e fzf_recent_sway
 
 ################----------------THEMING----------------################
 
@@ -216,6 +216,7 @@ for_window [title="LinuxRocks.Online - Firefox Nightly"] resize set width 20 ppt
 for_window [title="American Truck Simulator"]            fullscreen toggle
 for_window [class="Links"]                               opacity 0.85
 for_window [class="XTerm"]                               opacity 0.85
+for_window [title="fzf_recent"]                          floating enable
 
 include /etc/sway/config.d/*
 
