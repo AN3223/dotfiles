@@ -58,6 +58,9 @@ bar {
 
 #######################################################################
 
+# Lock when lid is shut
+bindswitch lid:on exec blurlock
+
 # Launching applications
 bindsym Mod4+i        exec xterm -e w3m
 bindsym Mod4+Shift+i  exec firefox-wayland
