@@ -13,6 +13,8 @@ set ttimeout
 set ttimeoutlen=40
 
 set ignorecase | set smartcase
+set incsearch
+set grepprg=rg\ --vimgrep
 
 set spelllang=en
 nnoremap s :setlocal spell!<cr>
