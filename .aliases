@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Updates packages
 alias update="yay -Syu && flatpak update"
