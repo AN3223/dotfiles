@@ -9,6 +9,7 @@ alias xclip="xclip -selection c"
 # Runs the interactive mode of these commands
 alias cp="cp -i"
 alias mv="mv -i"
+alias killall="killall -i"
 
 # Runs ripgrep with smart-casing by default
 alias rg="rg -S"
