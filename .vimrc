@@ -59,12 +59,12 @@ inoremap [ []<Left>
 " trip to the arrow keys.
 inoremap "" ""<Left>
 
-vnoremap <leader>{ xi{}<Left><Esc>p
-vnoremap <leader>( xi()<Left><Esc>p
-vnoremap <leader>" xi""<Left><Esc>p
-vnoremap <leader>[ xi[]<Left><Esc>p
-vnoremap <leader>' xi''<Left><Esc>p
-vnoremap <leader>< xi<><Left><Esc>p
+vnoremap <leader>{ c{}<Left><Esc>p
+vnoremap <leader>( c()<Left><Esc>p
+vnoremap <leader>" c""<Left><Esc>p
+vnoremap <leader>[ c[]<Left><Esc>p
+vnoremap <leader>' c''<Left><Esc>p
+vnoremap <leader>< c<><Left><Esc>p
 
 """""""""""""""""""""""""""""""""""""""""""""""""""
 
