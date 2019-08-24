@@ -11,33 +11,28 @@ set $right l
 set $term termite
 set $termexec termite_exec
 
-set $menu dmenu_recency
+set $menu termite -t fzf_recent -e fzf_recent_sway
 
 ################----------------THEMING----------------################
 
-gaps inner 14
-gaps outer -2
-smart_gaps on
-
 font pango:Fira Mono 9
 
-hide_edge_borders none
-default_border pixel 5
-default_floating_border normal
+default_border pixel 3
 smart_borders on
 
-set $gray  #556064
-set $green #1ABC9C
-set $bg    #2F3D44
-set $black #900000
-set $red   #CB4B16
+set $grey      #323232
+set $lightgrey #5c5c5c
+set $white     #eff0f1
+set $bg        #31363b
+set $black     #900000
+set $red       #CB4B16
 
-# i3 theme
-# class                   border  backgr. text    indic.   child_border
-  client.focused          $bg     $bg     $green  $bg      $bg
-  client.focused_inactive $gray   $gray   $green  $gray    $gray
-  client.unfocused        $gray   $gray   $green  $gray    $gray
-  client.urgent           $red    $red    $green  $black   $black 
+# Sway theme
+# class                   border     backgr.    text    indic.     child_border
+  client.focused          $bg        $bg        $white  $bg        $bg
+  client.focused_inactive $lightgrey $lightgrey $white  $lightgrey $lightgrey
+  client.unfocused        $lightgrey $lightgrey $white  $lightgrey $lightgrey
+  client.urgent           $red       $red       $white  $black     $black
 
 bar {
     position top
@@ -45,10 +40,10 @@ bar {
     status_command "$HOME/.sway/status"
 
     colors {
-        statusline #1ABC9C
-        background #2F3D44
-        inactive_workspace #323232 #323232 #5c5c5c
-        focused_workspace #323232 #1ABC9C #323232
+        statusline $white
+        background $bg
+        inactive_workspace $grey $grey $lightgrey
+        focused_workspace $grey $white $grey
     }
 }
 
@@ -56,10 +51,12 @@ bar {
 
 # Launching applications
 bindsym Mod4+Shift+i  exec firefox
-bindsym Mod4+f        exec kitty ranger
-bindsym Mod4+i        exec $termexec w3m
-bindsym Mod4+l        exec blurlock
+bindsym Mod4+f        exec $termcmd ranger
+bindsym Mod4+i        exec xterm -e w3m
 bindsym Mod4+q        exec qutebrowser
+
+bindsym Mod4+l        exec blurlock
+bindsym Mod4+Shift+s  exec systemctl suspend & blurlock
 
 # Screenshots
 bindsym Print exec scrot '%c.png' -e 'mv "$f" ~/Pictures/Screenshots/'
@@ -73,6 +70,10 @@ bindsym XF86AudioStop exec playerctl stop
 #bindsym XF86AudioPrev exec playerctl previous
 bindsym XF86AudioPlay exec playerctl play-pause
 bindsym XF86AudioNext exec playerctl next
+
+# VPN toggle
+bindsym Mod4+Shift+v exec vpnman -d
+bindsym Mod4+v       exec vpnman -u
 
 # terminal
 bindsym $mod+Return exec $term
@@ -215,6 +216,7 @@ for_window [title="LinuxRocks.Online - Mozilla Firefox"] resize set width 20 ppt
 for_window [title="LinuxRocks.Online - Firefox Nightly"] resize set width 20 ppt
 for_window [class="Links"]                               opacity 0.85
 for_window [class="XTerm"]                               opacity 0.85
+for_window [title="fzf_recent"]                          floating enable
 
 exec compton -b
 exec nitrogen --restore
