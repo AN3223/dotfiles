@@ -2,7 +2,7 @@
 browser mpv
 
 # Automatically reload all feeds on startup
-auto-reload yes
+#auto-reload yes
 
 # Arrow key navigation
 bind-key LEFT quit
