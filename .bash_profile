@@ -2,7 +2,7 @@
 
 [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc"
 
-export PATH="$HOME/.firejail/:$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:/var/lib/snapd/snap/bin/:$PATH"
+export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:/var/lib/snapd/snap/bin/:$PATH"
 
 export WINDOWMANAGER="i3"
 
