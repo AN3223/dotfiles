@@ -54,10 +54,10 @@ inoremap { {}<Left>
 inoremap ( ()<Left>
 inoremap [ []<Left>
 
-" Double quotation marks are easy to type but
-" problematic for vimscript, so this just saves a
-" trip to the arrow keys.
+" These are easy to type, but sometimes problematic,
+" so I just save the trip to the arrow keys.
 inoremap "" ""<Left>
+inoremap '' ''<Left>
 
 vnoremap <leader>{ c{}<Left><Esc>p
 vnoremap <leader>( c()<Left><Esc>p
