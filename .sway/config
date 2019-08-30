@@ -77,10 +77,10 @@ bindsym XF86AudioLowerVolume exec amixer -q set Master 5%- unmute
 bindsym XF86AudioRaiseVolume exec amixer -q set Master 5%+ unmute
 bindsym XF86AudioMute        exec amixer -q set Master toggle
 
-bindsym XF86AudioStop exec playerctl stop
-#bindsym XF86AudioPrev exec playerctl previous
-bindsym XF86AudioPlay exec playerctl play-pause
-bindsym XF86AudioNext exec playerctl next
+bindsym XF86AudioStop exec listenman -p stop
+#bindsym XF86AudioPrev exec listenman -p previous
+bindsym XF86AudioPlay exec listenman -p play-pause
+bindsym XF86AudioNext exec listenman -p next
 
 # VPN toggle
 bindsym Mod4+Shift+v exec vpnman -d
