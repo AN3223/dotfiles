@@ -1,15 +1,12 @@
-# Open everything with mpv, I've dedicated newsboat to YouTube now
-browser mpv
-
-# Automatically reload all feeds on startup
-#auto-reload yes
+# Open everything with mpv
+browser "mpv --idle=yes"
 
 # Arrow key navigation
 bind-key LEFT quit
 bind-key RIGHT open
 bind-key ENTER open-in-browser-and-mark-read
 
-# Vim-like navigation
+# Vi-like navigation
 bind-key h quit
 bind-key j down
 bind-key k up
