@@ -63,7 +63,7 @@ output * bg "/home/user/bluemountain.png" fill
 # Launching applications
 bindsym Mod4+Shift+i  exec firefox
 bindsym Mod4+f        exec $termcmd ranger
-bindsym Mod4+i        exec xterm -e w3m
+bindsym Mod4+i        exec $termcmd w3m
 bindsym Mod4+q        exec qutebrowser
 
 bindsym Mod4+l        exec blurlock
