@@ -9,8 +9,8 @@ set $up k
 set $right l
 
 # Terminal stuff :)
-set $term termite
-set $termcmd termite_exec
+set $term xfce4-terminal
+set $termcmd xfce4-terminal -x
 
 set $menu termite -t fzf_recent -e fzf_recent_sway
 
