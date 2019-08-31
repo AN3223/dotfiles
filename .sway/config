@@ -9,8 +9,8 @@ set $up k
 set $right l
 
 # Terminal stuff :)
-set $term sakura
-set $termexec sakura -e
+set $term xfce4-terminal
+set $termexec xfce4-terminal -x
 
 set $menu sakura -t fzf_recent -e fzf_recent_sway
 
