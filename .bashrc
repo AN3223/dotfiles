@@ -20,3 +20,6 @@ if [[ "$SSH_CONNECTION" ]]; then
 	PS1="(SSH) ${PS1}"
 fi
 
+# This prevents C-s from being annoying in vim
+stty -ixon
+

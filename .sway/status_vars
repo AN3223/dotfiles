@@ -15,7 +15,8 @@ VPN=$(ip address | awk '$1 ~ /[0-9]:/ && $2 ~ /tun[0-9]+:/ {print 1}')
 # audio_info is parsed weirdly b/c amixer's output is not easily parse-able, since
 # the number of fields may vary, and even the number of [bracketed] fields may vary.
 # TODO: Simplify this (amixer may not be the tool for the job?).
-audio_info=$(amixer get Master | tail -n1 | tr ' ' '\n' | awk '/\[.+\]/ {print $1}')
+# $ALSA_MASTER is for specifying a control other than Master, it defaults to Master
+audio_info=$(amixer get ${ALSA_MASTER:-Master} -M | tail -n1 | tr ' ' '\n' | awk '/\[.+\]/ {print $1}')
 audio_on=$(printf %s "$audio_info" | tail -n1)
 audio_level=$(printf %s "$audio_info" | head -n1)
 

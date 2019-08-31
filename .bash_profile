@@ -2,23 +2,14 @@
 
 [ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc"
 
-export PATH="$HOME/.firejail/:$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:/var/lib/snapd/snap/bin/:$PATH"
+export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:/var/lib/snapd/snap/bin/:$PATH"
 
 export WINDOWMANAGER="i3"
 
-export TERMINAL="sakura"
-export TERMCMD="sakura -e"
+export TERMINAL="xfce4-terminal"
+export TERMCMD="xfce4-terminal -x"
 
-export EDITOR="vim"
-
-export WWW_HOME="https://duckduckgo.com/lite"
-
-export QT_QPA_PLATFORMTHEME="gtk2"
-
-export GTK_THEME="Adwaita:dark"
-
-export LESS="-Ri"
-
+# Sway doesn't work w/o this
 if [ -z "$XDG_RUNTIME_DIR" ]; then
 	export XDG_RUNTIME_DIR="/tmp/${UID}-runtime-dir"
 	if [ ! -d "$XDG_RUNTIME_DIR" ]; then
@@ -26,4 +17,13 @@ if [ -z "$XDG_RUNTIME_DIR" ]; then
 		chmod 0700 "$XDG_RUNTIME_DIR"
 	fi
 fi
+
+export RANGER_LOAD_DEFAULT_RC="FALSE"
+
+export EDITOR="vim"
+
+export QT_QPA_PLATFORMTHEME="qt5ct"
+
+export LESS="-Ri"
+
 
