@@ -12,7 +12,7 @@ set $right l
 set $term xfce4-terminal
 set $termcmd xfce4-terminal -x
 
-set $menu termite -t fzf_recent -e fzf_recent_sway
+set $menu xfce4-terminal -T fzf_recent -x fzf_recent_sway
 
 ################----------------THEMING----------------################
 
