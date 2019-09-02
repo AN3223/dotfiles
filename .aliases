@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Updates packages
-alias update="sudo xbps-install -Su && flatpak update"
+alias update="sudo xbps-install -Su"
 
 # Copied from Stackoverflow, it's supposed to allow output | xclip
 alias xclip="xclip -selection c"
