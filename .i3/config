@@ -8,10 +8,10 @@ set $up k
 set $right l
 
 # Terminal stuff :)
-set $term termite
-set $termexec termite_exec
+set $term xfce4-terminal
+set $termexec xfce4-terminal -x
 
-set $menu termite -t fzf_recent -e fzf_recent_sway
+set $menu xfce4-terminal -T fzf_recent -x fzf_recent_sway
 
 ################----------------THEMING----------------################
 
@@ -59,17 +59,17 @@ bindsym Mod4+l        exec blurlock
 bindsym Mod4+Shift+s  exec systemctl suspend & blurlock
 
 # Screenshots
-bindsym Print exec scrot '%c.png' -e 'mv "$f" ~/Pictures/Screenshots/'
+bindsym Print exec scrot '%c.png' -e 'mv "$f" ~/shots/'
 
 # Media keys
 bindsym XF86AudioLowerVolume exec amixer -q set Master 5%- unmute
 bindsym XF86AudioRaiseVolume exec amixer -q set Master 5%+ unmute
 bindsym XF86AudioMute        exec amixer -q set Master toggle
 
-bindsym XF86AudioStop exec playerctl stop
-#bindsym XF86AudioPrev exec playerctl previous
-bindsym XF86AudioPlay exec playerctl play-pause
-bindsym XF86AudioNext exec playerctl next
+bindsym XF86AudioStop exec listenman stop
+#bindsym XF86AudioPrev exec listenman previous
+bindsym XF86AudioPlay exec listenman play-pause
+bindsym XF86AudioNext exec listenman next
 
 # VPN toggle
 bindsym Mod4+Shift+v exec vpnman -d
