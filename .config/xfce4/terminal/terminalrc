@@ -15,7 +15,7 @@ MiscToolbarDefault=FALSE
 MiscConfirmClose=FALSE
 MiscCycleTabs=TRUE
 MiscTabCloseButtons=TRUE
-MiscTabCloseMiddleClick=TRUE
+MiscTabCloseMiddleClick=FALSE
 MiscTabPosition=GTK_POS_TOP
 MiscHighlightUrls=TRUE
 MiscMiddleClickOpensUri=FALSE
@@ -33,4 +33,7 @@ ColorPalette=#000000;#cc0000;#4e9a06;#c4a000;#3465a4;#75507b;#06989a;#d3d7cf;#55
 ColorBackground=#252532313838
 ColorForeground=#b0b0c5c5c8c8
 ScrollingBar=TERMINAL_SCROLLBAR_NONE
+TitleMode=TERMINAL_TITLE_REPLACE
+ShortcutsNoHelpkey=TRUE
+ShortcutsNoMnemonics=TRUE
 
