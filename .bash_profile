@@ -6,8 +6,8 @@ export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:/var/lib/snapd/snap/
 
 export WINDOWMANAGER="i3"
 
-export TERMINAL="xfce4-terminal"
-export TERMCMD="xfce4-terminal -x"
+export TERMINAL="alacritty"
+export TERMCMD="alacritty -e"
 
 export RANGER_LOAD_DEFAULT_RC="FALSE"
 
