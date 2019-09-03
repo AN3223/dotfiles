@@ -67,7 +67,7 @@ bindsym Mod4+i        exec $termcmd w3m
 bindsym Mod4+q        exec qutebrowser
 
 bindsym Mod4+l        exec blurlock
-bindsym Mod4+Shift+s  exec systemctl suspend & blurlock
+bindsym --release Mod4+Shift+s  exec systemctl suspend & blurlock
 
 # Screenshots
 bindsym Print exec grim \"$HOME/shots/$(date +%c).png"
