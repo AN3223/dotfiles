@@ -8,10 +8,10 @@ set $up k
 set $right l
 
 # Terminal stuff :)
-set $term xfce4-terminal
-set $termexec xfce4-terminal -x
+set $term alacritty
+set $termexec alacritty -e
 
-set $menu xfce4-terminal -T fzf_recent -x fzf_recent_sway
+set $menu alacritty -t fzf_recent -e fzf_recent_sway
 
 ################----------------THEMING----------------################
 
