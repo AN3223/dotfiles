@@ -45,7 +45,7 @@ set $red       #CB4B16
 bar {
     position top
 
-    status_command "$HOME/.sway/status"
+    status_command while date +'%a, %b %-d %-I:%M %p '; do sleep 5; done
 
     colors {
         statusline $white
@@ -66,8 +66,13 @@ bindsym Mod4+f        exec $termcmd ranger
 bindsym Mod4+i        exec $termcmd w3m
 bindsym Mod4+q        exec qutebrowser
 
-bindsym Mod4+l        exec blurlock
-bindsym --release Mod4+Shift+s  exec systemctl suspend & blurlock
+bindsym Mod4+a        exec $termcmd alsamixer
+bindsym Mod4+h        exec $termcmd htop
+bindsym Mod4+n        exec $termcmd nmtui connect
+bindsym Mod4+c        exec $termcmd ping 8.8.8.8
+
+bindsym Mod4+l                 exec blurlock
+bindsym --release Mod4+Shift+s exec systemctl suspend & blurlock
 
 # Screenshots
 bindsym Print exec grim \"$HOME/shots/$(date +%c).png"
