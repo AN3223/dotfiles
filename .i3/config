@@ -37,7 +37,7 @@ set $red       #CB4B16
 bar {
     position top
 
-    status_command "$HOME/.sway/status"
+    status_command while date +'%a, %b %-d %-I:%M %p '; do sleep 5; done
 
     colors {
         statusline $white
@@ -47,16 +47,23 @@ bar {
     }
 }
 
+exec nitrogen --restore
+
 #######################################################################
 
 # Launching applications
 bindsym Mod4+Shift+i  exec firefox
-bindsym Mod4+f        exec $termcmd ranger
-bindsym Mod4+i        exec xterm -e w3m
 bindsym Mod4+q        exec qutebrowser
 
+bindsym Mod4+f        exec $termcmd ranger
+bindsym Mod4+i        exec $termcmd w3m
+bindsym Mod4+a        exec $termcmd alsamixer
+bindsym Mod4+h        exec $termcmd htop
+bindsym Mod4+n        exec $termcmd nmtui connect
+bindsym Mod4+c        exec $termcmd ping 8.8.8.8
+
 bindsym Mod4+l        exec blurlock
-bindsym Mod4+Shift+s  exec systemctl suspend & blurlock
+bindsym Mod4+Shift+s  exec zzz & blurlock
 
 # Screenshots
 bindsym Print exec scrot '%c.png' -e 'mv "$f" ~/shots/'
@@ -219,7 +226,6 @@ for_window [class="XTerm"]                               opacity 0.85
 for_window [title="fzf_recent"]                          floating enable
 
 exec compton -b
-exec nitrogen --restore
 exec xrdb ~/.Xresources
 
 exec xset r rate 300

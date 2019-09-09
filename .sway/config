@@ -28,6 +28,8 @@ exec_always {
     gsettings set $gnome-schema cursor-theme 'Vanilla-DMZ'
 }
 
+exec xrdb ~/.Xresources
+
 set $grey      #323232
 set $lightgrey #5c5c5c
 set $white     #eff0f1
@@ -56,31 +58,36 @@ bar {
 }
 
 # Wallpaper
-output * bg "/home/user/bluemountain.png" fill
+output * bg "/home/user/void-linux.png" fill
 
 #######################################################################
 
 # Launching applications
 bindsym Mod4+Shift+i  exec firefox
-bindsym Mod4+f        exec $termcmd ranger
-bindsym Mod4+i        exec $termcmd w3m
 bindsym Mod4+q        exec qutebrowser
 
 bindsym Mod4+a        exec $termcmd alsamixer
+bindsym Mod4+f        exec $termcmd ranger
+bindsym Mod4+i        exec $termcmd w3m
 bindsym Mod4+h        exec $termcmd htop
 bindsym Mod4+n        exec $termcmd nmtui connect
 bindsym Mod4+c        exec $termcmd ping 8.8.8.8
 
+bindsym --release Mod4+Shift+s exec killall -USR1 swayidle
 bindsym Mod4+l                 exec blurlock
-bindsym --release Mod4+Shift+s exec systemctl suspend & blurlock
+
+exec swayidle -w \
+	timeout 1100 'blurlock' \
+	timeout 1200 'swaymsg "output * dpms off"' \
+	resume 'swaymsg "output * dpms on"' &
 
 # Screenshots
 bindsym Print exec grim \"$HOME/shots/$(date +%c).png"
 
 # Media keys
-bindsym XF86AudioLowerVolume exec amixer -q set Master 5%- unmute
-bindsym XF86AudioRaiseVolume exec amixer -q set Master 5%+ unmute
-bindsym XF86AudioMute        exec amixer -q set Master toggle
+bindsym XF86AudioLowerVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 5%- unmute
+bindsym XF86AudioRaiseVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 5%+ unmute
+bindsym XF86AudioMute        exec amixer -Mq set ${ALSA_MASTER:-Master} toggle
 
 bindsym XF86AudioStop exec listenman -p stop
 #bindsym XF86AudioPrev exec listenman -p previous
@@ -251,8 +258,8 @@ seat * hide_cursor 5000
 bindsym $mod+m seat * hide_cursor 5000
 bindsym $mod+Shift+m seat * hide_cursor 0
 
-exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+exec dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus
+exec /usr/libexec/polkit-gnome-authentication-agent-1
+
 exec_always mako
-exec transmission-gtk --minimized
-exec xrdb ~/.Xresources
 
