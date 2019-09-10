@@ -70,6 +70,7 @@ bindsym Mod4+a        exec $termcmd alsamixer
 bindsym Mod4+f        exec $termcmd ranger
 bindsym Mod4+i        exec $termcmd w3m
 bindsym Mod4+h        exec $termcmd htop
+bindsym Mod4+g        exec $termcmd gotop
 bindsym Mod4+n        exec $termcmd nmtui connect
 bindsym Mod4+c        exec $termcmd ping 8.8.8.8
 
@@ -93,10 +94,6 @@ bindsym XF86AudioStop exec listenman -p stop
 #bindsym XF86AudioPrev exec listenman -p previous
 bindsym XF86AudioPlay exec listenman -p play-pause
 bindsym XF86AudioNext exec listenman -p next
-
-# VPN toggle
-bindsym Mod4+Shift+v exec vpnman -d
-bindsym Mod4+v       exec vpnman -u
 
 # terminal
 bindsym $mod+Return exec $term
