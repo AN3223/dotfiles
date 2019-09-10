@@ -34,6 +34,9 @@ nnoremap // I//<Esc><Down><C-0>
 " Copy " register into Wayland clipboard
 nnoremap <leader>w :call system('wl-copy', @")<cr>
 
+nnoremap q: <nop>
+nnoremap Q <nop>
+
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 

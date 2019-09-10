@@ -1,5 +1,5 @@
 # Open everything with mpv
-browser "mpv --idle=yes"
+browser "mpv --idle=yes --fs"
 
 # Arrow key navigation
 bind-key LEFT quit

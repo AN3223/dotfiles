@@ -28,7 +28,19 @@ alias internet?="ping 8.8.8.8"
 
 alias startsway=". wayenv && sway"
 
-# Conveniently view logs (not an alias but close enough)
-llog() { 
-	[ "$1" ] && less /var/log/socklog/$1/current || ls /var/log/socklog
+llog() {
+	if [ "$1" ]; then
+		less "/var/log/socklog/$1/current"
+	else
+		ls /var/log/socklog
+	fi
 }
+
+sv_enable() {
+	if [ "$1" ]; then
+		sudo ln -s "/etc/sv/$1" /var/service/
+	else
+		echo 'error: No service provided' >&2; exit 1;
+	fi
+}
+

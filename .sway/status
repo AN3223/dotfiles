@@ -1,9 +1,0 @@
-#!/bin/sh
-
-while :; do
-	. ~/.sway/status_vars
-
-	sep=' | '
-	[ "$NET" ] && NET=📶 || NET=❌
-	printf '%s\n' "⚡ ${BATTERY} ${sep} ${NET} ${sep} 🔉 ${AUDIO} ${sep} CPU: ${CPU_PCNT}% ${CPU_TEMP}°C ${sep} RAM: ${RAM}% ${sep} ${DATE} "
-done
