@@ -74,13 +74,7 @@ bindsym Mod4+g        exec $termcmd gotop
 bindsym Mod4+n        exec $termcmd nmtui connect
 bindsym Mod4+c        exec $termcmd ping 8.8.8.8
 
-bindsym --release Mod4+Shift+s exec killall -USR1 swayidle
 bindsym Mod4+l                 exec blurlock
-
-exec swayidle -w \
-	timeout 1100 'blurlock' \
-	timeout 1200 'swaymsg "output * dpms off"' \
-	resume 'swaymsg "output * dpms on"' &
 
 # Screenshots
 bindsym Print exec grim \"$HOME/shots/$(date +%c).png"
