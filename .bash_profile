@@ -14,7 +14,6 @@ export ALSA_MASTER='PCM'
 export EDITOR='vim'
 export LESS='-Ri'
 
-export GTK_THEME='Breeze-Dark'
 export QT_QPA_PLATFORMTHEME='qt5ct'
 
 # Sway doesn't start w/o this
