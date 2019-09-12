@@ -24,7 +24,7 @@ alias restart_compton='killall -s SIGUSR1 -e compton'
 # causes any unwanted behavior.
 alias su='su -p'
 
-alias internet?='ping 8.8.8.8'
+alias internet='ping 8.8.8.8'
 
 alias startsway='. wayenv && sway'
 

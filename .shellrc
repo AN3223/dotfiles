@@ -1,0 +1,23 @@
+#!/bin/sh
+# This is sourced by ~/.bashrc and ~/.mkshrc and ideally should be
+# portable enough to be sourced by other shells too.
+
+# If not running interactively, do not do anything
+case "$-" in *i*) ;; *) exit 1 ;; esac
+
+. "$HOME/.aliases"
+
+if [ "$(id -u)" -eq 0 ]; then
+	PS1="# "
+else
+	PS1="\$ "
+fi
+
+# Special PS1 for SSH
+if [ "$SSH_CONNECTION" ]; then
+	PS1="(SSH) ${PS1}"
+fi
+
+# This stops C-s from being annoying in vim
+stty -ixon
+
