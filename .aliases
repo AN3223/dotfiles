@@ -12,7 +12,7 @@ alias mv="mv -i"
 alias killall="killall -i"
 
 # Runs ripgrep with smart-casing by default
-alias rg="rg -S"
+alias rg="rg -Suu"
 
 # Prevents wal from borking the WM and/or messing with the wallpaper
 alias wal="wal -en"
