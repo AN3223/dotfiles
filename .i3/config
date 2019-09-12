@@ -11,7 +11,7 @@ set $right l
 set $term alacritty
 set $termexec alacritty -e
 
-set $menu alacritty -t fzf_recent -e fzf_recent_sway
+set $menu alacritty -t fzf_recent -e fzf_recent_i3
 
 ################----------------THEMING----------------################
 
