@@ -1,7 +1,7 @@
 #!/bin/sh
 # This file is read each time a login shell is started.
 
-[ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc"
+. "$HOME/.shellrc"
 
 export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:/var/lib/snapd/snap/bin/:$PATH"
 
