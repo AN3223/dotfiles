@@ -13,5 +13,5 @@ alias rg='rg -Suu'
 
 alias internet='ping 8.8.8.8'
 
-alias startsway='. wayenv && sway'
+alias startw='. wayenv && sway'
 
