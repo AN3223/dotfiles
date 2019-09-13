@@ -3,9 +3,6 @@
 # Updates packages
 alias update='sudo xbps-install -Su'
 
-# Copied from Stackoverflow, it's supposed to allow output | xclip
-alias xclip='xclip -selection c'
-
 # Runs the interactive mode of these commands
 alias cp='cp -i'
 alias mv='mv -i'
@@ -13,16 +10,6 @@ alias killall='killall -i'
 
 # Runs ripgrep with smart-casing by default
 alias rg='rg -Suu'
-
-# Prevents wal from borking the WM and/or messing with the wallpaper
-alias wal='wal -en'
-
-# Restarts compton
-alias restart_compton='killall -s SIGUSR1 -e compton'
-
-# Literally just for making the custom # prompt work for root. Disable if this
-# causes any unwanted behavior.
-alias su='su -p'
 
 alias internet='ping 8.8.8.8'
 
