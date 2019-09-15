@@ -231,7 +231,7 @@ exec xrdb ~/.Xresources
 exec xset r rate 300
 exec xinput set-prop 14 'libinput Accel Speed' -1
 
-exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+exec /usr/libexec/polkit-gnome-authentication-agent-1
 exec dunst
 exec transmission-gtk --minimized
 
