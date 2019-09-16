@@ -60,6 +60,8 @@ bindsym Mod4+i        exec $termcmd w3m
 bindsym Mod4+t        exec $termcmd w3mtor
 bindsym Mod4+a        exec $termcmd alsamixer
 bindsym Mod4+h        exec $termcmd htop
+bindsym Mod4+g        exec $termcmd gotop
+bindsym Mod4+m        exec $termcmd mutt
 bindsym Mod4+n        exec $termcmd nmtui connect
 bindsym Mod4+c        exec $termcmd ping 8.8.8.8
 
