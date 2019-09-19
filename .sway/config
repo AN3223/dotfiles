@@ -39,9 +39,9 @@ set $red       #CB4B16
 
 # Sway theme
 # class                   border     backgr.    text    indic.     child_border
-  client.focused          $bg        $bg        $white  $bg        $bg
-  client.focused_inactive $lightgrey $lightgrey $white  $lightgrey $lightgrey
-  client.unfocused        $lightgrey $lightgrey $white  $lightgrey $lightgrey
+  client.focused          $lightgrey $bg        $white  $lightgrey $lightgrey
+  client.focused_inactive $bg        $bg        $white  $bg        $bg
+  client.unfocused        $bg        $bg        $white  $bg        $bg
   client.urgent           $red       $red       $white  $black     $black 
 
 bar {
