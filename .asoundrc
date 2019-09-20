@@ -1,0 +1,34 @@
+# A softvol for increasing the volume on my mic
+pcm.boost {
+	type softvol
+	slave.pcm "sysdefault"
+
+	control {
+		name "MicBoost"
+		card 0
+	}
+
+	min_dB -5.0
+	max_dB 40.0
+	resolution 12
+}
+
+pcm.!default {
+	type asym
+
+	playback.pcm {
+		type plug
+		slave.pcm "dmix"
+	}
+
+	# Connecting my mic to the softvol
+	capture.pcm {
+		type plug
+		slave.pcm "boost"
+
+		# Forcing my mic into mono, since it normally
+		# outputs stereo in just the left ear
+		slave.channels 1
+	}
+}
+
