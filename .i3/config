@@ -8,10 +8,10 @@ set $up k
 set $right l
 
 # Terminal stuff :)
-set $term alacritty
-set $termexec alacritty -e
+set $term sakura
+set $termexec sakura -e
 
-set $menu alacritty -t fzf_recent -e fzf_recent_i3
+set $menu sakura -t fzf_recent -e fzf_recent_i3
 
 ################----------------THEMING----------------################
 

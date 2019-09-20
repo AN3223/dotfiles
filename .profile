@@ -5,8 +5,8 @@
 
 export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:/var/lib/snapd/snap/bin/:$PATH"
 
-export TERMINAL='alacritty'
-export TERMCMD='alacritty -e'
+export TERMINAL='sakura'
+export TERMCMD='sakura -e'
 
 export RANGER_LOAD_DEFAULT_RC='FALSE'
 
