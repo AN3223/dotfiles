@@ -208,14 +208,14 @@ mode "resize" {
     bindsym Right resize grow width 10px
 
     # Same as above, but more fine-grained control
-    bindsym Mod1+$left       resize shrink width  1 px
-    bindsym Mod1+$down       resize grow height   1 px
-    bindsym Mod1+$up         resize shrink height 1 px
-    bindsym Mod1+$right      resize grow width    1 px
-    bindsym Mod1+Left        resize shrink width  1 px
-    bindsym Mod1+Down        resize grow height   1 px
-    bindsym Mod1+Up          resize shrink height 1 px
-    bindsym Mod1+Right       resize grow width    1 px
+    bindsym $mod+$left       resize shrink width  1 px
+    bindsym $mod+$down       resize grow height   1 px
+    bindsym $mod+$up         resize shrink height 1 px
+    bindsym $mod+$right      resize grow width    1 px
+    bindsym $mod+Left        resize shrink width  1 px
+    bindsym $mod+Down        resize grow height   1 px
+    bindsym $mod+Up          resize shrink height 1 px
+    bindsym $mod+Right       resize grow width    1 px
 
     # return to default mode
     bindsym Return mode "default"
@@ -228,12 +228,10 @@ bindsym $mod+r mode "resize"
 #
 for_window [title="LinuxRocks.Online - Mozilla Firefox"] resize set width 20 ppt
 for_window [title="LinuxRocks.Online - Firefox Nightly"] resize set width 20 ppt
-for_window [title="American Truck Simulator"]            fullscreen toggle
+for_window [title="American Truck Simulator"]            fullscreen enable
 for_window [class="Links"]                               opacity 0.85
 for_window [class="XTerm"]                               opacity 0.85
 for_window [title="fzf_recent"]                          floating enable
-
-include /etc/sway/config.d/*
 
 # man 5 sway-input
 input * {
@@ -247,12 +245,24 @@ input * {
     pointer_accel -0.4
 }
 
+#
+# Cursor settings:
+#
 seat * hide_cursor 5000
 bindsym $mod+m seat * hide_cursor 5000
 bindsym $mod+Shift+m seat * hide_cursor 0
 
+#
+# Idle settings:
+#
+exec swayidle \
+    timeout 900   blurlock \
+    timeout 1000 'swaymsg "output * dpms off"' \
+    resume       'swaymsg "output * dpms on"'
+
+include /etc/sway/config.d/*
+
 exec dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus
 exec /usr/libexec/polkit-gnome-authentication-agent-1
-
 exec_always mako
 
