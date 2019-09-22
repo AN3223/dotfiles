@@ -13,6 +13,6 @@ alias rg='rg -Suu'
 
 alias internet='ping 8.8.8.8'
 
-alias startw='. wayenv && sway'
+alias startw='. wayenv && sway 2>&1 | logger'
 
 alias re='sudo $(fc -ln -1)'
