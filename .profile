@@ -3,16 +3,15 @@
 
 . "$HOME/.shellrc"
 
-export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:/var/lib/snapd/snap/bin/:$PATH"
+export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:$PATH"
 
 export TERMINAL='sakura'
 export TERMCMD='sakura -e'
 
-export RANGER_LOAD_DEFAULT_RC='FALSE'
-
 export ALSA_MASTER='PCM'
 
 export EDITOR='vim'
+export PAGER='less'
 export LESS='-Ri'
 
 export QT_QPA_PLATFORMTHEME='qt5ct'
