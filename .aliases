@@ -15,4 +15,7 @@ alias internet='ping 8.8.8.8'
 
 alias startw='. wayenv && sway 2>&1 | logger'
 
-alias re='sudo $(fc -ln -1)'
+# Hack to make sudo !! work like it does in bash
+alias sudo='sudo '
+alias !!='$(fc -ln -1)'
+
