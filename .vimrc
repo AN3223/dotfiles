@@ -1,7 +1,7 @@
 set nocompatible
 
 
-"""""""""""""""----- AESTHETIC -----"""""""""""""""
+"- AESTHETIC -"
 
 set encoding=utf-8
 syntax enable
@@ -12,10 +12,8 @@ let &t_SI = "\<Esc>[4 q"
 let &t_SR = "\<Esc>[4 q"
 let &t_EI = "\<Esc>[2 q"
 
-"""""""""""""""""""""""""""""""""""""""""""""""""""
 
-
-"""""""""""""""----- BASIC FUNCTIONALITY -----"""""""""""""""
+"- BASIC FUNCTIONALITY -"
 
 inoremap jj <Esc>
 let mapleader = ","
@@ -34,22 +32,22 @@ nnoremap // I//<Esc><Down><C-0>
 " Copy " register into Wayland clipboard
 nnoremap <leader>w :call system('wl-copy', @")<cr>
 
+" Disable annoying things
 nnoremap q: <nop>
-nnoremap Q <nop>
+nnoremap Q  <nop>
 
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Only lint on save
+let g:ale_lint_on_text_changed = "never"
 
 
-"""""""""""""""----- SEARCH -----"""""""""""""""
+"- SEARCH -"
 
 set ignorecase | set smartcase
 set incsearch
 set grepprg=rg\ --vimgrep
 
-""""""""""""""""""""""""""""""""""""""""""""""""
 
-
-"""""""""""""""----- AUTOCLOSE -----"""""""""""""""
+"- AUTOCLOSE -"
 
 " Automatically close braces/parenthesis/etc
 
@@ -69,10 +67,8 @@ vnoremap <leader>[ c[]<Left><Esc>p
 vnoremap <leader>' c''<Left><Esc>p
 vnoremap <leader>< c<><Left><Esc>p
 
-"""""""""""""""""""""""""""""""""""""""""""""""""""
 
-
-"""""""""""""""----- WINDOWS -----"""""""""""""""
+"- WINDOWS -"
 
 " Shortcuts for switching between windows
 nnoremap H <C-w>h
@@ -86,14 +82,10 @@ nnoremap <C-J> <C-w>J
 nnoremap <C-K> <C-w>K
 nnoremap <C-L> <C-w>L
 
-"""""""""""""""""""""""""""""""""""""""""""""""""
 
-
-"""""""""""""""----- MISCELLANEOUS -----"""""""""""""""
+"- MISCELLANEOUS -"
 
 " Commands for quickly editing this file
 nnoremap <leader>e :vsplit $MYVIMRC<cr>
 nnoremap <leader>s :source $MYVIMRC<cr>
-
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
