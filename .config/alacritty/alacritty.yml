@@ -8,11 +8,11 @@ window:
 
 font:
   normal:
-    family: Fira Mono
+    family: Fira Code
   bold:
-    family: Fira Mono
+    family: Fira Code
   italic:
-    family: Fira Mono
+    family: Fira Code
 
   size: 11.0
 
