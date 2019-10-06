@@ -9,10 +9,10 @@ set $up k
 set $right l
 
 # Terminal stuff :)
-set $term sakura
-set $termcmd sakura -e
+set $term alacritty
+set $termcmd alacritty -e
 
-set $menu sakura -t fzf_recent -e fzf_recent_sway
+set $menu alacritty -t fzf_recent -e fzf_recent_sway
 
 ################----------------THEMING----------------################
 

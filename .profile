@@ -5,8 +5,8 @@
 
 export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:$PATH"
 
-export TERMINAL='sakura'
-export TERMCMD='sakura -e'
+export TERMINAL='alacritty'
+export TERMCMD='alacritty -e'
 
 export ALSA_MASTER='PCM'
 
