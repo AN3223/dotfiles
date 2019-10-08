@@ -1,4 +1,3 @@
-# Open everything with mpv
 browser "mpv --idle=yes --fs"
 
 # Arrow key navigation
@@ -18,4 +17,14 @@ bind-key ^B pageup
 
 # Sort by newest
 feed-sort-order lastupdated
+
+bind-key s sort
+bind-key S rev-sort
+
+# Podcast-related settings
+player "mpv"
+podcast-auto-enqueue yes
+max-downloads 3
+download-path ~/Podcasts/
+podlist-format "%4i %-40b [%6p %%] %S"
 
