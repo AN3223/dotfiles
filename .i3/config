@@ -11,7 +11,7 @@ set $right l
 set $term alacritty
 set $termexec alacritty -e
 
-set $menu alacritty -t fzf_recent -e fzf_recent_sway
+set $menu alacritty -t fzf_recent -e fzf_recent_i3
 
 ################----------------THEMING----------------################
 
@@ -27,11 +27,11 @@ set $bg        #31363b
 set $black     #900000
 set $red       #CB4B16
 
-# Sway theme
+# i3 theme
 # class                   border     backgr.    text    indic.     child_border
-  client.focused          $bg        $bg        $white  $bg        $bg
-  client.focused_inactive $lightgrey $lightgrey $white  $lightgrey $lightgrey
-  client.unfocused        $lightgrey $lightgrey $white  $lightgrey $lightgrey
+  client.focused          $lightgrey $bg        $white  $lightgrey $lightgrey
+  client.focused_inactive $bg        $bg        $white  $bg        $bg
+  client.unfocused        $bg        $bg        $white  $bg        $bg
   client.urgent           $red       $red       $white  $black     $black
 
 bar {
@@ -55,10 +55,13 @@ exec nitrogen --restore
 bindsym Mod4+Shift+i  exec firefox
 bindsym Mod4+q        exec qutebrowser
 
-bindsym Mod4+f        exec $termcmd ranger
+bindsym Mod4+f        exec $termcmd nnn
 bindsym Mod4+i        exec $termcmd w3m
+bindsym Mod4+t        exec $termcmd w3mtor
 bindsym Mod4+a        exec $termcmd alsamixer
 bindsym Mod4+h        exec $termcmd htop
+bindsym Mod4+g        exec $termcmd gotop
+bindsym Mod4+m        exec $termcmd mutt
 bindsym Mod4+n        exec $termcmd nmtui connect
 bindsym Mod4+c        exec $termcmd ping 8.8.8.8
 
@@ -231,7 +234,7 @@ exec xrdb ~/.Xresources
 exec xset r rate 300
 exec xinput set-prop 14 'libinput Accel Speed' -1
 
-exec /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+exec /usr/libexec/polkit-gnome-authentication-agent-1
 exec dunst
 exec transmission-gtk --minimized
 

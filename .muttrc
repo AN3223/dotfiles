@@ -1,0 +1,10 @@
+set realname = "Ethan R"
+set from = "ethanr2048@gmail.com"
+
+set pop_host = "pops://$from@pop.gmail.com:995"
+set smtp_url = "smtps://$from@smtp.gmail.com:465"
+set ssl_force_tls = yes
+
+set sort = "reverse-date"
+set pager = "less"
+

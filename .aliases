@@ -1,46 +1,21 @@
 #!/usr/bin/env bash
 
 # Updates packages
-alias update="sudo xbps-install -Su"
-
-# Copied from Stackoverflow, it's supposed to allow output | xclip
-alias xclip="xclip -selection c"
+alias update='sudo xbps-install -Su'
 
 # Runs the interactive mode of these commands
-alias cp="cp -i"
-alias mv="mv -i"
-alias killall="killall -i"
+alias cp='cp -i'
+alias mv='mv -i'
+alias killall='killall -i'
 
 # Runs ripgrep with smart-casing by default
-alias rg="rg -S"
+alias rg='rg -Suu'
 
-# Prevents wal from borking the WM and/or messing with the wallpaper
-alias wal="wal -en"
+alias internet='ping 8.8.8.8'
 
-# Restarts compton
-alias restart_compton="killall -s SIGUSR1 -e compton"
+alias startw='. wayenv && sway 2>&1 | logger'
 
-# Literally just for making the custom # prompt work for root. Disable if this
-# causes any unwanted behavior.
-alias su="su -p"
-
-alias internet?="ping 8.8.8.8"
-
-alias startsway=". wayenv && sway"
-
-llog() {
-	if [ "$1" ]; then
-		less "/var/log/socklog/$1/current"
-	else
-		ls /var/log/socklog
-	fi
-}
-
-sv_enable() {
-	if [ "$1" ]; then
-		sudo ln -s "/etc/sv/$1" /var/service/
-	else
-		echo 'error: No service provided' >&2; exit 1;
-	fi
-}
+# Hack to make sudo !! work like it does in bash
+alias sudo='sudo '
+alias !!='$(fc -ln -1)'
 

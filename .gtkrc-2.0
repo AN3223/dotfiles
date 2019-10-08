@@ -1,4 +1,3 @@
-include "/home/user/.gtkrc-2.0.mine"
 gtk-theme-name="Breeze-Dark"
 gtk-icon-theme-name="breeze-dark"
 gtk-font-name="Fira Sans 11"

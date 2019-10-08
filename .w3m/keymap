@@ -1,6 +1,7 @@
 keymap C-f NULL
 keymap C-b NULL
 keymap C-d NULL
+keymap C-u NULL
 keymap C-v NULL
 keymap h NULL
 keymap j NULL
@@ -22,11 +23,17 @@ keymap yy NULL
 keymap yl NULL
 keymap r NULL
 keymap :h NULL
+keymap ab NULL
 
 
 keymap C-f NEXT_PAGE
 keymap C-b PREV_PAGE
-keymap C-d ADD_BOOKMARK
+# No half page scroll, sorry
+keymap C-d NEXT_PAGE
+keymap C-u PREV_PAGE
+
+
+keymap ab ADD_BOOKMARK
 keymap C-v VIEW_BOOKMARK
 
 keymap h SHIFT_LEFT
