@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -e
+
+. ~/.shellrc
+
+export HISTFILE=~/.ksh_history
+bind '^L=clear-screen'
+
