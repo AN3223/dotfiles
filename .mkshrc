@@ -6,4 +6,5 @@ set -e
 
 export HISTFILE=~/.ksh_history
 bind '^L=clear-screen'
+bind -m ^U='^[0^K'
 
