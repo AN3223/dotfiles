@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+# Description: View thumbnail of an image or a directory of images with tiv
+
+if [ -n "$1" ]; then
+    if [ -d "$1" ]; then
+        tiv "$1"/*
+    else
+        tiv "$1"
+    fi
+
+    printf %s "Press any key to exit..."
+    read -r dummy
+fi
+
