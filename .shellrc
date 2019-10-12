@@ -6,6 +6,20 @@
 case "$-" in *i*) ;; *) exit 1 ;; esac
 
 . "$HOME/.aliases"
+. "$HOME/.nnnrc"
+
+export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:$PATH"
+
+export TERMINAL='alacritty'
+export TERMCMD='alacritty -e'
+
+export ALSA_MASTER='PCM'
+
+export EDITOR='vim'
+export PAGER='less'
+export LESS='-Ri'
+
+export QT_QPA_PLATFORMTHEME='qt5ct'
 
 if [ "$(id -u)" -eq 0 ]; then
 	PS1="# "
