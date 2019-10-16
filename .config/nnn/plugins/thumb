@@ -3,6 +3,7 @@
 # Description: View thumbnail of an image or a directory of images with tiv
 
 if [ -n "$1" ]; then
+    clear
     if [ -d "$1" ]; then
         tiv "$1"/*
     else
