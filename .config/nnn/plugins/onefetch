@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Description: Display either the current selection (1) or the cwd (2) using
+# onefetch (2 is displayed only if 1 is not a git repo)
+
+clear
+if [ -d "$1" ] && [ -d "$1/.git/" ]; then
+	cd "$1" && onefetch
+else
+	onefetch
+fi
+
+read -r dummy
