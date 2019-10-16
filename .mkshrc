@@ -2,7 +2,7 @@
 
 set -e
 
-. ~/.shellrc
+. ~/.shrc
 
 export HISTFILE=~/.ksh_history
 bind '^L=clear-screen'
