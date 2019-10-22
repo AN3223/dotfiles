@@ -2,7 +2,7 @@
 
 set -e
 
-. ~/.shellrc
+. ~/.shrc
 
 export HISTFILE=~/.bash_history
 

@@ -39,6 +39,8 @@ nnoremap Q  <nop>
 " Only lint on save
 let g:ale_lint_on_text_changed = "never"
 
+set shiftwidth=4
+
 
 "- SEARCH -"
 

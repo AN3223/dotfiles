@@ -8,9 +8,9 @@ set $down j
 set $up k
 set $right l
 
-# Terminal stuff :)
 set $term alacritty
-set $termcmd alacritty -e
+set $termcmd $term -e
+set $filemanager $termcmd nnn
 
 set $menu alacritty -t fzf_recent -e fzf_recent_sway
 
@@ -71,7 +71,9 @@ bindswitch lid:on exec blurlock
 bindsym Mod4+Shift+i  exec firefox
 
 bindsym Mod4+a        exec $termcmd alsamixer
-bindsym Mod4+f        exec $termcmd nnn
+bindsym Mod4+f        exec $filemanager
+bindsym Mod4+p        exec $filemanager ~/Podcasts/
+bindsym Mod4+b        exec $termcmd newsboat
 bindsym Mod4+i        exec $termcmd w3m
 bindsym Mod4+h        exec $termcmd htop
 bindsym Mod4+g        exec $termcmd gotop
@@ -94,8 +96,8 @@ bindsym XF86AudioStop exec listenman -p stop
 bindsym XF86AudioPlay exec listenman -p play-pause
 bindsym XF86AudioNext exec listenman -p next
 
-# terminal
 bindsym $mod+Return exec $term
+bindsym $mod+Shift+Return exec $filemanager
 
 # kill focused window
 bindsym $mod+Shift+q kill
