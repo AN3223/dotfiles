@@ -60,7 +60,7 @@ bar {
 exec xrdb ~/.Xresources
 
 # Wallpaper
-output * bg /usr/share/backgrounds/sway/Sway_Wallpaper_Blue_1920x1080.png fill
+output * bg ~/void-linux.png fill
 
 #######################################################################
 
