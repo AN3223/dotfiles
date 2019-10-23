@@ -13,7 +13,7 @@ export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:$PATH"
 export TERMINAL='alacritty'
 export TERMCMD='alacritty -e'
 
-export ALSA_MASTER='PCM'
+export ALSA_MASTER='Master'
 
 export EDITOR='vim'
 export PAGER='less'
