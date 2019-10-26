@@ -8,7 +8,7 @@ set $up k
 set $right l
 
 set $term alacritty
-set $termcmd $term -e
+set $termcmd alacritty -e
 set $filemanager $termcmd nnn
 
 set $menu alacritty -t fzf_recent -e fzf_recent_i3
