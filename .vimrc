@@ -1,6 +1,3 @@
-set nocompatible
-
-
 "- AESTHETIC -"
 
 set encoding=utf-8
