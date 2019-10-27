@@ -4,6 +4,8 @@ set encoding=utf-8
 syntax enable
 set number
 
+set bg=dark
+
 " Different cursor shapes in different modes
 let &t_SI = "\<Esc>[4 q"
 let &t_SR = "\<Esc>[4 q"
