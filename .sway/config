@@ -87,10 +87,10 @@ bindsym XF86AudioLowerVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 5%- unmu
 bindsym XF86AudioRaiseVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 5%+ unmute
 bindsym XF86AudioMute        exec amixer -Mq set ${ALSA_MASTER:-Master} toggle
 
-bindsym XF86AudioStop exec listenman -p stop
-#bindsym XF86AudioPrev exec listenman -p previous
-bindsym XF86AudioPlay exec listenman -p play-pause
-bindsym XF86AudioNext exec listenman -p next
+bindsym XF86AudioStop exec listenman stop && playerctl -a stop
+#bindsym XF86AudioPrev exec listenman previous && playerctl -a previous
+bindsym XF86AudioPlay exec listenman play-pause && playerctl -a play-pause
+bindsym XF86AudioNext exec listenman next && playerctl -a next
 
 bindsym $mod+Return exec $term
 bindsym $mod+Shift+Return exec $filemanager
