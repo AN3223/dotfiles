@@ -8,3 +8,11 @@ set ssl_force_tls = yes
 set sort = "reverse-date"
 set pager = "less"
 
+# Some vim-like navigation
+bind attach,index g first-entry
+bind attach,index G last-entry
+
+# Rebinding overwritten functions elsewhere
+bind index        <F2> fetch-mail
+bind attach,index <F3> group-reply
+
