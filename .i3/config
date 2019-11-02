@@ -9,7 +9,6 @@ set $right l
 
 set $term alacritty
 set $termcmd alacritty -e
-set $filemanager $termcmd nnn
 
 set $menu alacritty -t fzf_recent -e fzf_recent_i3
 
@@ -56,8 +55,8 @@ exec nitrogen --restore
 bindsym Mod4+Shift+i  exec firefox
 bindsym Mod4+q        exec qutebrowser
 
-bindsym Mod4+f        exec $filemanager
-bindsym Mod4+p        exec $filemanager ~/Podcasts/
+bindsym Mod4+f        exec $termcmd nnn
+bindsym Mod4+p        exec $termcmd nnn ~/Podcasts/
 bindsym Mod4+b        exec $termcmd newsboat
 bindsym Mod4+i        exec $termcmd w3m
 bindsym Mod4+t        exec $termcmd w3mtor
@@ -85,7 +84,7 @@ bindsym XF86AudioPlay exec listenman play-pause && playerctl -a play-pause
 bindsym XF86AudioNext exec listenman next && playerctl -a next
 
 bindsym $mod+Return exec $term
-bindsym $mod+Shift+Return exec $filemanager
+bindsym $mod+Shift+Return exec $termcmd nnn
 
 # kill focused window
 bindsym $mod+Shift+q kill
