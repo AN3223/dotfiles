@@ -17,11 +17,12 @@ set $menu alacritty -t fzf_recent -e fzf_recent_i3
 
 font pango:Fira Mono 9
 
-default_border pixel 3
+default_border pixel 1
 smart_borders on
 
 set $grey      #323232
 set $lightgrey #5c5c5c
+set $highlight #3DAEE9
 set $white     #eff0f1
 set $bg        #31363b
 set $black     #900000
@@ -29,7 +30,7 @@ set $red       #CB4B16
 
 # i3 theme
 # class                   border     backgr.    text    indic.     child_border
-  client.focused          $lightgrey $bg        $white  $lightgrey $lightgrey
+  client.focused          $highlight $bg        $white  $highlight $highlight
   client.focused_inactive $bg        $bg        $white  $bg        $bg
   client.unfocused        $bg        $bg        $white  $bg        $bg
   client.urgent           $red       $red       $white  $black     $black
