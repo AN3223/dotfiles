@@ -40,3 +40,6 @@ config.bind('md', 'hint -r links spawn youtube-dl {hint-url} -o ~/Downloads/%(ti
 config.bind('ab', 'bookmark-add')
 config.bind('aB', 'bookmark-del')
 
+# Bash-like ^u
+config.bind('<Ctrl-u>', 'fake-key <Shift-Home><Backspace>', 'insert')
+
