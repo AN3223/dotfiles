@@ -35,9 +35,6 @@ nnoremap <leader>w :call system('wl-copy', @")<cr>
 nnoremap q: <nop>
 nnoremap Q  <nop>
 
-" Only lint on save
-let g:ale_lint_on_text_changed = "never"
-
 set shiftwidth=4
 
 
@@ -84,9 +81,18 @@ nnoremap <C-K> <C-w>K
 nnoremap <C-L> <C-w>L
 
 
+"- ALE -"
+
+let g:ale_lint_on_text_changed = "never"
+let g:ale_c_gcc_options = '-std=c90 -Wall'
+let g:ale_lint_on_insert_leave = "0"
+
+
 "- MISCELLANEOUS -"
 
 " Commands for quickly editing this file
 nnoremap <leader>e :vsplit $MYVIMRC<cr>
 nnoremap <leader>s :source $MYVIMRC<cr>
 
+packloadall
+silent! helptags ALL
