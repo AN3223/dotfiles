@@ -10,7 +10,6 @@ set $right l
 
 set $term alacritty
 set $termcmd alacritty -e
-set $filemanager $termcmd nnn
 
 set $menu alacritty -t fzf_recent -e fzf_recent_sway
 
@@ -18,7 +17,7 @@ set $menu alacritty -t fzf_recent -e fzf_recent_sway
 
 font Fira Mono 9
 
-default_border pixel 3
+default_border pixel 1
 smart_borders on
 
 set $gnome-schema org.gnome.desktop.interface
@@ -32,6 +31,7 @@ exec xrdb ~/.Xresources
 
 set $grey      #323232
 set $lightgrey #5c5c5c
+set $highlight #3DAEE9
 set $white     #eff0f1
 set $bg        #31363b
 set $black     #900000
@@ -39,7 +39,7 @@ set $red       #CB4B16
 
 # Sway theme
 # class                   border     backgr.    text    indic.     child_border
-  client.focused          $lightgrey $bg        $white  $lightgrey $lightgrey
+  client.focused          $highlight $bg        $white  $highlight $highlight
   client.focused_inactive $bg        $bg        $white  $bg        $bg
   client.unfocused        $bg        $bg        $white  $bg        $bg
   client.urgent           $red       $red       $white  $black     $black 
@@ -71,8 +71,8 @@ bindswitch lid:on exec blurlock
 bindsym Mod4+Shift+i  exec firefox
 
 bindsym Mod4+a        exec $termcmd alsamixer
-bindsym Mod4+f        exec $filemanager
-bindsym Mod4+p        exec $filemanager ~/Podcasts/
+bindsym Mod4+f        exec $termcmd nnn
+bindsym Mod4+p        exec $termcmd nnn ~/Podcasts/
 bindsym Mod4+b        exec $termcmd newsboat
 bindsym Mod4+i        exec $termcmd w3m
 bindsym Mod4+h        exec $termcmd htop
@@ -91,13 +91,13 @@ bindsym XF86AudioLowerVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 5%- unmu
 bindsym XF86AudioRaiseVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 5%+ unmute
 bindsym XF86AudioMute        exec amixer -Mq set ${ALSA_MASTER:-Master} toggle
 
-bindsym XF86AudioStop exec listenman -p stop
-#bindsym XF86AudioPrev exec listenman -p previous
-bindsym XF86AudioPlay exec listenman -p play-pause
-bindsym XF86AudioNext exec listenman -p next
+bindsym XF86AudioStop exec mpvctl stop && playerctl -a stop
+#bindsym XF86AudioPrev exec mpvctl previous && playerctl -a previous
+bindsym XF86AudioPlay exec mpvctl play-pause && playerctl -a play-pause
+bindsym XF86AudioNext exec mpvctl next && playerctl -a next
 
 bindsym $mod+Return exec $term
-bindsym $mod+Shift+Return exec $filemanager
+bindsym $mod+Shift+Return exec $termcmd nnn
 
 # kill focused window
 bindsym $mod+Shift+q kill

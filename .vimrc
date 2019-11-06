@@ -17,29 +17,27 @@ let &t_EI = "\<Esc>[2 q"
 inoremap jj <Esc>
 let mapleader = ","
 
-" Escape terminal mode
 tnoremap <Esc> <C-\><C-n>
 
-" Spellcheck
 set spelllang=en
 nnoremap s :setlocal spell!<cr>
 
-" Comment out a line
-nnoremap #  I#<Esc><Down><C-0>
-nnoremap // I//<Esc><Down><C-0>
-
-" Copy " register into Wayland clipboard
 nnoremap <leader>w :call system('wl-copy', @")<cr>
 
-" Disable annoying things
 nnoremap q: <nop>
 nnoremap Q  <nop>
 
-" Only lint on save
-let g:ale_lint_on_text_changed = "never"
-
 set shiftwidth=4
 
+
+"- COMMENTS -"
+
+nnoremap #  I#<Esc>
+nnoremap // I//<Esc>
+nnoremap -- I--<Esc>
+nnoremap /* I/* <Esc>A */<Esc>
+
+nnoremap ; A;<Esc>
 
 "- SEARCH -"
 
@@ -50,14 +48,10 @@ set grepprg=rg\ --vimgrep
 
 "- AUTOCLOSE -"
 
-" Automatically close braces/parenthesis/etc
-
 inoremap { {}<Left>
 inoremap ( ()<Left>
 inoremap [ []<Left>
 
-" These are easy to type, but sometimes problematic,
-" so I just save the trip to the arrow keys.
 inoremap "" ""<Left>
 inoremap '' ''<Left>
 
@@ -71,22 +65,28 @@ vnoremap <leader>< c<><Left><Esc>p
 
 "- WINDOWS -"
 
-" Shortcuts for switching between windows
 nnoremap H <C-w>h
 nnoremap J <C-w>j
 nnoremap K <C-w>k
 nnoremap L <C-w>l
 
-" Shortcuts for moving windows
-nnoremap <C-H> <C-w>H
-nnoremap <C-J> <C-w>J
-nnoremap <C-K> <C-w>K
-nnoremap <C-L> <C-w>L
+nnoremap <C-H> <C-w>h
+nnoremap <C-J> <C-w>j
+nnoremap <C-K> <C-w>k
+nnoremap <C-L> <C-w>l
+
+
+"- ALE -"
+
+let g:ale_lint_on_text_changed = "never"
+let g:ale_c_gcc_options = '-std=c90 -Wall'
+let g:ale_lint_on_insert_leave = "0"
 
 
 "- MISCELLANEOUS -"
 
-" Commands for quickly editing this file
 nnoremap <leader>e :vsplit $MYVIMRC<cr>
 nnoremap <leader>s :source $MYVIMRC<cr>
 
+packloadall
+silent! helptags ALL
