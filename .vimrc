@@ -36,6 +36,7 @@ nnoremap #  I#<Esc>
 nnoremap // I//<Esc>
 nnoremap -- I--<Esc>
 nnoremap /* I/* <Esc>A */<Esc>
+vnoremap /* c/**/<Left><Left><Esc>p
 
 nnoremap ; A;<Esc>
 
