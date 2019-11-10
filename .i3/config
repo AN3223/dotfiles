@@ -234,5 +234,4 @@ exec xinput set-prop 14 'libinput Accel Speed' -1
 
 exec /usr/libexec/polkit-gnome-authentication-agent-1
 exec dunst
-exec transmission-gtk --minimized
 
