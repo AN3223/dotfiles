@@ -224,16 +224,6 @@ mode "resize" {
 }
 bindsym $mod+r mode "resize"
 
-#
-# Window settings:
-#
-for_window [title="LinuxRocks.Online - Mozilla Firefox"] resize set width 20 ppt
-for_window [title="LinuxRocks.Online - Firefox Nightly"] resize set width 20 ppt
-for_window [title="American Truck Simulator"]            fullscreen enable
-for_window [class="Links"]                               opacity 0.85
-for_window [class="XTerm"]                               opacity 0.85
-for_window [title="fzf_recent"]                          floating enable
-
 # man 5 sway-input
 input * {
     # make the keyboard human-usable
@@ -262,6 +252,7 @@ exec swayidle \
     resume       'swaymsg "output * dpms on"'
 
 include /etc/sway/config.d/*
+include windows.config
 
 exec dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus
 exec /usr/libexec/polkit-gnome-authentication-agent-1
