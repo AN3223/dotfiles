@@ -65,6 +65,7 @@ output * bg "/home/user/void-linux.png" fill
 # Launching applications
 bindsym Mod4+Shift+i  exec firefox
 bindsym Mod4+q        exec qutebrowser
+bindsym Mod4+r        exec retroarch
 
 bindsym Mod4+a        exec $termcmd alsamixer
 bindsym Mod4+f        exec $termcmd nnn

@@ -54,6 +54,7 @@ exec nitrogen --restore
 # Launching applications
 bindsym Mod4+Shift+i  exec firefox
 bindsym Mod4+q        exec qutebrowser
+bindsym Mod4+r        exec retroarch
 
 bindsym Mod4+f        exec $termcmd nnn
 bindsym Mod4+p        exec $termcmd nnn ~/Podcasts/
