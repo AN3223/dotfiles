@@ -250,6 +250,7 @@ bindsym $mod+Shift+m seat * hide_cursor 0
 exec swayidle \
     timeout 900   blurlock \
     timeout 1000 'swaymsg "output * dpms off"' \
+    timeout 1000 'wl-copy --clear' \
     resume       'swaymsg "output * dpms on"'
 
 include /etc/sway/config.d/*
