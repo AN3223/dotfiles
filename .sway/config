@@ -1,7 +1,9 @@
 # Read `man 5 sway` for a complete reference.
-# Some of my scripts are referenced here, one may find them here https://github.com/AN3223/scripts
+# Some of my scripts are referenced here, one may find them here:
+# https://github.com/AN3223/scripts
 
 set $mod Mod1
+set $launch Mod4
 
 set $left h
 set $down j
@@ -13,72 +15,9 @@ set $termcmd alacritty -e
 
 set $menu alacritty -t fzf_recent -e fzf_recent_sway
 
-################----------------THEMING----------------################
-
-font Fira Mono 9
-
-default_border pixel 1
-smart_borders on
-
-set $gnome-schema org.gnome.desktop.interface
-exec_always {
-    gsettings set $gnome-schema gtk-theme 'Breeze-Dark'
-    gsettings set $gnome-schema icon-theme 'breeze-dark'
-    gsettings set $gnome-schema cursor-theme 'Vanilla-DMZ'
-}
-
-exec xrdb ~/.Xresources
-
-set $grey      #323232
-set $lightgrey #5c5c5c
-set $highlight #3DAEE9
-set $white     #eff0f1
-set $bg        #31363b
-set $black     #900000
-set $red       #CB4B16
-
-# Sway theme
-# class                   border     backgr.    text    indic.     child_border
-  client.focused          $highlight $bg        $white  $highlight $highlight
-  client.focused_inactive $bg        $bg        $white  $bg        $bg
-  client.unfocused        $bg        $bg        $white  $bg        $bg
-  client.urgent           $red       $red       $white  $black     $black 
-
-bar {
-    position top
-
-    status_command while date +'%a, %b %-d %-I:%M %p '; do sleep 5; done
-
-    colors {
-        statusline $white
-        background $bg
-        inactive_workspace $grey $grey $lightgrey
-        focused_workspace $grey $white $grey
-    }
-}
-
-# Wallpaper
-output * bg "/home/user/void-linux.png" fill
-
-#######################################################################
-
-# Launching applications
-bindsym Mod4+Shift+i  exec firefox
-bindsym Mod4+q        exec qutebrowser
-bindsym Mod4+r        exec retroarch
-
-bindsym Mod4+a        exec $termcmd alsamixer
-bindsym Mod4+f        exec $termcmd nnn
-bindsym Mod4+p        exec $termcmd nnn ~/Podcasts/
-bindsym Mod4+b        exec $termcmd newsboat
-bindsym Mod4+i        exec $termcmd w3m
-bindsym Mod4+h        exec $termcmd htop
-bindsym Mod4+g        exec $termcmd gotop
-bindsym Mod4+m        exec $termcmd mutt
-bindsym Mod4+n        exec $termcmd nmtui connect
-bindsym Mod4+c        exec $termcmd ping 8.8.8.8
-
-bindsym Mod4+l        exec blurlock
+include theming
+include windows
+include quicklaunch
 
 # Screenshots
 bindsym Print exec grim \"$HOME/shots/$(date +%c).png"
@@ -91,7 +30,19 @@ bindsym XF86AudioMute        exec amixer -Mq set ${ALSA_MASTER:-Master} toggle
 bindsym XF86AudioStop exec mpvctl stop
 #bindsym XF86AudioPrev exec mpvctl previous
 bindsym XF86AudioPlay exec mpvctl play-pause
-bindsym XF86AudioNext exec mpvctl next
+#bindsym XF86AudioNext exec mpvctl next
+
+# man 5 sway-input
+input * {
+    repeat_delay 300
+    accel_profile flat
+    pointer_accel -0.4
+}
+
+# Cursor settings:
+seat * hide_cursor 5000
+bindsym $mod+m seat * hide_cursor 5000
+bindsym $mod+Shift+m seat * hide_cursor 0
 
 bindsym $mod+Return exec $term
 bindsym $mod+Shift+Return exec $termcmd nnn
@@ -220,43 +171,9 @@ mode "resize" {
     bindsym $mod+Right       resize grow width    1 px
 
     # return to default mode
-    bindsym Return mode "default"
     bindsym Escape mode "default"
 }
 bindsym $mod+r mode "resize"
 
-# man 5 sway-input
-input * {
-    # make the keyboard human-usable
-    repeat_delay 300
-    
-    # disable context key
-    xkb_options grp:menu_toggle
-
-    accel_profile flat
-    pointer_accel -0.4
-}
-
-#
-# Cursor settings:
-#
-seat * hide_cursor 5000
-bindsym $mod+m seat * hide_cursor 5000
-bindsym $mod+Shift+m seat * hide_cursor 0
-
-#
-# Idle settings:
-#
-exec swayidle \
-    timeout 900   blurlock \
-    timeout 1000 'swaymsg "output * dpms off"' \
-    timeout 1000 'wl-copy --clear' \
-    resume       'swaymsg "output * dpms on"'
-
 include /etc/sway/config.d/*
-include windows.config
-
-exec dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus
-exec /usr/libexec/polkit-gnome-authentication-agent-1
-exec_always mako
 

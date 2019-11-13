@@ -1,0 +1,45 @@
+# Theme stuff
+
+font Fira Mono 9
+
+default_border pixel 1
+smart_borders on
+
+set $gnome-schema org.gnome.desktop.interface
+exec_always {
+    gsettings set $gnome-schema gtk-theme 'Breeze-Dark'
+    gsettings set $gnome-schema icon-theme 'breeze-dark'
+    gsettings set $gnome-schema cursor-theme 'Vanilla-DMZ'
+}
+
+exec xrdb ~/.Xresources
+
+set $grey      #323232
+set $lightgrey #5c5c5c
+set $highlight #3DAEE9
+set $white     #eff0f1
+set $bg        #31363b
+set $black     #900000
+set $red       #CB4B16
+
+# Sway theme
+# class                   border     backgr.    text    indic.     child_border
+  client.focused          $highlight $bg        $white  $highlight $highlight
+  client.focused_inactive $bg        $bg        $white  $bg        $bg
+  client.unfocused        $bg        $bg        $white  $bg        $bg
+  client.urgent           $red       $red       $white  $black     $black 
+
+bar {
+    position top
+
+    status_command while date +'%a, %b %-d %-I:%M %p '; do sleep 5; done
+
+    colors {
+        statusline $white
+        background $bg
+        inactive_workspace $grey $grey $lightgrey
+        focused_workspace $grey $white $grey
+    }
+}
+
+output * bg "/home/user/void-linux.png" fill

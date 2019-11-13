@@ -1,0 +1,16 @@
+bindsym $launch+Shift+i  exec firefox
+bindsym $launch+q        exec qutebrowser
+bindsym $launch+r        exec retroarch
+
+bindsym $launch+a        exec $termcmd alsamixer
+bindsym $launch+f        exec $termcmd nnn
+bindsym $launch+p        exec $termcmd nnn ~/Podcasts/
+bindsym $launch+b        exec $termcmd newsboat
+bindsym $launch+i        exec $termcmd w3m
+bindsym $launch+h        exec $termcmd htop
+bindsym $launch+g        exec $termcmd gotop
+bindsym $launch+m        exec $termcmd mutt
+bindsym $launch+n        exec $termcmd nmtui connect
+bindsym $launch+c        exec $termcmd ping 8.8.8.8
+
+bindsym $launch+l exec blurlock
