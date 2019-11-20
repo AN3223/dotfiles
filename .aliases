@@ -19,3 +19,6 @@ alias startw='. ~/.wayenv && sway 2>&1 | logger'
 alias sudo='sudo '
 alias !!='$(fc -ln -1)'
 
+# Always use human-readable output
+alias dmesg='dmesg -H'
+
