@@ -1,24 +1,25 @@
-#!/usr/bin/env bash
-
 # Updates packages
 alias update='sudo xbps-install -Su'
 
-# Runs the interactive mode of these commands
+# Interactive mode
 alias cp='cp -i'
 alias mv='mv -i'
 alias killall='killall -i'
 
+# Colors/human-readable
+alias dmesg='dmesg -H'
+alias df='df -h'
+alias diff='diff --color=always'
+alias ls='ls --color=always'
+
 # Runs ripgrep with smart-casing by default
 alias rg='rg -Suu'
 
-alias internet='ping 8.8.8.8'
+alias net='ping 8.8.8.8'
 
 alias startw='. ~/.wayenv && sway 2>&1 | logger'
 
 # Hack to make sudo !! work like it does in bash
 alias sudo='sudo '
 alias !!='$(fc -ln -1)'
-
-# Always use human-readable output
-alias dmesg='dmesg -H'
 
