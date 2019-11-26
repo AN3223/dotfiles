@@ -43,3 +43,11 @@ config.bind('aB', 'bookmark-del')
 # Bash-like ^u
 config.bind('<Ctrl-u>', 'fake-key <Shift-Home><Backspace>', 'insert')
 
+# Think ";i for image"
+config.unbind(';I')
+config.unbind(';i')
+config.bind(';ii', 'hint images')
+config.bind(';iI', 'hint images tab')
+config.bind(';id', 'hint images download')
+config.bind(';iy', 'hint images yank')
+
