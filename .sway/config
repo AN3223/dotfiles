@@ -28,9 +28,9 @@ bindsym XF86AudioRaiseVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 5%+ unmu
 bindsym XF86AudioMute        exec amixer -Mq set ${ALSA_MASTER:-Master} toggle
 
 bindsym XF86AudioStop exec mpvctl stop
-#bindsym XF86AudioPrev exec mpvctl previous
+bindsym XF86AudioPrev exec mpvctl previous
 bindsym XF86AudioPlay exec mpvctl play-pause
-#bindsym XF86AudioNext exec mpvctl next
+bindsym XF86AudioNext exec mpvctl next
 
 # man 5 sway-input
 input * {

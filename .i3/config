@@ -80,7 +80,7 @@ bindsym XF86AudioRaiseVolume exec amixer -q set Master 5%+ unmute
 bindsym XF86AudioMute        exec amixer -q set Master toggle
 
 bindsym XF86AudioStop exec mpvctl stop
-#bindsym XF86AudioPrev exec mpvctl previous
+bindsym XF86AudioPrev exec mpvctl previous
 bindsym XF86AudioPlay exec mpvctl play-pause
 bindsym XF86AudioNext exec mpvctl next
 
