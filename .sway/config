@@ -15,9 +15,70 @@ set $termcmd alacritty -e
 
 set $menu alacritty -t fzf_recent -e fzf_recent_sway
 
-include theming
-include windows
-include quicklaunch
+################----------------THEMING----------------################
+
+font Fira Mono 9
+
+default_border pixel 1
+smart_borders on
+
+set $gnome-schema org.gnome.desktop.interface
+exec_always {
+    gsettings set $gnome-schema gtk-theme 'Breeze-Dark'
+    gsettings set $gnome-schema icon-theme 'breeze-dark'
+    gsettings set $gnome-schema cursor-theme 'Vanilla-DMZ'
+}
+
+exec xrdb ~/.Xresources
+
+set $grey      #323232
+set $lightgrey #5c5c5c
+set $highlight #3DAEE9
+set $white     #eff0f1
+set $bg        #31363b
+set $black     #900000
+set $red       #CB4B16
+
+# Sway theme
+# class                   border     backgr.    text    indic.     child_border
+  client.focused          $highlight $bg        $white  $highlight $highlight
+  client.focused_inactive $bg        $bg        $white  $bg        $bg
+  client.unfocused        $bg        $bg        $white  $bg        $bg
+  client.urgent           $red       $red       $white  $black     $black
+
+bar {
+    position top
+
+    status_command while date +'%a, %b %-d %-I:%M %p '; do sleep 5; done
+
+    colors {
+        statusline $white
+        background $bg
+        inactive_workspace $grey $grey $lightgrey
+        focused_workspace $grey $white $grey
+    }
+}
+
+output * bg "/home/user/void-linux.png" fill
+
+#######################################################################
+
+# Launching applications
+bindsym $launch+Shift+i  exec firefox
+bindsym $launch+q        exec qutebrowser
+bindsym $launch+r        exec retroarch
+bindsym $launch+f        exec $termcmd nnn
+bindsym $launch+p        exec $termcmd nnn ~/Podcasts/
+bindsym $launch+b        exec $termcmd newsboat
+bindsym $launch+i        exec $termcmd w3m
+bindsym $launch+a        exec $termcmd alsamixer
+bindsym $launch+h        exec $termcmd htop
+bindsym $launch+g        exec $termcmd gotop
+bindsym $launch+m        exec $termcmd mutt
+bindsym $launch+n        exec $termcmd nmtui connect
+bindsym $launch+c        exec $termcmd ping 8.8.8.8
+
+bindsym $launch+l        exec blurlock
 
 # Screenshots
 bindsym Print exec grim \"$HOME/shots/$(date +%c).png"
@@ -177,11 +238,14 @@ mode "resize" {
 }
 bindsym $mod+r mode "resize"
 
+for_window [title="fzf_recent"] floating enable
+
+include windows
 include /etc/sway/config.d/*
 
-exec swayidle \
-    timeout 240 wl-copy --clear \
-    timeout 900 blurlock \
+exec swayidle                                  \
+    timeout 240   wl-copy --clear              \
+    timeout 900   blurlock                     \
     timeout 1000 'swaymsg "output * dpms off"' \
-    resume 'swaymsg "output * dpms on"'
+    resume       'swaymsg "output * dpms on"'
 
