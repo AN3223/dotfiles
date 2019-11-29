@@ -217,6 +217,7 @@ mode "resize" {
 
     # return to default mode
     bindsym Escape mode "default"
+    bindsym Control+bracketleft mode "default"
 }
 bindsym $mod+r mode "resize"
 
