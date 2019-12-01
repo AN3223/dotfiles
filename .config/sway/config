@@ -81,7 +81,7 @@ bindsym $launch+c        exec $termcmd ping 8.8.8.8
 bindsym $launch+l        exec blurlock
 
 # Screenshots
-bindsym Print exec grim -q 95 \"$HOME/shots/$(date +%c).png"
+bindsym Print exec grim \"$HOME/shots/$(date +%c).png"
 
 # Media keys
 bindsym XF86AudioLowerVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 5%- unmute
