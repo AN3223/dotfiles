@@ -1,4 +1,4 @@
-browser "mpv --idle=yes --fs"
+browser "mpv --idle=yes"
 
 # Arrow key navigation
 bind-key LEFT quit
