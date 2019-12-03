@@ -239,7 +239,7 @@ mode "resize" {
 }
 bindsym $mod+r mode "resize"
 
-for_window [title="fzf_recent"] floating enable
+for_window [title="^fzf_recent$"] floating enable
 
 include windows
 include /etc/sway/config.d/*
