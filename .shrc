@@ -10,6 +10,8 @@ case "$-" in *i*) ;; *) exit 1 ;; esac
 
 export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.local/bin/firejail/:$HOME/.cargo/bin/:$PATH"
 
+export XBPS_DISTDIR=~/devel/void-packages/
+
 export TERMINAL='alacritty'
 export TERMCMD='alacritty -e'
 
