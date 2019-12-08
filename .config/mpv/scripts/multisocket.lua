@@ -2,14 +2,14 @@
 -- followed by a number, i.e. mpvctl5. The highest number is the most recent
 -- instance, the lowest is the oldest.
 
-local i = 0
+i = 0
 while true do
-	local filename = "/tmp/mpvctl" .. i
-	local file, _, err = io.open(filename)
+	filename = "/tmp/mpvctl" .. i
+	local file, msg, err = io.open(filename)
 	if file == nil and err ~= 6 then -- 6 = socket (maybe not portable?)
 		break
 	else
-		local i = i + 1
+		i = i + 1
 	end
 end
 
