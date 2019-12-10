@@ -23,3 +23,9 @@ alias startw='. ~/.wayenv && sway 2>&1 | logger'
 alias sudo='sudo '
 alias !!='$(fc -ln -1)'
 
+# man-ly info
+info() {
+	# Also maybe consider info --vi-keys instead of this trick
+	/usr/bin/info --subnodes $1 | ${PAGER:-less}
+}
+
