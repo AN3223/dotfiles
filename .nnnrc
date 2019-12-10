@@ -3,4 +3,5 @@
 
 export NNN_USE_EDITOR=1
 export NNN_PLUG='t:thumb;'
+export NNN_BMS="x:$XBPS_DISTDIR;p:$HOME/Podcasts"
 
