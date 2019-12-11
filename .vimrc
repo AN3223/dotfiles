@@ -40,6 +40,7 @@ vnoremap /* c/**/<Left><Left><Esc>p
 
 nnoremap ;; A;<Esc>
 
+
 "- SEARCH -"
 
 set ignorecase | set smartcase
@@ -48,13 +49,6 @@ set grepprg=rg\ --vimgrep
 
 
 "- AUTOCLOSE -"
-
-inoremap { {}<Left>
-inoremap ( ()<Left>
-inoremap [ []<Left>
-
-inoremap "" ""<Left>
-inoremap '' ''<Left>
 
 vnoremap <leader>{ c{}<Left><Esc>p
 vnoremap <leader>( c()<Left><Esc>p
@@ -70,11 +64,6 @@ nnoremap H <C-w>h
 nnoremap J <C-w>j
 nnoremap K <C-w>k
 nnoremap L <C-w>l
-
-nnoremap <C-H> <C-w>h
-nnoremap <C-J> <C-w>j
-nnoremap <C-K> <C-w>k
-nnoremap <C-L> <C-w>l
 
 
 "- ALE -"
