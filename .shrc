@@ -5,8 +5,8 @@
 # If not running interactively, do not do anything
 case "$-" in *i*) ;; *) exit 1 ;; esac
 
-. "$HOME/.aliases"
-. "$HOME/.nnnrc"
+. ~/.aliases
+. ~/.nnnrc
 
 export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.local/bin/firejail/:$HOME/.cargo/bin/:$PATH"
 
