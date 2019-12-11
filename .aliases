@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Updates packages
 alias update='sudo xbps-install -Su'
 
@@ -19,13 +21,17 @@ alias net='ping 8.8.8.8'
 
 alias startw='. ~/.wayenv && sway 2>&1 | logger'
 
-# Hack to make sudo !! work like it does in bash
-alias sudo='sudo '
+# Hack to make sudo !! work. The !! substitution will be treated as text,
+# not shell code. So if !! includes a pipe/operator/etc it will be
+# interpreted as an argument
+alias sudo='doas '
 alias !!='$(fc -ln -1)'
 
-# man-ly info
+alias sudoedit='doasedit'
+alias su='doas -s'
+
+# man-ly info (Also maybe consider info --vi-keys instead of this trick)
 info() {
-	# Also maybe consider info --vi-keys instead of this trick
-	/usr/bin/info --subnodes $1 | ${PAGER:-less}
+	/usr/bin/info --subnodes "$1" | ${PAGER:-less}
 }
 
