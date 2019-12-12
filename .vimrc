@@ -28,6 +28,7 @@ nnoremap q: <nop>
 nnoremap Q  <nop>
 
 set shiftwidth=4
+set tabstop=6
 
 
 "- COMMENTS -"
