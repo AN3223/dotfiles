@@ -1,6 +1,9 @@
-# Some of my scripts are referenced here, one may find them here https://github.com/AN3223/scripts
+# Read `man 5 sway` for a complete reference.
+# Some of my scripts are referenced here, one may find them here:
+# https://github.com/AN3223/scripts
 
 set $mod Mod1
+set $launch Mod4
 
 set $left h
 set $down j
@@ -10,14 +13,23 @@ set $right l
 set $term alacritty
 set $termcmd alacritty -e
 
-set $menu alacritty -t fzf_recent -e fzf_recent_i3
+set $menu alacritty -t fzf_recent -e fzf_recent_sway
 
 ################----------------THEMING----------------################
 
-font pango:Fira Mono 9
+font Fira Mono 9
 
 default_border pixel 1
 smart_borders on
+
+set $gnome-schema org.gnome.desktop.interface
+exec_always {
+    gsettings set $gnome-schema gtk-theme 'Breeze-Dark'
+    gsettings set $gnome-schema icon-theme 'breeze-dark'
+    gsettings set $gnome-schema cursor-theme 'Vanilla-DMZ'
+}
+
+exec xrdb ~/.Xresources
 
 set $grey      #323232
 set $lightgrey #5c5c5c
@@ -27,7 +39,7 @@ set $bg        #31363b
 set $black     #900000
 set $red       #CB4B16
 
-# i3 theme
+# Sway theme
 # class                   border     backgr.    text    indic.     child_border
   client.focused          $highlight $bg        $white  $highlight $highlight
   client.focused_inactive $bg        $bg        $white  $bg        $bg
@@ -47,41 +59,58 @@ bar {
     }
 }
 
-exec nitrogen --restore
+output * bg ~/void-linux.png fill
 
 #######################################################################
 
+# Lock when lid is shut
+bindswitch lid:on exec blurlock
+
 # Launching applications
-bindsym Mod4+Shift+i  exec firefox
-bindsym Mod4+q        exec qutebrowser
+bindsym $launch+Shift+i  exec firefox
+bindsym $launch+q        exec qutebrowser
+bindsym $launch+r        exec retroarch
+bindsym $launch+f        exec $termcmd nnn
+bindsym $launch+p        exec $termcmd nnn ~/Podcasts/
+bindsym $launch+b        exec $termcmd newsboat
+bindsym $launch+i        exec $termcmd w3m
+bindsym $launch+a        exec $termcmd alsamixer
+bindsym $launch+h        exec $termcmd htop
+bindsym $launch+g        exec $termcmd gotop
+bindsym $launch+m        exec $termcmd mutt
+bindsym $launch+n        exec $termcmd nmtui connect
+bindsym $launch+c        exec $termcmd ping 8.8.8.8
 
-bindsym Mod4+f        exec $termcmd nnn
-bindsym Mod4+p        exec $termcmd nnn ~/Podcasts/
-bindsym Mod4+b        exec $termcmd newsboat
-bindsym Mod4+i        exec $termcmd w3m
-bindsym Mod4+t        exec $termcmd w3mtor
-bindsym Mod4+a        exec $termcmd alsamixer
-bindsym Mod4+h        exec $termcmd htop
-bindsym Mod4+g        exec $termcmd gotop
-bindsym Mod4+m        exec $termcmd mutt
-bindsym Mod4+n        exec $termcmd nmtui connect
-bindsym Mod4+c        exec $termcmd ping 8.8.8.8
-
-bindsym Mod4+l        exec blurlock
-bindsym Mod4+Shift+s  exec zzz & blurlock
+bindsym $launch+l        exec blurlock
 
 # Screenshots
-bindsym Print exec scrot '%c.png' -e 'mv "$f" ~/shots/'
+bindsym Print exec grim \"$HOME/shots/$(date +%c).png"
 
 # Media keys
-bindsym XF86AudioLowerVolume exec amixer -q set Master 5%- unmute
-bindsym XF86AudioRaiseVolume exec amixer -q set Master 5%+ unmute
-bindsym XF86AudioMute        exec amixer -q set Master toggle
+bindsym XF86AudioLowerVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 5%- unmute
+bindsym XF86AudioRaiseVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 5%+ unmute
+bindsym XF86AudioMute        exec amixer -Mq set ${ALSA_MASTER:-Master} toggle
 
-bindsym XF86AudioStop exec mpvctl stop && playerctl -a stop
-#bindsym XF86AudioPrev exec mpvctl previous && playerctl -a previous
-bindsym XF86AudioPlay exec mpvctl play-pause && playerctl -a play-pause
-bindsym XF86AudioNext exec mpvctl next && playerctl -a next
+bindsym XF86AudioStop exec mpvctl stop
+bindsym XF86AudioPrev exec mpvctl previous
+bindsym XF86AudioPlay exec mpvctl play-pause
+bindsym XF86AudioNext exec mpvctl next
+
+# man 5 sway-input
+input * {
+    repeat_delay 300
+    accel_profile flat
+    pointer_accel -0.4
+}
+
+input type:touchpad {
+	tap enabled
+}
+
+# Cursor settings:
+seat * hide_cursor 5000
+bindsym $mod+m seat * hide_cursor 5000
+bindsym $mod+Shift+m seat * hide_cursor 0
 
 bindsym $mod+Return exec $term
 bindsym $mod+Shift+Return exec $termcmd nnn
@@ -93,15 +122,13 @@ bindsym $mod+Shift+q kill
 bindsym $mod+d exec $menu
 
 # resizing
-floating_modifier $mod
+floating_modifier $mod normal
 
 # reload the configuration file
 bindsym $mod+Shift+c reload
-# restart i3 inplace
-bindsym $mod+Shift+r restart
 
-# exit i3 (logs you out of your X session)
-bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -B 'Yes, exit i3' 'i3-msg exit'"
+# exit sway (logs you out of your Wayland session)
+bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -b 'Yes, exit sway' 'swaymsg exit'
 
 # Moving around:
 #
@@ -130,6 +157,7 @@ bindsym $mod+Shift+Right move right
 # Workspaces:
 #
 # switch to workspace
+bindsym $mod+grave workspace back_and_forth
 bindsym $mod+1 workspace 1
 bindsym $mod+2 workspace 2
 bindsym $mod+3 workspace 3
@@ -141,6 +169,7 @@ bindsym $mod+8 workspace 8
 bindsym $mod+9 workspace 9
 bindsym $mod+0 workspace 10
 # move focused container to workspace
+bindsym $mod+Shift+grave move container to workspace back_and_forth
 bindsym $mod+Shift+1 move container to workspace 1
 bindsym $mod+Shift+2 move container to workspace 2
 bindsym $mod+Shift+3 move container to workspace 3
@@ -202,37 +231,29 @@ mode "resize" {
     bindsym Right resize grow width 10px
 
     # Same as above, but more fine-grained control
-    bindsym Mod1+$left       resize shrink width  1 px
-    bindsym Mod1+$down       resize grow height   1 px
-    bindsym Mod1+$up         resize shrink height 1 px
-    bindsym Mod1+$right      resize grow width    1 px
-    bindsym Mod1+Left        resize shrink width  1 px
-    bindsym Mod1+Down        resize grow height   1 px
-    bindsym Mod1+Up          resize shrink height 1 px
-    bindsym Mod1+Right       resize grow width    1 px
+    bindsym $mod+$left       resize shrink width  1 px
+    bindsym $mod+$down       resize grow height   1 px
+    bindsym $mod+$up         resize shrink height 1 px
+    bindsym $mod+$right      resize grow width    1 px
+    bindsym $mod+Left        resize shrink width  1 px
+    bindsym $mod+Down        resize grow height   1 px
+    bindsym $mod+Up          resize shrink height 1 px
+    bindsym $mod+Right       resize grow width    1 px
 
     # return to default mode
-    bindsym Return mode "default"
     bindsym Escape mode "default"
+    bindsym Control+bracketleft mode "default"
 }
 bindsym $mod+r mode "resize"
 
-#
-# Window settings:
-#
-for_window [title="LinuxRocks.Online - Mozilla Firefox"] resize set width 20 ppt
-for_window [title="LinuxRocks.Online - Firefox Nightly"] resize set width 20 ppt
-for_window [class="Links"]                               opacity 0.85
-for_window [class="XTerm"]                               opacity 0.85
-for_window [title="fzf_recent"]                          floating enable
+for_window [title="^fzf_recent$"] floating enable
 
-exec compton -b
-exec xrdb ~/.Xresources
+include windows
+include /etc/sway/config.d/*
 
-exec xset r rate 300
-exec xinput set-prop 14 'libinput Accel Speed' -1
-
-exec /usr/libexec/polkit-gnome-authentication-agent-1
-exec dunst
-exec transmission-gtk --minimized
+exec swayidle                                  \
+    timeout 240   wl-copy --clear              \
+    timeout 900   blurlock                     \
+    timeout 1000 'swaymsg "output * dpms off"' \
+    resume       'swaymsg "output * dpms on"'
 

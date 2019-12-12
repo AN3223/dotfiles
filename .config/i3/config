@@ -1,7 +1,8 @@
-# Read `man 5 sway` for a complete reference.
-# Some of my scripts are referenced here, one may find them here https://github.com/AN3223/scripts
+# Some of my scripts are referenced here, one may find them here:
+# https://github.com/AN3223/scripts
 
 set $mod Mod1
+set $launch Mod4
 
 set $left h
 set $down j
@@ -11,21 +12,14 @@ set $right l
 set $term alacritty
 set $termcmd alacritty -e
 
-set $menu alacritty -t fzf_recent -e fzf_recent_sway
+set $menu alacritty -t fzf_recent -e fzf_recent_i3
 
 ################----------------THEMING----------------################
 
-font Fira Mono 9
+font pango:Fira Mono 9
 
 default_border pixel 1
 smart_borders on
-
-set $gnome-schema org.gnome.desktop.interface
-exec_always {
-    gsettings set $gnome-schema gtk-theme 'Breeze-Dark'
-    gsettings set $gnome-schema icon-theme 'breeze-dark'
-    gsettings set $gnome-schema cursor-theme 'Vanilla-DMZ'
-}
 
 exec xrdb ~/.Xresources
 
@@ -37,12 +31,12 @@ set $bg        #31363b
 set $black     #900000
 set $red       #CB4B16
 
-# Sway theme
+# i3 theme
 # class                   border     backgr.    text    indic.     child_border
   client.focused          $highlight $bg        $white  $highlight $highlight
   client.focused_inactive $bg        $bg        $white  $bg        $bg
   client.unfocused        $bg        $bg        $white  $bg        $bg
-  client.urgent           $red       $red       $white  $black     $black 
+  client.urgent           $red       $red       $white  $black     $black
 
 bar {
     position top
@@ -57,44 +51,39 @@ bar {
     }
 }
 
-exec xrdb ~/.Xresources
-
-# Wallpaper
-output * bg ~/void-linux.png fill
+exec nitrogen --restore
 
 #######################################################################
 
-# Lock when lid is shut
-bindswitch lid:on exec blurlock
-
 # Launching applications
-bindsym Mod4+Shift+i  exec firefox
+bindsym $launch+Shift+i  exec firefox
+bindsym $launch+q        exec qutebrowser
+bindsym $launch+r        exec retroarch
+bindsym $launch+f        exec $termcmd nnn
+bindsym $launch+p        exec $termcmd nnn ~/Podcasts/
+bindsym $launch+b        exec $termcmd newsboat
+bindsym $launch+i        exec $termcmd w3m
+bindsym $launch+a        exec $termcmd alsamixer
+bindsym $launch+h        exec $termcmd htop
+bindsym $launch+g        exec $termcmd gotop
+bindsym $launch+m        exec $termcmd mutt
+bindsym $launch+n        exec $termcmd nmtui connect
+bindsym $launch+c        exec $termcmd ping 8.8.8.8
 
-bindsym Mod4+a        exec $termcmd alsamixer
-bindsym Mod4+f        exec $termcmd nnn
-bindsym Mod4+p        exec $termcmd nnn ~/Podcasts/
-bindsym Mod4+b        exec $termcmd newsboat
-bindsym Mod4+i        exec $termcmd w3m
-bindsym Mod4+h        exec $termcmd htop
-bindsym Mod4+g        exec $termcmd gotop
-bindsym Mod4+m        exec $termcmd mutt
-bindsym Mod4+n        exec $termcmd nmtui connect
-bindsym Mod4+c        exec $termcmd ping 8.8.8.8
-
-bindsym Mod4+l        exec blurlock
+bindsym $launch+l        exec blurlock
 
 # Screenshots
-bindsym Print exec grim \"$HOME/shots/$(date +%c).png"
+bindsym Print exec scrot '%c.png' -e 'mv "$f" ~/shots/'
 
 # Media keys
 bindsym XF86AudioLowerVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 5%- unmute
 bindsym XF86AudioRaiseVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 5%+ unmute
 bindsym XF86AudioMute        exec amixer -Mq set ${ALSA_MASTER:-Master} toggle
 
-bindsym XF86AudioStop exec mpvctl stop && playerctl -a stop
-#bindsym XF86AudioPrev exec mpvctl previous && playerctl -a previous
-bindsym XF86AudioPlay exec mpvctl play-pause && playerctl -a play-pause
-bindsym XF86AudioNext exec mpvctl next && playerctl -a next
+bindsym XF86AudioStop exec mpvctl stop
+bindsym XF86AudioPrev exec mpvctl previous
+bindsym XF86AudioPlay exec mpvctl play-pause
+bindsym XF86AudioNext exec mpvctl next
 
 bindsym $mod+Return exec $term
 bindsym $mod+Shift+Return exec $termcmd nnn
@@ -106,13 +95,15 @@ bindsym $mod+Shift+q kill
 bindsym $mod+d exec $menu
 
 # resizing
-floating_modifier $mod normal
+floating_modifier $mod
 
 # reload the configuration file
 bindsym $mod+Shift+c reload
+# restart i3 inplace
+bindsym $mod+Shift+r restart
 
-# exit sway (logs you out of your Wayland session)
-bindsym $mod+Shift+e exec swaynag -t warning -m 'You pressed the exit shortcut. Do you really want to exit sway? This will end your Wayland session.' -b 'Yes, exit sway' 'swaymsg exit'
+# exit i3 (logs you out of your X session)
+bindsym $mod+Shift+e exec "i3-nagbar -t warning -m 'You pressed the exit shortcut. Do you really want to exit i3? This will end your X session.' -B 'Yes, exit i3' 'i3-msg exit'"
 
 # Moving around:
 #
@@ -141,6 +132,7 @@ bindsym $mod+Shift+Right move right
 # Workspaces:
 #
 # switch to workspace
+bindsym $mod+grave workspace back_and_forth
 bindsym $mod+1 workspace 1
 bindsym $mod+2 workspace 2
 bindsym $mod+3 workspace 3
@@ -152,6 +144,7 @@ bindsym $mod+8 workspace 8
 bindsym $mod+9 workspace 9
 bindsym $mod+0 workspace 10
 # move focused container to workspace
+bindsym $mod+Shift+grave move container to workspace back_and_forth
 bindsym $mod+Shift+1 move container to workspace 1
 bindsym $mod+Shift+2 move container to workspace 2
 bindsym $mod+Shift+3 move container to workspace 3
@@ -223,50 +216,19 @@ mode "resize" {
     bindsym $mod+Right       resize grow width    1 px
 
     # return to default mode
-    bindsym Return mode "default"
     bindsym Escape mode "default"
+    bindsym Control+bracketleft mode "default"
 }
 bindsym $mod+r mode "resize"
 
-#
-# Window settings:
-#
-for_window [title="LinuxRocks.Online - Mozilla Firefox"] resize set width 20 ppt
-for_window [title="LinuxRocks.Online - Firefox Nightly"] resize set width 20 ppt
-for_window [title="American Truck Simulator"]            fullscreen enable
-for_window [class="Links"]                               opacity 0.85
-for_window [class="XTerm"]                               opacity 0.85
-for_window [title="fzf_recent"]                          floating enable
+for_window [title="^fzf_recent$"] floating enable
 
-# man 5 sway-input
-input * {
-    # make the keyboard human-usable
-    repeat_delay 300
-    
-    # disable context key
-    xkb_options grp:menu_toggle
-}
+exec compton -b
+exec xrdb ~/.Xresources
 
-input type:touchpad {
-	tap enabled
-}
+exec xset r rate 300
+exec xinput set-prop 14 'libinput Accel Speed' -1
 
-#
-# Cursor settings:
-#
-seat * hide_cursor 5000
-
-#
-# Idle settings:
-#
-exec swayidle \
-    timeout 900   blurlock \
-    timeout 1000 'swaymsg "output * dpms off"' \
-    resume       'swaymsg "output * dpms on"'
-
-include /etc/sway/config.d/*
-
-exec dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus
 exec /usr/libexec/polkit-gnome-authentication-agent-1
-exec_always mako
+exec dunst
 

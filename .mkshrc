@@ -5,6 +5,6 @@ set -e
 . ~/.shrc
 
 export HISTFILE=~/.mksh_history
-bind '^L=clear-screen'
+bind ^L='clear-screen'
 bind -m ^U='^[0^K'
 

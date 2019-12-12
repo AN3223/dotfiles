@@ -8,7 +8,9 @@ case "$-" in *i*) ;; *) exit 1 ;; esac
 . "$HOME/.aliases"
 . "$HOME/.nnnrc"
 
-export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:$PATH"
+export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.local/bin/firejail/:$HOME/.cargo/bin/:$PATH"
+
+export XBPS_DISTDIR=~/devel/void-packages/
 
 export TERMINAL='alacritty'
 export TERMCMD='alacritty -e'
@@ -20,14 +22,8 @@ export PAGER='less'
 export LESS='-Ri'
 
 export QT_QPA_PLATFORMTHEME='qt5ct'
+export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0
 
-if [ "$(id -u)" -eq 0 ]; then
-	PS1="# "
-else
-	PS1="\$ "
-fi
-
-# Special PS1 for SSH
 if [ "$SSH_CONNECTION" ]; then
 	PS1="(SSH) ${PS1}"
 fi
