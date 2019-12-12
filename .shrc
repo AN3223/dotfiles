@@ -3,7 +3,7 @@
 # portable enough to be sourced by other shells too.
 
 # If not running interactively, do not do anything
-case "$-" in *i*) ;; *) exit 1 ;; esac
+#case "$-" in *i*) ;; *) exit 1 ;; esac
 
 . ~/.aliases
 . ~/.nnnrc
