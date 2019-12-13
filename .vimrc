@@ -27,7 +27,11 @@ nnoremap <leader>w :call system('wl-copy', @")<cr>
 nnoremap q: <nop>
 nnoremap Q  <nop>
 
-set shiftwidth=4
+
+"- INDENTATION -"
+
+filetype plugin indent on
+set autoindent
 set tabstop=6
 
 
