@@ -2,7 +2,7 @@
 
 set encoding=utf-8
 syntax enable
-set number
+set relativenumber number
 
 set bg=dark
 
@@ -48,7 +48,7 @@ nnoremap ;; A;<Esc>
 
 "- SEARCH -"
 
-set ignorecase | set smartcase
+set ignorecase smartcase
 set incsearch
 set grepprg=rg\ --vimgrep
 
