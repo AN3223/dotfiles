@@ -97,6 +97,7 @@ input * {
     repeat_delay 300
     accel_profile flat
     pointer_accel -0.4
+    xkb_options grp:menu_toggle
 }
 
 # Cursor settings:
