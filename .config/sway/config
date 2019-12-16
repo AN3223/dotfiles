@@ -245,7 +245,7 @@ include windows
 include /etc/sway/config.d/*
 
 exec swayidle                                  \
-    timeout 240   wl-copy --clear              \
+    timeout 240   'wl-copy --clear'            \
     timeout 900   blurlock                     \
     timeout 1000 'swaymsg "output * dpms off"' \
     resume       'swaymsg "output * dpms on"'
