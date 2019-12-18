@@ -15,7 +15,7 @@ alias diff='diff --color=always'
 alias ls='ls --color=always'
 
 # Runs ripgrep with smart-casing by default
-alias rg='rg -Suu'
+alias rg='rg -Suu --color always'
 
 alias net='ping 8.8.8.8'
 
