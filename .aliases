@@ -1,4 +1,4 @@
-#!/bin/sh
+# vi: ft=sh
 
 # Updates packages
 alias update='sudo xbps-install -Su'

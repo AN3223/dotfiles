@@ -1,4 +1,4 @@
-#!/bin/sh
+# vi: ft=sh
 # nnn related settings
 
 export NNN_USE_EDITOR=1
