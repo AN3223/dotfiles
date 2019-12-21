@@ -40,7 +40,16 @@ config.bind('mcd', 'spawn youtube-dl {url} -o ~/Downloads/%(title)s')
 config.bind('ab', 'bookmark-add')
 config.bind('aB', 'bookmark-del')
 
-# Bash-like ^u
+# readline shortcuts
+config.bind('<Ctrl-d>', 'fake-key <Delete>', 'insert')
+config.bind('<Ctrl-a>', 'fake-key <Home>', 'insert')
+config.bind('<Ctrl-e>', 'fake-key <End>', 'insert')
+config.bind('<Ctrl-f>', 'fake-key <Right>', 'insert')
+config.bind('<Ctrl-b>', 'fake-key <Left>', 'insert')
+config.bind('<Ctrl-p>', 'fake-key <Up>', 'insert')
+config.bind('<Ctrl-n>', 'fake-key <Down>', 'insert')
+config.bind('<Ctrl-w>', 'fake-key <Ctrl-backspace>', 'insert')
+config.bind('<Ctrl-k>', 'fake-key <Shift-End><Delete>', 'insert')
 config.bind('<Ctrl-u>', 'fake-key <Shift-Home><Backspace>', 'insert')
 
 # Think ";i for image"
