@@ -32,7 +32,6 @@ nnoremap Q  <nop>
 
 filetype plugin indent on
 set autoindent
-set tabstop=6
 
 
 "- COMMENTS -"
