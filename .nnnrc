@@ -1,4 +1,5 @@
 # vi: ft=sh
+# This file is source by .shrc
 # nnn related settings
 
 export NNN_USE_EDITOR=1
