@@ -1,7 +1,13 @@
 # vi: ft=sh
 
-# Updates packages
-alias update='sudo xbps-install -Su'
+# Updating packages
+update_src() {
+	cd "$XBPS_DISTDIR" || return
+	git fetch upstream
+	git pull upstream master
+	xdistupgrade
+}
+alias update='update_src && sudo xbps-install -Su'
 
 # Interactive mode
 alias cp='cp -i'
@@ -13,8 +19,6 @@ alias dmesg='dmesg -H'
 alias df='df -h'
 alias diff='diff --color=always'
 alias ls='ls --color=always'
-
-# Runs ripgrep with smart-casing by default
 alias rg='rg -Suu --color always'
 
 alias net='ping 8.8.8.8'
