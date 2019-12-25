@@ -24,8 +24,6 @@ alias rg='rg -Suu --color always'
 
 alias net='ping 8.8.8.8'
 
-alias startw='. ~/.wayenv && sway 2>&1 | logger'
-
 # Hack to make sudo !! work. The !! substitution will be treated as text,
 # not shell code. So if !! includes a pipe/operator/etc it will be
 # interpreted as an argument
