@@ -1,4 +1,4 @@
-#!/bin/sh
+# vi: ft=sh
 # This is sourced by ~/.bashrc ~/.mkshrc ~/.profile and ideally should be
 # portable enough to be sourced by other shells too.
 
