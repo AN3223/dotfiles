@@ -5,7 +5,7 @@
 update_src() {
 	cd "$XBPS_DISTDIR" || return
 	git fetch upstream
-	git pull upstream master
+	git rebase upstream/master
 	xdistupgrade
 }
 alias update='update_src && sudo xbps-install -Su'
