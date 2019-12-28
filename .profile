@@ -3,6 +3,8 @@
 
 export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.local/bin/firejail/:$HOME/.cargo/bin/:$PATH"
 
+export TZ='America/Chicago'
+
 export XBPS_DISTDIR="$HOME/devel/void-packages/"
 
 export TERMINAL='alacritty'
