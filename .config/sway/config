@@ -75,7 +75,6 @@ bindsym $launch+a        exec $termcmd alsamixer
 bindsym $launch+h        exec $termcmd htop
 bindsym $launch+g        exec $termcmd gotop
 bindsym $launch+m        exec $termcmd mutt
-bindsym $launch+n        exec $termcmd nmtui connect
 bindsym $launch+c        exec $termcmd ping 8.8.8.8
 
 bindsym $launch+l        exec blurlock
