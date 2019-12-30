@@ -62,6 +62,18 @@ vnoremap <leader>' c''<Left><Esc>p
 vnoremap <leader>< c<><Left><Esc>p
 
 
+"- READLINE -"
+" This isn't even close to complete but it's all that matters to me. C-p and
+" C-n are omitted since they have special meanings already.
+
+inoremap <C-a> <Home>
+inoremap <C-e> <End>
+inoremap <C-d> <Delete>
+inoremap <C-k> <Esc>c$
+inoremap <C-f> <Right>
+inoremap <C-b> <Left>
+
+
 "- WINDOWS -"
 
 nnoremap H <C-w>h
