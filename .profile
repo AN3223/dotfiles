@@ -5,8 +5,6 @@ export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.local/bin/firejail/:$HOME/.carg
 
 export TZ='America/Chicago'
 
-export XBPS_DISTDIR="$HOME/devel/void-packages/"
-
 export TERMINAL='alacritty'
 export TERMCMD='alacritty -e'
 
