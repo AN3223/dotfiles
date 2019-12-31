@@ -38,3 +38,9 @@ info() {
 	/usr/bin/info --subnodes "$1" | ${PAGER:-less}
 }
 
+# find $2 -iname $1
+# $2 will default to . just like in GNU find
+search() {
+	find "${2:-.}" -iname "*${1}*"
+}
+
