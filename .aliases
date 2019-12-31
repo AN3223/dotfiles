@@ -3,7 +3,7 @@
 
 # Updating packages
 update_src() {
-	cd "$XBPS_DISTDIR" || return
+	cd "$(xdistdir)" || return
 	git fetch upstream
 	git pull --rebase upstream master
 	xdistupgrade
