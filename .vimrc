@@ -2,7 +2,7 @@
 
 set encoding=utf-8
 syntax enable
-set number
+set relativenumber number
 
 set bg=dark
 
@@ -27,7 +27,11 @@ nnoremap <leader>w :call system('wl-copy', @")<cr>
 nnoremap q: <nop>
 nnoremap Q  <nop>
 
-set shiftwidth=4
+
+"- INDENTATION -"
+
+filetype plugin indent on
+set autoindent
 
 
 "- COMMENTS -"
@@ -40,21 +44,15 @@ vnoremap /* c/**/<Left><Left><Esc>p
 
 nnoremap ;; A;<Esc>
 
+
 "- SEARCH -"
 
-set ignorecase | set smartcase
+set ignorecase smartcase
 set incsearch
 set grepprg=rg\ --vimgrep
 
 
 "- AUTOCLOSE -"
-
-inoremap { {}<Left>
-inoremap ( ()<Left>
-inoremap [ []<Left>
-
-inoremap "" ""<Left>
-inoremap '' ''<Left>
 
 vnoremap <leader>{ c{}<Left><Esc>p
 vnoremap <leader>( c()<Left><Esc>p
@@ -64,17 +62,24 @@ vnoremap <leader>' c''<Left><Esc>p
 vnoremap <leader>< c<><Left><Esc>p
 
 
+"- READLINE -"
+" This isn't even close to complete but it's all that matters to me. C-p and
+" C-n are omitted since they have special meanings already.
+
+inoremap <C-a> <Home>
+inoremap <C-e> <End>
+inoremap <C-d> <Delete>
+inoremap <C-k> <Esc>c$
+inoremap <C-f> <Right>
+inoremap <C-b> <Left>
+
+
 "- WINDOWS -"
 
 nnoremap H <C-w>h
 nnoremap J <C-w>j
 nnoremap K <C-w>k
 nnoremap L <C-w>l
-
-nnoremap <C-H> <C-w>h
-nnoremap <C-J> <C-w>j
-nnoremap <C-K> <C-w>k
-nnoremap <C-L> <C-w>l
 
 
 "- ALE -"

@@ -1,9 +1,9 @@
-#!/bin/sh
+# vi: ft=sh
 # This is sourced by ~/.bashrc ~/.mkshrc ~/.profile and ideally should be
 # portable enough to be sourced by other shells too.
 
 # If not running interactively, do not do anything
-case "$-" in *i*) ;; *) exit 1 ;; esac
+#case "$-" in *i*) ;; *) exit 1 ;; esac
 
 . "$HOME/.aliases"
 . "$HOME/.nnnrc"
