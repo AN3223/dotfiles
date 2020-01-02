@@ -1,10 +1,10 @@
-#!/bin/sh
+# vi: ft=bash
 
 set -e
 
 . ~/.shrc
 
-export HISTFILE=~/.mksh_history
+export HISTFILE="$HOME/.mksh_history"
 bind ^L='clear-screen'
 bind -m ^U='^[0^K'
 
