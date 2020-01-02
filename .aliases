@@ -30,7 +30,6 @@ alias sudo='doas '
 alias !!='$(fc -ln -1)'
 
 alias sudoedit='doasedit'
-alias su='doas -s'
 
 # man-ly info (Also maybe consider info --vi-keys instead of this trick)
 info() {
