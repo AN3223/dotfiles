@@ -4,6 +4,38 @@ set -e
 
 . ~/.shrc
 
+ps1() {
+	# REPLY_ is REPLY but w/o escape codes, used for checking length
+	REPLY_=
+
+	# show error code, if any
+	(( $1 )) && REPLY+="$1|" && REPLY_+="$1|"
+
+	REPLY+=$'\e[36m'${USER}@${HOSTNAME}$'\e[0m'
+	REPLY_+=${USER}@${HOSTNAME}
+
+	pwd=${PWD/#~/"~"} # replace home dir with tilde
+
+	# only show pwd if PS1 doesn't use more than 1/3rd of the terminal
+	if (( ${#REPLY_} + ${#pwd} < COLUMNS / 3 )); then
+		REPLY+=:$'\e[35m'"$pwd"$'\e[0m'
+		REPLY_+=":$pwd"
+	fi
+
+	if (( USER_ID )); then
+		REPLY+=$' \e[32m$\e[0m'
+		REPLY_+=' $'
+	else
+		REPLY+=$' \e[31m#\e[0m'
+		REPLY_+=' #'
+	fi
+
+	printf '%s' "$REPLY"
+	unset REPLY REPLY_ pwd
+}
+
+PS1='$(ps1 $?) '
+
 export HISTFILE="$HOME/.mksh_history"
 bind ^L='clear-screen'
 bind -m ^U='^[0^K'
