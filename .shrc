@@ -5,6 +5,10 @@
 . ~/.aliases
 . ~/.nnnrc
 
+set -bCu
+
+umask 077
+
 # This stops C-s from being annoying in vim
 stty -ixon
 
