@@ -33,7 +33,14 @@ alias sudoedit='doasedit'
 
 # man-ly info (Also maybe consider info --vi-keys instead of this trick)
 info() {
-	/usr/bin/info --subnodes "$1" | ${PAGER:-less}
+	env info --subnodes "$1" | ${PAGER:-less}
+}
+
+man() {
+	# The POSIX Programmer's Manual uses Unicode minus signs (U+2212)
+	# instead of the hyphen-minus (U+002D), which can make searching for
+	# options difficult.
+	env man "$@" | sed s/−/-/g | ${MANPAGER:-${PAGER:-less}}
 }
 
 # find $2 -iname $1
