@@ -9,6 +9,8 @@ update_src() {
 }
 alias update='update_src && sudo xbps-install -Su'
 
+alias sw='startw'
+
 # Interactive mode
 alias cp='cp -i'
 alias mv='mv -i'
