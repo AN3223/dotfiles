@@ -12,7 +12,7 @@ set $right l
 set $term alacritty
 set $termcmd alacritty -e
 
-set $menu alacritty -t fzf_recent -e fzf_recent_i3
+set $menu alacritty -t fzfrecent -e fzfrecent_i3
 
 ################----------------THEMING----------------################
 
@@ -220,7 +220,7 @@ mode "resize" {
 }
 bindsym $mod+r mode "resize"
 
-for_window [title="^fzf_recent$"] floating enable
+for_window [title="^fzfrecent$"] floating enable
 
 exec compton -b
 exec xrdb ~/.Xresources
