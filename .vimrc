@@ -14,7 +14,6 @@ let &t_EI = "\<Esc>[2 q"
 
 "- BASIC FUNCTIONALITY -"
 
-inoremap jj <Esc>
 let mapleader = ","
 
 tnoremap <Esc> <C-\><C-n>
