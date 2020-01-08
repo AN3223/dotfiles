@@ -5,6 +5,8 @@ export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.local/bin/firejail/:$HOME/.carg
 
 export TZ='America/Chicago'
 
+[ "$0" = "-ash" ] && export ENV="$HOME/.ashrc"
+
 HOSTNAME="$(uname -n)"; export HOSTNAME;
 
 export XBPS_DISTDIR="$HOME/devel/void-packages/"
