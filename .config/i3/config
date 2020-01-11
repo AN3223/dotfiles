@@ -220,6 +220,11 @@ mode "resize" {
 }
 bindsym $mod+r mode "resize"
 
+mode "passthrough" {
+    bindsym $mod+Escape mode "default"
+}
+bindsym $mod+Escape mode "passthrough"
+
 for_window [title="^fzfrecent$"] floating enable
 
 exec compton -b
