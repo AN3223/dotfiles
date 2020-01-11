@@ -22,13 +22,6 @@ font Fira Mono 9
 default_border pixel 1
 smart_borders on
 
-set $gnome-schema org.gnome.desktop.interface
-exec_always {
-    gsettings set $gnome-schema gtk-theme 'Breeze-Dark'
-    gsettings set $gnome-schema icon-theme 'breeze-dark'
-    gsettings set $gnome-schema cursor-theme 'Vanilla-DMZ'
-}
-
 exec xrdb ~/.Xresources
 
 set $grey      #323232
