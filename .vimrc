@@ -65,10 +65,16 @@ vnoremap <leader>< c<><Left><Esc>p
 " This isn't even close to complete but it's all that matters to me.
 
 inoremap <C-a> <Home>
+cnoremap <C-a> <Home>
 inoremap <C-e> <End>
 inoremap <C-d> <Delete>
+cnoremap <C-d> <Delete>
 inoremap <C-f> <Right>
+cnoremap <C-f> <Right>
 inoremap <C-b> <Left>
+cnoremap <C-b> <Left>
+inoremap <C-k> <C-o>c$
+" TODO cnoremap <C-k> if possible?
 
 
 "- WINDOWS -"
