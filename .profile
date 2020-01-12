@@ -23,3 +23,8 @@ export LESS='-Ri'
 export QT_QPA_PLATFORMTHEME='qt5ct'
 export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0
 
+if [ ! "$XDG_RUNTIME_DIR" ]; then
+	XDG_RUNTIME_DIR=/tmp/$(id -u)-runtime-dir; export XDG_RUNTIME_DIR;
+	[ ! -d "$XDG_RUNTIME_DIR" ] && mkdir "$XDG_RUNTIME_DIR"
+fi
+
