@@ -85,11 +85,14 @@ nnoremap K <C-w>k
 nnoremap L <C-w>l
 
 
-"- ALE -"
+"- LINTING -"
 
-let g:ale_lint_on_text_changed = "never"
-let g:ale_c_gcc_options = '-std=c90 -Wall'
-let g:ale_lint_on_insert_leave = "0"
+autocmd FileType python compiler pylint
+autocmd FileType sh setlocal makeprg=shellcheck
+autocmd FileType bash setlocal makeprg=shellcheck
+autocmd FileType c setlocal makeprg=gcc\ -Wall\ -std=c90\ %;splint\ %
+nnoremap <leader>m :make %<cr>
+nnoremap <leader>c :cwindow<cr>
 
 
 "- MISCELLANEOUS -"
