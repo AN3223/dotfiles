@@ -18,7 +18,6 @@ let mapleader = ","
 
 tnoremap <Esc> <C-\><C-n>
 
-set spelllang=en
 nnoremap s :setlocal spell!<cr>
 
 nnoremap <leader>w :call system('wl-copy', @")<cr>
@@ -39,7 +38,7 @@ nnoremap #  I#<Esc>
 nnoremap // I//<Esc>
 nnoremap -- I--<Esc>
 nnoremap /* I/* <Esc>A */<Esc>
-vnoremap /* c/**/<Left><Left><Esc>p
+vnoremap /* c/*<C-r>"*/<Esc>
 
 nnoremap ;; A;<Esc>
 
@@ -53,12 +52,12 @@ set grepprg=rg\ --vimgrep
 
 "- AUTOCLOSE -"
 
-vnoremap <leader>{ c{}<Left><Esc>p
-vnoremap <leader>( c()<Left><Esc>p
-vnoremap <leader>" c""<Left><Esc>p
-vnoremap <leader>[ c[]<Left><Esc>p
-vnoremap <leader>' c''<Left><Esc>p
-vnoremap <leader>< c<><Left><Esc>p
+vnoremap <leader>{ c{<C-r>"}<Esc>
+vnoremap <leader>( c(<C-r>")<Esc>
+vnoremap <leader>" c"<C-r>""<Esc>
+vnoremap <leader>[ c[<C-r>"]<Esc>
+vnoremap <leader>' c'<C-r>"'<Esc>
+vnoremap <leader>< c<<C-r>"><Esc>
 
 
 "- READLINE -"
