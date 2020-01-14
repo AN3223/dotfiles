@@ -20,7 +20,8 @@ tnoremap <Esc> <C-\><C-n>
 
 nnoremap s :setlocal spell!<cr>
 
-nnoremap <leader>w :call system('wl-copy', @")<cr>
+" The w buffer will go into the Wayland clipboard
+autocmd TextYankPost * if v:event.regname == "w" | call system('wl-copy', @w)
 
 nnoremap q: <nop>
 nnoremap Q  <nop>
