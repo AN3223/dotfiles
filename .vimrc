@@ -91,7 +91,7 @@ nnoremap L <C-w>l
 autocmd FileType python compiler pylint
 autocmd FileType sh setlocal makeprg=shellcheck
 autocmd FileType bash setlocal makeprg=shellcheck
-autocmd FileType c setlocal makeprg=gcc\ -Wall\ -std=c90\ %;splint\ %
+autocmd FileType c setlocal makeprg=splint\ %
 nnoremap <leader>m :make %<cr>
 nnoremap <leader>c :cwindow<cr>
 
