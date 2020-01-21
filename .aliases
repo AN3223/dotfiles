@@ -1,13 +1,13 @@
 # vi: ft=sh
 # This file is sourced by .shrc
 
-# Updating packages
-update_src() {
+# Update packages
+update() {
 	cd "$(xdistdir)" || return
 	git pull --rebase upstream master
 	xdistupgrade
+	doas xbps-install -Su
 }
-alias update='update_src && sudo xbps-install -Su'
 
 alias sw='startw'
 
@@ -34,10 +34,13 @@ man() {
 	# The POSIX Programmer's Manual uses Unicode minus signs (U+2212)
 	# instead of the hyphen-minus (U+002D), which can make searching for
 	# options difficult.
-	env man "$@" | sed s/−/-/g | ${MANPAGER:-${PAGER:-less}}
+	page=$(env man "$@")
+	if [ "$page" ]; then
+		printf %s "$page" | sed s/−/-/g | ${MANPAGER:-${PAGER:-less}}
+	fi
 }
 
-# find $2 -iname $1
+# find $2 -iname *$1*
 # $2 will default to . just like in GNU find
 search() {
 	find "${2:-.}" -iname "*${1}*"
