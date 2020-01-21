@@ -101,5 +101,11 @@ nnoremap <leader>c :cwindow<cr>
 nnoremap <leader>e :vsplit $MYVIMRC<cr>
 nnoremap <leader>s :source $MYVIMRC<cr>
 
+" Break a line at 72 characters w/o breaking words
+nnoremap <leader>l <C-0>71lbi<cr><Esc>
+
+" Show the diff between the buffer and the original file
+nnoremap <leader>d :w !diff % -<cr>
+
 packloadall
 silent! helptags ALL
