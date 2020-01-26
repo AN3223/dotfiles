@@ -59,7 +59,7 @@ exec nitrogen --restore
 bindsym $launch+Shift+i  exec firefox
 bindsym $launch+q        exec qutebrowser
 bindsym $launch+r        exec retroarch
-bindsym $launch+f        exec $termcmd nnn
+bindsym $launch+f        exec $termcmd n
 bindsym $launch+b        exec $termcmd newsboat
 bindsym $launch+i        exec $termcmd w3m
 bindsym $launch+w        exec $termcmd weechat
@@ -85,7 +85,7 @@ bindsym XF86AudioPlay exec mpvctl play-pause
 bindsym XF86AudioNext exec mpvctl next
 
 bindsym $mod+Return exec $term
-bindsym $mod+Shift+Return exec $termcmd nnn
+bindsym $mod+Shift+Return exec $termcmd n
 
 # kill focused window
 bindsym $mod+Shift+q kill
