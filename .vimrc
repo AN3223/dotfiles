@@ -101,8 +101,8 @@ nnoremap <leader>c :cwindow<cr>
 " Strip trailing whitespace
 autocmd BufWritePre * %s/\s\+$//e
 
-autocmd FileType sh setlocal textwidth=72
-autocmd FileType python setlocal textwidth=80
+autocmd FileType sh setlocal textwidth=72 formatoptions-=t
+autocmd FileType python setlocal textwidth=80 formatoptions-=t
 set formatoptions+=aown
 
 
