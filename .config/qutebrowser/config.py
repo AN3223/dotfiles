@@ -18,16 +18,20 @@ c.colors.statusbar.normal.bg =\
 
 c.scrolling.smooth = True
 c.new_instance_open_target = 'window'
-c.session.lazy_restore = True
+c.session.lazy_restore = False
+c.auto_save.session = True
 c.content.autoplay = False
 c.content.host_blocking.enabled = False
+c.qt.force_software_rendering = "qt-quick"
+c.downloads.remove_finished = 0
 
-# Dark theme toggle
-stylesheets = [
-    '~/.config/qutebrowser/solarized-dark-all-sites.css',
-    "''"
-]
-config.bind('tt', f"config-cycle content.user_stylesheets {' '.join(stylesheets)}")
+# YouTube incorrectly assumes JavaScript is enabled, so it requires a bogus
+# user agent in order to behave correctly
+with config.pattern("*://www.youtube.com/*") as p:
+    p.content.headers.user_agent = "asdf"
+
+c.url.start_pages = "about:blank"
+c.url.default_page = "about:blank"
 
 # Think "m for media"
 config.unbind('m')
