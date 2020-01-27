@@ -102,7 +102,7 @@ nnoremap <leader>c :cwindow<cr>
 autocmd BufWritePre * %s/\s\+$//e
 
 autocmd FileType sh setlocal textwidth=72 formatoptions-=t
-autocmd FileType python setlocal textwidth=80 formatoptions-=t
+autocmd FileType python setlocal textwidth=79 formatoptions-=t
 set formatoptions+=aown
 
 
