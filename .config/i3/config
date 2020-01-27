@@ -23,20 +23,18 @@ smart_borders on
 
 exec xrdb ~/.Xresources
 
-set $grey      #323232
-set $lightgrey #5c5c5c
-set $highlight #3DAEE9
-set $white     #eff0f1
-set $bg        #31363b
-set $black     #900000
-set $red       #CB4B16
+set $fg  #ebdbb2
+set $bg  #282828
+set $hl1 #d79921
+set $hl2 #928374
+set $hl3 #cc241d
 
 # i3 theme
 # class                   border     backgr.    text    indic.     child_border
-  client.focused          $highlight $bg        $white  $highlight $highlight
-  client.focused_inactive $bg        $bg        $white  $bg        $bg
-  client.unfocused        $bg        $bg        $white  $bg        $bg
-  client.urgent           $red       $red       $white  $black     $black
+  client.focused          $hl1       $bg        $fg     $hl1       $hl1
+  client.focused_inactive $bg        $bg        $fg     $bg        $bg
+  client.unfocused        $bg        $bg        $fg     $bg        $bg
+  client.urgent           $hl3       $hl3       $fg     $bg        $bg
 
 bar {
     position top
@@ -44,10 +42,10 @@ bar {
     status_command while date +'%a, %b %-d %-I:%M %p '; do sleep 5; done
 
     colors {
-        statusline $white
+        statusline $fg
         background $bg
-        inactive_workspace $grey $grey $lightgrey
-        focused_workspace $grey $white $grey
+        inactive_workspace $hl2 $bg $hl2
+        focused_workspace $hl1 $bg $hl1
     }
 }
 

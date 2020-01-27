@@ -6,8 +6,8 @@ config.load_autoconfig()
 #
 # Theme
 #
-c.fonts.monospace = '"Fira Mono", Monospace'
-bg = "#31363b"
+c.fonts.monospace = '"Fira Code", Monospace'
+bg = "#282828"
 c.colors.statusbar.normal.bg =\
     c.colors.statusbar.command.bg =\
     c.colors.tabs.selected.odd.bg =\
