@@ -1,7 +1,7 @@
 # vi: ft=sh
 # This file is read each time a login shell is started.
 
-export PATH="$HOME/bin/:$HOME/.local/bin/:$HOME/.cargo/bin/:$PATH"
+export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
 
 export TZ='America/Chicago'
 
