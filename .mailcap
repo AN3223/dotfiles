@@ -1,6 +1,12 @@
 image/*; mpv-img -- "%s"; test=test "$DISPLAY"
 video/*; mpv --player-operation-mode=pseudo-gui -- "%s"; test=test "$DISPLAY"
 audio/*; mpv -- "%s"; needsterminal
+
 application/octet-stream; mpv -- "%s"; needsterminal
+application/pdf; zathura "%s"
+application/oxps; zathura "%s"
+application/epub+zip; zathura "%s"
+
 text/html; w3m "%s" -T "%t"; needsterminal
 text/*; vim "%s"; needsterminal
+
