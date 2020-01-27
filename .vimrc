@@ -20,11 +20,24 @@ tnoremap <Esc> <C-\><C-n>
 
 nnoremap s :setlocal spell!<cr>
 
-" The w buffer will go into the Wayland clipboard
-autocmd TextYankPost * if v:event.regname == "w" | call system('wl-copy', @w)
-
 nnoremap q: <nop>
 nnoremap Q  <nop>
+
+
+"- WAYLAND -"
+
+" Bidirectional sync @w with the Wayland clipboard
+if len($WAYLAND_DISPLAY) > 0
+	augroup writeclip
+		au!
+		au TextYankPost * if v:event.regname == "w" | call system('wl-copy', @w)
+	augroup END
+
+	func! ReadClip(channel, msg)
+		noautocmd let @w = a:msg
+	endfunc
+	call job_start('wl-paste --watch cat', {"out_cb": "ReadClip"})
+endif
 
 
 "- INDENTATION -"
