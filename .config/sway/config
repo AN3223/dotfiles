@@ -48,7 +48,7 @@ bar {
     }
 }
 
-output * bg "/home/user/void-linux.png" fill
+output * bg $bg solid_color
 
 #######################################################################
 
