@@ -10,6 +10,7 @@ update() {
 }
 
 alias sw='startw'
+alias sx='startx'
 
 # Interactive mode
 alias cp='cp -i'
