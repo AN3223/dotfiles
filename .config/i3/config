@@ -21,8 +21,6 @@ font pango:Fira Mono 9
 default_border pixel 1
 smart_borders on
 
-exec xrdb ~/.Xresources
-
 set $fg  #ebdbb2
 set $bg  #282828
 set $hl1 #d79921
