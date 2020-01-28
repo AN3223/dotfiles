@@ -1,3 +1,4 @@
+# vi: ft=conf
 keymap C-f NULL
 keymap C-b NULL
 keymap C-d NULL
