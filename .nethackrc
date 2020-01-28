@@ -1,1 +1,4 @@
-OPTIONS=!autopickup,!legacy,color
+OPTIONS=color,showrace,hitpointbar
+OPTIONS=!autopickup
+OPTIONS=!legacy,force_invmenu
+OPTIONS=pettype:none
