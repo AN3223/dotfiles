@@ -1,41 +1,4 @@
 # vi: ft=conf
-keymap C-f NULL
-keymap C-b NULL
-keymap C-d NULL
-keymap C-u NULL
-keymap C-v NULL
-keymap h NULL
-keymap j NULL
-keymap k NULL
-keymap l NULL
-keymap LEFT NULL
-keymap DOWN NULL
-keymap UP NULL
-keymap RIGHT NULL
-keymap H NULL
-keymap J NULL
-keymap K NULL
-keymap L NULL
-keymap d NULL
-keymap f NULL
-keymap o NULL
-keymap O NULL
-keymap yy NULL
-keymap yl NULL
-keymap r NULL
-keymap :h NULL
-keymap ab NULL
-
-
-keymap C-f NEXT_PAGE
-keymap C-b PREV_PAGE
-# No half page scroll, sorry
-keymap C-d NEXT_PAGE
-keymap C-u PREV_PAGE
-
-
-keymap ab ADD_BOOKMARK
-keymap C-v VIEW_BOOKMARK
 
 keymap h SHIFT_LEFT
 keymap j UP
@@ -51,18 +14,38 @@ keymap H PREV
 keymap J NEXT_TAB
 keymap K PREV_TAB
 keymap L NEXT
-keymap d CLOSE_TAB
 
 keymap f LIST_MENU
-keymap F MOVE_LIST_MENU
+keymap F COMMAND "MOVE_LIST_MENU ; TAB_LINK"
 
+keymap C-f NEXT_PAGE
+keymap C-b PREV_PAGE
+keymap C-d NEXT_HALF_PAGE
+keymap C-u PREV_HALF_PAGE
+
+keymap ab ADD_BOOKMARK
+keymap C-v VIEW_BOOKMARK
+
+# FIXME this should go to the user's WWW_HOME or HTTP_HOME
+keymap C-h GOTO https://duckduckgo.com/lite
+
+# FIXME o and O should be able to use search engines, and shouldn't start with
+# the current URL
 keymap o GOTO
 keymap O TAB_GOTO
-keymap C-o TAB_LINK
+keymap d CLOSE_TAB
 
-keymap yy EXTERN
-keymap yl EXTERN_LINK
+keymap go GOTO
+keymap gg BEGIN
 
 keymap r RELOAD
 
+keymap C-g PEEK
+
+keymap yy EXTERN wl-copy
+keymap mm COMMAND "MOVE_LIST_MENU ; EXTERN_LINK mpv"
+keymap mcm EXTERN mpv
+
 keymap :h HELP
+keymap :q ABORT
+keymap :set OPTIONS

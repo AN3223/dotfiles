@@ -1,1 +1,21 @@
-extbrowser sh -c 'printf %s "$0" | wl-copy'
+# vi: ft=conf
+
+# Prompt the user for the browser
+extbrowser sh -c 'read -r b; exec $b $0'
+
+# Aesthetics
+tabstop 4
+anchor_color yellow
+form_color yellow
+visited_color yellow
+
+mailcap ~/.mailcap
+
+no_referer 1
+use_history 0
+save_hist 0
+
+# Probably doesn't help much. Using a UA from a major browser would help more
+# with anonymity, but will cause some sites (i.e. youtube) to serve a less
+# text-friendly version of the site
+user_agent curl/7.68.0
