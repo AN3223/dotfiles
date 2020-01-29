@@ -23,6 +23,7 @@ nnoremap s :setlocal spell!<cr>
 nnoremap q: <nop>
 nnoremap Q  <nop>
 
+set ttimeoutlen=0 showcmd
 
 "- WAYLAND -"
 
@@ -33,7 +34,8 @@ if len($WAYLAND_DISPLAY) > 0
 		au TextYankPost * if v:event.regname == "w" | call system('wl-copy', @w)
 	augroup END
 
-	" FIXME this should probably strip trailing newlines
+	" FIXME this should probably strip trailing newlines and ignore empty
+	" strings
 	func! ReadClip(channel, msg)
 		noautocmd let @w = a:msg
 	endfunc
