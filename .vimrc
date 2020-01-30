@@ -25,27 +25,15 @@ nnoremap Q  <nop>
 
 set ttimeoutlen=0 showcmd
 
+
 "- WAYLAND -"
 
-" Bidirectional sync @w with the Wayland clipboard
+" Writes the contents of @w into the clipboard when @w is updated
 if len($WAYLAND_DISPLAY) > 0
 	augroup writeclip
 		au!
 		au TextYankPost * if v:event.regname == "w" | call system('wl-copy', @w)
 	augroup END
-
-	" FIXME this should probably strip trailing newlines and ignore empty
-	" strings
-	func! ReadClip(channel, msg)
-		noautocmd let @w = a:msg
-	endfunc
-
-	call job_start('wl-paste --watch cat', {"out_cb": "ReadClip"})
-
-	" Hack to flush the pipe's buffer if the clipboard doesn't end with a
-	" newline, since wl-paste --watch doesn't seem to have an option to always
-	" print newlines after the clipboard contents
-	nnoremap <leader>wnl :call system('wl-copy', "\n")<cr>
 endif
 
 
