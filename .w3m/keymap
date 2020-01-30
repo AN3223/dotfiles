@@ -5,11 +5,6 @@ keymap j UP
 keymap k DOWN
 keymap l SHIFT_RIGHT
 
-keymap LEFT SHIFT_LEFT
-keymap UP DOWN
-keymap DOWN UP
-keymap RIGHT SHIFT_RIGHT
-
 keymap H PREV
 keymap J NEXT_TAB
 keymap K PREV_TAB

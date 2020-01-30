@@ -8,6 +8,7 @@ tabstop 4
 anchor_color yellow
 form_color yellow
 visited_color yellow
+image_color red
 
 mailcap ~/.mailcap
 
