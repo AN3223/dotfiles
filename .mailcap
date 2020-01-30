@@ -3,9 +3,9 @@ video/*; mpv --player-operation-mode=pseudo-gui -- "%s"; test=test "$DISPLAY"
 audio/*; mpv -- "%s"; needsterminal
 
 application/octet-stream; mpv -- "%s"; needsterminal
-application/pdf; zathura "%s"
-application/oxps; zathura "%s"
-application/epub+zip; zathura "%s"
+application/pdf; zathura "%s"; test=test "$DISPLAY"
+application/oxps; zathura "%s"; test=test "$DISPLAY"
+application/epub+zip; zathura "%s"; test=test "$DISPLAY"
 
 text/html; w3m "%s" -T "%t"; needsterminal
 application/json; vim "%s"; needsterminal
