@@ -1,0 +1,18 @@
+#!/bin/sh
+# This is my URL handler for mailcap-open. It will open youtube-dl
+# capable URLs inside of mpv, and use the default MCO_DOWNLOADER
+# behavior for all other URLs.
+
+case "$1" in
+	*://*)
+		if youtube-dl -qs "$1" 2> /dev/null; then
+			nohup mpv --player-operation-mode=pseudo-gui -- "$1"
+			exit 1
+		fi
+
+		${MCO_DOWNLOADER:-curl} "$1"
+		;;
+	*)
+		;;
+esac
+
