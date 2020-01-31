@@ -17,7 +17,7 @@ export SVDIR="$HOME/.config/service/"
 export TERMINAL='alacritty'
 export TERMCMD='alacritty -e'
 
-export MCO_HANDLER="$HOME/.urlhandler"
+export MCO_HANDLER="$HOME/.mcohandler"
 
 export ALSA_MASTER='PCM'
 
