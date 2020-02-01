@@ -9,5 +9,6 @@ application/epub+zip; zathura "%s"; test=test "$DISPLAY"
 
 text/html; w3m "%s" -T "%t"; needsterminal
 application/json; vim "%s"; needsterminal
+application/pdf; pdftotext "%s" -; needsterminal; copiousoutput
 text/*; vim "%s"; needsterminal
 
