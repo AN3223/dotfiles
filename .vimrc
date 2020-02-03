@@ -18,7 +18,7 @@ let mapleader = ","
 
 tnoremap <Esc> <C-\><C-n>
 
-nnoremap s :setlocal spell!<cr>
+nnoremap <leader>s :setlocal spell!<cr>
 
 nnoremap q: <nop>
 nnoremap Q  <nop>
@@ -42,17 +42,6 @@ endif
 filetype plugin indent on
 set autoindent
 set tabstop=4 shiftwidth=0
-
-
-"- COMMENTS -"
-
-nnoremap #  I#<Esc>
-nnoremap // I//<Esc>
-nnoremap -- I--<Esc>
-nnoremap /* I/* <Esc>A */<Esc>
-vnoremap /* c/*<C-r>"*/<Esc>
-
-nnoremap ;; A;<Esc>
 
 
 "- SEARCH -"
@@ -88,14 +77,6 @@ inoremap <C-k> <C-o>c$
 " TODO cnoremap <C-k> if possible?
 
 
-"- WINDOWS -"
-
-nnoremap H <C-w>h
-nnoremap J <C-w>j
-nnoremap K <C-w>k
-nnoremap L <C-w>l
-
-
 "- LINTING -"
 
 autocmd FileType python compiler pylint
@@ -128,9 +109,6 @@ nnoremap <leader>f :setlocal formatoptions+=aown<cr>
 
 
 "- MISCELLANEOUS -"
-
-nnoremap <leader>e :vsplit $MYVIMRC<cr>
-nnoremap <leader>s :source $MYVIMRC<cr>
 
 " Show the diff between the buffer and the original file
 nnoremap <leader>d :w !diff % -<cr>
