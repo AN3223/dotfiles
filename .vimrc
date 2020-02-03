@@ -48,7 +48,9 @@ set tabstop=4 shiftwidth=0
 
 set ignorecase smartcase
 set incsearch
-set grepprg=rg\ --vimgrep
+if executable("rg")
+	set grepprg=rg\ --vimgrep
+endif
 
 
 "- AUTOCLOSE -"
