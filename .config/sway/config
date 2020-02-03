@@ -57,7 +57,6 @@ bindsym $launch+Shift+i  exec firefox
 bindsym $launch+q        exec qutebrowser
 bindsym $launch+r        exec retroarch
 bindsym $launch+f        exec $termcmd n
-bindsym $launch+b        exec $termcmd newsboat
 bindsym $launch+i        exec $termcmd w3m
 bindsym $launch+w        exec $termcmd weechat
 bindsym $launch+a        exec $termcmd alsamixer
