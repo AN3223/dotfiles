@@ -1,0 +1,8 @@
+#!/bin/sh -e
+# Downloads YouTube videos with youtube-dl into ~/youtube/
+
+[ ! "$LINK" ] && exit
+mkdir -p "$HOME/youtube"
+
+youtube-dl -q --no-warnings -o "$HOME/youtube/%(uploader)s - %(title)s.%(ext)s" "$LINK"
+

@@ -1,0 +1,12 @@
+#!/bin/sh -e
+# Downloads YouTube links as m3u files into ~/youtube/ so they can be
+# streamed by a media player (i.e. mpv w/ youtube-dl)
+
+[ ! "$LINK" ] && exit
+mkdir -p "$HOME/youtube"
+
+# Sanitize the filename by removing occurences of /
+filename=$(printf '%s\n' "$AUTHOR - $TITLE" | sed 's|/|\\|g')
+
+printf '%s\n' "$LINK" > "$HOME/youtube/$filename.m3u"
+
