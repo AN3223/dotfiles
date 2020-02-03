@@ -108,8 +108,15 @@ nnoremap <leader>c :cwindow<cr>
 
 "- FORMATTING -"
 
-" Strip trailing whitespace
-autocmd BufWritePre * %s/\s\+$//e
+" Highlight trailing whitespace only in normal mode (it's pretty distracting
+" when highlighted in insert mode)
+highlight TrailingWhitespace ctermbg=red
+match TrailingWhitespace /\s\+$/
+autocmd InsertLeave,WinEnter * highlight TrailingWhitespace ctermbg=red
+autocmd InsertEnter * highlight clear TrailingWhitespace
+
+" Remove trailing whitespace
+nnoremap <leader>w :%s/\s\+$//e<cr>
 
 autocmd FileType sh setlocal textwidth=72 formatoptions-=t
 autocmd FileType python setlocal textwidth=79 formatoptions-=t
