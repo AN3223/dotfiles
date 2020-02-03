@@ -120,7 +120,11 @@ nnoremap <leader>w :%s/\s\+$//e<cr>
 
 autocmd FileType sh setlocal textwidth=72 formatoptions-=t
 autocmd FileType python setlocal textwidth=79 formatoptions-=t
+
+" Set default formatoptions, but also have a toggle just in case
 set formatoptions+=aown
+nnoremap <leader>F :setlocal formatoptions-=aown<cr>
+nnoremap <leader>f :setlocal formatoptions+=aown<cr>
 
 
 "- MISCELLANEOUS -"
