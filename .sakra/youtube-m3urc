@@ -1,6 +1,9 @@
 #!/bin/sh -e
 # Downloads YouTube links as m3u files into ~/youtube/ so they can be
 # streamed by a media player (i.e. mpv w/ youtube-dl)
+#
+# Also consider checking out this script for converting YouTube links
+# into RSS feeds https://github.com/AN3223/scripts/blob/master/y2rss
 
 [ ! "$LINK" ] && exit
 mkdir -p "$HOME/youtube"
