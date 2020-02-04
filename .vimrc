@@ -106,8 +106,8 @@ autocmd FileType python setlocal textwidth=79 formatoptions-=t
 
 " Set default formatoptions, but also have a toggle just in case
 set formatoptions+=aown
-nnoremap <leader>F :setlocal formatoptions-=aown<cr>
-nnoremap <leader>f :setlocal formatoptions+=aown<cr>
+nnoremap <leader>F :setlocal fo-=a fo-=o fo-=w fo-=n<cr>
+nnoremap <leader>f :setlocal fo+=aown<cr>
 
 
 "- MISCELLANEOUS -"
