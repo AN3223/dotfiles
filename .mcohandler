@@ -13,7 +13,7 @@ case "$1" in
 		${MCO_DOWNLOADER:-curl} "$1"
 		;;
 	*.m3u)
-		mpv -- "$1"
+		nohup mpv --player-operation-mode=pseudo-gui -- "$1" 2>&1 &
 		exit 1
 		;;
 	*)
