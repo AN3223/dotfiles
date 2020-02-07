@@ -38,6 +38,8 @@ keymap r RELOAD
 keymap C-g PEEK
 
 keymap yy EXTERN wl-copy
+keymap ";y" COMMAND "MOVE_LIST_MENU ; EXTERN_LINK wl-copy"
+
 keymap mm COMMAND "MOVE_LIST_MENU ; EXTERN_LINK mpv"
 keymap mcm EXTERN mpv
 
