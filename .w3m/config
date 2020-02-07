@@ -15,3 +15,4 @@ mailcap ~/.mailcap
 no_referer 1
 use_history 0
 save_hist 0
+display_image false
