@@ -121,6 +121,16 @@ endfunc
 nnoremap <leader>f :call ToggleFormatting()<cr>
 
 
+"- MAIL -"
+
+" Opens mutt in a terminal window while I write emails
+function OpenMail()
+	call term_start("mutt", {"term_finish": "close"})
+	call feedkeys("\<C-w>p")
+endfunc
+autocmd FileType mail call OpenMail()
+
+
 "- MISCELLANEOUS -"
 
 " Show the diff between the buffer and the original file
