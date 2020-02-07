@@ -34,6 +34,7 @@ config.bind('aB', 'bookmark-del')
 
 # readline shortcuts
 config.bind('<Ctrl-d>', 'fake-key <Delete>', 'insert')
+config.bind('<Ctrl-d>', 'fake-key -g <Delete>', 'command')
 config.bind('<Ctrl-a>', 'fake-key <Home>', 'insert')
 config.bind('<Ctrl-e>', 'fake-key <End>', 'insert')
 config.bind('<Ctrl-f>', 'fake-key <Right>', 'insert')
