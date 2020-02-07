@@ -101,13 +101,24 @@ autocmd InsertEnter * highlight clear TrailingWhitespace
 " Remove trailing whitespace
 nnoremap <leader>w :%s/\s\+$//e<cr>
 
-autocmd FileType sh setlocal textwidth=72 formatoptions-=t
-autocmd FileType python setlocal textwidth=79 formatoptions-=t
-
-" Set default formatoptions, but also have a toggle just in case
+" Set default formatoptions
 set formatoptions+=aown
-nnoremap <leader>F :setlocal fo-=a fo-=o fo-=w fo-=n<cr>
-nnoremap <leader>f :setlocal fo+=aown<cr>
+
+" Fix broken format options for certain filetypes
+autocmd FileType sh setl tw=72 fo-=t
+autocmd FileType python setl tw=79 fo-=t
+autocmd FileType markdown setl fo-=t
+autocmd FileType crontab setl fo-=t
+
+" Fallback for naughty files
+function ToggleFormatting()
+	if stridx(&fo, "t") >= 0
+		setl fo-=t
+	else
+		setl fo+=t
+	endif
+endfunc
+nnoremap <leader>f :call ToggleFormatting()<cr>
 
 
 "- MISCELLANEOUS -"
