@@ -1,19 +1,47 @@
-#!/bin/sh
-# This is my file handler for mailcap-open. It will open youtube-dl
-# capable URLs inside of mpv, and use the default MCO_DOWNLOADER
-# behavior for all other URLs.
+#!/bin/sh -e
+# This is my file handler for mailcap-open, it will:
+# - open youtube-dl capable URLs with mpv
+# - open m3u files with mpv
+# - transparently handle gpg files as if they weren't encrypted
+# - use the default MCO_DOWNLOADER behavior for all other URLs
+#
+
+view_video() {
+	nohup mpv --player-operation-mode=pseudo-gui -- "$1" > /dev/null 2>&1 &
+}
 
 case "$1" in
 	*://*)
 		if youtube-dl -qs "$1" 2> /dev/null; then
-			nohup mpv --player-operation-mode=pseudo-gui -- "$1" 2>&1 &
+			view_video "$1"
 			exit 1
 		fi
 
 		${MCO_DOWNLOADER:-curl} "$1"
 		;;
 	*.m3u)
-		nohup mpv --player-operation-mode=pseudo-gui -- "$1" 2>&1 &
+		view_video "$1"
+		exit 1
+		;;
+	*.gpg)
+		trap 'rm -rf "$tmpd"' EXIT TERM QUIT HUP INT
+		tmpd=$(mktemp -d)
+
+		gpg='gpg2 --no-tty --batch --yes'
+
+		$gpg -d "$1" > "$tmpd/plain"
+
+		cat "$tmpd/plain" > "$tmpd/plain_copy"
+
+		# force it to execute in a terminal, haven't figured out a way
+		# to do it otherwise
+		MCO_NEEDSTERMINAL=1 mailcap-open "$tmpd/plain"
+
+		# update original file, if modified
+		if ! cmp -s "$tmpd/plain" "$tmpd/plain_copy"; then
+			$gpg --default-recipient-self -a -o "$1" -e "$tmpd/plain"
+		fi
+
 		exit 1
 		;;
 	*)
