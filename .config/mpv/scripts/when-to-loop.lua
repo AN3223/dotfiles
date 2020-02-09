@@ -1,15 +1,13 @@
--- Set loop-playlist=inf when a condition is true, conditions are kept in
+-- Sets loop-playlist=inf when a condition is true, conditions are kept in
 -- $MPV_HOME/script-opts/when-to-loop.conf and the defaults go as follows:
 --
 -- shuffle=no    # (loop if shuffled)
--- duration_lt=0 # (loop if the file is longer than n seconds)
--- playlist_gt=0 # (loop if the playlist contains more than n files)
+-- duration_lt=0 # (loop if the file is longer than 0 seconds)
+-- playlist_gt=0 # (loop if the playlist contains more than 0 files)
 --
 -- duration_lt and playlist_gt are checked every file-loaded event and shuffle
 -- is only checked on launch.
 --
--- This script doesn't ever unset the loop, so one does not need to worry about
--- option precedence.
 
 require "mp.options"
 
