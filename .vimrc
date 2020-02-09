@@ -69,9 +69,12 @@ autocmd FileType python setl textwidth=79
 " Show diff between the buffer and the original file
 nnoremap <leader>d :w !diff % -<cr>
 
-" Open mutt in a terminal window while writing an email
-autocmd FileType mail call term_start("mutt", {"term_finish": "close"})
+" Open a read-only mutt instance in a terminal window, and close it whenever
+" the email is closed
+autocmd FileType mail
+	\ call term_start("mutt -R", {"term_finish": "close", "term_name": "mutt"})
 	\ | call feedkeys("\<C-w>p")
+	\ | au QuitPre /tmp/mutt-* ++once bdelete! mutt
 
 syntax enable
 packloadall
