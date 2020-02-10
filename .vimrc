@@ -34,11 +34,15 @@ endif
 
 "- READLINE -"
 
-inoremap <C-a> <Home>   | cnoremap <C-a> <Home>
+inoremap <C-a> <Home>
+cnoremap <C-a> <Home>
 inoremap <C-e> <End>
-inoremap <C-d> <Delete> | cnoremap <C-d> <Delete>
-inoremap <C-f> <Right>  | cnoremap <C-f> <Right>
-inoremap <C-b> <Left>   | cnoremap <C-b> <Left>
+inoremap <C-d> <Delete>
+cnoremap <C-d> <Delete>
+inoremap <C-f> <Right>
+cnoremap <C-f> <Right>
+inoremap <C-b> <Left>
+cnoremap <C-b> <Left>
 inoremap <C-k> <C-o>c$
 
 
