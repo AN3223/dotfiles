@@ -1,0 +1,15 @@
+#!/bin/sh -e
+# This is my status script used for sway/i3
+
+DATE=$(date +'%a, %b %-d %-I:%M %p')
+NOTIFICATION=$(snotify)
+
+# always assume date is non-empty
+RESULT=$DATE
+
+if [ "$NOTIFICATION" ]; then
+	RESULT="${NOTIFICATION} | ${RESULT}"
+fi
+
+printf '%s \n' "$RESULT"
+

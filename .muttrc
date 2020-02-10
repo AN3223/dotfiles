@@ -7,7 +7,7 @@ set ssl_force_tls = yes
 set sort = "reverse-date"
 set pager = "less"
 
-set new_mail_command = "notify-send mutt '%n new message(s)'"
+set new_mail_command = "snotify -n new mail"
 set timeout = 10
 
 # Some vim-like navigation
