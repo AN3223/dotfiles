@@ -1,14 +1,16 @@
 # vi: ft=sh
 # This file is sourced by .shrc
 
-# Updating packages
-update_src() {
+# Update packages
+update() {
 	cd "$(xdistdir)" || return
-	git fetch upstream
 	git pull --rebase upstream master
 	xdistupgrade
+	doas xbps-install -Su
 }
-alias update='update_src && sudo xbps-install -Su'
+
+alias sw='startw'
+alias sx='startx'
 
 # Interactive mode
 alias cp='cp -i'
@@ -24,21 +26,22 @@ alias rg='rg -Suu --color always'
 
 alias net='ping 8.8.8.8'
 
-# Hack to make sudo !! work. The !! substitution will be treated as text,
-# not shell code. So if !! includes a pipe/operator/etc it will be
-# interpreted as an argument
-alias sudo='doas '
-alias !!='$(fc -ln -1)'
-
-alias sudoedit='doasedit'
-alias su='doas -s'
-
 # man-ly info (Also maybe consider info --vi-keys instead of this trick)
 info() {
-	/usr/bin/info --subnodes "$1" | ${PAGER:-less}
+	env info --subnodes "$1" | ${PAGER:-less}
 }
 
-# find $2 -iname $1
+man() {
+	# The POSIX Programmer's Manual uses Unicode minus signs (U+2212)
+	# instead of the hyphen-minus (U+002D), which can make searching for
+	# options difficult.
+	page=$(env man "$@")
+	if [ "$page" ]; then
+		printf %s "$page" | sed s/−/-/g | ${MANPAGER:-${PAGER:-less}}
+	fi
+}
+
+# find $2 -iname *$1*
 # $2 will default to . just like in GNU find
 search() {
 	find "${2:-.}" -iname "*${1}*"

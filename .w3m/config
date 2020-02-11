@@ -1,1 +1,18 @@
-extbrowser sh -c 'printf %s "$0" | wl-copy'
+# vi: ft=conf
+
+# Prompt the user for the browser
+extbrowser sh -c 'read -r b; exec $b $0'
+
+# Aesthetics
+tabstop 4
+anchor_color yellow
+form_color yellow
+visited_color yellow
+image_color red
+
+mailcap ~/.mailcap
+
+no_referer 1
+use_history 0
+save_hist 0
+display_image false

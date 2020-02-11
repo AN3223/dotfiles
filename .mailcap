@@ -1,0 +1,22 @@
+image/*; mpv-img -- "%s"; test=test "$DISPLAY"
+video/*; mpv --player-operation-mode=pseudo-gui -- "%s"; test=test "$DISPLAY"
+audio/*; mpv -- "%s"; needsterminal
+application/octet-stream; mpv -- "%s"; needsterminal
+
+application/pdf; zathura "%s"; test=test "$DISPLAY"
+application/oxps; zathura "%s"; test=test "$DISPLAY"
+application/epub+zip; zathura "%s"; test=test "$DISPLAY"
+application/pdf; pdftotext "%s" -; needsterminal; copiousoutput
+
+# pup does a better job fixing the html than w3m
+text/html; pup < "%s" | w3m -T "%t"; needsterminal; test=command -v pup
+# ...but something is better than nothing
+text/html; w3m "%s" -T "%t"; needsterminal
+
+# n is nnn
+inode/directory; n "%s"; needsterminal
+
+application/json; vim "%s"; needsterminal
+inode/x-empty; vim "%s"; needsterminal
+text/*; vim "%s"; needsterminal
+

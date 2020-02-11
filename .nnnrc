@@ -1,8 +1,9 @@
 # vi: ft=sh
-# This file is source by .shrc
+# This file is sourced by .shrc
 # nnn related settings
 
+# NNN is used by my n script
+export NNN='-c'
 export NNN_USE_EDITOR=1
-export NNN_PLUG='t:thumb;'
-export NNN_BMS="x:$XBPS_DISTDIR;p:$HOME/Data/Podcasts"
+export NNN_OPENER=mailcap-open
 

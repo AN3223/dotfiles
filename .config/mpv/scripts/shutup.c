@@ -2,6 +2,7 @@
 This plugin will set mpv's "quiet" option when stdout/stderr is NOT
 pointing to a terminal.
 
+Compile with:
 gcc -o shutup.so shutup.c `pkg-config --cflags mpv` -shared -fPIC
 */
 

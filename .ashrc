@@ -1,0 +1,18 @@
+# vi: ft=sh
+
+. ~/.shrc
+
+set -o vi # ash vi mode is top notch
+
+AESC=$(printf '\e')
+BESC='m'
+if [ "$(id -u)" -gt 0 ]; then
+	PS1="\\[${AESC}[32${BESC}\\]\$\\[${AESC}[0${BESC}\\] "
+else
+	PS1="${AESC}[31${BESC}#${AESC}[0${BESC} "
+fi
+
+PS1="$(whoami)@$(uname -n) ${PS1}"
+
+export HISTFILE=~/.ash_history
+

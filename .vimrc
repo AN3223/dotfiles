@@ -1,98 +1,86 @@
 "- AESTHETIC -"
 
-set encoding=utf-8
-syntax enable
-set relativenumber number
-
-set bg=dark
+set relativenumber number showcmd bg=dark
 
 " Different cursor shapes in different modes
-let &t_SI = "\<Esc>[4 q"
-let &t_SR = "\<Esc>[4 q"
+let &t_SI = "\<Esc>[4 q" | let &t_SR = &t_SI
 let &t_EI = "\<Esc>[2 q"
 
 
-"- BASIC FUNCTIONALITY -"
+"- ESSENTIALS -"
 
-inoremap jj <Esc>
 let mapleader = ","
-
 tnoremap <Esc> <C-\><C-n>
-
-set spelllang=en
 nnoremap s :setlocal spell!<cr>
-
-nnoremap <leader>w :call system('wl-copy', @")<cr>
-
 nnoremap q: <nop>
-nnoremap Q  <nop>
+set encoding=utf-8 ttimeoutlen=0
 
 
-"- INDENTATION -"
+"- WAYLAND -"
 
-filetype plugin indent on
-set autoindent
-
-
-"- COMMENTS -"
-
-nnoremap #  I#<Esc>
-nnoremap // I//<Esc>
-nnoremap -- I--<Esc>
-nnoremap /* I/* <Esc>A */<Esc>
-vnoremap /* c/**/<Left><Left><Esc>p
-
-nnoremap ;; A;<Esc>
+" Writes the contents of @w into the clipboard when @w is updated
+if len($WAYLAND_DISPLAY) > 0
+	au TextYankPost * if v:event.regname == "w" | call system('wl-copy', @w)
+endif
 
 
 "- SEARCH -"
 
-set ignorecase smartcase
-set incsearch
-set grepprg=rg\ --vimgrep
-
-
-"- AUTOCLOSE -"
-
-vnoremap <leader>{ c{}<Left><Esc>p
-vnoremap <leader>( c()<Left><Esc>p
-vnoremap <leader>" c""<Left><Esc>p
-vnoremap <leader>[ c[]<Left><Esc>p
-vnoremap <leader>' c''<Left><Esc>p
-vnoremap <leader>< c<><Left><Esc>p
+set ignorecase smartcase incsearch
+if executable("rg")
+	set grepprg=rg\ --vimgrep
+endif
 
 
 "- READLINE -"
-" This isn't even close to complete but it's all that matters to me. C-p and
-" C-n are omitted since they have special meanings already.
 
 inoremap <C-a> <Home>
+cnoremap <C-a> <Home>
 inoremap <C-e> <End>
 inoremap <C-d> <Delete>
-inoremap <C-k> <Esc>c$
+cnoremap <C-d> <Delete>
 inoremap <C-f> <Right>
+cnoremap <C-f> <Right>
 inoremap <C-b> <Left>
+cnoremap <C-b> <Left>
+inoremap <C-k> <C-o>c$
 
 
-"- WINDOWS -"
+"- LINTING -"
 
-nnoremap H <C-w>h
-nnoremap J <C-w>j
-nnoremap K <C-w>k
-nnoremap L <C-w>l
-
-
-"- ALE -"
-
-let g:ale_lint_on_text_changed = "never"
-let g:ale_c_gcc_options = '-std=c90 -Wall'
-let g:ale_lint_on_insert_leave = "0"
+autocmd FileType python compiler pylint
+autocmd FileType sh,bash setl makeprg=shellcheck
+autocmd FileType c setl makeprg=splint
+nnoremap <leader>m :make %<cr>
 
 
-"- MISCELLANEOUS -"
+"- FORMATTING -"
 
-nnoremap <leader>e :vsplit $MYVIMRC<cr>
-nnoremap <leader>s :source $MYVIMRC<cr>
+filetype plugin indent on
+set autoindent tabstop=4 shiftwidth=0
 
+" Strip trailing whitespace on write
+autocmd BufWritePre * %s/\s\+$//e
+
+set formatoptions+=aown
+autocmd FileType sh,python,markdown,crontab,scheme setl fo-=t
+autocmd FileType sh setl textwidth=72
+autocmd FileType python setl textwidth=79
+
+
+"- MISC -"
+
+" Show diff between the buffer and the original file
+nnoremap <leader>d :w !diff % -<cr>
+
+" Open a read-only mutt instance in a terminal window, and close it whenever
+" the email is closed
+autocmd FileType mail
+	\ call term_start("mutt -R", {"term_finish": "close", "term_name": "mutt"})
+	\ | call feedkeys("\<C-w>p")
+	\ | au QuitPre /tmp/mutt-* ++once bdelete! mutt
+
+syntax enable
 packloadall
 silent! helptags ALL
+

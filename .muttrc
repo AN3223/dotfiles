@@ -1,18 +1,20 @@
 set realname = "Ethan R"
 set from = "ethanr2048@gmail.com"
 
-set pop_host = "pops://$from@pop.gmail.com:995"
 set smtp_url = "smtps://$from@smtp.gmail.com:465"
 set ssl_force_tls = yes
 
 set sort = "reverse-date"
 set pager = "less"
 
+set new_mail_command = "snotify -n new mail"
+set timeout = 10
+
 # Some vim-like navigation
 bind attach,index g first-entry
 bind attach,index G last-entry
 
-# Rebinding overwritten functions elsewhere
-bind index        <F2> fetch-mail
-bind attach,index <F3> group-reply
+bind attach,index <F2> group-reply
+
+color index default default ~P
 

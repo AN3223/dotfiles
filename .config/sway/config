@@ -13,53 +13,42 @@ set $right l
 set $term alacritty
 set $termcmd alacritty -e
 
-set $menu alacritty -t fzf_recent -e fzf_recent_sway
+set $menu alacritty -t fzfrecent -e fzfrecent_sway
 
 ################----------------THEMING----------------################
 
-font Fira Mono 9
+font Fira Code 9
 
 default_border pixel 1
 smart_borders on
 
-set $gnome-schema org.gnome.desktop.interface
-exec_always {
-    gsettings set $gnome-schema gtk-theme 'Breeze-Dark'
-    gsettings set $gnome-schema icon-theme 'breeze-dark'
-    gsettings set $gnome-schema cursor-theme 'Vanilla-DMZ'
-}
-
-exec xrdb ~/.Xresources
-
-set $grey      #323232
-set $lightgrey #5c5c5c
-set $highlight #3DAEE9
-set $white     #eff0f1
-set $bg        #31363b
-set $black     #900000
-set $red       #CB4B16
+set $fg  #ebdbb2
+set $bg  #282828
+set $hl1 #d79921
+set $hl2 #928374
+set $hl3 #cc241d
 
 # Sway theme
 # class                   border     backgr.    text    indic.     child_border
-  client.focused          $highlight $bg        $white  $highlight $highlight
-  client.focused_inactive $bg        $bg        $white  $bg        $bg
-  client.unfocused        $bg        $bg        $white  $bg        $bg
-  client.urgent           $red       $red       $white  $black     $black
+  client.focused          $hl1       $bg        $fg     $hl1       $hl1
+  client.focused_inactive $bg        $bg        $fg     $bg        $bg
+  client.unfocused        $bg        $bg        $fg     $bg        $bg
+  client.urgent           $hl3       $hl3       $fg     $bg        $bg
 
 bar {
     position top
 
-    status_command while date +'%a, %b %-d %-I:%M %p '; do sleep 5; done
+    status_command while ~/.status; do sleep 1; done
 
     colors {
-        statusline $white
+        statusline $fg
         background $bg
-        inactive_workspace $grey $grey $lightgrey
-        focused_workspace $grey $white $grey
+        inactive_workspace $hl2 $bg $hl2
+        focused_workspace $hl1 $bg $hl1
     }
 }
 
-output * bg ~/void-linux.png fill
+output * bg $bg solid_color
 
 #######################################################################
 
@@ -70,17 +59,15 @@ bindswitch lid:on exec blurlock
 bindsym $launch+Shift+i  exec firefox
 bindsym $launch+q        exec qutebrowser
 bindsym $launch+r        exec retroarch
-bindsym $launch+f        exec $termcmd nnn
-bindsym $launch+b        exec $termcmd newsboat
+bindsym $launch+f        exec $termcmd n
 bindsym $launch+i        exec $termcmd w3m
 bindsym $launch+w        exec $termcmd weechat
 bindsym $launch+a        exec $termcmd alsamixer
 bindsym $launch+h        exec $termcmd htop
 bindsym $launch+g        exec $termcmd gotop
 bindsym $launch+m        exec $termcmd mutt
-bindsym $launch+c        exec $termcmd ping 8.8.8.8
-
 bindsym $launch+l        exec blurlock
+bindsym $launch+c        exec snotify -d
 
 # Screenshots
 bindsym Print exec grim \"$HOME/shots/$(date +%c).png"
@@ -113,7 +100,7 @@ bindsym $mod+m seat * hide_cursor 5000
 bindsym $mod+Shift+m seat * hide_cursor 0
 
 bindsym $mod+Return exec $term
-bindsym $mod+Shift+Return exec $termcmd nnn
+bindsym $mod+Shift+Return exec $termcmd n
 
 # kill focused window
 bindsym $mod+Shift+q kill
@@ -246,7 +233,12 @@ mode "resize" {
 }
 bindsym $mod+r mode "resize"
 
-for_window [title="^fzf_recent$"] floating enable
+mode "passthrough" {
+    bindsym $mod+Escape mode "default"
+}
+bindsym $mod+Escape mode "passthrough"
+
+for_window [title="^fzfrecent$"] floating enable
 
 include windows
 include /etc/sway/config.d/*
