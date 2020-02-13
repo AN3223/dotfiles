@@ -3,10 +3,9 @@ video/*; mpv --player-operation-mode=pseudo-gui -- "%s"; test=test "$DISPLAY"
 audio/*; mpv -- "%s"; needsterminal
 application/octet-stream; mpv -- "%s"; needsterminal
 
-application/pdf; zathura "%s"; test=test "$DISPLAY"
 application/oxps; zathura "%s"; test=test "$DISPLAY"
 application/epub+zip; zathura "%s"; test=test "$DISPLAY"
-application/pdf; pdftotext "%s" -; needsterminal; copiousoutput
+application/pdf; pdftotext -layout -nopgbrk "%s"
 
 # pup does a better job fixing the html than w3m
 text/html; pup < "%s" | w3m -T "%t"; needsterminal; test=command -v pup
