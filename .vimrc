@@ -81,6 +81,6 @@ autocmd FileType mail
 	\ | au QuitPre /tmp/mutt-* ++once bdelete! mutt
 
 syntax enable
-packloadall
+packadd! matchit
 silent! helptags ALL
 
