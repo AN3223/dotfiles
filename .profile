@@ -11,7 +11,6 @@ HOSTNAME="$(uname -n)"; export HOSTNAME;
 
 export WWW_HOME='https://duckduckgo.com/lite'
 
-export XBPS_DISTDIR="$HOME/devel/void-packages/"
 export SVDIR="$HOME/.config/service/"
 
 export TERMINAL='alacritty'
