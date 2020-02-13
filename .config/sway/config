@@ -243,6 +243,7 @@ for_window [title="^fzfrecent$"] floating enable
 include windows
 include /etc/sway/config.d/*
 
+xwayland disable
 exec swayidle                                  \
     timeout 240   'wl-copy --clear'            \
     timeout 900   blurlock                     \
