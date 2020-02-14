@@ -1,5 +1,6 @@
 scrolling:
   auto_scroll: false
+  history: 100
 
 window:
   dimensions:

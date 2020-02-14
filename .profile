@@ -22,7 +22,7 @@ export ALSA_MASTER='PCM'
 
 export EDITOR='vim'
 export PAGER='less'
-export LESS='-Ri'
+export LESS='-Ri --save-marks'
 
 export QT_QPA_PLATFORMTHEME='qt5ct'
 export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0

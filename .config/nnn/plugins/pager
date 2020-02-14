@@ -1,0 +1,5 @@
+#!/bin/sh
+# Opens a pager, because nnn doesn't know how
+
+exec ${PAGER:-less} "$1"
+
