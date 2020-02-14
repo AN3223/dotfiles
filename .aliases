@@ -26,6 +26,8 @@ alias rg='rg -Suu --color always'
 
 alias net='ping 8.8.8.8'
 
+alias todo='${EDITOR:-vi} ~/TODO'
+
 # man-ly info (Also maybe consider info --vi-keys instead of this trick)
 info() {
 	env info --subnodes "$1" | ${PAGER:-less}
