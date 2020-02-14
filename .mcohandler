@@ -1,13 +1,17 @@
 #!/bin/sh -e
 # This is my file handler for mailcap-open, it will:
-# - open youtube-dl capable URLs with mpv
-# - open m3u files with mpv
+# - open youtube-dl capable URLs with video player
+# - open m3u files with video player
 # - transparently handle gpg files as if they weren't encrypted
 # - use the default MCO_DOWNLOADER behavior for all other URLs
 #
 
+# pushes the URL/file straight to the video player
 view_video() {
-	nohup mpv --player-operation-mode=pseudo-gui -- "$1" > /dev/null 2>&1 &
+	# hack to force a particular mimetype on mailcap-open
+	export MIMER="printf video/generic"
+	export MCO_HANDLER=':'
+	mailcap-open "$1"
 	exit 1
 }
 
