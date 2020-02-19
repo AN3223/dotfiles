@@ -28,8 +28,13 @@ export LESS='-Ri --save-marks'
 export QT_QPA_PLATFORMTHEME='qt5ct'
 export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0
 
+# needed for sway w/o elogind
 if [ ! "$XDG_RUNTIME_DIR" ]; then
 	XDG_RUNTIME_DIR=/tmp/$(id -u)-runtime-dir; export XDG_RUNTIME_DIR;
 	[ ! -d "$XDG_RUNTIME_DIR" ] && mkdir "$XDG_RUNTIME_DIR"
 fi
+
+# prompt the user for their gpg passphrase, so it can be cached for
+# unattended use
+pass show blank
 

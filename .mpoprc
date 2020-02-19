@@ -1,0 +1,11 @@
+defaults
+delivery maildir /var/mail/user
+
+account gmail
+tls on
+tls_starttls off
+host pop.gmail.com
+user ethanr2048
+passwordeval pass show email
+
+account default : gmail
