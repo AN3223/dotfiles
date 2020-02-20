@@ -1,8 +1,7 @@
 set realname = "Ethan R"
 set from = "ethanr2048@gmail.com"
 
-set smtp_url = "smtps://$from@smtp.gmail.com:465"
-set ssl_force_tls = yes
+set sendmail = '/usr/bin/env msmtp --'
 
 set sort = "reverse-date"
 set pager = "less"
