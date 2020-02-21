@@ -1,5 +1,5 @@
 defaults
-delivery maildir /var/mail/user
+delivery maildir /home/user/Mail
 
 account gmail
 tls on

@@ -13,6 +13,7 @@ export WWW_HOME='https://duckduckgo.com/lite'
 
 export XBPS_DISTDIR="$HOME/devel/void-packages/"
 export SVDIR="$HOME/.config/service/"
+export MAIL="$HOME/Mail"
 
 export TERMINAL='alacritty'
 export TERMCMD='alacritty -e'
