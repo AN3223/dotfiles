@@ -12,6 +12,7 @@ HOSTNAME="$(uname -n)"; export HOSTNAME;
 export WWW_HOME='https://duckduckgo.com/lite'
 
 export SVDIR="$HOME/.config/service/"
+export MAIL="$HOME/Mail"
 
 export TERMINAL='alacritty'
 export TERMCMD='alacritty -e'
@@ -27,9 +28,9 @@ export LESS='-Ri --save-marks'
 export QT_QPA_PLATFORMTHEME='qt5ct'
 export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0
 
+# needed for sway w/o elogind
 if [ ! "$XDG_RUNTIME_DIR" ]; then
 	XDG_RUNTIME_DIR=/tmp/$(id -u)-runtime-dir; export XDG_RUNTIME_DIR;
 	[ ! -d "$XDG_RUNTIME_DIR" ] && mkdir "$XDG_RUNTIME_DIR"
 fi
-
 

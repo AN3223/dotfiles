@@ -103,7 +103,7 @@ bindsym $mod+Return exec $term
 bindsym $mod+Shift+Return exec $termcmd n
 
 # kill focused window
-bindsym $mod+Shift+q kill
+bindsym --release $mod+Shift+q kill
 
 # start application launcher
 bindsym $mod+d exec $menu

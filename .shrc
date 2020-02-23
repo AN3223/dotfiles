@@ -12,15 +12,3 @@ umask 077
 # This stops C-s from being annoying in vim
 stty -ixon
 
-# autostart tmux
-while command -v tmux > /dev/null 2>&1; do
-	# don't nest sessions
-	[ "$TMUX" ] && break
-
-	# skip login shells
-	case "$0" in -*) break;; esac
-
-	tmux
-	break
-done
-

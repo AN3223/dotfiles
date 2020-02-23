@@ -1,14 +1,14 @@
-image/*; mpv-img -- "%s"; test=test "$DISPLAY"
+image/*; mpv-img -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 image/*; mpv-img --vo=tct -- "%s"; needsterminal
 
-video/*; mpv --player-operation-mode=pseudo-gui -- "%s"; test=test "$DISPLAY"
+video/*; mpv -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 video/*; mpv --vo=tct -- "%s"; needsterminal
 
 audio/*; mpv -- "%s"; needsterminal
 application/octet-stream; mpv -- "%s"; needsterminal
 
-application/oxps; zathura "%s"; test=test "$DISPLAY"
-application/epub+zip; zathura "%s"; test=test "$DISPLAY"
+application/oxps; zathura "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
+application/epub+zip; zathura "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 
 # doesn't actually view the pdf, just converts it to text and drops it into the
 # same directory.
