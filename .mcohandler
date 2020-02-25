@@ -36,24 +36,11 @@ case "$1" in
 		view_video "$1"
 		;;
 	*.gpg)
-		trap 'rm -rf "$tmpd"' EXIT TERM QUIT HUP INT
-		tmpd=$(mktemp -d)
-
-		gpg='gpg2 --no-tty --batch --yes'
-
-		$gpg -d "$1" > "$tmpd/plain"
-
-		cat "$tmpd/plain" > "$tmpd/plain_copy"
-
 		# force it to execute in a terminal, haven't figured out a way
 		# to do it otherwise
-		MCO_NEEDSTERMINAL=1 mailcap-open "$tmpd/plain"
-
-		# update original file, if modified
-		if ! cmp -s "$tmpd/plain" "$tmpd/plain_copy"; then
-			$gpg --default-recipient-self -a -o "$1" -e "$tmpd/plain"
-		fi
-
+		export MCO_NEEDSTERMINAL=1
+		export EDITOR='mailcap-open'
+		gpgedit "$1"
 		exit 1
 		;;
 	*)
