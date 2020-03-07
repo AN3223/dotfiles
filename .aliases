@@ -3,10 +3,11 @@
 
 # Update packages
 update() {
+	doas xbps-install -Su xbps
 	cd "$(xdistdir)" || return
 	git pull --rebase upstream master
 	xdistupgrade
-	doas xbps-install -Su
+	doas xbps-install -u
 }
 
 alias sw='startw'
