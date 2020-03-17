@@ -70,6 +70,9 @@ autocmd FileType python setl textwidth=79
 
 "- MISC -"
 
+" Help with performance
+set lazyredraw nottyfast
+
 " Show diff between the buffer and the original file
 nnoremap <leader>d :w !diff % -<cr>
 
