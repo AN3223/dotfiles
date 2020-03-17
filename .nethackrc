@@ -2,3 +2,4 @@ OPTIONS=color,showrace,hitpointbar
 OPTIONS=!autopickup
 OPTIONS=!legacy,force_invmenu
 OPTIONS=pettype:none
+OPTIONS=DECgraphics
