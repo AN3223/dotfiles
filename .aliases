@@ -29,6 +29,8 @@ alias net='ping 8.8.8.8'
 
 alias todo='${EDITOR:-vi} ~/TODO'
 
+alias rtorrent='tmux -L rtorrent attach -t rtorrent'
+
 # search for youtube videos
 youtube() {
 	mpv ytdl://ytsearchall:"$*"
