@@ -31,7 +31,7 @@ alias todo='${EDITOR:-vi} ~/TODO'
 
 # search for youtube videos
 youtube() {
-	mpv ytdl://ytsearchall:"$1"
+	mpv ytdl://ytsearchall:"$*"
 }
 
 # man-ly info (Also maybe consider info --vi-keys instead of this trick)
