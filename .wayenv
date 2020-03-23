@@ -1,6 +1,6 @@
 #!/bin/sh
-# This file is sourced by the startw alias (see ~/.aliases)
 # Environment variables for enabling various Wayland backends
+# This file is sourced by my startw script
 
 export QT_QPA_PLATFORM=wayland
 export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
