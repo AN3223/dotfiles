@@ -13,6 +13,10 @@ update() {
 alias sw='startw'
 alias sx='startx'
 
+alias :q='exit'
+alias :wq='exit'
+alias :e='vim '
+
 # Interactive mode
 alias cp='cp -i'
 alias mv='mv -i'
