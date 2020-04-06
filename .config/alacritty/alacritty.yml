@@ -47,6 +47,8 @@ colors:
     cyan:    '0x8ec07c'
     white:   '0xebdbb2'
 
+draw_bold_text_with_bright_colors: true
+
 background_opacity: 0.80
 
 mouse.hide_when_typing: true
