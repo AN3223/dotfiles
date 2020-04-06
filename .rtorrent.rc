@@ -1,0 +1,5 @@
+directory = ~/Data/Torrents
+upload_rate = 400
+encryption = require_RC4
+session = ~/.rtorrent
+
