@@ -62,7 +62,7 @@ bindsym $launch+a        exec $termcmd alsamixer
 bindsym $launch+h        exec $termcmd htop
 bindsym $launch+g        exec $termcmd gotop
 bindsym $launch+m        exec $termcmd mutt
-bindsym $launch+l        exec blurlock
+bindsym $launch+l        exec i3lock --color=282828
 bindsym $launch+c        exec snotify -d
 
 # Screenshots

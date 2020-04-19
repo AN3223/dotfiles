@@ -63,7 +63,7 @@ bindsym $launch+a        exec $termcmd alsamixer
 bindsym $launch+h        exec $termcmd htop
 bindsym $launch+g        exec $termcmd gotop
 bindsym $launch+m        exec $termcmd mutt
-bindsym $launch+l        exec blurlock
+bindsym $launch+l        exec swaylock --color 282828
 bindsym $launch+c        exec snotify -d
 
 # Screenshots
@@ -238,12 +238,23 @@ bindsym $mod+Escape mode "passthrough"
 
 for_window [title="^fzfrecent$"] floating enable
 
+#
+# Multi-monitor
+#
+output HDMI-A-1 position 0 0
+output DVI-D-1 position 1920 0
+output DP-4 position 3840 0
+workspace 1 output HDMI-A-1
+workspace 2 output DVI-D-1
+workspace 3 output DP-4
+exec swaymsg focus output HDMI-A-1
+
 include windows
 include /etc/sway/config.d/*
 
 exec swayidle                                  \
     timeout 240   'wl-copy --clear'            \
-    timeout 900   blurlock                     \
+    timeout 900  'swaylock -c 282828'          \
     timeout 1000 'swaymsg "output * dpms off"' \
     resume       'swaymsg "output * dpms on"'
 
