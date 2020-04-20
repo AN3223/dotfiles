@@ -2,13 +2,14 @@
 # This file is sourced by .shrc
 
 # Update packages
-update() {
-	doas xbps-install -Su xbps
+update() {(
+	doas xbps-install -Syu xbps
+	doas xbps-install -yu
 	cd "$(xdistdir)" || return
+	git switch personal
 	git pull --rebase upstream master
 	xdistupgrade
-	doas xbps-install -u
-}
+)}
 
 alias sw='startw'
 alias sx='startx'
