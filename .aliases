@@ -38,7 +38,7 @@ alias rtorrent='tmux -L rtorrent attach -t rtorrent'
 
 # search for youtube videos
 youtube() {
-	mpv ytdl://ytsearchall:"$*"
+	mpv --no-resume-playback ytdl://ytsearch10:"$*"
 }
 
 # man-ly info (Also maybe consider info --vi-keys instead of this trick)
