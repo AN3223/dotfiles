@@ -3,10 +3,11 @@
 
 # Update packages
 update() {(
+	set -e
 	doas xbps-install -Syu xbps
 	doas xbps-install -yu
-	cd "$(xdistdir)" || return
-	git switch personal
+	cd "$(xdistdir)"
+	git switch master
 	git pull --rebase upstream master
 	xdistupgrade
 )}
@@ -36,29 +37,19 @@ alias todo='${EDITOR:-vi} ~/TODO'
 
 alias rtorrent='tmux -L rtorrent attach -t rtorrent'
 
-# search for youtube videos
-youtube() {
-	mpv --no-resume-playback ytdl://ytsearch10:"$*"
-}
-
 # man-ly info (Also maybe consider info --vi-keys instead of this trick)
-info() {
-	env info --subnodes "$1" | ${PAGER:-less}
-}
+info() { env info --subnodes "$1" | ${PAGER:-less}; }
 
+# The POSIX Programmer's Manual uses Unicode minus signs (U+2212)
+# instead of the hyphen-minus (U+002D), which can make searching for
+# options difficult.
 man() {
-	# The POSIX Programmer's Manual uses Unicode minus signs (U+2212)
-	# instead of the hyphen-minus (U+002D), which can make searching for
-	# options difficult.
 	page=$(env man "$@")
 	if [ "$page" ]; then
 		printf %s "$page" | sed s/−/-/g | ${MANPAGER:-${PAGER:-less}}
 	fi
 }
 
-# find $2 -iname *$1*
-# $2 will default to . just like in GNU find
-search() {
-	find "${2:-.}" -iname "*${1}*"
-}
+# brainless file search
+search() { find "${2:-.}" -iname "*${1}*"; }
 
