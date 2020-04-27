@@ -19,6 +19,8 @@ alias :q='exit'
 alias :wq='exit'
 alias :e='vim '
 
+alias e='exec '
+
 # Interactive mode
 alias cp='cp -i'
 alias mv='mv -i'
@@ -27,6 +29,7 @@ alias killall='killall -i'
 # Colors/human-readable
 alias dmesg='dmesg -H'
 alias df='df -h'
+alias du='du -h'
 alias diff='diff --color=always'
 alias ls='ls --color=always'
 alias rg='rg -Suu --color always'
