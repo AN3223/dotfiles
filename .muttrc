@@ -17,3 +17,5 @@ bind attach,index <F2> group-reply
 
 color index default default ~P
 
+ignore *
+unignore from: subject to cc date x-mailer x-url

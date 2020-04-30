@@ -2,15 +2,7 @@
 # This file is sourced by .shrc
 
 # Update packages
-update() {(
-	set -e
-	doas xbps-install -Syu xbps
-	doas xbps-install -yu
-	cd "$(xdistdir)"
-	git switch master
-	git pull --rebase upstream master
-	xdistupgrade
-)}
+update() { doas sh -c 'emerge --sync && emerge -auND @world && emerge -ac'; }
 
 alias sw='startw'
 alias sx='startx'
@@ -30,9 +22,11 @@ alias killall='killall -i'
 alias dmesg='dmesg -H'
 alias df='df -h'
 alias du='du -h'
-alias diff='diff --color=always'
-alias ls='ls --color=always'
-alias rg='rg -Suu --color always'
+if ls --version 2>&1 | grep -q GNU; then
+	alias diff='diff --color=always'
+	alias ls='ls --color=always'
+	alias rg='rg -Suu --color always'
+fi
 
 alias net='ping 8.8.8.8'
 

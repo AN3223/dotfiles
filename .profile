@@ -13,7 +13,7 @@ export WWW_HOME='https://duckduckgo.com/lite'
 
 export XBPS_DISTDIR="$HOME/devel/void-packages/"
 export SVDIR="$HOME/.config/service/"
-export MAIL="$HOME/Mail"
+export MAIL="$HOME/.maildir"
 
 export TERMINAL='alacritty'
 export TERMCMD='alacritty -e'
@@ -21,6 +21,7 @@ export TERMCMD='alacritty -e'
 export MCO_HANDLER="$HOME/.mcohandler"
 
 export ALSA_MASTER='PCM'
+export ALSA_CARD='CODEC'
 
 export EDITOR='vim'
 export PAGER='less'
