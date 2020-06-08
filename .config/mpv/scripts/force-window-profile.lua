@@ -16,7 +16,7 @@
 -- fullscreen=no
 -- audio-display=attachment
 
-if mp.get_property("force-window") == "yes" then
+if mp.get_property("force-window") ~= "no" then
 	mp.command("apply-profile force-window")
 end
 
