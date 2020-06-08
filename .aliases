@@ -2,7 +2,10 @@
 # This file is sourced by .shrc
 
 # Update packages
-update() { doas sh -c 'emerge --sync && emerge -auND @world && emerge -ac'; }
+update() {(
+	renice -n +19 $$
+	doas sh -c 'emerge --sync && emerge -auND @world && emerge -ac'
+)}
 
 alias sw='startw'
 alias sx='startx'
