@@ -1,7 +1,7 @@
 image/*; mpv-img -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 image/*; mpv-img --vo=tct -- "%s"; needsterminal
 
-video/*; mpv -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
+video/*; mpv --force-window=immediate -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 video/*; mpv --vo=tct -- "%s"; needsterminal
 
 audio/*; mpv -- "%s"; needsterminal
