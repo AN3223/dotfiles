@@ -7,6 +7,7 @@ video/*; mpv --vo=tct -- "%s"; needsterminal
 audio/*; mpv -- "%s"; needsterminal
 application/octet-stream; mpv -- "%s"; needsterminal
 
+application/pdf; zathura "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 application/oxps; zathura "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 application/epub+zip; zathura "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 
