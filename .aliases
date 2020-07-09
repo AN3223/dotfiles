@@ -4,7 +4,7 @@
 # Update packages
 update() {(
 	renice -n +19 $$
-	doas sh -c 'emerge --sync && emerge -auND @world && emerge -ac'
+	doas sh -c 'mount /boot && emerge --sync && emerge -auND @world && emerge -ac'
 )}
 
 alias sw='startw'
