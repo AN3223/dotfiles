@@ -66,6 +66,7 @@ set formatoptions+=aown
 autocmd FileType sh,python,markdown,crontab,scheme setl fo-=t
 autocmd FileType sh setl textwidth=72
 autocmd FileType python setl textwidth=79
+autocmd FileType json setl expandtab tabstop=2
 
 
 "- MISC -"
