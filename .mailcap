@@ -1,3 +1,4 @@
+image/x-xcf; gimp -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 image/*; mpv-img -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 image/*; mpv-img --vo=tct -- "%s"; needsterminal
 
@@ -8,6 +9,8 @@ audio/*; mpv -- "%s"; needsterminal
 application/octet-stream; mpv -- "%s"; needsterminal
 
 application/pdf; zathura "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
+application/vnc.comicbook-rar; zathura "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
+application/vnd.comicbook+zip; zathura "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 application/oxps; zathura "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 application/epub+zip; zathura "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 
