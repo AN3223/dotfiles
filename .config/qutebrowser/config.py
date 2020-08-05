@@ -24,8 +24,8 @@ c.url.default_page = "about:blank"
 # Think "m for media"
 config.unbind('m')
 config.unbind('M')
-config.bind('mm', 'hint links spawn mpv {hint-url}')
-config.bind('mcm', 'spawn mpv {url}')
+config.bind('mm', 'hint links spawn mpv --force-window=immediate {hint-url}')
+config.bind('mcm', 'spawn mpv --force-window=immediate {url}')
 config.bind('md', 'hint -r links spawn youtube-dl {hint-url} -o ~/Downloads/%(title)s')
 config.bind('mcd', 'spawn youtube-dl {url} -o ~/Downloads/%(title)s')
 
