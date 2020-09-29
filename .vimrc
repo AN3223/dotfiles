@@ -13,6 +13,9 @@ let mapleader = ","
 tnoremap <Esc> <C-\><C-n>
 nnoremap s :setlocal spell!<cr>
 nnoremap q: <nop>
+nnoremap J gt
+nnoremap K gT
+
 set encoding=utf-8 ttimeoutlen=0
 
 
