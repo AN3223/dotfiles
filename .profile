@@ -23,9 +23,20 @@ export MCO_HANDLER="$HOME/.mcohandler"
 export ALSA_MASTER='PCM'
 export ALSA_CARD='CODEC'
 
-export EDITOR='vim'
-export PAGER='less'
-export LESS='-Ri --save-marks'
+if command -v vim > /dev/null 2>&1; then
+	export EDITOR='vim'
+else
+	export EDITOR='vi'
+fi
+
+if less --help 2>&1 | head -n 1 | grep -qi busybox; then
+	export PAGER='less -RI'
+else
+	export PAGER='less'
+	export LESS='-Ri --save-marks'
+fi
+
+export SUDO='doas'
 
 export QT_QPA_PLATFORMTHEME='qt5ct'
 export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0

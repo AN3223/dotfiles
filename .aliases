@@ -12,23 +12,21 @@ alias sx='startx'
 
 alias :q='exit'
 alias :wq='exit'
-alias :e='vim '
+alias :e='${EDITOR:-vi} '
 
 alias e='exec '
 
 # Interactive mode
 alias cp='cp -i'
 alias mv='mv -i'
-alias killall='killall -i'
 
 # Colors/human-readable
-alias dmesg='dmesg -H'
 alias df='df -h'
 alias du='du -h'
 if ls --version 2>&1 | grep -q GNU; then
 	alias diff='diff --color=always'
 	alias ls='ls --color=always'
-	alias rg='rg -Suu --color always'
+	alias dmesg='dmesg -H'
 fi
 
 alias net='ping 8.8.8.8'

@@ -29,11 +29,7 @@ endif
 
 "- SEARCH -"
 
-set ignorecase smartcase incsearch
-if executable("rg")
-	set grepprg=rg\ --vimgrep
-endif
-
+set ignorecase smartcase
 
 "- READLINE -"
 
