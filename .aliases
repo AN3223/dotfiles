@@ -2,10 +2,9 @@
 # This file is sourced by .shrc
 
 # Update packages
-update() {(
-	renice -n +19 $$
+update() {
 	doas sh -c 'mount /boot; emerge --sync && emerge -auND @world && emerge -ac'
-)}
+}
 
 alias sw='startw'
 alias sx='startx'
