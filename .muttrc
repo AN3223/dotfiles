@@ -1,7 +1,7 @@
 set realname = "Ethan R"
 set from = "ethanr2048@gmail.com"
 
-set sendmail = '/usr/bin/env msmtp --'
+set sendmail = "env MAILMAN_URL=smtp.gmail.com:465 mailman --"
 
 set sort = "reverse-date"
 set pager = "less"

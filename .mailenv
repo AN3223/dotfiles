@@ -1,0 +1,7 @@
+# vi: ft=sh
+# This file is sourced by ~/.profile
+
+export MAIL="$HOME/.maildir"
+export MAILMAN_USERNAME='ethanr2048@gmail.com'
+export MAILMAN_PASS_CMD='pass show email'
+

@@ -11,9 +11,7 @@ HOSTNAME="$(uname -n)"; export HOSTNAME;
 
 export WWW_HOME='https://duckduckgo.com/lite'
 
-export XBPS_DISTDIR="$HOME/devel/void-packages/"
 export SVDIR="$HOME/.config/service/"
-export MAIL="$HOME/.maildir"
 
 export TERMINAL='alacritty'
 export TERMCMD='alacritty -e'
@@ -38,8 +36,9 @@ fi
 
 export SUDO='doas'
 
-export QT_QPA_PLATFORMTHEME='qt5ct'
 export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0
+
+. ~/.mailenv
 
 # needed for sway w/o elogind
 if [ ! "$XDG_RUNTIME_DIR" ]; then
