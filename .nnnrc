@@ -5,6 +5,6 @@
 # NNN is used by my n script
 export NNN='-c'
 export NNN_USE_EDITOR=1
-export NNN_OPENER=mailcap-open
+export NNN_OPENER=mailcap_open
 export NNN_PLUG='p:-pager'
 
