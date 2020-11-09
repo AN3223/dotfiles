@@ -1,8 +1,8 @@
 image/x-xcf; gimp -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 image/gif; mpv --force-window=immediate -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 image/gif; mpv --vo=tct -- "%s"; needsterminal
-image/*; mpv-img -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
-image/*; mpv-img --vo=tct -- "%s"; needsterminal
+image/*; mpv_img -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
+image/*; mpv_img --vo=tct -- "%s"; needsterminal
 
 video/*; mpv --force-window=immediate -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 application/vnd.rn-realmedia; mpv --force-window=immediate -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
