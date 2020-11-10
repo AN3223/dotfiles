@@ -43,6 +43,8 @@ cnoremap <C-f> <Right>
 inoremap <C-b> <Left>
 cnoremap <C-b> <Left>
 inoremap <C-k> <C-o>c$
+cnoremap <C-p> <Up>
+cnoremap <C-n> <Down>
 
 
 "- LINTING -"
