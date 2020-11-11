@@ -9,7 +9,7 @@
 # pushes the URL/file straight to the video player
 view_video() {
 	# hack to force a particular mimetype on mailcap_open
-	export MIMER="printf video/generic"
+	export MIMER="printf video/generic\n"
 	export MCO_HANDLER=':'
 	mailcap_open "$1"
 	exit 1
