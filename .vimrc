@@ -1,23 +1,21 @@
 "- AESTHETIC -"
 
-set relativenumber number bg=dark
+set number bg=dark
 
 " Different cursor shapes in different modes
 let &t_SI = "\<Esc>[4 q" | let &t_SR = &t_SI
 let &t_EI = "\<Esc>[2 q"
 
-
 "- ESSENTIALS -"
 
 let mapleader = ","
-tnoremap <Esc> <C-\><C-n>
 nnoremap s :setlocal spell!<cr>
 nnoremap q: <nop>
 nnoremap J gt
 nnoremap K gT
 
 set encoding=utf-8 ttimeoutlen=0
-
+set ignorecase smartcase
 
 "- WAYLAND -"
 
@@ -25,11 +23,6 @@ set encoding=utf-8 ttimeoutlen=0
 if len($WAYLAND_DISPLAY) > 0
 	au TextYankPost * if v:event.regname == "w" | call system('wl-copy', @w)
 endif
-
-
-"- SEARCH -"
-
-set ignorecase smartcase
 
 "- READLINE -"
 
@@ -46,15 +39,6 @@ inoremap <C-k> <C-o>c$
 cnoremap <C-p> <Up>
 cnoremap <C-n> <Down>
 
-
-"- LINTING -"
-
-autocmd FileType python compiler pylint
-autocmd FileType sh,bash setl makeprg=shellcheck
-autocmd FileType c setl makeprg=splint
-nnoremap <leader>m :make %<cr>
-
-
 "- FORMATTING -"
 
 filetype plugin indent on
@@ -63,28 +47,21 @@ set autoindent tabstop=4 shiftwidth=0
 " Strip trailing whitespace on write
 autocmd BufWritePre * %s/\s\+$//e
 
-set formatoptions+=aown
+set formatoptions+=own
 autocmd FileType sh,python,markdown,crontab,scheme setl fo-=t
 autocmd FileType sh setl textwidth=72
 autocmd FileType python setl textwidth=79
 autocmd FileType json setl expandtab tabstop=2
-
 
 "- MISC -"
 
 " Help with performance
 set lazyredraw nottyfast
 
-" Show diff between the buffer and the original file
+" Show diff between the buffer and the file on disk
 nnoremap <leader>d :w !diff % -<cr>
 
-" Open a read-only mutt instance in a terminal window, and close it whenever
-" the email is closed
-autocmd FileType mail
-	\ call term_start("mutt -R", {"term_finish": "close", "term_name": "mutt"})
-	\ | call feedkeys("\<C-w>p")
-	\ | au QuitPre /tmp/mutt-* ++once bdelete! mutt
-
+set modeline
 syntax enable
 packadd! matchit
 silent! helptags ALL
