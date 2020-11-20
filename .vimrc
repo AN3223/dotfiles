@@ -35,7 +35,7 @@ inoremap <C-f> <Right>
 cnoremap <C-f> <Right>
 inoremap <C-b> <Left>
 cnoremap <C-b> <Left>
-inoremap <C-k> <C-o>c$
+inoremap <C-k> <C-\><C-N><Right>c$
 cnoremap <C-p> <Up>
 cnoremap <C-n> <Down>
 
