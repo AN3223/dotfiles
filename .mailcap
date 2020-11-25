@@ -1,6 +1,6 @@
 image/x-xcf; gimp -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
-image/gif; mpv --force-window=immediate -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
-image/gif; mpv --vo=tct -- "%s"; needsterminal
+image/gif; mpv --force-window=immediate --loop-file=inf -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
+image/gif; mpv --vo=tct --loop-file=inf -- "%s"; needsterminal
 image/*; mpv_img -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
 image/*; mpv_img --vo=tct -- "%s"; needsterminal
 
