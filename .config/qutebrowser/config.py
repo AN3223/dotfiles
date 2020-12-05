@@ -13,11 +13,6 @@ c.qt.force_software_rendering = "qt-quick"
 c.downloads.remove_finished = 0
 c.content.notifications = False
 
-# YouTube incorrectly assumes JavaScript is enabled, so it requires a bogus
-# user agent in order to behave correctly
-with config.pattern("*://www.youtube.com/*") as p:
-    p.content.headers.user_agent = "asdf"
-
 c.url.start_pages = "about:blank"
 c.url.default_page = "about:blank"
 
