@@ -1,5 +1,5 @@
-OPTIONS=color,showrace,hitpointbar
+OPTIONS=color,showrace,hitpointbar,menucolors
+OPTIONS=boulder:0,hilite_pet,hilite_pile,statushilites:10
 OPTIONS=!autopickup
 OPTIONS=!legacy,force_invmenu
-OPTIONS=pettype:none
 OPTIONS=DECgraphics
