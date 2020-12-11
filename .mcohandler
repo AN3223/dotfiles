@@ -17,27 +17,31 @@ view_video() {
 
 # fallback to the default MCO_DOWNLOADER behavior
 mcodownloader() {
-	export MCO_HANDLER=
-	mailcap_open "$1"
+	MCO_HANDLER="" mailcap_open "$1"
 	exit 1
 }
 
 case "$1" in
-	*://*.png|*://*.jpg|*://*.jpeg|*://*.gif)
+	*://*.png|*://*.jpg|*://*.jpeg|*://*.gif|*://*.tiff)
 		mcodownloader "$1"
+		;;
+	gopher://*)
+		sacc "$1"
+		exit 1
 		;;
 	*://*)
 		if youtube-dl -qs "$1" 2> /dev/null; then
 			view_video "$1"
 		fi
-		mcodownloader "$1"
+		export MIMER="printf text/html\n"
+		export MCO_HANDLER=":"
+		mailcap_open "$1"
+		exit 1
 		;;
 	*.m3u)
 		view_video "$1"
 		;;
 	*.gpg)
-		# force it to execute in a terminal, haven't figured out a way
-		# to do it otherwise
 		export MCO_NEEDSTERMINAL=1
 		export EDITOR='mailcap_open'
 		gpgedit "$1"
