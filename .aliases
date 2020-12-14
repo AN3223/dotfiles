@@ -32,7 +32,7 @@ alias net='ping 8.8.8.8'
 
 alias todo='${EDITOR:-vi} ~/TODO'
 
-alias rtorrent='tmux -L rtorrent attach -t rtorrent'
+alias bt='aria2c --conf-path="$HOME"/.aria2bittorrent '
 
 # man-ly info (Also maybe consider info --vi-keys instead of this trick)
 info() { env info --subnodes "$1" | ${PAGER:-less}; }

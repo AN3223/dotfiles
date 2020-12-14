@@ -1,6 +1,0 @@
-#!/bin/sh -e
-
-#exec rtorrent -o system.daemon.set=true
-
-export HOME=/home/user
-exec tmux -L rtorrent new -ds rtorrent rtorrent \; wait kill-server

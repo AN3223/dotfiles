@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+aria2c --conf-path=/home/user/.aria2bittorrent /home/user/Data/Torrents/*.torrent

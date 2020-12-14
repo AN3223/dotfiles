@@ -1,0 +1,10 @@
+dir=/home/user/Data/Torrents/
+max-overall-upload-limit=400K
+seed-ratio=0.0
+check-integrity=true
+bt-seed-unverified=true
+bt-force-encryption=true
+bt-hash-check-seed=true
+bt-detach-seed-only=true
+bt-save-metadata=true
+#bt-load-saved-metadata=true
