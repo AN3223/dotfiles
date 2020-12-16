@@ -31,6 +31,8 @@ application/xhtml+xml; w3m "%s" -T "%t"; needsterminal
 # n is nnn
 inode/directory; n "%s"; needsterminal
 
+text/x-osu-beatmap; oshu --pause "%s"; needsterminal; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
+
 application/json; vim "%s"; needsterminal
 inode/x-empty; vim "%s"; needsterminal
 text/*; vim "%s"; needsterminal
