@@ -38,6 +38,8 @@ export SUDO='doas'
 
 export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0
 
+export GOPATH="$HOME/.local"
+
 . ~/.mailenv
 
 # needed for sway w/o elogind
