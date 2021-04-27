@@ -1,42 +1,10 @@
-# vi: ft=bash
+# vi: ft=sh
 
-set -e
+set -o vi -o emacs
 
 . ~/.shrc
 
-ps1() {
-	# REPLY_ is REPLY but w/o escape codes, used for checking length
-	REPLY_=
-	REPLY=$'\1\r'
-
-	# show error code, if any
-	(( $1 )) && REPLY+="$1|" && REPLY_+="$1|"
-
-	REPLY+=$'\1\e[36m\1'${USER}@${HOSTNAME}$'\1\e[0m\1'
-	REPLY_+=${USER}@${HOSTNAME}
-
-	pwd=${PWD/#~/"~"} # replace home dir with tilde
-
-	# only show pwd if PS1 doesn't use more than 1/3rd of the terminal
-	if (( ${#REPLY_} + ${#pwd} < COLUMNS / 3 )); then
-		REPLY+=:$'\1\e[35m\1'"$pwd"$'\1\e[0m\1'
-		REPLY_+=":$pwd"
-	fi
-
-	if (( USER_ID )); then
-		REPLY+=$' \1\e[32m\1$\1\e[0m\1'
-		REPLY_+=' $'
-	else
-		REPLY+=$' \1\e[31m\1#\1\e[0m\1'
-		REPLY_+=' #'
-	fi
-
-	printf '%s' "$REPLY"
-	unset REPLY REPLY_ pwd
-}
-
-PS1='$(ps1 $?) '
-
+PS1="${USER:=$(id -un)}@${HOSTNAME:=$(hostname)} \$ "
 export HISTFILE="$HOME/.mksh_history"
 bind ^L='clear-screen'
 bind -m ^U='^[0^K'
