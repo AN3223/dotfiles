@@ -40,12 +40,7 @@ info() { env info --subnodes "$1" | ${PAGER:-less}; }
 # The POSIX Programmer's Manual uses Unicode minus signs (U+2212)
 # instead of the hyphen-minus (U+002D), which can make searching for
 # options difficult.
-man() {
-	page=$(env man "$@")
-	if [ "$page" ]; then
-		printf %s "$page" | sed s/−/-/g | ${MANPAGER:-${PAGER:-less}}
-	fi
-}
+man() { env man "$@" | sed s/−/-/g | ${MANPAGER:-${PAGER:-less}}; }
 
 # brainless file search
 search() { find "${2:-.}" -iname "*${1}*"; }
