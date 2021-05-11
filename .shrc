@@ -3,7 +3,6 @@
 # portable enough to be sourced by other shells too.
 
 . ~/.aliases
-. ~/.nnnrc
 
 set -bC
 

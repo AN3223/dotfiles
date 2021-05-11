@@ -81,7 +81,6 @@ bindsym $mod+m seat * hide_cursor 5000
 bindsym $mod+Shift+m seat * hide_cursor 0
 
 bindsym $mod+Return exec $term
-bindsym $mod+Shift+Return exec $termcmd n
 
 # kill focused window
 bindsym $mod+Shift+q kill
