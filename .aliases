@@ -6,6 +6,13 @@ update() {
 	doas sh -c 'mount /boot; emerge --sync && emerge -auND @world && emerge -ac'
 }
 
+# Automatically create directory for cp SOURCE... DIRECTORY
+cp() {
+	for last; do :; done
+	case "$last" in */) mkdir -p "$last" ;; esac
+	command cp "$@"
+}
+
 alias sw='startw'
 alias sx='startx'
 
