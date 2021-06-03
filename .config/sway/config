@@ -58,8 +58,8 @@ bindsym Mod4+c exec snotify -d
 bindsym Print exec grim \"$HOME/shots/$(date +%c).png"
 
 # Media keys
-bindsym XF86AudioLowerVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 5%- unmute
-bindsym XF86AudioRaiseVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 5%+ unmute
+bindsym XF86AudioLowerVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 3%- unmute
+bindsym XF86AudioRaiseVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 3%+ unmute
 bindsym XF86AudioMute        exec amixer -Mq set ${ALSA_MASTER:-Master} toggle
 
 bindsym XF86AudioStop exec mpvctl stop
