@@ -17,6 +17,9 @@ alias sx='startx'
 alias :q='exit'
 alias :wq='exit'
 alias :e='${EDITOR:-vi} '
+h() { { "$@" --help || "$@" -h ; } 2>&1 | less ; }
+alias :h='h'
+alias :help='h'
 
 alias e='exec '
 
@@ -27,9 +30,9 @@ alias mv='mv -i'
 # Colors/human-readable
 alias df='df -h'
 alias du='du -h'
+alias diff='diff --color=always'
+alias ls='ls --color=always'
 if ls --version 2>&1 | grep -q GNU; then
-	alias diff='diff --color=always'
-	alias ls='ls --color=always'
 	alias dmesg='dmesg -H'
 fi
 
