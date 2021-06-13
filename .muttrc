@@ -1,8 +1,13 @@
 set realname = "Ethan R"
 set from = "ethanr2048@gmail.com"
 
-set sendmail = "env MAILMAN_URL=smtp.gmail.com:465 mailman --"
+set pop_host = "pops://$from@pop.gmail.com:995"
+set smtp_url = "smtps://$from@smtp.gmail.com:465"
+set pop_pass = `pass show email`
+set smtp_pass = "$pop_pass"
 
+set mark_old = no
+set pop_delete = no
 set sort = "reverse-date"
 set pager = "less"
 
@@ -13,6 +18,7 @@ set timeout = 10
 bind attach,index g first-entry
 bind attach,index G last-entry
 
+bind index <F1> fetch-mail
 bind attach,index <F2> group-reply
 
 color index default default ~P

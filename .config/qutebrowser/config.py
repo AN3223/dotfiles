@@ -8,10 +8,12 @@ c.new_instance_open_target = 'window'
 c.session.lazy_restore = False
 c.auto_save.session = True
 c.content.autoplay = False
-c.content.blocking.enabled = False
+#c.content.blocking.enabled = False
+c.content.host_blocking.enabled = False
 c.qt.force_software_rendering = "qt-quick"
 c.downloads.remove_finished = 0
-c.content.notifications.enabled = False
+#c.content.notifications.enabled = False
+c.content.notifications = False
 
 c.url.start_pages = "about:blank"
 c.url.default_page = "about:blank"

@@ -16,7 +16,7 @@ set $menu alacritty -t plauncher -e plauncher swaymsg exec
 
 ################----------------THEMING----------------################
 
-font Fira Code 9
+font JetBrains Mono Nerd Font 9
 
 default_border pixel 1
 smart_borders on
