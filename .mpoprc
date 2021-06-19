@@ -6,6 +6,6 @@ tls on
 tls_starttls off
 host pop.gmail.com
 user ethanr2048
-passwordeval pass show email
+passwordeval tpm show email
 
 account default : gmail

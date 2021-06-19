@@ -40,7 +40,7 @@ export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0
 
 export GOPATH="$HOME/.local"
 
-. ~/.mailenv
+export MAIL="$HOME/.maildir"
 
 # needed for sway w/o elogind
 if [ ! "$XDG_RUNTIME_DIR" ]; then
@@ -51,5 +51,5 @@ fi
 
 # prompt the user for their gpg passphrase, so it can be cached for
 # unattended use
-pass show blank
+tpm show blank
 

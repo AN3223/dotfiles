@@ -3,7 +3,7 @@ set from = "ethanr2048@gmail.com"
 
 set pop_host = "pops://$from@pop.gmail.com:995"
 set smtp_url = "smtps://$from@smtp.gmail.com:465"
-set pop_pass = `pass show email`
+set pop_pass = `tpm show email`
 set smtp_pass = "$pop_pass"
 
 set mark_old = no
