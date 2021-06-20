@@ -47,6 +47,9 @@ set autoindent tabstop=4 shiftwidth=0
 " Strip trailing whitespace on write
 autocmd BufWritePre * %s/\s\+$//e
 
+" Fix annoying highlighting around $() in shell code
+let g:is_posix = 1
+
 set formatoptions+=own
 autocmd FileType sh,python,markdown,crontab,scheme setl fo-=t
 autocmd FileType sh setl textwidth=72
