@@ -4,13 +4,6 @@
 # Update packages
 alias update='doas apk upgrade -Ui'
 
-# Automatically create directory for cp SOURCE... DIRECTORY
-cp() {
-	for last; do :; done
-	case "$last" in */) mkdir -p "$last" ;; esac
-	command cp "$@"
-}
-
 alias sw='startw'
 alias sx='startx'
 
