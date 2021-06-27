@@ -24,7 +24,8 @@ alias mv='mv -i'
 alias df='df -h'
 alias du='du -h'
 alias diff='diff --color=always'
-alias ls='ls --color=always'
+alias ls='ls -h --color=always'
+alias bc='bc -l'
 if ls --version 2>&1 | grep -q GNU; then
 	alias dmesg='dmesg -H'
 fi
