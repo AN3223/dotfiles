@@ -50,6 +50,8 @@ autocmd BufWritePre * %s/\s\+$//e
 " Fix annoying highlighting around $() in shell code
 let g:is_posix = 1
 
+set hlsearch
+
 set formatoptions+=own
 autocmd FileType sh,python,markdown,crontab,scheme setl fo-=t
 autocmd FileType sh setl textwidth=72
