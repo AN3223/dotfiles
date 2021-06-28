@@ -1,12 +1,13 @@
-You can clone this repository as a hidden service if you so desire:
-torsocks git clone --depth 1 git://r7imjx7zhchprlklefxtunh2yfxt545yed64gwvuqlln4kmeswct3vad.onion/dotfiles
-
-This is my set of configuration files that I use on my systems. Most have been
-written by me and I try to keep them tidy. You are free to do whatever you wish
-with these. However I recommend you do not copy them blindly, you may end up
-with unexpected behavior.
-
 My dotfiles are tightly intertwined with my scripts, you can find my scripts
 here: https://github.com/an3223/scripts/
 
+Some scripts live here (e.g., .config/mpv/scripts/) and many config files live
+here. Please don't blindly copy my config files onto your system. They are
+written for me and they probably don't behave the way you want. Use them as
+guidance instead.
+
 Contributions are welcome.
+
+You might be able to clone this repo over tor (server is often down, currently borked):
+torsocks git clone --depth 1 git://r7imjx7zhchprlklefxtunh2yfxt545yed64gwvuqlln4kmeswct3vad.onion/dotfiles
+
