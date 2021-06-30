@@ -43,11 +43,7 @@ export GOPATH="$HOME/.local"
 export MAIL="$HOME/.maildir"
 
 # needed for sway w/o elogind
-if [ ! "$XDG_RUNTIME_DIR" ]; then
-	XDG_RUNTIME_DIR=/tmp/$(id -u)-runtime-dir; export XDG_RUNTIME_DIR;
-	[ ! -d "$XDG_RUNTIME_DIR" ] && mkdir "$XDG_RUNTIME_DIR"
-	chmod -R 700 "$XDG_RUNTIME_DIR"
-fi
+[ "$XDG_RUNTIME_DIR" ] || export XDG_RUNTIME_DIR=$(mktemp -d /tmp/runtime-dir-XXXXXX)
 
 # prompt the user for their gpg passphrase, so it can be cached for
 # unattended use
