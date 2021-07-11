@@ -42,7 +42,7 @@ cnoremap <C-n> <Down>
 "- FORMATTING -"
 
 filetype plugin indent on
-set autoindent tabstop=4 shiftwidth=0
+set autoindent tabstop=2 shiftwidth=0
 
 " Strip trailing whitespace on write
 autocmd BufWritePre * %s/\s\+$//e
@@ -56,7 +56,7 @@ set formatoptions+=own
 autocmd FileType sh,python,markdown,crontab,scheme setl fo-=t
 autocmd FileType sh setl textwidth=72
 autocmd FileType python setl textwidth=79
-autocmd FileType json setl expandtab tabstop=2
+autocmd FileType json setl expandtab
 
 "- MISC -"
 
