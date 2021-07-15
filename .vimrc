@@ -17,6 +17,12 @@ nnoremap K gT
 set encoding=utf-8 ttimeoutlen=0
 set ignorecase smartcase
 
+" Save cursor positions for up to ten files and restore them on file load
+set viminfo='10,<0,h,f1
+au BufReadPost * if line("'\"") && line("'\"") <= line("$") && &ft !~# 'commit'
+	\ | exe "normal! g`\""
+	\ | endif
+
 "- WAYLAND -"
 
 " Writes the contents of @w into the clipboard when @w is updated
