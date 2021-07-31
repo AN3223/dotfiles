@@ -1,5 +1,8 @@
 # pylint: skip-file
 
+# fix crash on musl
+c.qt.args = [ 'no-sandbox' ]
+
 # Source autoconfig.yml
 config.load_autoconfig()
 
