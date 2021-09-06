@@ -16,6 +16,8 @@ export SVDIR="$HOME/.config/service/"
 export TERMINAL='alacritty'
 export TERMCMD='alacritty -e'
 
+export BEMENU_OPTS='--fn "JetBrains Mono Nerd Font 10" --nf #ebdbb2 --tf #ebdbb2 --ff #ebdbb2 --hf #282828 --fb #282828 --nb #282828 --tb #282828 --hb #ebdbb2'
+
 export MCO_HANDLER="$HOME/.mcohandler"
 
 export ALSA_MASTER='PCM'

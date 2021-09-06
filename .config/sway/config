@@ -12,7 +12,7 @@ set $right l
 set $term alacritty
 set $termcmd alacritty -e
 
-set $menu alacritty -t plauncher -e plauncher swaymsg exec
+set $menu belauncher swaymsg exec
 
 ################----------------THEMING----------------################
 
@@ -222,8 +222,6 @@ mode "passthrough" {
     bindsym $mod+Escape mode "default"
 }
 bindsym $mod+Escape mode "passthrough"
-
-for_window [title="^plauncher$"] floating enable
 
 #
 # Multi-monitor
