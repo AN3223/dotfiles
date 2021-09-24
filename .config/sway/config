@@ -12,7 +12,7 @@ set $right l
 set $term alacritty
 set $termcmd alacritty -e
 
-set $menu belauncher swaymsg exec
+set $menu launcher swaymsg exec
 
 ################----------------THEMING----------------################
 
