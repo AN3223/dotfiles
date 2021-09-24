@@ -5,7 +5,7 @@ export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
 
 export TZ='America/Chicago'
 
-[ "$0" = "-ash" ] && export ENV="$HOME/.ashrc"
+export ENV="$HOME/.ashrc"
 
 HOSTNAME="$(uname -n)"; export HOSTNAME;
 
@@ -13,16 +13,18 @@ export WWW_HOME='https://duckduckgo.com/lite'
 
 export SVDIR="$HOME/.config/service/"
 
-export TERMINAL='alacritty'
-export TERMCMD='alacritty -e'
+export TERMINAL='st'
+export TERMCMD='st -e'
+
+export MENU='dmenu -c -l 10'
 
 export BEMENU_OPTS='-p "" --fn "JetBrains Mono Nerd Font 10" --nf #ebdbb2 --tf #ebdbb2 --ff #ebdbb2 --hf #282828 --fb #282828 --nb #282828 --tb #282828 --hb #ebdbb2'
 export MENU='bemenu -i -l 10'
 
 export MCO_HANDLER="$HOME/.mcohandler"
 
-export ALSA_MASTER='PCM'
-export ALSA_CARD='CODEC'
+#export ALSA_MASTER='PCM'
+#export ALSA_CARD='CODEC'
 
 if command -v vim > /dev/null 2>&1; then
 	export EDITOR='vim'
@@ -48,7 +50,9 @@ export MAIL="$HOME/.maildir"
 # needed for sway w/o elogind
 [ "$XDG_RUNTIME_DIR" ] || export XDG_RUNTIME_DIR=$(mktemp -d /tmp/runtime-dir-XXXXXX)
 
+export MPV_HOME="$HOME/.config/mpv/"
+
 # prompt the user for their gpg passphrase, so it can be cached for
 # unattended use
-tpm show blank
+#tpm show blank
 
