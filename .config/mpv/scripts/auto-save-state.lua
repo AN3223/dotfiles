@@ -26,7 +26,7 @@ end
 -- the next file in the playlist would likely be loaded by the time the
 -- end-file event runs.
 local function clean_watch_later(event)
-	local path = mp.get_property("path")
+	save()
 
 	function delete_watch_later_config(path)
 		return function(event)
@@ -37,7 +37,7 @@ local function clean_watch_later(event)
 		end
 	end
 
-	mp.register_event("end-file", delete_watch_later_config(path))
+	mp.register_event("end-file", delete_watch_later_config(mp.get_property("path")))
 end
 
 timer = mp.add_periodic_timer(o.save_interval, save)
