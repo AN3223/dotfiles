@@ -87,6 +87,7 @@ bindsym $mod+Shift+q kill
 
 # start application launcher
 bindsym $mod+d exec $menu
+bindsym $mod+Shift+d exec bang! $(: | ${MENU:-bemenu})
 
 # resizing
 floating_modifier $mod normal
