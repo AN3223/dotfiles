@@ -18,7 +18,7 @@ save_hist 0
 display_image false
 cookie_accept_domains .wikipedia.org
 cookie_reject_domains .
-user_agent Mozilla/5.0 (Windows NT 6.1; rv:45.0) Gecko/20100101 Firefox/45.0
+user_agent Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0
 accept_language en-US,en;q=0.5
 accept_encoding gzip, deflate
 accept_media text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
