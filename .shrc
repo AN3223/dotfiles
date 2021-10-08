@@ -11,3 +11,5 @@ umask 077
 # This stops C-s from being annoying in vim
 stty -ixon
 
+GPG_TTY=$(tty); export GPG_TTY;
+

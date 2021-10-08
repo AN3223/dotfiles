@@ -48,7 +48,3 @@ export MAIL="$HOME/.maildir"
 # needed for sway w/o elogind
 [ "$XDG_RUNTIME_DIR" ] || export XDG_RUNTIME_DIR=$(mktemp -d /tmp/runtime-dir-XXXXXX)
 
-# prompt the user for their gpg passphrase, so it can be cached for
-# unattended use
-tpm show blank
-
