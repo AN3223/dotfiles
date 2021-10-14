@@ -1,2 +1,2 @@
---format 'bestvideo[height <=? 1080]+bestaudio/best'
+--format 'bestvideo[height<=?1080][vcodec!^=av0][vcodec!^=vp9]+bestaudio/bestvideo[height<=?1080]+bestaudio/best'
 --no-check-certificate
