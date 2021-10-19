@@ -11,6 +11,7 @@ visited_color yellow
 image_color red
 
 mailcap ~/.mailcap
+editor /usr/bin/vim
 
 no_referer 1
 use_history 0
