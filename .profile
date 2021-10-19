@@ -21,7 +21,7 @@ export MENU='bemenu -i -l 10'
 
 export MCO_HANDLER="$HOME/.mcohandler"
 
-export ALSA_MASTER='PCM'
+#export ALSA_MASTER='PCM'
 export ALSA_CARD='CODEC'
 
 if command -v vim > /dev/null 2>&1; then
