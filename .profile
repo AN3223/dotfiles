@@ -43,8 +43,6 @@ export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0
 
 export GOPATH="$HOME/.local"
 
-export MAIL="$HOME/.maildir"
-
 # needed for sway w/o elogind
 [ "$XDG_RUNTIME_DIR" ] || export XDG_RUNTIME_DIR=$(mktemp -d /tmp/runtime-dir-XXXXXX)
 
