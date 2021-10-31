@@ -6,6 +6,22 @@
 # - open all other URLs in a browser
 #
 
+mailcap_open() {
+	command ${I2P:+i2proxychains} ${TOR:+torsocks} mailcap_open "$@"
+}
+
+unset -v I2P TOR
+case "$1" in
+	*://*.i2p/*|*://*.i2p) I2P=1 ;;
+	*://*.onion/*|*://*.onion) TOR=1 ;;
+esac
+
+# prevent nesting
+case "$LD_PRELOAD" in
+	*libproxychains*.so) unset -v I2P ;;
+	*libtorsocks*.so) unset -v TOR ;;
+esac
+
 case "$1" in
 	*://*.png|*://*.jpg|*://*.jpeg|*://*.gif|*://*.tiff)
 		export MIMETYPE='image/generic'; export MCO_HANDLER=':';
@@ -26,8 +42,6 @@ case "$1" in
 		export MCO_NEEDSTERMINAL=1; export EDITOR='mailcap_open';
 		gpgedit "$1"
 		exit 1
-		;;
-	*)
 		;;
 esac
 
