@@ -24,8 +24,6 @@ keymap C-v VIEW_BOOKMARK
 # FIXME this should go to the user's WWW_HOME or HTTP_HOME
 keymap C-h GOTO https://duckduckgo.com/lite
 
-# FIXME o and O should be able to use search engines, and shouldn't start with
-# the current URL
 keymap o GOTO
 keymap O TAB_GOTO
 keymap d CLOSE_TAB
