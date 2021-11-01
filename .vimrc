@@ -13,6 +13,7 @@ nnoremap s :setlocal spell!<cr>
 nnoremap q: <nop>
 nnoremap J gt
 nnoremap K gT
+nnoremap <Space> <C-f>
 
 set encoding=utf-8 ttimeoutlen=0
 set ignorecase smartcase
