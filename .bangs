@@ -1,0 +1,14 @@
+# vi: ft=sh
+
+# capitalizes first letter & interpolates words with _
+kifix() { IFS=_; awk -v A="$*" 'END{print toupper(substr(A,1,1)) substr(A,2)}' /dev/null; }
+
+: ${KIWIX_URL=http://127.0.0.1:8000}
+case "$bang" in
+	!kw|!kiwix) link="$KIWIX_URL/search?pattern=$*" ;;
+	!kww|!kwikipedia) link="$KIWIX_URL/wikipedia_en_all_mini/A/$(kifix "$@")" ;;
+	!kwc|!kwikipediac) link="$KIWIX_URL/wikipedia_en_computer_nopic/A/$(kifix "$@")" ;;
+	!kalpine) link="$KIWIX_URL/alpinelinux_en_all_maxi/A/$(kifix "$@")" ;;
+	!kaw|!karchwiki) link="$KIWIX_URL/archlinux_en_all_maxi/A/$(kifix "$@")" ;;
+esac
+
