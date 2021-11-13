@@ -9,8 +9,8 @@ set $down j
 set $up k
 set $right l
 
-set $term alacritty
-set $termcmd alacritty -e
+set $term footclient
+set $termcmd footclient
 
 set $menu launcher swaymsg exec
 
@@ -243,4 +243,6 @@ exec swayidle                                  \
     timeout 500   'swaylock -c 282828'         \
     timeout 600   'swaymsg "output * dpms off"'\
     resume        'swaymsg "output * dpms on"'
+
+exec foot -s
 
