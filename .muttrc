@@ -18,7 +18,7 @@ set pop_delete = no
 set sort = "reverse-date"
 set pager = "less"
 set new_mail_command = "snotify -n new mail"
-set timeout = 60
+set pop_checkinterval = 120
 
 # vim-like navigation
 bind attach,index g first-entry
