@@ -1,2 +1,3 @@
 --format '(bestvideo[vcodec!^=av0][vcodec!^=vp9]+bestaudio/bestvideo+bestaudio)[height<=?1080]/best'
 --no-check-certificate
+--sponsorblock-mark all
