@@ -1,8 +1,6 @@
 image/x-xcf; gimp -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"
-image/gif; mpv --force-window=immediate --loop-file=inf -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"; x-url
-image/gif; mpv --vo=tct --loop-file=inf -- "%s"; needsterminal; x-url
-image/*; mpv_img -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"; x-url
-image/*; mpv_img --vo=tct -- "%s"; needsterminal; x-url
+image/*; mpv -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"; x-url
+image/*; mpv --vo=tct -- "%s"; needsterminal; x-url
 
 video/*; mpv --force-window=immediate -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"; x-url
 application/vnd.rn-realmedia; mpv --force-window=immediate -- "%s"; test=test "${DISPLAY:-$WAYLAND_DISPLAY}"; x-url
