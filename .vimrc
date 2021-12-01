@@ -5,6 +5,7 @@ set bg=dark
 " Different cursor shapes in different modes
 let &t_SI = "\<Esc>[4 q" | let &t_SR = &t_SI
 let &t_EI = "\<Esc>[2 q"
+" workaround for https://github.com/vim/vim/issues/9014
 let &t_TI = "\<Esc>[>4;2m"
 let &t_TE = "\<Esc>[>4m"
 
