@@ -3,7 +3,7 @@
 
 set statusbar-home-tilde true
 
-set font "JetBrains Mono Nerd Font 9"
+set font "Fira Code 9"
 set default-fg "#ebdbb2"
 set default-bg "#282828"
 set inputbar-fg "#ebdbb2"

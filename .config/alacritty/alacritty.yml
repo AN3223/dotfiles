@@ -8,11 +8,11 @@ window:
 
 font:
   normal:
-    family: JetBrains Mono Nerd Font
+    family: Fira Code
   bold:
-    family: JetBrains Mono Nerd Font
+    family: Fira Code
   italic:
-    family: JetBrains Mono Nerd Font
+    family: Fira Code
 
   size: 14.0
 
