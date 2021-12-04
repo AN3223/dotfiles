@@ -1,6 +1,6 @@
 "- AESTHETIC -"
 
-set bg=dark
+set bg=dark scrolloff=15
 
 " Different cursor shapes in different modes
 let &t_SI = "\<Esc>[4 q" | let &t_SR = &t_SI
