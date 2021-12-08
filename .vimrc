@@ -54,9 +54,6 @@ cnoremap <C-n> <Down>
 filetype plugin indent on
 set autoindent tabstop=2 shiftwidth=0
 
-" Strip trailing whitespace on write
-autocmd BufWritePre * %s/\s\+$//e
-
 " Fix annoying highlighting around $() in shell code
 let g:is_posix = 1
 
