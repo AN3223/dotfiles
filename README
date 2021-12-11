@@ -8,6 +8,3 @@ guidance instead.
 
 Contributions are welcome.
 
-You might be able to clone this repo over tor (server is often down, currently borked):
-torsocks git clone --depth 1 git://r7imjx7zhchprlklefxtunh2yfxt545yed64gwvuqlln4kmeswct3vad.onion/dotfiles
-
