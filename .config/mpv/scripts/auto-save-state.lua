@@ -26,8 +26,6 @@ end
 -- the next file in the playlist would likely be loaded by the time the
 -- end-file event runs.
 local function clean_watch_later(event)
-	save()
-
 	function delete_watch_later_config(path)
 		return function(event)
 			mp.unregister_event(delete_watch_later_config(path))
