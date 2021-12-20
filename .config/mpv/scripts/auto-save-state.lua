@@ -26,7 +26,9 @@ local function delete_watch_later(event)
 	-- Temporarily disables save-position-on-quit while eof-reached is true, so 
 	-- state isn't saved at EOF when keep-open=yes
 	local function eof_reached(_, eof)
-		if eof then
+		if not can_delete then
+			return
+		elseif eof then
 			print("Deleting state (eof-reached)")
 			mp.commandv("delete-watch-later-config", path)
 			mp.set_property("save-position-on-quit", "no")
@@ -38,7 +40,10 @@ local function delete_watch_later(event)
 	local function end_file(event)
 		mp.unregister_event(end_file)
 		mp.unobserve_property(eof_reached)
-		if event["reason"] == "eof" or event["reason"] == "stop" then
+
+		if not can_delete then
+			can_delete = true
+		elseif event["reason"] == "eof" or event["reason"] == "stop" then
 			print("Deleting state (end-file "..event["reason"]..")")
 			mp.commandv("delete-watch-later-config", path)
 		end
@@ -49,8 +54,13 @@ local function delete_watch_later(event)
 end
 
 mp.set_property("save-position-on-quit", "yes")
+
+can_delete = true
+mp.register_script_message("skip-delete-state", function() can_delete = false end)
+
 timer = mp.add_periodic_timer(o.save_interval, save)
 mp.observe_property("pause", "bool", pause_timer_while_paused)
+
 mp.observe_property("pause", "bool", save_if_pause)
 mp.register_event("file-loaded", delete_watch_later)
 
