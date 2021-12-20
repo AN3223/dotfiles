@@ -51,7 +51,7 @@ mp.register_event("file-loaded", function()
 	end
 
 	internal_seek = true
-	mp.commandv("seek", pos, "absolute")
+	mp.commandv("seek", pos, "absolute+keyframes")
 
 	timer:resume()
 end)
