@@ -33,8 +33,8 @@ mp.set_property("resume-playback", "no")
 if o.shuffle then mp.set_property("shuffle", "yes")       end
 if o.loop    then mp.set_property("loop-playlist", "inf") end
 
-timer = mp.add_periodic_timer(o.duration,
-	function() mp.command("playlist-next force")
+timer = mp.add_periodic_timer(o.duration, function()
+	mp.command("playlist-next force")
 end)
 timer:kill()
 
