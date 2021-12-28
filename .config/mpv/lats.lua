@@ -28,22 +28,14 @@ require "mp.options"
 o = { duration = 10, shuffle = true, loop = true }
 read_options(o, "lats")
 
-mp.set_property("resume-playback", "no")
-
-if o.shuffle then mp.set_property("shuffle", "yes")       end
-if o.loop    then mp.set_property("loop-playlist", "inf") end
-
-timer = mp.add_periodic_timer(o.duration,
-	function() mp.command("playlist-next force")
-end)
-timer:kill()
-
--- when file loads, seek to random position and start timer
-mp.register_event("file-loaded", function()
+function A()
 	user_seek = false
 	timer:kill()
-
-	upper = mp.get_property_number("duration") - o.duration - 1
+	if mp.get_property_number("duration") ~= nil then
+		upper = mp.get_property_number("duration") - o.duration - 1
+	else
+		upper = 0
+	end
 	if upper > 1 then
 		pos = math.random(upper)
 	else
@@ -54,24 +46,65 @@ mp.register_event("file-loaded", function()
 	mp.commandv("seek", pos, "absolute")
 
 	timer:resume()
-end)
+end
 
--- don't skip around while player is paused
-mp.observe_property("pause", "bool", function(_, pause)
+function B(_, pause)
 	if user_seek then
 		return
 	end
 
 	if pause then timer:stop() else timer:resume() end
-end)
+end
 
--- stop skipping around if the user seeks
-mp.register_event("seek", function()
+function C()
 	if internal_seek then
 		internal_seek = false
 	else
 		user_seek = true
 		timer:stop()
 	end
-end)
+end
 
+
+function latson()
+	mp.set_property("resume-playback", "no")
+	if o.shuffle then
+		mp.command("playlist-shuffle")
+		mp.set_property("shuffle", "yes")
+	end
+	if o.loop    then mp.set_property("loop-playlist", "inf") end
+	mp.add_key_binding("f5", "latsoff", latsoff)
+	mp.osd_message("Lats On")
+
+	timer = mp.add_periodic_timer(o.duration,
+		function() mp.command("playlist-next force")
+	end)
+	-- timer:kill()
+
+-- -- when file loads, seek to random position and start timer
+	mp.register_event("file-loaded", A)
+
+-- -- don't skip around while player is paused
+	mp.observe_property("pause", "bool", B)
+
+-- -- stop skipping around if the user seeks
+	mp.register_event("seek", C)
+
+end
+
+function latsoff()
+	mp.set_property("resume-playback", "yes")
+	if o.shuffle then
+		mp.command("playlist-unshuffle")
+		mp.set_property("shuffle", "no")
+	end
+	if o.loop    then mp.set_property("loop-playlist", "no") end
+	timer:kill()
+	mp.unregister_event(A)
+	mp.unobserve_property(B)
+	mp.unregister_event(C)
+	mp.remove_key_binding("latsoff")
+	mp.osd_message("Lats Off")
+end
+
+mp.add_key_binding("f4", "latson", latson)
