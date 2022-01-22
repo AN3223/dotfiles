@@ -1,13 +1,14 @@
 dir=/home/user/Data/Torrents/
-max-overall-upload-limit=50K
+max-overall-upload-limit=250K
 seed-ratio=0.0
 check-integrity=true
 summary-interval=0
-bt-max-peers=10
+#bt-max-peers=10
 bt-seed-unverified=true
 bt-force-encryption=true
 bt-hash-check-seed=true
 bt-detach-seed-only=true
 bt-save-metadata=true
 #bt-load-saved-metadata=true
-interface=wg0
+disable-ipv6=true
+interface=tun0
