@@ -245,4 +245,5 @@ exec swayidle                                  \
     resume        'swaymsg "output * dpms on"'
 
 exec foot -s
+exec dbus-launch --exit-with-session pipewire
 
