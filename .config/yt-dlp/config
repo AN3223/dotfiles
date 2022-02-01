@@ -1,3 +1,4 @@
---format '(bestvideo[vcodec!^=av0][vcodec!^=vp9]+bestaudio/bestvideo+bestaudio)[height<=?1080]/best'
+--format '(bv*[vcodec^=hevc]/bv*[vcodec^=h265]/bv*[vcodec^=avc]/bv*[vcodec^=h264])+ba/bv*+ba/b'
+--format-sort res~1080
 --no-check-certificate
 --sponsorblock-mark all
