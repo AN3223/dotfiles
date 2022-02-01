@@ -29,36 +29,36 @@ o = { duration = 10, shuffle = true, loop = true }
 read_options(o, "lats")
 
 mp.set_property("resume-playback", "no")
-
 if o.shuffle then mp.set_property("shuffle", "yes")       end
 if o.loop    then mp.set_property("loop-playlist", "inf") end
 
 timer = mp.add_periodic_timer(o.duration, function()
-	mp.command("playlist-next force")
+	mp.commandv("playlist-next", "force")
 end)
 timer:kill()
 
 -- when file loads, seek to random position and start timer
 mp.register_event("file-loaded", function()
-	user_seek = false
 	timer:kill()
 
-	upper = mp.get_property_number("duration") - o.duration - 1
-	if upper > 1 then
-		pos = math.random(upper)
-	else
-		pos = 0
+	dur = mp.get_property_number("duration")
+	if dur == nil then
+		return
 	end
 
-	internal_seek = true
-	mp.commandv("seek", pos, "absolute+keyframes")
-
-	timer:resume()
+	upper = dur - o.duration
+	if upper >= 1 then
+		internal_seek = 1
+		mp.commandv("seek", math.random(upper), "absolute+keyframes")
+		timer:resume()
+	else
+		internal_seek = -1
+	end
 end)
 
 -- don't skip around while player is paused
 mp.observe_property("pause", "bool", function(_, pause)
-	if user_seek then
+	if internal_seek == -1 then
 		return
 	end
 
@@ -67,10 +67,10 @@ end)
 
 -- stop skipping around if the user seeks
 mp.register_event("seek", function()
-	if internal_seek then
-		internal_seek = false
+	if internal_seek == 1 then
+		internal_seek = 0
 	else
-		user_seek = true
+		internal_seek = -1
 		timer:stop()
 	end
 end)
