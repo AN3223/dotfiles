@@ -71,7 +71,7 @@ bindsym XF86AudioNext exec mpvctl next
 input * {
     repeat_delay 300
     accel_profile flat
-    pointer_accel -0.4
+    pointer_accel -0.6
     xkb_options grp:menu_toggle
 }
 
