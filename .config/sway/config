@@ -75,6 +75,9 @@ input * {
     xkb_options grp:menu_toggle
 }
 
+bindsym $mod+n bar mode dock
+bindsym $mod+Shift+n bar mode hide
+
 # Cursor settings:
 seat * hide_cursor 5000
 bindsym $mod+m seat * hide_cursor 5000
