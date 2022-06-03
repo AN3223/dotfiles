@@ -45,6 +45,8 @@ local function addy() ih=height(); y=y+step; if y>ih then y=ih end; update() end
 local function suby()              y=y-step; if y<0 then y=0 end;   update() end
 local function addstep() step=step+1; mp.commandv("show-text", "step: "..step) end
 local function substep() step=step-1; mp.commandv("show-text", "step: "..step) end
+local function dblstep() step=step*2; mp.commandv("show-text", "step: "..step) end
+local function hlfstep() step=step/2; mp.commandv("show-text", "step: "..step) end
 
 local function cropmode()
 	if not mode_on then
@@ -69,8 +71,10 @@ local function cropmode()
 		mp.add_forced_key_binding("DOWN",   "addy",    addy)
 		mp.add_forced_key_binding("UP",     "suby",    suby)
 		mp.add_forced_key_binding("RIGHT",  "addx",    addx)
-		mp.add_forced_key_binding("a",      "addstep", addstep, { repeatable = true })
-		mp.add_forced_key_binding("z",      "substep", substep, { repeatable = true })
+		mp.add_forced_key_binding("a",      "dblstep", dblstep)
+		mp.add_forced_key_binding("z",      "hlfstep", hlfstep)
+		mp.add_forced_key_binding("A",      "addstep", addstep, { repeatable = true })
+		mp.add_forced_key_binding("Z",      "substep", substep, { repeatable = true })
 	else
 		mode_on = false
 		print(filter()); mp.commandv("show-text", filter());
