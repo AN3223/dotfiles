@@ -249,4 +249,5 @@ exec swayidle                                  \
 
 exec foot -s
 exec dbus-launch --exit-with-session pipewire
+exec gammastep
 
