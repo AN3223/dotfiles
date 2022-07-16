@@ -50,7 +50,9 @@ mp.register_event("file-loaded", function()
 	if upper >= 1 then
 		internal_seek = 1
 		mp.commandv("seek", math.random(upper), "absolute+keyframes")
-		timer:resume()
+		if not mp.get_property_bool("pause") then
+			timer:resume()
+		end
 	else
 		internal_seek = -1
 	end
