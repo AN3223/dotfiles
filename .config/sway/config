@@ -243,6 +243,7 @@ include /etc/sway/config.d/*
 
 exec swayidle                                  \
     timeout 240   'wl-copy --clear'            \
+    timeout 240   'wl-copy -p --clear'         \
     timeout 500   'swaylock -c 282828'         \
     timeout 600   'swaymsg "output * dpms off"'\
     resume        'swaymsg "output * dpms on"'
