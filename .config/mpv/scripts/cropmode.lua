@@ -35,14 +35,14 @@ local function update() mp.commandv("vf", "add", "@crop:"..filter()) end
 local function height() return mp.get_property_native("height", 2) end
 local function width()  return mp.get_property_native("width", 2)  end
 
-local function addw() iw=width();  w=w+step; if w>iw then w=iw end; update() end
-local function subw()              w=w-step; if w<2 then w=2 end;   update() end
-local function addh() ih=height(); h=h+step; if h>ih then h=ih end; update() end
-local function subh()              h=h-step; if h<2 then h=2 end;   update() end
-local function addx() iw=width();  x=x+step; if x>iw then x=iw end; update() end
-local function subx()              x=x-step; if x<0 then x=0 end;   update() end
-local function addy() ih=height(); y=y+step; if y>ih then y=ih end; update() end
-local function suby()              y=y-step; if y<0 then y=0 end;   update() end
+local function addw() iw=width();  w=w+step; if w>iw then w=iw end; if x+w>=iw then x=x-step end; update() end
+local function addh() ih=height(); h=h+step; if h>ih then h=ih end; if y+h>=ih then y=y-step end; update() end
+local function addx() iw=width();  x=x+step; if x>iw-w then x=iw-w end; update() end
+local function addy() ih=height(); y=y+step; if y>ih-h then y=ih-h end; update() end
+local function subw() w=w-step; if w<2 then w=2 end; update() end
+local function subh() h=h-step; if h<2 then h=2 end; update() end
+local function subx() x=x-step; if x<0 then x=0 end; update() end
+local function suby() y=y-step; if y<0 then y=0 end; update() end
 local function addstep() step=step+1; mp.commandv("show-text", "step: "..step) end
 local function substep() step=step-1; mp.commandv("show-text", "step: "..step) end
 local function dblstep() step=step*2; mp.commandv("show-text", "step: "..step) end
