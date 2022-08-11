@@ -65,7 +65,17 @@
 #define R 5
 #endif
 
-// Disabling might be faster, but will reduce denoising around the image edges
+/* Ranges from 0-2 in ascending order of quality, performance may vary wildly.
+ *
+ * Basically just tries to apply an appropriate amount of denoising to the 
+ * edges of the image. The quality differences are miniscule unless you have a 
+ * very large R, so this should only be turned up if it doesn't affect 
+ * performance or when quality is very important.
+ *
+ * 0: perform no bounds checking
+ * 1: ignore out-of-bounds pixels
+ * 2: shift research zone to avoid out-of-bounds pixels
+ */
 #define BOUNDS_CHECKING 1
 
 /* Shader code */
@@ -80,16 +90,27 @@ const vec4 maxdiff = vec4(log(range)/pdiff_scale);
 vec4 hook()
 {
 	vec4 weight, pdiff_sq, ignore;
-	vec2 r, p;
+	vec2 r, p, lower, upper;
 	vec4 total_weight = vec4(1);
 	vec4 sum = HOOKED_texOff(0);
 
-	for (r.x = -hr; r.x <= hr; r.x++) {
-		for (r.y = -hr; r.y <= hr; r.y++) {
+#if BOUNDS_CHECKING == 2
+	vec2 px_pos = HOOKED_pos * input_size;
+	lower = min(vec2(hr), px_pos);
+	upper = min(vec2(hr), input_size - px_pos);
+	// try to extend sides opposite of truncated sides
+	lower = min(lower + (vec2(hr) - upper), px_pos);
+	upper = min(upper + (vec2(hr) - lower), input_size - px_pos);
+#else
+	lower = upper = vec2(hr);
+#endif
+
+	for (r.x = -lower.x; r.x <= upper.x; r.x++) {
+		for (r.y = -lower.y; r.y <= upper.y; r.y++) {
 			ignore = vec4(1);
 
-#if BOUNDS_CHECKING
-			vec2 abs_r = r * HOOKED_pt + HOOKED_pos;
+#if BOUNDS_CHECKING == 1
+			vec2 abs_r = HOOKED_pos * input_size + r;
 			ignore *= int(clamp(abs_r, vec2(0), input_size) == abs_r);
 #endif
 
