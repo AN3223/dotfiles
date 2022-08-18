@@ -78,16 +78,16 @@
  */
 #define BOUNDS_CHECKING 1
 
-/* Bright preserve, reduces denoising on brighter parts of the image
+/* Extremes preserve, reduces denoising around very bright/dark areas.
  *
- * BP represents the size of a zone to sample around each pixel for getting the 
+ * EP represents the size of a zone to sample around each pixel for getting the 
  * average luminance. If enabled, the recommended value is 3.
  *
- * BPW is range [0,1], lower values will increase the effect.
+ * EPW is range [0,1], lower values will increase the effect.
  */
 #ifdef LUMA_raw
-#define BP 3
-#define BPW 0.25
+#define EP 3
+#define EPW 0.35
 #endif
 
 /* Shader code */
@@ -136,14 +136,14 @@ vec4 hook()
 			// XXX bad performance on AMD-Vulkan (but not OpenGL), seems to be rooted here?
 			weight = exp(-pdiff_sq * pdiff_scale) * ignore;
 
-#if BP
-			const int hbp = BP/2;
+#if EP
+			const int hbp = EP/2;
 			vec4 luminance = vec4(0);
 			for (p.x = -hbp; p.x <= hbp; p.x++)
 				for (p.y = -hbp; p.y <= hbp; p.y++)
 					luminance += HOOKED_texOff(p);
-			luminance /= BP*BP;
-			weight *= (1 - luminance) * BPW;
+			luminance /= EP*EP;
+			weight *= min(1 - luminance, luminance) * EPW;
 #endif
 
 			sum += weight * HOOKED_texOff(r);
