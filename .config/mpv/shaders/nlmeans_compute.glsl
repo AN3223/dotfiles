@@ -98,22 +98,21 @@ const int maxdiff = int(log(range)/pdiff_scale);
 #if WEIGHT_LUT
 shared float weight_lut[maxdiff+1];
 #endif
-const ivec2 block = ivec2(gl_WorkGroupID.xy * BLOCKSIZE);
 
-vec4 nlmeans(vec2 pos)
+vec4 nlmeans(vec2 px)
 {
 	vec4 weight, pdiff_sq, ignore;
 	vec2 r, p, lower, upper;
 	vec4 total_weight = vec4(1);
-	vec4 sum = HOOKED_tex(pos);
+	vec4 sum = HOOKED_tex(px);
 
 #if BOUNDS_CHECKING == 2
-	vec2 px_pos = pos * input_size;
-	lower = min(vec2(hr), px_pos);
-	upper = min(vec2(hr), input_size - px_pos);
+	vec2 abs_px = px * input_size;
+	lower = min(vec2(hr), abs_px);
+	upper = min(vec2(hr), input_size - abs_px);
 	// try to extend sides opposite of truncated sides
-	lower = min(lower + (vec2(hr) - upper), px_pos);
-	upper = min(upper + (vec2(hr) - lower), input_size - px_pos);
+	lower = min(lower + (vec2(hr) - upper), abs_px);
+	upper = min(upper + (vec2(hr) - lower), input_size - abs_px);
 #else
 	lower = upper = vec2(hr);
 #endif
@@ -123,14 +122,14 @@ vec4 nlmeans(vec2 pos)
 			ignore = vec4(1);
 
 #if BOUNDS_CHECKING == 1
-			vec2 abs_r = pos * input_size + r;
+			vec2 abs_r = px * input_size + r;
 			ignore *= int(clamp(abs_r, vec2(0), input_size) == abs_r);
 #endif
 
 			pdiff_sq = vec4(0);
 			for (p.x = -hp; p.x <= hp; p.x++)
 				for (p.y = -hp; p.y <= hp; p.y++)
-					pdiff_sq += pow((HOOKED_tex(pos+OFF(r+p)) - HOOKED_tex(pos+OFF(p))) * range, vec4(2));
+					pdiff_sq += pow((HOOKED_tex(px+OFF(r+p)) - HOOKED_tex(px+OFF(p))) * range, vec4(2));
 
 			// low pdiff_sq -> high weight, high weight -> more blur
 			// XXX bad performance on AMD-Vulkan (but not OpenGL), seems to be rooted here?
@@ -142,7 +141,7 @@ vec4 nlmeans(vec2 pos)
 			weight = exp(-pdiff_sq * pdiff_scale) * ignore;
 #endif
 
-			sum += weight * HOOKED_tex(pos+OFF(r));
+			sum += weight * HOOKED_tex(px+OFF(r));
 			total_weight += weight;
 		}
 	}
@@ -152,15 +151,17 @@ vec4 nlmeans(vec2 pos)
 
 void hook()
 {
+	ivec2 block = ivec2(gl_WorkGroupID.xy * BLOCKSIZE);
+
 #if WEIGHT_LUT
 	for (uint i = gl_LocalInvocationIndex; i < maxdiff; i += THREADS)
 		weight_lut[i] = exp(-int(i) * pdiff_scale);
 	weight_lut[maxdiff] = 0;
-	memoryBarrierShared();
+	barrier();
 #endif
 
 	for (uint idx = gl_LocalInvocationIndex; idx < (BLOCKSIZE.x * BLOCKSIZE.y); idx += THREADS) {
-		ivec2 off = ivec2(idx%BLOCKSIZE.x, idx/BLOCKSIZE.y);
-		imageStore(out_image, block+off, nlmeans(OFF(block+off+0.5)));
+		ivec2 px = ivec2(idx%BLOCKSIZE.x, idx/BLOCKSIZE.y);
+		imageStore(out_image, block+px, nlmeans(OFF(block+px+0.5)));
 	}
 }
