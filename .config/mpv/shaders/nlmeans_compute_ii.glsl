@@ -19,6 +19,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+//
+// This is a variant of nlmeans_compute that uses integral images
+//
+// But do not use this shader! It is extremely slow!
+//
+
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB

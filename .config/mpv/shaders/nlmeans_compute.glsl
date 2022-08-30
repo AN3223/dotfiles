@@ -19,6 +19,11 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+//
+// This is a compute shader variant of nlmeans. It's not much use right now, 
+// you should probably use the fragmentation shader instead.
+//
+
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
