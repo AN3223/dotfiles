@@ -99,6 +99,21 @@ const float pdiff_scale = 1.0/(h*h);
 const float range = 255.0; // for making pixels range from 0-255
 const vec4 maxdiff = vec4(log(range)/pdiff_scale);
 
+#if RADIAL_SEARCH
+int radius = 1;
+vec2 radial_increment(vec2 r)
+{
+	if (r == vec2(radius))
+		return -vec2(++radius); // new ring
+	else if (r.x == radius)
+		return vec2(-radius, ++r.y); // end row
+	else if (abs(r.y) == radius)
+		return vec2(++r.x, r.y); // top/bottom rows
+	else
+		return vec2(radius, r.y); // start row
+}
+#endif
+
 vec4 hook()
 {
 	vec4 weight, pdiff_sq, ignore;
@@ -117,38 +132,43 @@ vec4 hook()
 	lower = upper = vec2(hr);
 #endif
 
-	for (r.x = -lower.x; r.x <= upper.x; r.x++) {
-		for (r.y = -lower.y; r.y <= upper.y; r.y++) {
-			ignore = vec4(1);
+#if RADIAL_SEARCH
+	// radial search
+	for (r = vec2(-radius); radius <= hr; r = radial_increment(r)) {
+#else
+	// regular search
+	for (r.x = -lower.x; r.x <= upper.x; r.x++)
+	for (r.y = -lower.y; r.y <= upper.y; r.y++) {
+#endif
+		ignore = vec4(1);
 
 #if BOUNDS_CHECKING == 1
-			vec2 abs_r = HOOKED_pos * input_size + r;
-			ignore *= int(clamp(abs_r, vec2(0), input_size) == abs_r);
+		vec2 abs_r = HOOKED_pos * input_size + r;
+		ignore *= int(clamp(abs_r, vec2(0), input_size) == abs_r);
 #endif
 
-			pdiff_sq = vec4(0);
-			for (p.x = -hp; p.x <= hp; p.x++)
-				for (p.y = -hp; p.y <= hp; p.y++)
-					pdiff_sq += pow((HOOKED_texOff(r+p) - HOOKED_texOff(p)) * range, vec4(2));
-			ignore *= step(pdiff_sq, maxdiff);
+		pdiff_sq = vec4(0);
+		for (p.x = -hp; p.x <= hp; p.x++)
+			for (p.y = -hp; p.y <= hp; p.y++)
+				pdiff_sq += pow((HOOKED_texOff(r+p) - HOOKED_texOff(p)) * range, vec4(2));
+		ignore *= step(pdiff_sq, maxdiff);
 
-			// low pdiff_sq -> high weight, high weight -> more blur
-			// XXX bad performance on AMD-Vulkan (but not OpenGL), seems to be rooted here?
-			weight = exp(-pdiff_sq * pdiff_scale) * ignore;
+		// low pdiff_sq -> high weight, high weight -> more blur
+		// XXX bad performance on AMD-Vulkan (but not OpenGL) seems to be rooted here?
+		weight = exp(-pdiff_sq * pdiff_scale) * ignore;
 
 #if EP
-			const int hbp = EP/2;
-			vec4 luminance = vec4(0);
-			for (p.x = -hbp; p.x <= hbp; p.x++)
-				for (p.y = -hbp; p.y <= hbp; p.y++)
-					luminance += HOOKED_texOff(p);
-			luminance /= EP*EP;
-			weight *= min(1 - luminance, luminance) * EPW;
+		const int hbp = EP/2;
+		vec4 luminance = vec4(0);
+		for (p.x = -hbp; p.x <= hbp; p.x++)
+			for (p.y = -hbp; p.y <= hbp; p.y++)
+				luminance += HOOKED_texOff(p);
+		luminance /= EP*EP;
+		weight *= min(1 - luminance, luminance) * EPW;
 #endif
 
-			sum += weight * HOOKED_texOff(r);
-			total_weight += weight;
-		}
+		sum += weight * HOOKED_texOff(r);
+		total_weight += weight;
 	}
 
 	return sum / total_weight;
