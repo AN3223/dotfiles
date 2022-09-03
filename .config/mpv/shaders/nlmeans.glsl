@@ -80,14 +80,16 @@
 
 /* Extremes preserve, reduces denoising around very bright/dark areas.
  *
- * EP represents the size of a zone to sample around each pixel for getting the 
- * average luminance. If enabled, the recommended value is 3.
+ * EP is the size the zone to sample around each pixel for computing the average 
+ * luminance. Set to 0 to disable extremes preserve.
  *
- * EPW is range [0,1], lower values will increase the effect.
+ * DP starts at 1, higher values increase the effect on dark patches.
+ * BP starts at 1, higher values increase the effect on bright patches.
  */
 #ifdef LUMA_raw
 #define EP 3
-#define EPW 0.35
+#define BP 3.0
+#define DP 1.5
 #endif
 
 /* Shader code */
@@ -132,6 +134,17 @@ vec4 hook()
 	lower = upper = vec2(hr);
 #endif
 
+#if EP
+	vec4 ep_weight;
+	const int hep = EP/2;
+	vec4 l = vec4(0);
+	for (p.x = -hep; p.x <= hep; p.x++)
+		for (p.y = -hep; p.y <= hep; p.y++)
+			l += HOOKED_texOff(p);
+	l /= EP*EP; // avg luminance
+	ep_weight = pow(min(1-l, l)*2, step(l, vec4(0.5))*DP + step(vec4(0.5), l)*BP);
+#endif
+
 #if RADIAL_SEARCH
 	// radial search
 	for (r = vec2(-radius); radius <= hr; r = radial_increment(r)) {
@@ -156,15 +169,8 @@ vec4 hook()
 		// low pdiff_sq -> high weight, high weight -> more blur
 		// XXX bad performance on AMD-Vulkan (but not OpenGL) seems to be rooted here?
 		weight = exp(-pdiff_sq * pdiff_scale) * ignore;
-
 #if EP
-		const int hbp = EP/2;
-		vec4 luminance = vec4(0);
-		for (p.x = -hbp; p.x <= hbp; p.x++)
-			for (p.y = -hbp; p.y <= hbp; p.y++)
-				luminance += HOOKED_texOff(p);
-		luminance /= EP*EP;
-		weight *= min(1 - luminance, luminance) * EPW;
+		weight *= ep_weight;
 #endif
 
 		sum += weight * HOOKED_texOff(r);
