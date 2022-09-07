@@ -99,7 +99,6 @@ const int hr = R/2;
 const float h = S*10.0;
 const float pdiff_scale = 1.0/(h*h);
 const float range = 255.0; // for making pixels range from 0-255
-const vec4 maxdiff = vec4(log(range)/pdiff_scale);
 
 #if RADIAL_SEARCH
 int radius = 1;
@@ -164,7 +163,6 @@ vec4 hook()
 		for (p.x = -hp; p.x <= hp; p.x++)
 			for (p.y = -hp; p.y <= hp; p.y++)
 				pdiff_sq += pow((HOOKED_texOff(r+p) - HOOKED_texOff(p)) * range, vec4(2));
-		ignore *= step(pdiff_sq, maxdiff);
 
 		// low pdiff_sq -> high weight, high weight -> more blur
 		// XXX bad performance on AMD-Vulkan (but not OpenGL) seems to be rooted here?
