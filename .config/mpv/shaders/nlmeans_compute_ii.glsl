@@ -40,18 +40,6 @@
  * P = patch size (odd number)
  * R = research size (odd number)
  *
- * Suggested values:
- *
- *         LUMA               CHROMA
- *   0<S<=15:P=3:R=21    0<S<=25:P=3:R=21
- *  15<S<=30:P=5:R=21   25<S<=55:P=5:R=35
- *  30<S<=45:P=7:R=35  55<S<=100:P=7:R=35
- *  45<S<=75:P=9:R=35
- * 75<S<=100:P=11:R=35
- *
- * Source:
- * https://www.ipol.im/pub/art/2011/bcm_nlm/article.pdf
- *
  * Increasing the patch and research sizes will be slower, but may do a better 
  * job at finding noise
  *
