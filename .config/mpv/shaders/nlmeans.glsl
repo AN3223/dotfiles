@@ -31,22 +31,29 @@
  * P = patch size (odd number)
  * R = research size (odd number)
  *
- * Increasing the patch and research sizes will be slower, but may do a better 
- * job at finding noise
+ * The defaults below are performance oriented and tuned for images captured on 
+ * a digital camera, but should be acceptable for other types of images as 
+ * well
  *
- * Increasing the denoising factor will increase blur
+ * The time to render a frame is linked to (R^2 * P^2), so P=3:R=15 will run 
+ * about as fast as P=5:R=9
  *
- * It is generally preferable to denoise chroma more than luma, so the user 
- * variables for luma and chroma are split below. Other user variables can be 
- * moved into these blocks if desired.
+ * Increasing the denoising factor will increase blur without impacting speed
  *
- * The defaults below are performance oriented, you may want to adjust them for 
- * your use case
+ * It may be preferable to denoise chroma more than luma, so the user variables 
+ * for luma and chroma are split below. Other user variables can be moved into 
+ * these blocks if desired.
+ *
+ * For film & anime you may want to disable chroma denoising by deleting the 
+ * !HOOK CHROMA line above
+ *
+ * For anime you most likely want to disable EP below, and perhaps denoise more 
+ * aggressively with a configuration like 2:3:5
  */
 #ifdef LUMA_raw
-#define S 1.0
+#define S 2.0
 #define P 3
-#define R 9
+#define R 3
 #else
 #define S 2.0
 #define P 5
@@ -71,13 +78,15 @@
  * EP is the size the zone to sample around each pixel for computing the average 
  * luminance. Set to 0 to disable extremes preserve.
  *
- * DP starts at 1, higher values increase the effect on dark patches.
- * BP starts at 1, higher values increase the effect on bright patches.
+ * Higher DP increases the effect on dark patches.
+ * Higher BP increases the effect on bright patches.
+ *
+ * DP and BP both start at 1, or 0 to disable.
  */
 #ifdef LUMA_raw
 #define EP 3
 #define BP 3.0
-#define DP 1.5
+#define DP 1.0
 #endif
 
 /* Shader code */
