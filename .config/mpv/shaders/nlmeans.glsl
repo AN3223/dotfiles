@@ -30,34 +30,47 @@
  * S = denoising factor
  * P = patch size (odd number)
  * R = research size (odd number)
+ * WF = weight function
+ * SS = spatial denoising factor (bilateral only)
  *
- * The defaults below are performance oriented and tuned for images captured on 
- * a digital camera, but should be acceptable for other types of images as 
- * well
- *
- * The time to render a frame is linked to (R^2 * P^2), so P=3:R=15 will run 
- * about as fast as P=5:R=9
+ * Speed is dictated by (R^2 * P^2), e.g., P=3:R=15 is about as fast as P=5:R=9
  *
  * Increasing the denoising factor will increase blur without impacting speed
  *
- * It may be preferable to denoise chroma more than luma, so the user variables 
+ * Decreasing spatial denoising factor will increase the locality, meaning 
+ * distant pixels contribute less
+ *
+ * WF=0 uses non-local means
+ * WF=1 uses bilateral
+ *
+ * It may be preferable to denoise chroma more than luma, so the user variables
  * for luma and chroma are split below. Other user variables can be moved into 
  * these blocks if desired.
  *
  * For film & anime you may want to disable chroma denoising by deleting the 
  * !HOOK CHROMA line above
  *
- * For anime you most likely want to disable EP below, and perhaps denoise more 
+ * For anime you most likely want to disable EP below, and perhaps denoise more
  * aggressively with a configuration like 2:3:5
+ *
+ * It's recommended to make multiple copies of this shader with settings 
+ * tweaked for different types of content, and then dispatch the appropriate 
+ * one via keybinds in input.conf, e.g.:
+ *
+ * F4 no-osd change-list glsl-shaders toggle "~~/shaders/nlmeans_luma.glsl"; show-text "Non-local means (LUMA only)"
  */
 #ifdef LUMA_raw
 #define S 2.0
 #define P 3
 #define R 3
+#define WF 0
+#define SS 0.0
 #else
 #define S 2.0
-#define P 5
+#define P 3
 #define R 5
+#define WF 1
+#define SS 6.0
 #endif
 
 /* Ranges from 0-2 in ascending order of quality, performance may vary wildly.
@@ -93,9 +106,7 @@
 
 const int hp = P/2;
 const int hr = R/2;
-const float h = S*10.0;
-const float pdiff_scale = 1.0/(h*h);
-const float range = 255.0; // for making pixels range from 0-255
+const float p_scale = 1.0/(P*P);
 
 #if RADIAL_SEARCH
 int radius = 1;
@@ -114,7 +125,7 @@ vec2 radial_increment(vec2 r)
 
 vec4 hook()
 {
-	vec4 weight, pdiff_sq, ignore;
+	vec4 weight, ignore;
 	vec2 r, p, lower, upper;
 	vec4 total_weight = vec4(1);
 	vec4 sum = HOOKED_texOff(0);
@@ -131,14 +142,16 @@ vec4 hook()
 #endif
 
 #if EP
-	vec4 ep_weight;
 	const int hep = EP/2;
+	const float ep_scale = 1.0/(EP*EP);
+
 	vec4 l = vec4(0);
 	for (p.x = -hep; p.x <= hep; p.x++)
 		for (p.y = -hep; p.y <= hep; p.y++)
 			l += HOOKED_texOff(p);
-	l /= EP*EP; // avg luminance
-	ep_weight = pow(min(1-l, l)*2, step(l, vec4(0.5))*DP + step(vec4(0.5), l)*BP);
+	l *= ep_scale; // avg luminance
+
+	vec4 ep_weight = pow(min(1-l, l)*2, step(l, vec4(0.5))*DP + step(vec4(0.5), l)*BP);
 #endif
 
 #if RADIAL_SEARCH
@@ -156,14 +169,33 @@ vec4 hook()
 		ignore *= int(clamp(abs_r, vec2(0), input_size) == abs_r);
 #endif
 
-		pdiff_sq = vec4(0);
+		// low pdiff_sq -> high weight, high weight -> more blur
+#if WF == 1
+		const float pdiff_scale = 1.0/(S*0.005);
+		const float length_scale = 1.0/SS;
+
+		vec4 pdiff = vec4(0);
+		for (p.x = -hp; p.x <= hp; p.x++)
+			for (p.y = -hp; p.y <= hp; p.y++)
+				pdiff += HOOKED_texOff(r+p) - HOOKED_texOff(p);
+		pdiff *= p_scale; // avg pixel difference
+
+		weight = exp(-pow(pdiff * pdiff_scale, vec4(2)));
+		weight *= exp(-pow(length(r) * length_scale, 2));
+#else
+		const float h = S*10.0;
+		const float pdiff_scale = 1.0/(h*h);
+		const float range = 255.0; // for making pixels range from 0-255
+
+		vec4 pdiff_sq = vec4(0);
 		for (p.x = -hp; p.x <= hp; p.x++)
 			for (p.y = -hp; p.y <= hp; p.y++)
 				pdiff_sq += pow((HOOKED_texOff(r+p) - HOOKED_texOff(p)) * range, vec4(2));
 
-		// low pdiff_sq -> high weight, high weight -> more blur
-		// XXX bad performance on AMD-Vulkan (but not OpenGL) seems to be rooted here?
-		weight = exp(-pdiff_sq * pdiff_scale) * ignore;
+		weight = exp(-pdiff_sq * pdiff_scale);
+#endif
+
+		weight *= ignore;
 #if EP
 		weight *= ep_weight;
 #endif
