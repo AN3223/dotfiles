@@ -102,6 +102,17 @@
 #define DP 1.0
 #endif
 
+/* Robust filtering
+ *
+ * Compares the pixel of interest to blurred pixel. The blurred pixel is 
+ * computed by averaging the pixels of the surrounding patch sized RF*RF.
+ *
+ * May improve quality, but can increase blur
+ *
+ * Must be an odd number. Set to 0 to disable.
+ */
+#define RF 0
+
 /* Shader code */
 
 const int hp = P/2;
@@ -121,6 +132,26 @@ vec2 radial_increment(vec2 r)
 	else
 		return vec2(radius, r.y); // start row
 }
+#endif
+
+#if RF
+#define ROBUST_PROXY(r) blurred(r)
+vec4 blurred(vec2 r)
+{
+	const int hrf = RF/2;
+	// XXX multiplying by reciprocal refuses to work here, compiler bug?
+	//const float hrf_scale = 1/(RF*RF);
+
+	vec4 sum = vec4(0);
+	for (int i = -hrf; i <= hrf; i++)
+		for (int j = -hrf; j <= hrf; j++)
+			sum += HOOKED_texOff(r + vec2(i,j));
+	sum /= RF*RF;
+
+	return sum;
+}
+#else
+#define ROBUST_PROXY HOOKED_texOff
 #endif
 
 vec4 hook()
@@ -177,7 +208,7 @@ vec4 hook()
 		vec4 pdiff = vec4(0);
 		for (p.x = -hp; p.x <= hp; p.x++)
 			for (p.y = -hp; p.y <= hp; p.y++)
-				pdiff += HOOKED_texOff(r+p) - HOOKED_texOff(p);
+				pdiff += ROBUST_PROXY(r+p) - HOOKED_texOff(p);
 		pdiff *= p_scale; // avg pixel difference
 
 		weight = exp(-pow(pdiff * pdiff_scale, vec4(2)));
@@ -190,7 +221,7 @@ vec4 hook()
 		vec4 pdiff_sq = vec4(0);
 		for (p.x = -hp; p.x <= hp; p.x++)
 			for (p.y = -hp; p.y <= hp; p.y++)
-				pdiff_sq += pow((HOOKED_texOff(r+p) - HOOKED_texOff(p)) * range, vec4(2));
+				pdiff_sq += pow((ROBUST_PROXY(r+p) - HOOKED_texOff(p)) * range, vec4(2));
 
 		weight = exp(-pdiff_sq * pdiff_scale);
 #endif
