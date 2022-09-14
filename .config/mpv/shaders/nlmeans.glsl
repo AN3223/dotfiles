@@ -139,16 +139,14 @@ vec2 radial_increment(vec2 r)
 vec4 blurred(vec2 r)
 {
 	const int hrf = RF/2;
-	// XXX multiplying by reciprocal refuses to work here, compiler bug?
-	//const float hrf_scale = 1/(RF*RF);
+	const float hrf_scale = 1.0/(RF*RF);
 
 	vec4 sum = vec4(0);
 	for (int i = -hrf; i <= hrf; i++)
 		for (int j = -hrf; j <= hrf; j++)
 			sum += HOOKED_texOff(r + vec2(i,j));
-	sum /= RF*RF;
 
-	return sum;
+	return sum * hrf_scale;
 }
 #else
 #define ROBUST_PROXY HOOKED_texOff
