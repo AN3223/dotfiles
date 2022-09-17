@@ -64,13 +64,13 @@
 #define P 3
 #define R 3
 #define WF 0
-#define SS 0.0
+#define SS 0
 #else
 #define S 2.0
 #define P 3
 #define R 5
 #define WF 1
-#define SS 6.0
+#define SS 6
 #endif
 
 /* Ranges from 0-2 in ascending order of quality, performance may vary wildly.
@@ -201,7 +201,6 @@ vec4 hook()
 		// low pdiff_sq -> high weight, high weight -> more blur
 #if WF == 1
 		const float pdiff_scale = 1.0/(S*0.005);
-		const float length_scale = 1.0/SS;
 
 		vec4 pdiff = vec4(0);
 		for (p.x = -hp; p.x <= hp; p.x++)
@@ -210,7 +209,6 @@ vec4 hook()
 		pdiff *= p_scale; // avg pixel difference
 
 		weight = exp(-pow(pdiff * pdiff_scale, vec4(2)));
-		weight *= exp(-pow(length(r) * length_scale, 2));
 #else
 		const float h = S*10.0;
 		const float pdiff_scale = 1.0/(h*h);
@@ -222,6 +220,11 @@ vec4 hook()
 				pdiff_sq += pow((ROBUST_PROXY(r+p) - HOOKED_texOff(p)) * range, vec4(2));
 
 		weight = exp(-pdiff_sq * pdiff_scale);
+#endif
+
+#if SS
+		const float length_scale = 1.0/float(SS);
+		weight *= exp(-pow(length(r) * length_scale, 2));
 #endif
 
 		weight *= ignore;
