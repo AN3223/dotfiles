@@ -30,28 +30,34 @@
  * S = denoising factor
  * P = patch size (odd number)
  * R = research size (odd number)
- * WF = weight function
- * SS = spatial denoising factor (bilateral only)
+ * SS = spatial denoising factor
  *
  * Speed is dictated by (R^2 * P^2), e.g., P=3:R=15 is about as fast as P=5:R=9
  *
- * Increasing the denoising factor will increase blur without impacting speed
+ * Increasing the denoising factor will increase blur without impacting speed.
  *
  * Decreasing spatial denoising factor will increase the locality, meaning 
- * distant pixels contribute less
+ * distant pixels contribute less. Set SS to 0 disable this feature.
  *
- * WF=0 uses non-local means
- * WF=1 uses bilateral
+ * Patch size should usually be 3. P=5 may be better sometimes, especially for 
+ * bilateral chroma denoising. P>=7 is usually worse. P=1 is fairly low 
+ * quality, but better than no denoising, so it could be useful for weak GPUs.
  *
- * It may be preferable to denoise chroma more than luma, so the user variables
- * for luma and chroma are split below. Other user variables can be moved into 
- * these blocks if desired.
+ * Research size should be at least 3. Higher values are usually better, but 
+ * slower and offer diminishing returns.
  *
- * For film & anime you may want to disable chroma denoising by deleting the 
- * !HOOK CHROMA line above
+ * It is usually preferable to denoise chroma and luma differently, so the user 
+ * variables for luma and chroma are split.
  *
- * For anime you most likely want to disable EP below, and perhaps denoise more
- * aggressively with a configuration like 2:3:5
+ * Suggested settings (assume defaults for unspecified parameters):
+ * 	- Film (especially black and white):
+ * 		- Disable chroma denoising by removing the !HOOK CHROMA line above
+ * 	- HQ (slow):
+ * 		- LUMA=S=1.5:P=3:R=15:SS=4:EP=0
+ * 		- CHROMA=S=2:P=3:R=15:SS=4
+ * 	- Anime (middleground between defaults & HQ, HQ offers better quality):
+ * 		- LUMA=S=2:P=3:R=9:SS=0:EP=0
+ *		- CHROMA=S=3:P=3:R=5:SS=0
  *
  * It's recommended to make multiple copies of this shader with settings 
  * tweaked for different types of content, and then dispatch the appropriate 
@@ -60,46 +66,60 @@
  * F4 no-osd change-list glsl-shaders toggle "~~/shaders/nlmeans_luma.glsl"; show-text "Non-local means (LUMA only)"
  */
 #ifdef LUMA_raw
-#define S 2.0
-#define P 3
-#define R 3
-#define WF 0
-#define SS 0
-#else
-#define S 2.0
+#define S 1.25
 #define P 3
 #define R 5
-#define WF 1
-#define SS 6
+#define SS 4
+#else
+#define S 3.0
+#define P 3
+#define R 5
+#define SS 4
 #endif
 
-/* Ranges from 0-2 in ascending order of quality, performance may vary wildly.
+/* Weight function
  *
- * Basically just tries to apply an appropriate amount of denoising to the 
- * edges of the image. The quality differences are miniscule unless you have a 
- * very large R, so this should only be turned up if it doesn't affect 
- * performance or when quality is very important.
+ * Bilateral scales well with heavy noise, and can offer good feature 
+ * preservation on low-contrast detail (e.g., wood grain, reflections).
+ *
+ * NLM is great at low noise levels, and tends to preserve lines and patterns.
+ *
+ * 0: non-local means (NLM)
+ * 1: bilateral
+ */
+#ifdef LUMA_raw
+#define WF 0
+#else
+#define WF 0
+#endif
+
+/* Bounds checking
+ *
+ * Attempts to apply an appropriate amount of denoising to the edges of the 
+ * image. The difference in quality usually imperceptible.
  *
  * 0: perform no bounds checking
- * 1: ignore out-of-bounds pixels
- * 2: shift research zone to avoid out-of-bounds pixels
+ * 1: ignore out-of-bounds pixels (preferred)
+ * 2: shift research zones to avoid out-of-bounds pixels (may be slow)
  */
 #define BOUNDS_CHECKING 1
 
-/* Extremes preserve, reduces denoising around very bright/dark areas.
+/* Extremes preserve
  *
- * EP is the size the zone to sample around each pixel for computing the average 
- * luminance. Set to 0 to disable extremes preserve.
+ * Reduces denoising around very bright/dark areas.
  *
- * Higher DP increases the effect on dark patches.
- * Higher BP increases the effect on bright patches.
- *
- * DP and BP both start at 1, or 0 to disable.
+ * EP (odd number): zone size for computing average luminance, 0 to disable
+ * DP (starts at 1): EP strength on dark patches, 0 to fully denoise
+ * BP (starts at 1): EP strength on bright patches, 0 to fully denoise
  */
 #ifdef LUMA_raw
 #define EP 3
 #define BP 3.0
 #define DP 1.0
+#else
+#define EP 0
+#define BP 0.0
+#define DP 0.0
 #endif
 
 /* Robust filtering
@@ -107,11 +127,18 @@
  * Compares the pixel of interest to blurred pixel. The blurred pixel is 
  * computed by averaging the pixels of the surrounding patch sized RF*RF.
  *
- * May improve quality, but can increase blur
+ * May slightly improve quality, but can increase blur, especially on text. 
+ * Usually sigma should be decreased to account for the added blur.
  *
- * Must be an odd number. Set to 0 to disable.
+ * Significantly slow. Consider increasing R instead.
+ *
+ * RF (odd number): zone size for blur, 0 to disable
  */
+#ifdef LUMA_raw
 #define RF 0
+#else
+#define RF 0
+#endif
 
 /* Shader code */
 
