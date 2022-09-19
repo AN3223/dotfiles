@@ -146,21 +146,6 @@ const int hp = P/2;
 const int hr = R/2;
 const float p_scale = 1.0/(P*P);
 
-#if RADIAL_SEARCH
-int radius = 1;
-vec2 radial_increment(vec2 r)
-{
-	if (r == vec2(radius))
-		return -vec2(++radius); // new ring
-	else if (r.x == radius)
-		return vec2(-radius, ++r.y); // end row
-	else if (abs(r.y) == radius)
-		return vec2(++r.x, r.y); // top/bottom rows
-	else
-		return vec2(radius, r.y); // start row
-}
-#endif
-
 #if RF
 #define ROBUST_PROXY(r) blurred(r)
 vec4 blurred(vec2 r)
@@ -210,14 +195,8 @@ vec4 hook()
 	vec4 ep_weight = pow(min(1-l, l)*2, step(l, vec4(0.5))*DP + step(vec4(0.5), l)*BP);
 #endif
 
-#if RADIAL_SEARCH
-	// radial search
-	for (r = vec2(-radius); radius <= hr; r = radial_increment(r)) {
-#else
-	// regular search
-	for (r.x = -lower.x; r.x <= upper.x; r.x++)
+	for (r.x = -lower.x; r.x <= upper.x; r.x++) {
 	for (r.y = -lower.y; r.y <= upper.y; r.y++) {
-#endif
 		ignore = vec4(1);
 
 #if BOUNDS_CHECKING == 1
@@ -261,6 +240,7 @@ vec4 hook()
 
 		sum += weight * HOOKED_texOff(r);
 		total_weight += weight;
+	}
 	}
 
 	return sum / total_weight;
