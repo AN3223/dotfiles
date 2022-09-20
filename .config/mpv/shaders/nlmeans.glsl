@@ -166,7 +166,6 @@ vec4 blurred(vec2 r)
 
 vec4 hook()
 {
-	vec4 weight, ignore;
 	vec2 r, p, lower, upper;
 	vec4 total_weight = vec4(1);
 	vec4 sum = HOOKED_texOff(0);
@@ -197,14 +196,7 @@ vec4 hook()
 
 	for (r.x = -lower.x; r.x <= upper.x; r.x++) {
 	for (r.y = -lower.y; r.y <= upper.y; r.y++) {
-		ignore = vec4(1);
-
-#if BOUNDS_CHECKING == 1
-		vec2 abs_r = HOOKED_pos * input_size + r;
-		ignore *= int(clamp(abs_r, vec2(0), input_size) == abs_r);
-#endif
-
-		// low pdiff_sq -> high weight, high weight -> more blur
+		// low pdiff -> high weight, high weight -> more blur
 #if WF == 1
 		const float pdiff_scale = 1.0/(S*0.005);
 
@@ -214,7 +206,7 @@ vec4 hook()
 				pdiff += ROBUST_PROXY(r+p) - HOOKED_texOff(p);
 		pdiff *= p_scale; // avg pixel difference
 
-		weight = exp(-pow(pdiff * pdiff_scale, vec4(2)));
+		vec4 weight = exp(-pow(pdiff * pdiff_scale, vec4(2)));
 #else
 		const float h = S*10.0;
 		const float pdiff_scale = 1.0/(h*h);
@@ -225,7 +217,7 @@ vec4 hook()
 			for (p.y = -hp; p.y <= hp; p.y++)
 				pdiff_sq += pow((ROBUST_PROXY(r+p) - HOOKED_texOff(p)) * range, vec4(2));
 
-		weight = exp(-pdiff_sq * pdiff_scale);
+		vec4 weight = exp(-pdiff_sq * pdiff_scale);
 #endif
 
 #if SS
@@ -233,9 +225,13 @@ vec4 hook()
 		weight *= exp(-pow(length(r) * length_scale, 2));
 #endif
 
-		weight *= ignore;
 #if EP
 		weight *= ep_weight;
+#endif
+
+#if BOUNDS_CHECKING == 1
+		vec2 abs_r = HOOKED_pos * input_size + r;
+		weight *= int(clamp(abs_r, vec2(0), input_size) == abs_r);
 #endif
 
 		sum += weight * HOOKED_texOff(r);
