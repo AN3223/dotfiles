@@ -27,14 +27,15 @@ cd "$(dirname "$0")"
 
 shader() {
 	sed -i "
-		/^\/\/!HOOK /d
-		21a //!HOOK $PLANE
+		35s|.*|//!HOOK $PLANE|
 		${S:+s/^#define S .*/#define S $S/}
 		${P:+s/^#define P .*/#define P $P/}
 		${R:+s/^#define R .*/#define R $R/}
 		${WF:+s/^#define WF .*/#define WF $WF/}
 		${SS:+s/^#define SS .*/#define SS $SS/}
-		${RF:+s/^#define RF .*/#define RF $RF/}
+		${RF:+s/^#define RF .*/#define RF $RF_BOOL/}
+		${RF:+s|//!WIDTH .*|//!WIDTH HOOKED.w $RF_SAFE /|}
+		${RF:+s|//!HEIGHT .*|//!HEIGHT HOOKED.w $RF_SAFE /|}
 		s/^#define EP .*/#define EP 0/
 	" "$3"
 
@@ -75,6 +76,7 @@ BASELINE_ALL=$(echo "$BASELINE" | cut -f 4 | cut -d : -f 2)
 echo "BASELINE=$CORRUPTION	$BASELINE" >> "${3:-nlmeans_test.stats}"
 
 cp nlmeans.glsl nlmeans_test.glsl
+sed -i '36,38d' nlmeans_test.glsl
 
 for PLANE in ${NLM_PLANES:-LUMA CHROMA}; do
 for WF in ${NLM_WF:-0}; do
@@ -82,6 +84,14 @@ for R in ${NLM_R:-15 13 11 9 7 5 3}; do
 for P in ${NLM_P:-5 3 1}; do
 for SS in ${NLM_SS:-6 0}; do
 for RF in ${NLM_RF:-0}; do
+	if [ "$RF" = 0 ]; then
+		RF_SAFE=1
+		RF_BOOL=0
+	else
+		RF_SAFE="$RF"
+		RF_BOOL=1
+	fi
+
 	S="$NLM_START"
 	FACTOR="$NLM_FACTOR"
 	unset -v SSIM SSIM_ALL OLD_SSIM OLD_SSIM_ALL

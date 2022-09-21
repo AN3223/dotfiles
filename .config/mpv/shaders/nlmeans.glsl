@@ -23,6 +23,21 @@
 //!HOOK CHROMA
 //!HOOK RGB
 //!BIND HOOKED
+//!DESC Non-local means (downscale)
+//!WIDTH HOOKED.w 2 /
+//!HEIGHT HOOKED.h 2 /
+//!SAVE DOWNSCALED
+
+vec4 hook()
+{
+	return HOOKED_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!BIND HOOKED
+//!BIND DOWNSCALED
 //!DESC Non-local means
 
 /* User variables
@@ -51,7 +66,7 @@
  *
  * Suggested settings (assume defaults for unspecified parameters):
  * 	- Film (especially black and white):
- * 		- Disable chroma denoising by removing the !HOOK CHROMA line above
+ * 		- Disable chroma by removing the !HOOK CHROMA line above this comment
  * 	- HQ (slow):
  * 		- LUMA=S=1.5:P=3:R=15:SS=4:EP=0
  * 		- CHROMA=S=2:P=3:R=15:SS=4
@@ -124,15 +139,17 @@
 
 /* Robust filtering
  *
- * Compares the pixel of interest to blurred pixel. The blurred pixel is 
- * computed by averaging the pixels of the surrounding patch sized RF*RF.
+ * Compares the pixel of interest against downscaled pixels.
  *
- * May slightly improve quality, but can increase blur, especially on text. 
- * Usually sigma should be decreased to account for the added blur.
+ * May improve quality, especially for low patch sizes, but can cause blur and 
+ * distortion. Usually sigma should be decreased to account for the added blur.
  *
- * Significantly slow. Consider increasing R instead.
+ * The downscale factor can be modified in the WIDTH/HEIGHT directives near the 
+ * top of this shader, higher numbers increase blur.
  *
- * RF (odd number): zone size for blur, 0 to disable
+ * Any notation of RF as a positive number should be assumed to be referring to 
+ * the downscaling factor, e.g., RF=3 means RF is enabled and the downscaling 
+ * factor is set to 3.
  */
 #ifdef LUMA_raw
 #define RF 0
@@ -142,27 +159,15 @@
 
 /* Shader code */
 
+#if RF
+#define ROBUST_texOff DOWNSCALED_texOff
+#else
+#define ROBUST_texOff HOOKED_texOff
+#endif
+
 const int hp = P/2;
 const int hr = R/2;
 const float p_scale = 1.0/(P*P);
-
-#if RF
-#define ROBUST_PROXY(r) blurred(r)
-vec4 blurred(vec2 r)
-{
-	const int hrf = RF/2;
-	const float hrf_scale = 1.0/(RF*RF);
-
-	vec4 sum = vec4(0);
-	for (int i = -hrf; i <= hrf; i++)
-		for (int j = -hrf; j <= hrf; j++)
-			sum += HOOKED_texOff(r + vec2(i,j));
-
-	return sum * hrf_scale;
-}
-#else
-#define ROBUST_PROXY HOOKED_texOff
-#endif
 
 vec4 hook()
 {
@@ -203,7 +208,7 @@ vec4 hook()
 		vec4 pdiff = vec4(0);
 		for (p.x = -hp; p.x <= hp; p.x++)
 			for (p.y = -hp; p.y <= hp; p.y++)
-				pdiff += ROBUST_PROXY(r+p) - HOOKED_texOff(p);
+				pdiff += ROBUST_texOff(r+p) - HOOKED_texOff(p);
 		pdiff *= p_scale; // avg pixel difference
 
 		vec4 weight = exp(-pow(pdiff * pdiff_scale, vec4(2)));
@@ -215,7 +220,7 @@ vec4 hook()
 		vec4 pdiff_sq = vec4(0);
 		for (p.x = -hp; p.x <= hp; p.x++)
 			for (p.y = -hp; p.y <= hp; p.y++)
-				pdiff_sq += pow((ROBUST_PROXY(r+p) - HOOKED_texOff(p)) * range, vec4(2));
+				pdiff_sq += pow((ROBUST_texOff(r+p) - HOOKED_texOff(p)) * range, vec4(2));
 
 		vec4 weight = exp(-pdiff_sq * pdiff_scale);
 #endif
