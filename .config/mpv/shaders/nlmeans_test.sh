@@ -27,7 +27,7 @@ cd "$(dirname "$0")"
 
 shader() {
 	sed -i "
-		35s|.*|//!HOOK $PLANE|
+		59s|.*|//!HOOK $PLANE|
 		${S:+s/^#define S .*/#define S $S/}
 		${P:+s/^#define P .*/#define P $P/}
 		${R:+s/^#define R .*/#define R $R/}
@@ -76,7 +76,7 @@ BASELINE_ALL=$(echo "$BASELINE" | cut -f 4 | cut -d : -f 2)
 echo "BASELINE=$CORRUPTION	$BASELINE" >> "${3:-nlmeans_test.stats}"
 
 cp nlmeans.glsl nlmeans_test.glsl
-sed -i '36,38d' nlmeans_test.glsl
+sed -i '60,62d' nlmeans_test.glsl
 
 for PLANE in ${NLM_PLANES:-LUMA CHROMA}; do
 for WF in ${NLM_WF:-0}; do

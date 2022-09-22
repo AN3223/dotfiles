@@ -24,8 +24,8 @@
 //!HOOK RGB
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
-//!WIDTH HOOKED.w 1.75 /
-//!HEIGHT HOOKED.h 1.75 /
+//!WIDTH HOOKED.w 2.0 /
+//!HEIGHT HOOKED.h 2.0 /
 //!SAVE DOWNSCALED
 
 vec4 hook()
@@ -198,9 +198,9 @@ vec4 hook()
 
 #if RF
 #ifdef LUMA_raw
-#define ROBUST_texOff DOWNSCALED_LUMA_texOff
+#define ROBUST_texOff(off) DOWNSCALED_LUMA_tex(HOOKED_pos + HOOKED_pt * vec2(off))
 #else
-#define ROBUST_texOff DOWNSCALED_texOff
+#define ROBUST_texOff(off) DOWNSCALED_tex(HOOKED_pos + HOOKED_pt * vec2(off))
 #endif
 #else
 #define ROBUST_texOff HOOKED_texOff
