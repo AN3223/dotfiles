@@ -24,9 +24,33 @@
 //!HOOK RGB
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
+//!WIDTH HOOKED.w 1.75 /
+//!HEIGHT HOOKED.h 1.75 /
+//!SAVE DOWNSCALED
+
+vec4 hook()
+{
+	return HOOKED_texOff(0);
+}
+
+//!HOOK LUMA
+//!BIND HOOKED
+//!DESC Non-local means (downscale)
 //!WIDTH HOOKED.w 1.25 /
 //!HEIGHT HOOKED.h 1.25 /
-//!SAVE DOWNSCALED
+//!SAVE DOWNSCALED_LUMA
+
+vec4 hook()
+{
+	return HOOKED_texOff(0);
+}
+
+//!HOOK LUMA
+//!BIND HOOKED
+//!DESC Non-local means (EP downscale)
+//!WIDTH HOOKED.w 3 /
+//!HEIGHT HOOKED.h 3 /
+//!SAVE EP_LUMA
 
 vec4 hook()
 {
@@ -38,6 +62,8 @@ vec4 hook()
 //!HOOK RGB
 //!BIND HOOKED
 //!BIND DOWNSCALED
+//!BIND DOWNSCALED_LUMA
+//!BIND EP_LUMA
 //!DESC Non-local means
 
 /* User variables
@@ -121,14 +147,16 @@ vec4 hook()
 
 /* Extremes preserve
  *
- * Reduces denoising around very bright/dark areas.
+ * Reduces denoising around very bright/dark areas. The downscaling factor of 
+ * EP_LUMA (located near the top of this shader) controls the area sampled for 
+ * luminance (higher numbers consider more area).
  *
- * EP (odd number): zone size for computing average luminance, 0 to disable
+ * EP: 1 to enable, 0 to disable
  * DP (starts at 1): EP strength on dark patches, 0 to fully denoise
  * BP (starts at 1): EP strength on bright patches, 0 to fully denoise
  */
 #ifdef LUMA_raw
-#define EP 3
+#define EP 1
 #define BP 3.0
 #define DP 1.0
 #else
@@ -145,8 +173,9 @@ vec4 hook()
  * distortion, especially in tandem with bilateral. Sigma may need to be 
  * decreased to account for the added blur.
  *
- * The downscale factor can be modified in the WIDTH/HEIGHT directives near the 
- * top of this shader, higher numbers increase blur.
+ * The downscale factor can be modified in the WIDTH/HEIGHT directives for the 
+ * DOWNSCALED (for CHROMA, RGB) and DOWNSCALED_LUMA (LUMA only) textures near 
+ * the top of this shader, higher numbers increase blur.
  *
  * Any notation of RF as a positive number should be assumed to be referring to 
  * the downscaling factor, e.g., RF=3 means RF is enabled and the downscaling 
@@ -168,7 +197,11 @@ vec4 hook()
 /* Shader code */
 
 #if RF
+#ifdef LUMA_raw
+#define ROBUST_texOff DOWNSCALED_LUMA_texOff
+#else
 #define ROBUST_texOff DOWNSCALED_texOff
+#endif
 #else
 #define ROBUST_texOff HOOKED_texOff
 #endif
@@ -201,15 +234,7 @@ vec4 hook()
 #endif
 
 #if EP
-	const int hep = EP/2;
-	const float ep_scale = 1.0/(EP*EP);
-
-	vec4 l = vec4(0);
-	for (p.x = -hep; p.x <= hep; p.x++)
-		for (p.y = -hep; p.y <= hep; p.y++)
-			l += HOOKED_texOff(p);
-	l *= ep_scale; // avg luminance
-
+	vec4 l = EP_LUMA_texOff(0);
 	vec4 ep_weight = pow(min(1-l, l)*2, step(l, vec4(0.5))*DP + step(vec4(0.5), l)*BP);
 #endif
 
