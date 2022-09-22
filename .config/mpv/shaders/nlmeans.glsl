@@ -34,6 +34,8 @@ vec4 hook()
 }
 
 //!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
 //!WIDTH HOOKED.w 1.25 /
@@ -46,6 +48,8 @@ vec4 hook()
 }
 
 //!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
 //!BIND HOOKED
 //!DESC Non-local means (EP downscale)
 //!WIDTH HOOKED.w 3 /
@@ -159,10 +163,6 @@ vec4 hook()
 #define EP 1
 #define BP 3.0
 #define DP 1.0
-#else
-#define EP 0
-#define BP 0.0
-#define DP 0.0
 #endif
 
 /* Robust filtering
