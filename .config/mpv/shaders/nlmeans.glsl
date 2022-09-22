@@ -189,10 +189,26 @@ vec4 hook()
 
 /* Estimator
  *
- * 0: means (default, recommended)
+ * 0: means
  * 1: Euclidean medians (extremely slow, may be better for heavy noise)
  */
 #define M 0
+
+/* Weight discard
+ *
+ * Discard weights that fall below a threshold based on the cumulative average, 
+ * helping to retain low contrast detail.
+ * 
+ * WD: 1 to enable, 0 to disable
+ * WDT (0<WDT<1): Coefficient for threshold, lower numbers discard less
+ * WDP: lowers threshold for small sample sizes, further explanation:
+ * 	- WDP>=1 slowly decreases the penalty, higher numbers increase effect
+ * 	- 1>WDP>0 quickly decreases the penalty, numbers closer to 0 increase effect
+ * 	- 0 to disable
+ */
+#define WD 1
+#define WDT 0.875
+#define WDP 6.0
 
 /* Shader code */
 
@@ -213,6 +229,10 @@ const float p_scale = 1.0/(P*P);
 vec4 hook()
 {
 	vec2 r, p, lower, upper;
+
+#if WD
+	vec4 no_weights = vec4(1);
+#endif
 
 #if M == 1
 	vec4 minsum = vec4(0);
@@ -276,6 +296,13 @@ vec4 hook()
 #if BOUNDS_CHECKING == 1
 		vec2 abs_r = HOOKED_pos * input_size + r;
 		weight *= int(clamp(abs_r, vec2(0), input_size) == abs_r);
+#endif
+
+#if WD
+		vec4 wd_scale = 1/no_weights;
+		vec4 keeps = step(total_weight*wd_scale*WDT*exp(-wd_scale*WDP), weight);
+		weight *= keeps;
+		no_weights += keeps;
 #endif
 
 #if M == 1

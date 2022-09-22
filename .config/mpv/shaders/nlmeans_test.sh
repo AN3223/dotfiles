@@ -36,6 +36,9 @@ shader() {
 		${RF:+s/^#define RF .*/#define RF $RF_BOOL/}
 		${RF:+s|//!WIDTH .*|//!WIDTH HOOKED.w $RF_SAFE /|}
 		${RF:+s|//!HEIGHT .*|//!HEIGHT HOOKED.w $RF_SAFE /|}
+		${WD_BOOL:+s/^#define WDT .*/#define WDT $WDT/}
+		${WD_BOOL:+s/^#define WDP .*/#define WDP $WDP/}
+		${WD_BOOL:+s/^#define WD .*/#define WD $WD_BOOL/}
 		s/^#define EP .*/#define EP 0/
 	" "$3"
 
@@ -82,16 +85,26 @@ for PLANE in ${NLM_PLANES:-LUMA CHROMA}; do
 for WF in ${NLM_WF:-0}; do
 for R in ${NLM_R:-15 13 11 9 7 5 3}; do
 for P in ${NLM_P:-5 3 1}; do
-for SS in ${NLM_SS:-6 0}; do
-for RF in ${NLM_RF:-0}; do
-	if [ "$RF" = 0 ]; then
+for SS in ${NLM_SS:-""}; do
+for RF in ${NLM_RF:-""}; do
+	if [ "$RF" = 0 ] || [ ! "$RF" ]; then
 		RF_SAFE=1
 		RF_BOOL=0
 	else
 		RF_SAFE="$RF"
 		RF_BOOL=1
 	fi
-
+for WDT in ${NLM_WDT:-""}; do
+	if [ ! "$WDT" ]; then
+		unset -v WD_BOOL
+	elif [ "$WDT" = 0 ]; then
+		unset -v NLM_WDP_
+		WD_BOOL=0
+	else
+		WD_BOOL=1
+		NLM_WDP_="$NLM_WDP"
+	fi
+for WDP in ${NLM_WDP_:-""}; do
 	S="$NLM_START"
 	FACTOR="$NLM_FACTOR"
 	unset -v SSIM SSIM_ALL OLD_SSIM OLD_SSIM_ALL
@@ -134,8 +147,10 @@ for RF in ${NLM_RF:-0}; do
 	done
 
 	if [ "$SSIM" ]; then
-		echo "$PLANE=${S:+S=$S}${P:+:P=$P}${R:+:R=$R}${WF:+:WF=$WF}${SS:+:SS=$SS}${RF:+:RF=$RF}	$SSIM" >> nlmeans_test.stats
+		echo "$PLANE=${S:+S=$S}${P:+:P=$P}${R:+:R=$R}${WF:+:WF=$WF}${SS:+:SS=$SS}${RF:+:RF=$RF}${WDT:+:WDT=$WDT}${WDP:+:WDP=$WDP}	$SSIM" >> nlmeans_test.stats
 	fi
+done
+done
 done
 done
 done
