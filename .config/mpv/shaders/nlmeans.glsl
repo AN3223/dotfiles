@@ -157,6 +157,13 @@ vec4 hook()
 #define RF 0
 #endif
 
+/* Estimator
+ *
+ * 0: means (default, recommended)
+ * 1: Euclidean medians (extremely slow, may be better for heavy noise)
+ */
+#define M 0
+
 /* Shader code */
 
 #if RF
@@ -172,8 +179,14 @@ const float p_scale = 1.0/(P*P);
 vec4 hook()
 {
 	vec2 r, p, lower, upper;
+
+#if M == 1
+	vec4 minsum = vec4(0);
+	vec4 minpx = vec4(0);
+#else
 	vec4 total_weight = vec4(1);
 	vec4 sum = HOOKED_texOff(0);
+#endif
 
 #if BOUNDS_CHECKING == 2
 	vec2 px_pos = HOOKED_pos * input_size;
@@ -239,11 +252,52 @@ vec4 hook()
 		weight *= int(clamp(abs_r, vec2(0), input_size) == abs_r);
 #endif
 
-		sum += weight * HOOKED_texOff(r);
+#if M == 1
+		/* Based on: https://arxiv.org/abs/1207.3056
+		 *
+		 * It describes using the center pixel of the patch that results in the 
+		 * minimum sum of the weighted patch distances.
+		 *
+		 * However, this implementation uses the opposite weight, one minus weight. 
+		 * Using the regular weight doesn't seem to make sense, as that would 
+		 * reduce the sum for patches that are the most different from the patch 
+		 * around the pixel of interest, therefore the most dissimilar pixels would 
+		 * get selected.
+		 */
+		vec2 r2;
+		vec4 wpdist_sum = vec4(0);
+		for (r2.x = -lower.x; r2.x <= upper.x; r2.x++) {
+			for (r2.y = -lower.y; r2.y <= upper.y; r2.y++) {
+				vec4 pdist = vec4(0);
+				for (p.x = -hp; p.x <= hp; p.x++)
+					for (p.y = -hp; p.y <= hp; p.y++)
+						pdist += pow((HOOKED_texOff(r2+p) - HOOKED_texOff(r+p)) * 255, vec4(2));
+				wpdist_sum += sqrt(pdist) * (1-weight);
+			}
+		}
+
+		// initialize minsum and minpx
+		minsum += step(minsum, vec4(0)) * wpdist_sum;
+		minpx  += step(minpx, vec4(0))  * HOOKED_texOff(r);
+
+		// find new minimums, exclude zeros
+		vec4 newmin = step(wpdist_sum, minsum) - step(wpdist_sum, vec4(0));
+		vec4 notmin = 1 - newmin;
+
+		// update minimums
+		minsum = (newmin * wpdist_sum)       + (notmin * minsum);
+		minpx  = (newmin * HOOKED_texOff(r)) + (notmin * minpx);
+#else
+		sum += HOOKED_texOff(r) * weight;
 		total_weight += weight;
+#endif
 	}
 	}
 
+#if M == 1
+	return minpx;
+#else
 	return sum / total_weight;
+#endif
 }
 
