@@ -24,8 +24,8 @@
 //!HOOK RGB
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
-//!WIDTH HOOKED.w 2 /
-//!HEIGHT HOOKED.h 2 /
+//!WIDTH HOOKED.w 1.25 /
+//!HEIGHT HOOKED.h 1.25 /
 //!SAVE DOWNSCALED
 
 vec4 hook()
@@ -142,7 +142,8 @@ vec4 hook()
  * Compares the pixel of interest against downscaled pixels.
  *
  * May improve quality, especially for low patch sizes, but can cause blur and 
- * distortion. Usually sigma should be decreased to account for the added blur.
+ * distortion, especially in tandem with bilateral. Sigma may need to be 
+ * decreased to account for the added blur.
  *
  * The downscale factor can be modified in the WIDTH/HEIGHT directives near the 
  * top of this shader, higher numbers increase blur.
@@ -152,9 +153,9 @@ vec4 hook()
  * factor is set to 3.
  */
 #ifdef LUMA_raw
-#define RF 0
+#define RF 1
 #else
-#define RF 0
+#define RF 1
 #endif
 
 /* Estimator
