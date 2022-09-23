@@ -96,13 +96,13 @@ vec4 hook()
  *
  * Suggested settings (assume defaults for unspecified parameters):
  * 	- Film (especially black and white):
- * 		- Disable chroma by removing the !HOOK CHROMA line above this comment
+ * 		- Disable chroma by removing the !HOOK CHROMA lines above
  * 	- HQ (slow):
- * 		- LUMA=S=1.5:P=3:R=15:SS=4:EP=0
- * 		- CHROMA=S=2:P=3:R=15:SS=4
+ * 		- LUMA=R=15:EP=0
+ * 		- CHROMA=R=15
  * 	- Anime (middleground between defaults & HQ, HQ offers better quality):
- * 		- LUMA=S=2:P=3:R=9:SS=0:EP=0
- *		- CHROMA=S=3:P=3:R=5:SS=0
+ * 		- LUMA=S=2:R=9:SS=0:EP=0
+ *		- CHROMA=SS=0
  *
  * It's recommended to make multiple copies of this shader with settings 
  * tweaked for different types of content, and then dispatch the appropriate 
