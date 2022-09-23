@@ -4,9 +4,10 @@
 # $3: output file (default: nlmeans_test.stats)
 
 #
-# This script approximates the ideal sigma (S) value for a set of 
-# nlmeans.glsl configurations by trying multiple S values for each 
-# configuration and comparing their SSIM scores.
+# This script benchmarks nlmeans.glsl by running the shader with a 
+# corrupt image as input, and comparing the output to the clean image 
+# with SSIM. A multitude of configurations are tested, and for each 
+# configuration the SSIM is maximized by adjusting the S value.
 #
 # The configurations (including S values) and their corresponding SSIM 
 # scores are output into a file called nlmeans_test.stats in the 
@@ -23,7 +24,6 @@ NLM_FACTOR=${NLM_FACTOR:-16.0}
 NLM_FACTOR_DECAY=${NLM_FACTOR_DECAY:-0.73}
 
 renice -n 19 $$; ionice -c 3 -p $$;
-cd "$(dirname "$0")"
 
 shader() {
 	sed -i "
@@ -40,24 +40,30 @@ shader() {
 		${WD_BOOL:+s/^#define WDP .*/#define WDP $WDP/}
 		${WD_BOOL:+s/^#define WD .*/#define WD $WD_BOOL/}
 		s/^#define EP .*/#define EP 0/
-	" "$3"
+	" "$SHADER"
 
-	ffmpeg -nostdin -i "$1" -i "$2" -init_hw_device vulkan \
-		-lavfi "hwupload,libplacebo=custom_shader_path="$3",hwdownload,format=yuv420p[placebo];
-			[placebo]ssim=f=nlmeans_test.stats.tmp" \
+	ffmpeg -nostdin -i "$CORRUPT_IMAGE" -i "$INPUT_IMAGE" -init_hw_device vulkan"$NLM_VK" \
+		-lavfi "hwupload,libplacebo=custom_shader_path=$SHADER,hwdownload,format=yuv420p[placebo];
+			[placebo]ssim=f=$TMP" \
 		-f null -
 }
 
 ssim_tsv() {
-	cut -d ' ' -f 2-5 nlmeans_test.stats.tmp | tr ' ' '\t'
+	cut -d ' ' -f 2-5 "$TMP" | tr ' ' '\t'
 }
 
+STATS=${3:-nlmeans_test}.stats
+CORRUPT_IMAGE=${3:-nlmeans_test}.mkv
+TMP=${3:-nlmeans_test}.tmp
+SHADER=${3:-nlmeans_test}.shader
+INPUT_IMAGE=${1:?}
+
 # make sure old stats aren't appended to
-if [ -f nlmeans_test.stats ]; then
-	echo 'remove old nlmeans_test.stats file? y/N' >&2
+if [ -f "$STATS" ]; then
+	echo "remove existing $STATS? y/N" >&2
 	read -r input
 	case "$input" in 
-		y|Y) rm nlmeans_test.stats ;;
+		y|Y) rm "$STATS" ;;
 		*) exit 1 ;;
 	esac
 fi
@@ -66,20 +72,20 @@ fi
 case "${2:?}" in
 	JPEG=*)
 		CORRUPTION="$2"
-		ffmpeg -y -i "${1:?}" -c:v mjpeg -q:v "${2#JPEG=}" nlmeans_test_corrupt.mkv
+		ffmpeg -y -i "$INPUT_IMAGE" -c:v mjpeg -q:v "${2#JPEG=}" "$CORRUPT_IMAGE"
 		;;
 	*)
 		CORRUPTION="NOISE=${2#NOISE=}"
-		ffmpeg -y -i "${1:?}" -vf noise=alls="${2#NOISE=}" -c:v libx265 -x265-params lossless=1 nlmeans_test_corrupt.mkv
+		ffmpeg -y -i "$INPUT_IMAGE" -vf noise=alls="${2#NOISE=}" -c:v libx265 -x265-params lossless=1 "$CORRUPT_IMAGE"
 		;;
 esac
-ffmpeg -i "$1" -i nlmeans_test_corrupt.mkv -lavfi ssim=f=nlmeans_test.stats.tmp -f null -
-BASELINE=$(ssim_tsv nlmeans_test.stats.tmp)
+ffmpeg -i "$INPUT_IMAGE" -i "$CORRUPT_IMAGE" -lavfi ssim=f="$TMP" -f null -
+BASELINE=$(ssim_tsv)
 BASELINE_ALL=$(echo "$BASELINE" | cut -f 4 | cut -d : -f 2)
-echo "BASELINE=$CORRUPTION	$BASELINE" >> "${3:-nlmeans_test.stats}"
+echo "BASELINE=$CORRUPTION	$BASELINE" >> "$STATS"
 
-cp nlmeans.glsl nlmeans_test.glsl
-sed -i '64,66d' nlmeans_test.glsl
+cp nlmeans.glsl "$SHADER"
+sed -i '64,66d' "$SHADER"
 
 for PLANE in ${NLM_PLANES:-LUMA CHROMA}; do
 for WF in ${NLM_WF:-0}; do
@@ -108,19 +114,8 @@ for WDP in ${NLM_WDP_:-""}; do
 	S="$NLM_START"
 	FACTOR="$NLM_FACTOR"
 	unset -v SSIM SSIM_ALL OLD_SSIM OLD_SSIM_ALL
-
-	# Depiction of the peak approximation algorithm with FACTOR=4 and 
-	# FACTOR_DECAY=0.375
-	#
-	#             |1 2 3 4 5 6 7 8 9 ...         16
-	#  True SSIM: |I I I I I I I I I I I I P D D D D D D D D D D D D 
-	# Known SSIM: |I     I                       D
-	# Known SSIM: |I I I   I     I     A           D
-	#
-	# I = Increase; P = Peak; D = Decrease; A = Approximated peak
-	#
 	while :; do
-		shader nlmeans_test_corrupt.mkv "$1" nlmeans_test.glsl
+		shader
 		NEW_SSIM=$(ssim_tsv)
 		NEW_SSIM_ALL=$(echo "$NEW_SSIM" | cut -f 4 | cut -d : -f 2)
 
@@ -147,7 +142,7 @@ for WDP in ${NLM_WDP_:-""}; do
 	done
 
 	if [ "$SSIM" ]; then
-		echo "$PLANE=${S:+S=$S}${P:+:P=$P}${R:+:R=$R}${WF:+:WF=$WF}${SS:+:SS=$SS}${RF:+:RF=$RF}${WDT:+:WDT=$WDT}${WDP:+:WDP=$WDP}	$SSIM" >> nlmeans_test.stats
+		echo "$PLANE=${S:+S=$S}${P:+:P=$P}${R:+:R=$R}${WF:+:WF=$WF}${SS:+:SS=$SS}${RF:+:RF=$RF}${WDT:+:WDT=$WDT}${WDP:+:WDP=$WDP}	$SSIM" >> "$STATS"
 	fi
 done
 done
@@ -158,5 +153,5 @@ done
 done
 done
 
-rm nlmeans_test.glsl nlmeans_test_corrupt.mkv nlmeans_test.stats.tmp
+rm "$SHADER" "$TMP" "$CORRUPT_IMAGE"
 
