@@ -42,7 +42,7 @@ shader() {
 		s/^#define EP .*/#define EP 0/
 	" "$SHADER"
 
-	ffmpeg -nostdin -i "$CORRUPT_IMAGE" -i "$INPUT_IMAGE" -init_hw_device vulkan"$NLM_VK" \
+	ffmpeg -nostdin -i "${1:-$CORRUPT_IMAGE}" -i "$INPUT_IMAGE" -init_hw_device vulkan"$NLM_VK" \
 		-lavfi "hwupload,libplacebo=custom_shader_path=$SHADER,hwdownload,format=yuv420p[placebo];
 			[placebo]ssim=f=$TMP" \
 		-f null -
@@ -52,8 +52,35 @@ ssim_tsv() {
 	cut -d ' ' -f 2-5 "$TMP" | tr ' ' '\t'
 }
 
+avg_ssim() {
+	[ "$REALIZATIONS" ] || return 0
+
+	SSIM_Y=$(echo "$SSIM" | cut -f 1 | cut -d : -f 2)
+	SSIM_U=$(echo "$SSIM" | cut -f 2 | cut -d : -f 2)
+	SSIM_V=$(echo "$SSIM" | cut -f 3 | cut -d : -f 2)
+	SSIM_ALL=$(echo "$SSIM" | cut -f 4 | cut -d : -f 2)
+	SSIM="$SSIM_Y	$SSIM_U	$SSIM_V	$SSIM_ALL"
+
+	i=1
+	while [ "$i" -lt "$REALIZATIONS" ]; do
+		shader "${CORRUPT_IMAGE%0.mkv}$i.mkv"
+		NEW_SSIM=$(ssim_tsv)
+		NEW_SSIM_Y=$(echo "$NEW_SSIM" | cut -f 1 | cut -d : -f 2)
+		NEW_SSIM_U=$(echo "$NEW_SSIM" | cut -f 2 | cut -d : -f 2)
+		NEW_SSIM_V=$(echo "$NEW_SSIM" | cut -f 3 | cut -d : -f 2)
+		NEW_SSIM_ALL=$(echo "$NEW_SSIM" | cut -f 4 | cut -d : -f 2)
+		SSIM="$SSIM
+$NEW_SSIM_Y	$NEW_SSIM_U	$NEW_SSIM_V	$NEW_SSIM_ALL"
+		i=$((i+1))
+	done
+
+	SSIM=$(printf '%s\n' "$SSIM" | awk '
+		{ y+=$1; u+=$2; v+=$3; a+=$4; }
+		END { printf("Y:%s\tU:%s\tV:%s\tAll:%s\n", y/NR, u/NR, v/NR, a/NR) }
+	')
+}
+
 STATS=${3:-nlmeans_test}.stats
-CORRUPT_IMAGE=${3:-nlmeans_test}.mkv
 TMP=${3:-nlmeans_test}.tmp
 SHADER=${3:-nlmeans_test}.shader
 INPUT_IMAGE=${1:?}
@@ -72,15 +99,38 @@ fi
 case "${2:?}" in
 	JPEG=*)
 		CORRUPTION="$2"
-		ffmpeg -y -i "$INPUT_IMAGE" -c:v mjpeg -q:v "${2#JPEG=}" "$CORRUPT_IMAGE"
+		CORRUPT_IMAGE=${3:-nlmeans_test}.jpg
+		ffmpeg -y -i "$INPUT_IMAGE" -q:v "${2#JPEG=}" "$CORRUPT_IMAGE"
+		ffmpeg -i "$INPUT_IMAGE" -i "$CORRUPT_IMAGE" -lavfi ssim=f="$TMP" -f null -
+		BASELINE=$(ssim_tsv)
 		;;
 	*)
-		CORRUPTION="NOISE=${2#NOISE=}"
-		ffmpeg -y -i "$INPUT_IMAGE" -vf noise=alls="${2#NOISE=}" -c:v libx265 -x265-params lossless=1 "$CORRUPT_IMAGE"
+		REALIZATIONS=${NLM_REALIZATIONS:-10}
+		CORRUPTION="NOISE=${2#NOISE=}:REALIZATIONS=$REALIZATIONS"
+
+		i=0
+		BASELINE=""
+		while [ "$i" -lt "$REALIZATIONS" ]; do
+			ffmpeg -y -i "$INPUT_IMAGE" -vf noise="alls=${2#NOISE=}:all_seed=$i" \
+				-c:v libx265 -x265-params lossless=1 "${3:-nlmeans_test}$i.mkv"
+			ffmpeg -i "$INPUT_IMAGE" -i "${3:-nlmeans_test}$i.mkv" -lavfi ssim=f="$TMP" -f null -
+			SSIM=$(ssim_tsv)
+			SSIM_Y=$(echo "$SSIM" | cut -f 1 | cut -d : -f 2)
+			SSIM_U=$(echo "$SSIM" | cut -f 2 | cut -d : -f 2)
+			SSIM_V=$(echo "$SSIM" | cut -f 3 | cut -d : -f 2)
+			SSIM_ALL=$(echo "$SSIM" | cut -f 4 | cut -d : -f 2)
+			BASELINE="$BASELINE
+$SSIM_Y $SSIM_U $SSIM_V $SSIM_ALL"
+			i=$((i+1))
+		done
+
+		BASELINE=$(printf '%s\n' "$BASELINE" | awk '
+			{ y+=$1; u+=$2; v+=$3; a+=$4; }
+			END { printf("Y:%s\tU:%s\tV:%s\tAll:%s\n", y/NR, u/NR, v/NR, a/NR) }
+		')
+		CORRUPT_IMAGE=${3:-nlmeans_test}0.mkv
 		;;
 esac
-ffmpeg -i "$INPUT_IMAGE" -i "$CORRUPT_IMAGE" -lavfi ssim=f="$TMP" -f null -
-BASELINE=$(ssim_tsv)
 BASELINE_ALL=$(echo "$BASELINE" | cut -f 4 | cut -d : -f 2)
 echo "BASELINE=$CORRUPTION	$BASELINE" >> "$STATS"
 
@@ -142,6 +192,7 @@ for WDP in ${NLM_WDP_:-""}; do
 	done
 
 	if [ "$SSIM" ]; then
+		avg_ssim
 		echo "$PLANE=${S:+S=$S}${P:+:P=$P}${R:+:R=$R}${WF:+:WF=$WF}${SS:+:SS=$SS}${RF:+:RF=$RF}${WDT:+:WDT=$WDT}${WDP:+:WDP=$WDP}	$SSIM" >> "$STATS"
 	fi
 done
@@ -153,5 +204,15 @@ done
 done
 done
 
-rm "$SHADER" "$TMP" "$CORRUPT_IMAGE"
+if [ "$REALIZATIONS" ]; then
+	i=0
+	while [ "$i" -lt "$REALIZATIONS" ]; do
+		rm "${CORRUPT_IMAGE%0.mkv}$i.mkv"
+		i=$((i+1))
+	done
+else
+	rm "$CORRUPT_IMAGE"
+fi
+
+rm "$SHADER" "$TMP"
 
