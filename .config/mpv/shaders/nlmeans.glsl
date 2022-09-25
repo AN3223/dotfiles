@@ -233,12 +233,16 @@ vec4 hook()
 
 /* Weight discard
  *
- * Discard weights that fall below a threshold based on the cumulative average,
- * helping to retain low contrast detail.
+ * Discard weights that fall below a threshold based on the average weight. 
+ * Helps to retain low contrast detail.
  * 
- * WD: 1 to enable, 0 to disable
+ * WD:
+ * 	- 2: true average, uses more memory
+ * 	- 1: moving cumulative average, inaccurate, may blur directionally
+ * 	- 0: disable
  * WDT (0<WDT<1): Coefficient for threshold, lower numbers discard less
- * WDP: lowers threshold for small sample sizes, further explanation:
+ * WDP: Lowers threshold for small sample sizes, further explanation:
+ * 	- Only applies to WD=1
  * 	- WDP>=1 slowly decreases the penalty, higher numbers increase effect
  * 	- 1>WDP>0 quickly decreases the penalty, numbers closer to 0 increase effect
  * 	- 0 to disable
@@ -316,8 +320,12 @@ const float p_scale = 1.0/(P*P);
 vec4 hook()
 {
 	vec3 r, p, lower, upper;
+	int index = 0;
 
-#if WD
+#if WD == 2
+	vec4 all_weights[R*R*(T+1)];
+	vec4 all_pixels[R*R*(T+1)];
+#elif WD == 1
 	vec4 no_weights = vec4(1);
 #endif
 
@@ -347,7 +355,7 @@ vec4 hook()
 
 	for (r.z = 0; r.z <= T; r.z++)
 	for (r.x = -lower.x; r.x <= upper.x; r.x++)
-	for (r.y = -lower.y; r.y <= upper.y; r.y++) {
+	for (r.y = -lower.y; r.y <= upper.y; r.y++,index++) {
 		// low pdiff -> high weight, high weight -> more blur
 #if WF == 1
 		const float pdiff_scale = 1.0/(S*0.005);
@@ -383,7 +391,10 @@ vec4 hook()
 		weight *= int(clamp(abs_r, vec2(0), input_size) == abs_r);
 #endif
 
-#if WD
+#if WD == 2
+		all_weights[index] = weight;
+		all_pixels[index] = load(r) * weight;
+#elif WD == 1
 		vec4 wd_scale = 1.0/no_weights;
 		vec4 keeps = step(total_weight*wd_scale*WDT*exp(-wd_scale*WDP), weight);
 		weight *= keeps;
@@ -460,6 +471,20 @@ vec4 hook()
 #endif
 #ifdef PREV1
 	imageStore(PREV1, ivec2(HOOKED_pos*target_size), load(vec3(0)));
+#endif
+
+#if WD == 2
+	const float weight_scale = 1.0/(R*R*(T+1));
+
+	vec4 avg_weight = total_weight * weight_scale;
+	total_weight = vec4(1);
+	sum = HOOKED_texOff(0);
+
+	for (int i = 0; i < R*R*(T+1); i++) {
+		vec4 keeps = step(avg_weight*WDT, all_weights[i]);
+		sum += all_pixels[i] * keeps;
+		total_weight += all_weights[i] * keeps;
+	}
 #endif
 
 #if M == 1
