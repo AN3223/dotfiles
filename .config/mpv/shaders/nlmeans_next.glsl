@@ -279,14 +279,6 @@ vec4 hook()
  */
 #define RI 0
 
-/* Adaptive S
- *
- * Surveys the area before denoising and decreases S if the noise level is low.
- *
- * AS (odd number): size of the area to survey (ideally AS<=R)
- */
-#define AS 0
-
 /* Shader code */
 
 #if RF && defined(LUMA_raw)
@@ -397,28 +389,6 @@ vec4 hook()
 	vec4 sum = HOOKED_texOff(0);
 #endif
 
-#if AS
-	const int has = AS/2;
-
-	vec3 as = vec3(0);
-	vec4 s = vec4(S);
-	for (as.x = -has; as.x <= has; as.x++)
-	for (as.y = -has; as.y <= has; as.y++) {
-		vec4 apdiff_sq = vec4(0);
-		for (int ri = 0; ri <= RI; ri++)
-		for (p.x = -hp; p.x <= hp; p.x++)
-		for (p.y = -hp; p.y <= hp; p.y++)
-			apdiff_sq += pow((HOOKED_texOff(p) - HOOKED_texOff(rotate(p,ri)+as)) * range, vec4(2));
-		apdiff_sq *= p_scale * float(as != vec3(0));
-
-		vec4 anewmin = step(apdiff_sq, s) - step(apdiff_sq, vec4(0));
-		vec4 anotmin = 1 - anewmin;
-		s = (anewmin * apdiff_sq) + (anotmin * s);
-	}
-#else
-	vec4 s = vec4(S);
-#endif
-
 #if BOUNDS_CHECKING == 2
 	vec2 px_pos = HOOKED_pos * input_size;
 	lower = min(vec2(hr), px_pos);
@@ -440,9 +410,9 @@ vec4 hook()
 	for (r.y = -lower.y; r.y <= upper.y; r.y++,r_index++) {
 		// low pdiff -> high weight, high weight -> more blur
 #if WF == 1
-		vec4 pdiff_scale = 1.0/(s*0.00166);
-		vec4 pdiff = vec4(0);
+		const float pdiff_scale = 1.0/(S*0.00166);
 
+		vec4 pdiff = vec4(0);
 		for (int ri = 0; ri <= RI; ri++)
 		for (p.x = -hp; p.x <= hp; p.x++)
 		for (p.y = -hp; p.y <= hp; p.y++)
@@ -450,10 +420,10 @@ vec4 hook()
 
 		vec4 weight = exp(-pow(pdiff * p_scale * pdiff_scale, vec4(2)));
 #else
-		vec4 h = s*3.33;
-		vec4 pdiff_scale = 1.0/(h*h);
-		vec4 pdiff_sq = vec4(0);
+		const float h = S*3.33;
+		const float pdiff_scale = 1.0/(h*h);
 
+		vec4 pdiff_sq = vec4(0);
 		for (int ri = 0; ri <= RI; ri++)
 		for (p.x = -hp; p.x <= hp; p.x++)
 		for (p.y = -hp; p.y <= hp; p.y++)
