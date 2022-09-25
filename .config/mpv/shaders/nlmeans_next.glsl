@@ -250,7 +250,9 @@ vec4 hook()
  * 	- 2: true average, uses more memory
  * 	- 1: moving cumulative average, inaccurate, may blur directionally
  * 	- 0: disable
- * WDT (0<WDT<1): Coefficient for threshold, lower numbers discard less
+ *
+ * WDT (0<WDT<2): Coefficient for threshold, lower numbers discard less
+ *
  * WDP: Lowers threshold for small sample sizes, further explanation:
  * 	- Only applies to WD=1
  * 	- WDP>=1 slowly decreases the penalty, higher numbers increase effect
@@ -261,6 +263,22 @@ vec4 hook()
 #define WDT 0.875
 #define WDP 6.0
 
+/* Rotational invariance
+ *
+ * Number of rotations to try for each patch comparison. Slow, but can greatly 
+ * increase feature preservation.
+ *
+ * Each additional rotation provides greatly diminishing returns.
+ *
+ * 0: 0
+ * 1: 0, 90
+ * 2: 0, 90, 180
+ * 3: 0, 90, 180, 270
+ * 4: 0, 90, 180, 270, hflip
+ * 5: 0, 90, 180, 270, hflip, vflip
+ */
+#define RI 0
+
 /* Shader code */
 
 #if RF && defined(LUMA_raw)
@@ -270,6 +288,13 @@ vec4 hook()
 #else
 #define TEX HOOKED_tex
 #endif
+
+const int hp = P/2;
+const int hr = R/2;
+const int r_size = R*R*(T+1);
+const int p_size = P*P*(RI+1);
+const float r_scale = 1.0/r_size;
+const float p_scale = 1.0/p_size;
 
 #if T
 vec4 load(vec3 off)
@@ -323,18 +348,32 @@ vec4 load(vec3 off)
 #define load(off) TEX(HOOKED_pos + HOOKED_pt * vec2(off))
 #endif
 
-const int hp = P/2;
-const int hr = R/2;
-const float p_scale = 1.0/(P*P);
+vec3 rotate(vec3 coords, int degree)
+{
+	switch (degree) {
+	case 0: // 0 degrees
+		return coords;
+	case 1: // 90 degrees clockwise
+		return coords.yxz * vec3(1,-1,1);
+	case 2: // 180 degrees clockwise
+		return coords * vec3(-1,-1,1);
+	case 3: // 270 degrees clockwise
+		return coords.yxz * vec3(-1,1,1);
+	case 4: // flip horizontally
+		return coords * vec3(1,-1,1);
+	case 5: // flip vertically
+		return coords * vec3(-1,1,1);
+	}
+}
 
 vec4 hook()
 {
 	vec3 r, p, lower, upper;
-	int index = 0;
+	int r_index = 0;
 
 #if WD == 2
-	vec4 all_weights[R*R*(T+1)];
-	vec4 all_pixels[R*R*(T+1)];
+	vec4 all_weights[r_size];
+	vec4 all_pixels[r_size];
 #elif WD == 1
 	vec4 no_weights = vec4(1);
 #endif
@@ -365,29 +404,30 @@ vec4 hook()
 
 	for (r.z = 0; r.z <= T; r.z++)
 	for (r.x = -lower.x; r.x <= upper.x; r.x++)
-	for (r.y = -lower.y; r.y <= upper.y; r.y++,index++) {
+	for (r.y = -lower.y; r.y <= upper.y; r.y++,r_index++) {
 		// low pdiff -> high weight, high weight -> more blur
 #if WF == 1
-		const float pdiff_scale = 1.0/(S*0.005);
+		const float pdiff_scale = 1.0/(S*0.00166);
 
 		vec4 pdiff = vec4(0);
+		for (int ri = 0; ri <= RI; ri++)
 		for (p.x = -hp; p.x <= hp; p.x++)
 		for (p.y = -hp; p.y <= hp; p.y++)
-			pdiff += HOOKED_texOff(p) - load(r+p);
-		pdiff *= p_scale; // avg pixel difference
+			pdiff += HOOKED_texOff(p) - load(rotate(p,ri)+r);
 
-		vec4 weight = exp(-pow(pdiff * pdiff_scale, vec4(2)));
+		vec4 weight = exp(-pow(pdiff * p_scale * pdiff_scale, vec4(2)));
 #else
-		const float h = S*10.0;
+		const float h = S*3.33;
 		const float pdiff_scale = 1.0/(h*h);
 		const float range = 255.0;
 
 		vec4 pdiff_sq = vec4(0);
+		for (int ri = 0; ri <= RI; ri++)
 		for (p.x = -hp; p.x <= hp; p.x++)
 		for (p.y = -hp; p.y <= hp; p.y++)
-			pdiff_sq += pow((HOOKED_texOff(p) - load(r+p)) * range, vec4(2));
+			pdiff_sq += pow((HOOKED_texOff(p) - load(rotate(p,ri)+r)) * range, vec4(2));
 
-		vec4 weight = exp(-pdiff_sq * pdiff_scale);
+		vec4 weight = exp(-pdiff_sq * p_scale * pdiff_scale);
 #endif
 
 		weight *= exp(-pow(length(r*SD) * SS, 2));
@@ -402,8 +442,8 @@ vec4 hook()
 #endif
 
 #if WD == 2
-		all_weights[index] = weight;
-		all_pixels[index] = load(r) * weight;
+		all_weights[r_index] = weight;
+		all_pixels[r_index] = load(r) * weight;
 #elif WD == 1
 		vec4 wd_scale = 1.0/no_weights;
 		vec4 keeps = step(total_weight*wd_scale*WDT*exp(-wd_scale*WDP), weight);
@@ -429,9 +469,10 @@ vec4 hook()
 		for (r2.x = -lower.x; r2.x <= upper.x; r2.x++)
 		for (r2.y = -lower.y; r2.y <= upper.y; r2.y++) {
 				vec4 pdist = vec4(0);
+				for (int ri = 0; ri <= RI; ri++)
 				for (p.x = -hp; p.x <= hp; p.x++)
 				for (p.y = -hp; p.y <= hp; p.y++)
-					pdist += pow((load(r+p) - load(r2+p)) * 255, vec4(2));
+					pdist += pow((load(p+r) - load(rotate(p,ri)+r2)) * 255, vec4(2));
 				wpdist_sum += sqrt(pdist) * (1-weight);
 		}
 
@@ -484,13 +525,11 @@ vec4 hook()
 #endif
 
 #if WD == 2
-	const float weight_scale = 1.0/(R*R*(T+1));
-
-	vec4 avg_weight = total_weight * weight_scale;
+	vec4 avg_weight = total_weight * r_scale;
 	total_weight = vec4(1);
 	sum = HOOKED_texOff(0);
 
-	for (int i = 0; i < R*R*(T+1); i++) {
+	for (int i = 0; i < r_size; i++) {
 		vec4 keeps = step(avg_weight*WDT, all_weights[i]);
 		sum += all_pixels[i] * keeps;
 		total_weight += all_weights[i] * keeps;
@@ -553,3 +592,4 @@ vec4 hook()
 //!SIZE 3840 3840
 //!FORMAT r32f
 //!STORAGE
+
