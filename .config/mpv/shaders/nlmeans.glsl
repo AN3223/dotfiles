@@ -242,12 +242,7 @@ vec4 hook()
  * 	- 0: disable
  *
  * WDT (0<WDT<2): Coefficient for threshold, lower numbers discard less
- *
- * WDP: Lowers threshold for small sample sizes, further explanation:
- * 	- Only applies to WD=1
- * 	- WDP>=1 slowly decreases the penalty, higher numbers increase effect
- * 	- 1>WDP>0 quickly decreases the penalty, numbers closer to 0 increase effect
- * 	- 0 to disable
+ * WDP (WD=1): Higher numbers reduce the threshold more for small sample sizes
  */
 #define WD 1
 #define WDT 0.875
@@ -403,9 +398,9 @@ vec4 hook()
 		const float pdiff_scale = 1.0/(S*0.00166);
 
 		vec4 pdiff = vec4(0);
-		for (int ri = 0; ri <= RI; ri++)
 		for (p.x = -hp; p.x <= hp; p.x++)
 		for (p.y = -hp; p.y <= hp; p.y++)
+		for (int ri = 0; ri <= RI; ri++)
 			pdiff += HOOKED_texOff(p) - load(rotate(p,ri)+r);
 
 		vec4 weight = exp(-pow(pdiff * p_scale * pdiff_scale, vec4(2)));
@@ -414,9 +409,9 @@ vec4 hook()
 		const float pdiff_scale = 1.0/(h*h);
 
 		vec4 pdiff_sq = vec4(0);
-		for (int ri = 0; ri <= RI; ri++)
 		for (p.x = -hp; p.x <= hp; p.x++)
 		for (p.y = -hp; p.y <= hp; p.y++)
+		for (int ri = 0; ri <= RI; ri++)
 			pdiff_sq += pow((HOOKED_texOff(p) - load(rotate(p,ri)+r)) * range, vec4(2));
 
 		vec4 weight = exp(-pdiff_sq * p_scale * pdiff_scale);
@@ -461,9 +456,9 @@ vec4 hook()
 		for (r2.x = -lower.x; r2.x <= upper.x; r2.x++)
 		for (r2.y = -lower.y; r2.y <= upper.y; r2.y++) {
 				vec4 pdist = vec4(0);
-				for (int ri = 0; ri <= RI; ri++)
 				for (p.x = -hp; p.x <= hp; p.x++)
 				for (p.y = -hp; p.y <= hp; p.y++)
+				for (int ri = 0; ri <= RI; ri++)
 					pdist += pow((load(p+r) - load(rotate(p,ri)+r2)) * 255, vec4(2));
 				wpdist_sum += sqrt(pdist) * (1-weight);
 		}
