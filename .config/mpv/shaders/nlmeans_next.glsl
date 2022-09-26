@@ -90,11 +90,13 @@ vec4 hook()
  * Increasing the denoising factor will increase blur without impacting speed.
  *
  * Increasing spatial denoising factor will increase the locality, resulting in
- * distant pixels contributing less. SS=0 is non-local, locality has no effect.
+ * distant pixels contributing less. SS=0 is non-local (locality has no effect).
  *
- * Patch size should usually be 3. P=5 may be better sometimes, especially for 
- * bilateral chroma denoising. P>=7 is usually worse. P=1 is fairly low 
- * quality, but better than no denoising, so it could be useful for weak GPUs.
+ * Patch size should be 0-2 or any odd number. Higher values are slower, and 
+ * may or may not offer better quality. Patch sizes 0-2 are special:
+ * 	- 0: 1x1 patch
+ * 	- 1: 1x3 patch
+ * 	- 2: Plus (+) shaped patch
  *
  * Research size should be at least 3. Higher values are usually better, but 
  * slower and offer diminishing returns.
@@ -104,27 +106,77 @@ vec4 hook()
  *
  * Suggested settings (assume defaults for unspecified parameters):
  * 	- Film (especially black and white):
- * 		- Disable chroma by removing the !HOOK CHROMA lines above
+ * 		- Disable chroma by removing the HOOK CHROMA lines above
  * 	- HQ (slow):
  * 		- LUMA=S=3:EP=0:RI=2:WD=2:WDT=1
- * 		- CHROMA=RI=2:WD=2:WDT=1
  *
- * It's recommended to make multiple copies of this shader with settings 
+ * It is recommended to make multiple copies of this shader with settings 
  * tweaked for different types of content, and then dispatch the appropriate 
  * one via keybinds in input.conf, e.g.:
  *
  * F4 no-osd change-list glsl-shaders toggle "~~/shaders/nlmeans_luma.glsl"; show-text "Non-local means (LUMA only)"
+ *
+ * The shader can also be enabled by default in mpv.conf:
+ *
+ * glsl-shaders='~~/shaders/nlmeans.glsl'
+ *
+ * Both of the examples above assume the shader(s) being located in a 
+ * subdirectory named "shaders" inside of mpv's config directory. Refer to the 
+ * mpv documentation for more details.
  */
 #ifdef LUMA_raw
 #define S 1.25
-#define P 3
+#define P 2
 #define R 5
 #define SS 0.25
 #else
-#define S 3.0
-#define P 3
+#define S 2.0
+#define P 2
 #define R 5
 #define SS 0.25
+#endif
+
+/* Weight discard
+ *
+ * Discard weights that fall below a threshold based on the average weight. 
+ * This causes areas with less noise to receive less blur.
+ * 
+ * WD:
+ * 	- 2: true average, very good quality, but slower and uses more memory
+ * 	- 1: moving cumulative average, inaccurate, tends to blur directionally
+ * 	- 0: disable
+ *
+ * WDT (0<WDT<2): Coefficient for threshold, lower numbers discard less
+ * WDP (WD=1): Higher numbers reduce the threshold more for small sample sizes
+ */
+#ifdef LUMA_raw
+#define WD 1
+#define WDT 0.875
+#define WDP 6.0
+#else
+#define WD 1
+#define WDT 0.875
+#define WDP 6.0
+#endif
+
+/* Rotational invariance
+ *
+ * Number of rotations to try for each patch comparison. Slow, but can greatly 
+ * increase feature preservation.
+ *
+ * Each additional rotation provides greatly diminishing returns.
+ *
+ * 0: 0
+ * 1: 0, 90
+ * 2: 0, 90, 180
+ * 3: 0, 90, 180, 270
+ * 4: 0, 90, 180, 270, hflip
+ * 5: 0, 90, 180, 270, hflip, vflip
+ */
+#ifdef LUMA_raw
+#define RI 0
+#else
+#define RI 0
 #endif
 
 /* Temporal denoising
@@ -152,7 +204,7 @@ vec4 hook()
  * SD is most useful for controlling motion blur, higher Z values produce less 
  * motion blur. SD only works if SS is greater than zero.
  *
- * The X and Y distortion of the spatial kernel can be controlled here too, 
+ * The X and Y distortion of the spatial kernel can be controlled with SD too,
  * although I'm not aware of any practical use for them.
  *
  * T: number of frames used
@@ -182,17 +234,6 @@ vec4 hook()
 #define WF 0
 #endif
 
-/* Bounds checking
- *
- * Attempts to apply an appropriate amount of denoising to the edges of the 
- * image. The difference in quality usually imperceptible.
- *
- * 0: perform no bounds checking
- * 1: ignore out-of-bounds pixels (preferred)
- * 2: shift research zones to avoid out-of-bounds pixels (may be slow)
- */
-#define BOUNDS_CHECKING 1
-
 /* Extremes preserve
  *
  * Reduces denoising around very bright/dark areas. The downscaling factor of 
@@ -213,9 +254,7 @@ vec4 hook()
  *
  * Compares the pixel of interest against downscaled pixels.
  *
- * May improve quality, especially for low patch sizes, but can cause blur and 
- * distortion, especially in tandem with bilateral. Sigma may need to be 
- * decreased to account for the added blur.
+ * Almost always this will improve quality, except when bilateral is used.
  *
  * The downscale factor can be modified in the WIDTH/HEIGHT directives for the 
  * DOWNSCALED (for CHROMA, RGB) and DOWNSCALED_LUMA (LUMA only) textures near 
@@ -236,40 +275,22 @@ vec4 hook()
  * 0: means
  * 1: Euclidean medians (extremely slow, may be better for heavy noise)
  */
+#ifdef LUMA_raw
 #define M 0
+#else
+#define M 0
+#endif
 
-/* Weight discard
+/* Bounds checking
  *
- * Discard weights that fall below a threshold based on the average weight. 
- * Helps to retain low contrast detail.
- * 
- * WD:
- * 	- 2: true average, uses more memory
- * 	- 1: moving cumulative average, inaccurate, may blur directionally
- * 	- 0: disable
+ * Attempts to apply an appropriate amount of denoising to the edges of the 
+ * image. The difference in quality usually imperceptible.
  *
- * WDT (0<WDT<2): Coefficient for threshold, lower numbers discard less
- * WDP (WD=1): Higher numbers reduce the threshold more for small sample sizes
+ * 0: perform no bounds checking
+ * 1: ignore out-of-bounds pixels (preferred)
+ * 2: shift research zones to avoid out-of-bounds pixels (may be slow)
  */
-#define WD 1
-#define WDT 0.875
-#define WDP 6.0
-
-/* Rotational invariance
- *
- * Number of rotations to try for each patch comparison. Slow, but can greatly 
- * increase feature preservation.
- *
- * Each additional rotation provides greatly diminishing returns.
- *
- * 0: 0
- * 1: 0, 90
- * 2: 0, 90, 180
- * 3: 0, 90, 180, 270
- * 4: 0, 90, 180, 270, hflip
- * 5: 0, 90, 180, 270, hflip, vflip
- */
-#define RI 0
+#define BOUNDS_CHECKING 1
 
 /* Shader code */
 
@@ -281,12 +302,25 @@ vec4 hook()
 #define TEX HOOKED_tex
 #endif
 
+#if P >= 3
+#define FOR_PATCH(p) for (p.x = -hp; p.x <= hp; p.x++) for (p.y = -hp; p.y <= hp; p.y++) for (int ri = 0; ri <= RI; ri++)
+const int p_area = P*P*(RI+1);
+#elif P == 2
+#define FOR_PATCH(p) for (p.x = -1; p.x <= 1; p.x++) for (p.y = -int(p.x==0); p.y <= int(p.x==0); p.y++) for (int ri = 0; ri <= RI; ri++)
+const int p_area = 5*(RI+1);
+#elif P == 1
+#define FOR_PATCH(p) for (p.x = -1; p.x <= 1; p.x++) for (p.y = 0; p.y <= 0; p.y++) for (int ri = 0; ri <= RI; ri++)
+const int p_area = 3*(RI+1);
+#elif P == 0
+#define FOR_PATCH(p) for (p = vec3(0); p.x <= 0; p.x++) for (int ri = 0; ri <= 0; ri++)
+const int p_area = 1;
+#endif
+
 const int hp = P/2;
 const int hr = R/2;
-const int r_size = R*R*(T+1);
-const int p_size = P*P*(RI+1);
-const float r_scale = 1.0/r_size;
-const float p_scale = 1.0/p_size;
+const int r_area = R*R*(T+1);
+const float r_scale = 1.0/r_area;
+const float p_scale = 1.0/p_area;
 const float range = 255.0;
 
 #if T
@@ -367,8 +401,8 @@ vec4 hook()
 	int r_index = 0;
 
 #if WD == 2
-	vec4 all_weights[r_size];
-	vec4 all_pixels[r_size];
+	vec4 all_weights[r_area];
+	vec4 all_pixels[r_area];
 #elif WD == 1
 	vec4 no_weights = vec4(1);
 #endif
@@ -405,9 +439,7 @@ vec4 hook()
 		const float pdiff_scale = 1.0/(S*0.00166);
 
 		vec4 pdiff = vec4(0);
-		for (p.x = -hp; p.x <= hp; p.x++)
-		for (p.y = -hp; p.y <= hp; p.y++)
-		for (int ri = 0; ri <= RI; ri++)
+		FOR_PATCH(p)
 			pdiff += HOOKED_texOff(p) - load(rotate(p,ri)+r);
 
 		vec4 weight = exp(-pow(pdiff * p_scale * pdiff_scale, vec4(2)));
@@ -416,9 +448,7 @@ vec4 hook()
 		const float pdiff_scale = 1.0/(h*h);
 
 		vec4 pdiff_sq = vec4(0);
-		for (p.x = -hp; p.x <= hp; p.x++)
-		for (p.y = -hp; p.y <= hp; p.y++)
-		for (int ri = 0; ri <= RI; ri++)
+		FOR_PATCH(p)
 			pdiff_sq += pow((HOOKED_texOff(p) - load(rotate(p,ri)+r)) * range, vec4(2));
 
 		vec4 weight = exp(-pdiff_sq * p_scale * pdiff_scale);
@@ -463,9 +493,7 @@ vec4 hook()
 		for (r2.x = -lower.x; r2.x <= upper.x; r2.x++)
 		for (r2.y = -lower.y; r2.y <= upper.y; r2.y++) {
 				vec4 pdist = vec4(0);
-				for (p.x = -hp; p.x <= hp; p.x++)
-				for (p.y = -hp; p.y <= hp; p.y++)
-				for (int ri = 0; ri <= RI; ri++)
+				FOR_PATCH(p)
 					pdist += pow((load(p+r) - load(rotate(p,ri)+r2)) * 255, vec4(2));
 				wpdist_sum += sqrt(pdist) * (1-weight);
 		}
@@ -523,7 +551,7 @@ vec4 hook()
 	total_weight = vec4(1);
 	sum = HOOKED_texOff(0);
 
-	for (int i = 0; i < r_size; i++) {
+	for (int i = 0; i < r_area; i++) {
 		vec4 keeps = step(avg_weight*WDT, all_weights[i]);
 		sum += all_pixels[i] * keeps;
 		total_weight += all_weights[i] * keeps;
