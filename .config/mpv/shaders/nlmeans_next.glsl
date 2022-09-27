@@ -146,7 +146,7 @@ vec4 hook()
  * 	- 1: moving cumulative average, inaccurate, tends to blur directionally
  * 	- 0: disable
  *
- * WDT (0<WDT<2): Coefficient for threshold, lower numbers discard less
+ * WDT: Threshold coefficient, higher numbers discard more
  * WDP (WD=1): Higher numbers reduce the threshold more for small sample sizes
  */
 #ifdef LUMA_raw
@@ -556,6 +556,10 @@ vec4 hook()
 		sum += all_pixels[i] * keeps;
 		total_weight += all_weights[i] * keeps;
 	}
+#endif
+
+#if WM // for viewing weight map
+	return total_weight * r_scale;
 #endif
 
 #if M == 1
