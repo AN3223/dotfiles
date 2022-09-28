@@ -82,11 +82,7 @@ vec4 hook()
  * Increasing spatial denoising factor will increase the locality, resulting in
  * distant pixels contributing less. SS=0 is non-local (locality has no effect).
  *
- * Patch size should be 0-2 or any odd number. Higher values are slower, and 
- * may or may not offer better quality. Patch sizes 0-2 are special:
- * 	- 0: 1x1 patch
- * 	- 1: 1x3 patch
- * 	- 2: Plus (+) shaped patch
+ * Patch size should usually be 3. Varying patch shapes are available too.
  *
  * Research size should be at least 3. Higher values are usually better, but 
  * slower and offer diminishing returns.
@@ -116,12 +112,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define S 1.25
-#define P 2
+#define P 3
 #define R 5
 #define SS 0.25
 #else
 #define S 2.0
-#define P 2
+#define P 3
 #define R 5
 #define SS 0.25
 #endif
@@ -147,6 +143,23 @@ vec4 hook()
 #define WD 1
 #define WDT 0.875
 #define WDP 6.0
+#endif
+
+/* Patch shape
+ *
+ * Useful for making patches with areas between 1x1, 3x3, 5x5, etc. for 
+ * fine-grain control, might have other effects too. Always reduces patch area 
+ * in comparison to square.
+ *
+ * 3: diamond
+ * 2: vertical line
+ * 1: horizontal line
+ * 0: square
+ */
+#ifdef LUMA_raw
+#define PS 3
+#else
+#define PS 3
 #endif
 
 /* Rotational invariance
@@ -292,26 +305,30 @@ vec4 hook()
 #define TEX HOOKED_tex
 #endif
 
-#if P >= 3
-#define FOR_PATCH(p) for (p.x = -hp; p.x <= hp; p.x++) for (p.y = -hp; p.y <= hp; p.y++) for (int ri = 0; ri <= RI; ri++)
-const int p_area = P*P*(RI+1);
-#elif P == 2
-#define FOR_PATCH(p) for (p.x = -1; p.x <= 1; p.x++) for (p.y = -int(p.x==0); p.y <= int(p.x==0); p.y++) for (int ri = 0; ri <= RI; ri++)
-const int p_area = 5*(RI+1);
-#elif P == 1
-#define FOR_PATCH(p) for (p.x = -1; p.x <= 1; p.x++) for (p.y = 0; p.y <= 0; p.y++) for (int ri = 0; ri <= RI; ri++)
-const int p_area = 3*(RI+1);
-#elif P == 0
-#define FOR_PATCH(p) for (p = vec3(0); p.x <= 0; p.x++) for (int ri = 0; ri <= 0; ri++)
-const int p_area = 1;
-#endif
-
 const int hp = P/2;
 const int hr = R/2;
 const int r_area = R*R*(T+1);
 const float r_scale = 1.0/r_area;
-const float p_scale = 1.0/p_area;
 const float range = 255.0;
+
+#if P == 0 || P == 1 // 1x1
+#define FOR_PATCH(p) for (p = vec3(0); p.x <= 0; p.x++) for (int ri = 0; ri <= 0; ri++)
+const int p_area = 1;
+#elif PS == 3        // diamond
+#define FOR_PATCH(p) for (p.x = -hp; p.x <= hp; p.x++) for (p.y = -abs(abs(p.x) - hp); p.y <= abs(abs(p.x) - hp); p.y++) for (int ri = 0; ri <= RI; ri++)
+const int p_area = int(pow(hp+1, 2))*(RI+1);
+#elif PS == 2        // vertical
+#define FOR_PATCH(p) for (p.x = 0; p.x <= 0; p.x++) for (p.y = -hp; p.y <= hp; p.y++) for (int ri = 0; ri <= RI; ri++)
+const int p_area = P*(RI+1);
+#elif PS == 1        // horizontal
+#define FOR_PATCH(p) for (p.x = -hp; p.x <= hp; p.x++) for (p.y = 0; p.y <= 0; p.y++) for (int ri = 0; ri <= RI; ri++)
+const int p_area = P*(RI+1);
+#else                // square
+#define FOR_PATCH(p) for (p.x = -hp; p.x <= hp; p.x++) for (p.y = -hp; p.y <= hp; p.y++) for (int ri = 0; ri <= RI; ri++)
+const int p_area = P*P*(RI+1);
+#endif
+
+const float p_scale = 1.0/p_area;
 
 #if T
 vec4 load(vec3 off)
