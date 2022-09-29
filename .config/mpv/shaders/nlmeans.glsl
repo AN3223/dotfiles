@@ -77,12 +77,11 @@ vec4 hook()
  * R = research size (odd number)
  * SS = spatial denoising factor
  *
- * Increasing the denoising factor will increase blur without impacting speed.
+ * A higher denoising factor will increase the denoising effect.
  *
- * Increasing spatial denoising factor will increase the locality, resulting in
- * distant pixels contributing less. SS=0 is non-local (locality has no effect).
+ * With a higher spatial denoising factor, distant pixels will contribute less.
  *
- * Patch size should usually be 3. Varying patch shapes are available too.
+ * Patch size should usually be 3. Higher values are not always better.
  *
  * Research size should be at least 3. Higher values are usually better, but 
  * slower and offer diminishing returns.
@@ -223,10 +222,10 @@ vec4 hook()
 
 /* Weight function
  *
- * Bilateral scales well with heavy noise, and can offer good feature 
- * preservation on low-contrast detail (e.g., wood grain, reflections).
+ * NLM is generally preferable.
  *
- * NLM is great at low noise levels, and tends to preserve lines and patterns.
+ * Bilateral may do better with heavy noise, but can produce jaggies and even 
+ * worse artifacts when used with RF.
  *
  * 0: non-local means (NLM)
  * 1: bilateral
@@ -257,7 +256,7 @@ vec4 hook()
  *
  * Compares the pixel of interest against downscaled pixels.
  *
- * Almost always this will improve quality, except when bilateral is used.
+ * This will almost always improve quality, except when bilateral is used.
  *
  * The downscale factor can be modified in the WIDTH/HEIGHT directives for the 
  * DOWNSCALED (for CHROMA, RGB) and DOWNSCALED_LUMA (LUMA only) textures near 
@@ -277,11 +276,27 @@ vec4 hook()
  *
  * 0: means
  * 1: Euclidean medians (extremely slow, may be better for heavy noise)
+ * 2: weight map (not a denoiser, intended for development use)
  */
 #ifdef LUMA_raw
 #define M 0
 #else
 #define M 0
+#endif
+
+/* Blur factor
+ *
+ * The amount to blur the pixel of interest with the estimated pixel. For the 
+ * means estimator this should always be 1.0, since it already blurs against 
+ * the pixel of interest and the level of blur can be controlled with the S 
+ * macro.
+ *
+ * BF (1>=BF>=0): blur factor, 1 being the estimation, 0 being the raw input
+ */
+#ifdef LUMA_raw
+#define BF 1.0
+#else
+#define BF 1.0
 #endif
 
 /* Bounds checking
@@ -406,6 +421,8 @@ vec4 hook()
 	vec3 r = vec3(0);
 	vec3 p = vec3(0);
 	int r_index = 0;
+	vec4 total_weight = vec4(1);
+	vec4 sum = HOOKED_texOff(0);
 
 #if WD == 2
 	vec4 all_weights[r_area];
@@ -417,9 +434,6 @@ vec4 hook()
 #if M == 1
 	vec4 minsum = vec4(0);
 	vec4 minpx = vec4(0);
-#else
-	vec4 total_weight = vec4(1);
-	vec4 sum = HOOKED_texOff(0);
 #endif
 
 #if BOUNDS_CHECKING == 2
@@ -442,7 +456,7 @@ vec4 hook()
 	for (r.x = -lower.x; r.x <= upper.x; r.x++)
 	for (r.y = -lower.y; r.y <= upper.y; r.y++,r_index++) {
 		// low pdiff -> high weight, high weight -> more blur
-#if WF == 1
+#if WF == 1 // bilateral
 		const float pdiff_scale = 1.0/(S*0.00166);
 
 		vec4 pdiff = vec4(0);
@@ -450,7 +464,7 @@ vec4 hook()
 			pdiff += HOOKED_texOff(p) - load(rotate(p,ri)+r);
 
 		vec4 weight = exp(-pow(pdiff * p_scale * pdiff_scale, vec4(2)));
-#else
+#else // non-local means
 		const float h = S*3.33;
 		const float pdiff_scale = 1.0/(h*h);
 
@@ -472,28 +486,22 @@ vec4 hook()
 		weight *= int(clamp(abs_r, vec2(0), input_size) == abs_r);
 #endif
 
-#if WD == 2
+#if WD == 2 // true average
 		all_weights[r_index] = weight;
 		all_pixels[r_index] = load(r) * weight;
-#elif WD == 1
+#elif WD == 1 // cumulative moving average
 		vec4 wd_scale = 1.0/no_weights;
 		vec4 keeps = step(total_weight*wd_scale*WDT*exp(-wd_scale*WDP), weight);
 		weight *= keeps;
 		no_weights += keeps;
 #endif
 
-#if M == 1
-		/* Based on: https://arxiv.org/abs/1207.3056
-		 *
-		 * It describes using the center pixel of the patch that results in the 
-		 * minimum sum of the weighted patch distances.
-		 *
-		 * However, this implementation uses the opposite weight, one minus weight. 
-		 * Using the regular weight doesn't seem to make sense, as that would 
-		 * reduce the sum for patches that are the most different from the patch 
-		 * around the pixel of interest, therefore the most dissimilar pixels would 
-		 * get selected.
-		 */
+		sum += load(r) * weight;
+		total_weight += weight;
+
+#if M == 1 // Euclidean median
+		// Based on: https://arxiv.org/abs/1207.3056
+		// XXX currently this doesn't work with WD=2
 		vec3 r2;
 		vec4 wpdist_sum = vec4(0);
 		for (r.z = 0; r.z <= T; r.z++)
@@ -502,6 +510,8 @@ vec4 hook()
 				vec4 pdist = vec4(0);
 				FOR_PATCH(p)
 					pdist += pow((load(p+r) - load(rotate(p,ri)+r2)) * 255, vec4(2));
+
+				// opposite weight; regular weight doesn't seem to make sense here
 				wpdist_sum += sqrt(pdist) * (1-weight);
 		}
 
@@ -516,9 +526,6 @@ vec4 hook()
 		// update minimums
 		minsum = (newmin * wpdist_sum) + (notmin * minsum);
 		minpx  = (newmin * load(r))    + (notmin * minpx);
-#else
-		sum += load(r) * weight;
-		total_weight += weight;
 #endif
 	}
 
@@ -553,7 +560,7 @@ vec4 hook()
 	imageStore(PREV1, ivec2(HOOKED_pos*target_size), load(vec3(0)));
 #endif
 
-#if WD == 2
+#if WD == 2 // true average
 	vec4 avg_weight = total_weight * r_scale;
 	total_weight = vec4(1);
 	sum = HOOKED_texOff(0);
@@ -565,14 +572,14 @@ vec4 hook()
 	}
 #endif
 
-#if WM // for viewing weight map
-	return total_weight * r_scale;
+#if M == 2 // weight map
+	vec4 result = total_weight * r_scale;
+#elif M == 1 // Euclidean median
+	vec4 result = minpx;
+#else // mean
+	vec4 result = sum / total_weight;
 #endif
 
-#if M == 1
-	return minpx;
-#else
-	return sum / total_weight;
-#endif
+	return mix(HOOKED_texOff(0), result, BF);
 }
 
