@@ -230,22 +230,6 @@ vec4 hook()
 #define SD vec3(1,1,1)
 #endif
 
-/* Weight function
- *
- * NLM is generally preferable.
- *
- * Bilateral may do better with heavy noise, but can produce jaggies and even 
- * worse artifacts when used with RF.
- *
- * 0: non-local means (NLM)
- * 1: bilateral
- */
-#ifdef LUMA_raw
-#define WF 0
-#else
-#define WF 0
-#endif
-
 /* Extremes preserve
  *
  * Reduces denoising around very bright/dark areas. The downscaling factor of 
@@ -266,7 +250,7 @@ vec4 hook()
  *
  * Compares the pixel of interest against downscaled pixels.
  *
- * This will almost always improve quality, except when bilateral is used.
+ * This will virtually always improves quality.
  *
  * The downscale factor can be modified in the WIDTH/HEIGHT directives for the 
  * DOWNSCALED (for CHROMA, RGB) and DOWNSCALED_LUMA (LUMA only) textures near 
@@ -466,24 +450,13 @@ vec4 hook()
 	for (r.x = -lower.x; r.x <= upper.x; r.x++)
 	for (r.y = -lower.y; r.y <= upper.y; r.y++,r_index++) {
 		// low pdiff -> high weight, high weight -> more blur
-#if WF == 1 // bilateral
-		const float pdiff_scale = 1.0/(S*0.00166);
-
-		vec4 pdiff = vec4(0);
-		FOR_PATCH(p)
-			pdiff += HOOKED_texOff(p) - load(rotate(p,ri)+r);
-
-		vec4 weight = exp(-pow(pdiff * p_scale * pdiff_scale, vec4(2)));
-#else // non-local means
 		const float h = S*3.33;
 		const float pdiff_scale = 1.0/(h*h);
 
 		vec4 pdiff_sq = vec4(0);
 		FOR_PATCH(p)
 			pdiff_sq += pow((HOOKED_texOff(p) - load(rotate(p,ri)+r)) * range, vec4(2));
-
 		vec4 weight = exp(-pdiff_sq * p_scale * pdiff_scale);
-#endif
 
 		weight *= exp(-pow(length(r*SD) * SS, 2));
 

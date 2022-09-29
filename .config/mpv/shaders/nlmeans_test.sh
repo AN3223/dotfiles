@@ -31,7 +31,6 @@ shader() {
 		${S:+s/^#define S .*/#define S $S/}
 		${P:+s/^#define P .*/#define P $P/}
 		${R:+s/^#define R .*/#define R $R/}
-		${WF:+s/^#define WF .*/#define WF $WF/}
 		${SS:+s/^#define SS .*/#define SS $SS/}
 		${RF:+s/^#define RF .*/#define RF $RF_BOOL/}
 		${RF:+s|//!WIDTH .*|//!WIDTH HOOKED.w $RF_SAFE /|}
@@ -138,7 +137,6 @@ cp nlmeans.glsl "$SHADER"
 sed -i '64,66d' "$SHADER"
 
 for PLANE in ${NLM_PLANES:-LUMA CHROMA}; do
-for WF in ${NLM_WF:-0}; do
 for R in ${NLM_R:-15 13 11 9 7 5 3}; do
 for P in ${NLM_P:-5 3 1}; do
 for SS in ${NLM_SS:-""}; do
@@ -193,9 +191,8 @@ for WDP in ${NLM_WDP_:-""}; do
 
 	if [ "$SSIM" ]; then
 		avg_ssim
-		echo "$PLANE=${S:+S=$S}${P:+:P=$P}${R:+:R=$R}${WF:+:WF=$WF}${SS:+:SS=$SS}${RF:+:RF=$RF}${WDT:+:WDT=$WDT}${WDP:+:WDP=$WDP}	$SSIM" >> "$STATS"
+		echo "$PLANE=${S:+S=$S}${P:+:P=$P}${R:+:R=$R}${SS:+:SS=$SS}${RF:+:RF=$RF}${WDT:+:WDT=$WDT}${WDP:+:WDP=$WDP}	$SSIM" >> "$STATS"
 	fi
-done
 done
 done
 done
