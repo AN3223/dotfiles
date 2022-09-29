@@ -325,7 +325,7 @@ const float range = 255.0;
 const int p_area = 1;
 #elif PS == 3        // diamond
 #define FOR_PATCH(p) for (p.x = -hp; p.x <= hp; p.x++) for (p.y = -abs(abs(p.x) - hp); p.y <= abs(abs(p.x) - hp); p.y++) for (int ri = 0; ri <= RI; ri++)
-const int p_area = int(pow(hp+1, 2))*(RI+1);
+const int p_area = int(pow(hp+1, 2)*2+P)*(RI+1);
 #elif PS == 2        // vertical
 #define FOR_PATCH(p) for (p.x = 0; p.x <= 0; p.x++) for (p.y = -hp; p.y <= hp; p.y++) for (int ri = 0; ri <= RI; ri++)
 const int p_area = P*(RI+1);
