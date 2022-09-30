@@ -93,7 +93,8 @@ vec4 hook()
  * 	- Film (especially black and white):
  * 		- Disable chroma by removing the HOOK CHROMA lines above
  * 	- HQ (slow):
- * 		- LUMA=S=3:EP=0:RI=2:WD=2:WDT=1
+ * 		- LUMA=S=3:PS=3:WD=2:WDT=1
+ * 		- CHROMA=PS=3:RI=2
  *
  * It is recommended to make multiple copies of this shader with settings 
  * tweaked for different types of content, and then dispatch the appropriate 
@@ -162,7 +163,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define RS 3
-#define PS 5
+#define PS 4
 #else
 #define RS 3
 #define PS 4
@@ -170,8 +171,8 @@ vec4 hook()
 
 /* Rotational invariance
  *
- * Number of rotations to try for each patch comparison. Slow, but can greatly 
- * increase feature preservation.
+ * Number of rotations to try for each patch comparison. Slow, but may improve 
+ * feature preservation.
  *
  * Each additional rotation provides greatly diminishing returns.
  *
