@@ -154,22 +154,27 @@ vec4 hook()
 #define WDP 6.0
 #endif
 
-/* Patch shape
+/* Search shape
  *
- * Useful for making patches with areas between 1x1, 3x3, 5x5, etc. for 
- * fine-grain control, might have other effects too. Always reduces patch area 
- * in comparison to square.
+ * Useful for making searches with areas between 1x1, 3x3, 5x5, etc. for
+ * fine-grain control. Might have other effects too, such as directional blur 
+ * for asymmetrical shapes. Each shape reduces search area in comparison to 
+ * square.
  *
- * 0: square
+ * PS applies applies to patches, RS applies to research zones.
+ *
+ * 0: square (symmetrical)
  * 1: horizontal line
  * 2: vertical line
- * 3: diamond
+ * 3: diamond (symmetrical)
  * 4: triangle (pointing upward, center pixel is in the bottom-middle)
  * 5: truncated triangle (last row halved)
  */
 #ifdef LUMA_raw
-#define PS 3 // XXX consider 4/5 as possible defaults
+#define RS 3
+#define PS 5
 #else
+#define RS 3
 #define PS 4
 #endif
 
@@ -318,33 +323,75 @@ vec4 hook()
 
 const int hp = P/2;
 const int hr = R/2;
-const int r_area = R*R*(T+1);
-const float r_scale = 1.0/r_area;
 const float range = 255.0;
 
-#if P == 0 || P == 1 // 1x1
-#define FOR_PATCH(p) for (p = vec3(0); p.x <= 0; p.x++) for (int ri = 0; ri <= 0; ri++)
-const int p_area = 1;
-#elif PS == 5        // truncated triangle
-#define FOR_PATCH(p) for (p.y = -hp; p.y <= 0; p.y++) for (p.x = -abs(abs(p.y) - hp); p.x <= abs(abs(p.y) - hp)*int(p.y!=0); p.x++) for (int ri = 0; ri <= RI; ri++)
-const int p_area = int(pow(hp+1, 2)+hp)*(RI+1);
-#elif PS == 4        // triangle
-#define FOR_PATCH(p) for (p.y = -hp; p.y <= 0; p.y++) for (p.x = -abs(abs(p.y) - hp); p.x <= abs(abs(p.y) - hp); p.x++) for (int ri = 0; ri <= RI; ri++)
-const int p_area = int(pow(hp+1, 2)+P)*(RI+1);
-#elif PS == 3        // diamond
-#define FOR_PATCH(p) for (p.x = -hp; p.x <= hp; p.x++) for (p.y = -abs(abs(p.x) - hp); p.y <= abs(abs(p.x) - hp); p.y++) for (int ri = 0; ri <= RI; ri++)
-const int p_area = int(pow(hp+1, 2)*2+P)*(RI+1);
-#elif PS == 2        // vertical
-#define FOR_PATCH(p) for (p.x = 0; p.x <= 0; p.x++) for (p.y = -hp; p.y <= hp; p.y++) for (int ri = 0; ri <= RI; ri++)
-const int p_area = P*(RI+1);
-#elif PS == 1        // horizontal
-#define FOR_PATCH(p) for (p.x = -hp; p.x <= hp; p.x++) for (p.y = 0; p.y <= 0; p.y++) for (int ri = 0; ri <= RI; ri++)
-const int p_area = P*(RI+1);
-#else                // square
-#define FOR_PATCH(p) for (p.x = -hp; p.x <= hp; p.x++) for (p.y = -hp; p.y <= hp; p.y++) for (int ri = 0; ri <= RI; ri++)
-const int p_area = P*P*(RI+1);
+// search shapes and their corresponding areas
+#define S_1X1(z,hz) for (z = vec3(0); z.x <= 0; z.x++)
+#define S_1X1_A(hz,Z) 1
+
+#define S_TRIANGLE(z,hz) for (z.y = -hz; z.y <= 0; z.y++) for (z.x = -abs(abs(z.y) - hz); z.x <= abs(abs(z.y) - hz); z.x++)
+#define S_TRUNC_TRIANGLE(z,hz) for (z.y = -hz; z.y <= 0; z.y++) for (z.x = -abs(abs(z.y) - hz); z.x <= abs(abs(z.y) - hz)*int(z.y!=0); z.x++)
+#define S_TRIANGLE_A(hz,Z) int(pow(hz, 2)+Z)
+
+#define S_DIAMOND(z,hz) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -abs(abs(z.x) - hz); z.y <= abs(abs(z.x) - hz); z.y++)
+#define S_DIAMOND_A(hz,Z) int(pow(hz, 2)*2+Z)
+
+#define S_VERTICAL(z,hz) for (z.x = 0; z.x <= 0; z.x++) for (z.y = -hz; z.y <= hz; z.y++)
+#define S_HORIZONTAL(z,hz) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = 0; z.y <= 0; z.y++)
+#define S_LINE_A(hz,Z) Z
+
+#define S_SQUARE(z,hz) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -hz; z.y <= hz; z.y++)
+#define S_SQUARE_A(hz,Z) (Z*Z)
+
+// research shapes
+#if R == 0 || R == 1
+#define FOR_RESEARCH(r) for (r.z = 0; r.z <= T; r.z++) S_1X1(r,hr)
+const int r_area = S_1X1_A(hr,R)*(T+1);
+#elif RS == 5
+#define FOR_RESEARCH(r) for (r.z = 0; r.z <= T; r.z++) S_TRUNC_TRIANGLE(r,hr)
+const int r_area = S_TRIANGLE_A(hr,hr)*(T+1);
+#elif RS == 4
+#define FOR_RESEARCH(r) for (r.z = 0; r.z <= T; r.z++) S_TRIANGLE(r,hr)
+const int r_area = S_TRIANGLE_A(hr,R)*(T+1);
+#elif RS == 3
+#define FOR_RESEARCH(r) for (r.z = 0; r.z <= T; r.z++) S_DIAMOND(r,hr)
+const int r_area = S_DIAMOND_A(hr,R)*(T+1);
+#elif RS == 2
+#define FOR_RESEARCH(r) for (r.z = 0; r.z <= T; r.z++) S_VERTICAL(r,hr)
+const int r_area = S_LINE_A(hr,R)*(T+1);
+#elif RS == 1
+#define FOR_RESEARCH(r) for (r.z = 0; r.z <= T; r.z++) S_HORIZONTAL(r,hr)
+const int r_area = S_LINE_A(hr,R)*(T+1);
+#else
+#define FOR_RESEARCH(r) for (r.z = 0; r.z <= T; r.z++) S_SQUARE(r,hr)
+const int r_area = S_SQUARE_A(hr,R)*(T+1);
 #endif
 
+// patch shapes
+#if P == 0 || P == 1
+#define FOR_PATCH(p) S_1X1(p,hp) for (int ri = 0; ri <= 0; ri++)
+const int p_area = S_1X1_A(hp,P)*(RI+1);
+#elif PS == 5
+#define FOR_PATCH(p) S_TRUNC_TRIANGLE(p,hp) for (int ri = 0; ri <= RI; ri++)
+const int p_area = S_TRIANGLE_A(hp,hp)*(RI+1);
+#elif PS == 4
+#define FOR_PATCH(p) S_TRIANGLE(p,hp) for (int ri = 0; ri <= RI; ri++)
+const int p_area = S_TRIANGLE_A(hp,P)*(RI+1);
+#elif PS == 3
+#define FOR_PATCH(p) S_DIAMOND(p,hp) for (int ri = 0; ri <= RI; ri++)
+const int p_area = S_DIAMOND_A(hp,P)*(RI+1);
+#elif PS == 2
+#define FOR_PATCH(p) S_VERTICAL(p,hp) for (int ri = 0; ri <= RI; ri++)
+const int p_area = S_LINE_A(hp,P)*(RI+1);
+#elif PS == 1
+#define FOR_PATCH(p) S_HORIZONTAL(p,hp) for (int ri = 0; ri <= RI; ri++)
+const int p_area = S_LINE_A(hp,P)*(RI+1);
+#else
+#define FOR_PATCH(p) S_SQUARE(p,hp) for (int ri = 0; ri <= RI; ri++)
+const int p_area = S_SQUARE_A(hp,P)*(RI+1);
+#endif
+
+const float r_scale = 1.0/r_area;
 const float p_scale = 1.0/p_area;
 
 #if T
@@ -454,9 +501,7 @@ vec4 hook()
 	vec4 ep_weight = pow(min(1-l, l)*2, step(l, vec4(0.5))*DP + step(vec4(0.5), l)*BP);
 #endif
 
-	for (r.z = 0; r.z <= T; r.z++)
-	for (r.x = -lower.x; r.x <= upper.x; r.x++)
-	for (r.y = -lower.y; r.y <= upper.y; r.y++,r_index++) {
+	FOR_RESEARCH(r) {
 		// low pdiff -> high weight, high weight -> more blur
 		const float h = S*3.33;
 		const float pdiff_scale = 1.0/(h*h);
@@ -480,6 +525,7 @@ vec4 hook()
 #if WD == 2 // true average
 		all_weights[r_index] = weight;
 		all_pixels[r_index] = load(r) * weight;
+		r_index++;
 #elif WD == 1 // cumulative moving average
 		/* XXX maybe early values can be kept in a small buffer for later 
 		 * evaluation instead of automatically accepting them */
