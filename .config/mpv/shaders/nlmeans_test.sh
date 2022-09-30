@@ -37,7 +37,10 @@ shader() {
 		${RF:+s|//!HEIGHT .*|//!HEIGHT HOOKED.w $RF_SAFE /|}
 		${WD_BOOL:+s/^#define WDT .*/#define WDT $WDT/}
 		${WD_BOOL:+s/^#define WDP .*/#define WDP $WDP/}
-		${WD_BOOL:+s/^#define WD .*/#define WD $WD_BOOL/}
+		${WD_BOOL:+s/^#define WD .*/#define WD $WD/}
+		${RS:+s/^#define RS .*/#define RS $RS/}
+		${PS:+s/^#define PS .*/#define PS $PS/}
+		${RI:+s/^#define RI .*/#define RI $RI/}
 		s/^#define EP .*/#define EP 0/
 	" "$SHADER"
 
@@ -81,8 +84,8 @@ $NEW_SSIM_Y	$NEW_SSIM_U	$NEW_SSIM_V	$NEW_SSIM_ALL"
 
 STATS=${3:-nlmeans_test}.stats
 TMP=${3:-nlmeans_test}.tmp
-SHADER=${3:-nlmeans_test}.shader
-INPUT_IMAGE=${1:?}
+SHADER="$TMP.glsl"
+INPUT_IMAGE="$TMP.input.mkv"
 
 # make sure old stats aren't appended to
 if [ -f "$STATS" ]; then
@@ -93,6 +96,9 @@ if [ -f "$STATS" ]; then
 		*) exit 1 ;;
 	esac
 fi
+
+# save a yuv420p version of the input
+ffmpeg -y -i "${1:?}" -c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p "$INPUT_IMAGE"
 
 # generate corrupted image and get baseline from it
 case "${2:?}" in
@@ -137,28 +143,45 @@ cp nlmeans.glsl "$SHADER"
 sed -i '64,66d' "$SHADER"
 
 for PLANE in ${NLM_PLANES:-LUMA CHROMA}; do
-for R in ${NLM_R:-15 13 11 9 7 5 3}; do
+for R in ${NLM_R:-9 7 5 3}; do
 for P in ${NLM_P:-5 3 1}; do
 for SS in ${NLM_SS:-""}; do
 for RF in ${NLM_RF:-""}; do
-	if [ "$RF" = 0 ] || [ ! "$RF" ]; then
-		RF_SAFE=1
-		RF_BOOL=0
-	else
-		RF_SAFE="$RF"
-		RF_BOOL=1
-	fi
-for WDT in ${NLM_WDT:-""}; do
-	if [ ! "$WDT" ]; then
-		unset -v WD_BOOL
-	elif [ "$WDT" = 0 ]; then
-		unset -v NLM_WDP_
-		WD_BOOL=0
-	else
+	case "$RF" in
+		0|"")
+			RF_SAFE=1
+			RF_BOOL=0
+			;;
+		*)
+			RF_SAFE="$RF"
+			RF_BOOL=1
+			;;
+	esac
+for WD in ${NLM_WD:-""}; do
+	case "$WD" in
+	0)
 		WD_BOOL=1
+		unset -v NLM_WDT_ NLM_WDP_
+		;;
+	1)
+		WD_BOOL=1
+		NLM_WDT_="$NLM_WDT"
 		NLM_WDP_="$NLM_WDP"
-	fi
+		;;
+	2)
+		WD_BOOL=1
+		NLM_WDT_="$NLM_WDT"
+		NLM_WDP_=0
+		;;
+	"")
+		unset -v WD_BOOL NLM_WDP_ NLM_WDT_
+		;;
+	esac
+for WDT in ${NLM_WDT_:-""}; do
 for WDP in ${NLM_WDP_:-""}; do
+for RS in ${NLM_RS:-""}; do
+for PS in ${NLM_PS:-""}; do
+for RI in ${NLM_RI:-""}; do
 	S="$NLM_START"
 	FACTOR="$NLM_FACTOR"
 	unset -v SSIM SSIM_ALL OLD_SSIM OLD_SSIM_ALL
@@ -191,8 +214,12 @@ for WDP in ${NLM_WDP_:-""}; do
 
 	if [ "$SSIM" ]; then
 		avg_ssim
-		echo "$PLANE=${S:+S=$S}${P:+:P=$P}${R:+:R=$R}${SS:+:SS=$SS}${RF:+:RF=$RF}${WDT:+:WDT=$WDT}${WDP:+:WDP=$WDP}	$SSIM" >> "$STATS"
+		echo "$PLANE=${S:+S=$S}${P:+:P=$P}${R:+:R=$R}${SS:+:SS=$SS}${RF:+:RF=$RF}${WD:+:WD=$WD}${WDT:+:WDT=$WDT}${WDP:+:WDP=$WDP}${RS:+:RS=$RS}${PS:+:PS=$PS}${RI:+:RI=$RI}	$SSIM" >> "$STATS"
 	fi
+done
+done
+done
+done
 done
 done
 done
@@ -211,5 +238,5 @@ else
 	rm "$CORRUPT_IMAGE"
 fi
 
-rm "$SHADER" "$TMP"
+rm "$SHADER" "$TMP" "$INPUT_IMAGE"
 
