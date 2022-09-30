@@ -44,48 +44,27 @@ shader() {
 		s/^#define EP .*/#define EP 0/
 	" "$SHADER"
 
-	ffmpeg -nostdin -i "${1:-$CORRUPT_IMAGE}" -i "$INPUT_IMAGE" -init_hw_device vulkan"$NLM_VK" \
+	ffmpeg -nostdin -i "$1" -i "$INPUT_IMAGE" -init_hw_device vulkan"$NLM_VK" \
 		-lavfi "hwupload,libplacebo=custom_shader_path=$SHADER,hwdownload,format=yuv420p[placebo];
 			[placebo]ssim=f=$TMP" \
 		-f null -
 }
 
 ssim_tsv() {
-	cut -d ' ' -f 2-5 "$TMP" | tr ' ' '\t'
+	cut -d ' ' -f 2-5 "$TMP" | tr ' ' '\t' | sed 's/[YUV]://g ; s/All://g'
 }
 
 avg_ssim() {
-	[ "$REALIZATIONS" ] || return 0
-
-	SSIM_Y=$(echo "$SSIM" | cut -f 1 | cut -d : -f 2)
-	SSIM_U=$(echo "$SSIM" | cut -f 2 | cut -d : -f 2)
-	SSIM_V=$(echo "$SSIM" | cut -f 3 | cut -d : -f 2)
-	SSIM_ALL=$(echo "$SSIM" | cut -f 4 | cut -d : -f 2)
-	SSIM="$SSIM_Y	$SSIM_U	$SSIM_V	$SSIM_ALL"
-
-	i=1
-	while [ "$i" -lt "$REALIZATIONS" ]; do
-		shader "${CORRUPT_IMAGE%0.mkv}$i.mkv"
-		NEW_SSIM=$(ssim_tsv)
-		NEW_SSIM_Y=$(echo "$NEW_SSIM" | cut -f 1 | cut -d : -f 2)
-		NEW_SSIM_U=$(echo "$NEW_SSIM" | cut -f 2 | cut -d : -f 2)
-		NEW_SSIM_V=$(echo "$NEW_SSIM" | cut -f 3 | cut -d : -f 2)
-		NEW_SSIM_ALL=$(echo "$NEW_SSIM" | cut -f 4 | cut -d : -f 2)
-		SSIM="$SSIM
-$NEW_SSIM_Y	$NEW_SSIM_U	$NEW_SSIM_V	$NEW_SSIM_ALL"
-		i=$((i+1))
-	done
-
-	SSIM=$(printf '%s\n' "$SSIM" | awk '
-		{ y+=$1; u+=$2; v+=$3; a+=$4; }
-		END { printf("Y:%s\tU:%s\tV:%s\tAll:%s\n", y/NR, u/NR, v/NR, a/NR) }
-	')
+	awk '{ s+=$1; y+=$2; u+=$3; v+=$4; a+=$5; }
+		END { printf("%s\t%s\t%s\t%s\t%s\n", s/NR, y/NR, u/NR, v/NR, a/NR) }'
 }
 
 STATS=${3:-nlmeans_test}.stats
 TMP=${3:-nlmeans_test}.tmp
 SHADER="$TMP.glsl"
 INPUT_IMAGE="$TMP.input.mkv"
+CORRUPT_IMAGE="$TMP.corrupt"
+REALIZATIONS=${NLM_REALIZATIONS:-10}
 
 # make sure old stats aren't appended to
 if [ -f "$STATS" ]; then
@@ -103,42 +82,32 @@ ffmpeg -y -i "${1:?}" -c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p "$IN
 # generate corrupted image and get baseline from it
 case "${2:?}" in
 	JPEG=*)
+		REALIZATIONS=1
 		CORRUPTION="$2"
-		CORRUPT_IMAGE=${3:-nlmeans_test}.jpg
-		ffmpeg -y -i "$INPUT_IMAGE" -q:v "${2#JPEG=}" "$CORRUPT_IMAGE"
-		ffmpeg -i "$INPUT_IMAGE" -i "$CORRUPT_IMAGE" -lavfi ssim=f="$TMP" -f null -
+		ffmpeg -y -i "$INPUT_IMAGE" -q:v "${2#JPEG=}" -c:v mjpeg "${CORRUPT_IMAGE}0.mkv"
+		ffmpeg -i "$INPUT_IMAGE" -i "${CORRUPT_IMAGE}0.mkv" -lavfi ssim=f="$TMP" -f null -
 		BASELINE=$(ssim_tsv)
 		;;
 	*)
-		REALIZATIONS=${NLM_REALIZATIONS:-10}
 		CORRUPTION="NOISE=${2#NOISE=}:REALIZATIONS=$REALIZATIONS"
 
 		i=0
 		BASELINE=""
 		while [ "$i" -lt "$REALIZATIONS" ]; do
 			ffmpeg -y -i "$INPUT_IMAGE" -vf noise="alls=${2#NOISE=}:all_seed=$i" \
-				-c:v libx265 -x265-params lossless=1 "${3:-nlmeans_test}$i.mkv"
-			ffmpeg -i "$INPUT_IMAGE" -i "${3:-nlmeans_test}$i.mkv" -lavfi ssim=f="$TMP" -f null -
-			SSIM=$(ssim_tsv)
-			SSIM_Y=$(echo "$SSIM" | cut -f 1 | cut -d : -f 2)
-			SSIM_U=$(echo "$SSIM" | cut -f 2 | cut -d : -f 2)
-			SSIM_V=$(echo "$SSIM" | cut -f 3 | cut -d : -f 2)
-			SSIM_ALL=$(echo "$SSIM" | cut -f 4 | cut -d : -f 2)
-			BASELINE="$BASELINE
-$SSIM_Y $SSIM_U $SSIM_V $SSIM_ALL"
+				-c:v libx265 -x265-params lossless=1 "${CORRUPT_IMAGE}$i.mkv"
+			ffmpeg -i "$INPUT_IMAGE" -i "${CORRUPT_IMAGE}$i.mkv" -lavfi ssim=f="$TMP" -f null -
+			BASELINE="${BASELINE:+$BASELINE
+}0	$(ssim_tsv)"
 			i=$((i+1))
 		done
 
-		BASELINE=$(printf '%s\n' "$BASELINE" | awk '
-			{ y+=$1; u+=$2; v+=$3; a+=$4; }
-			END { printf("Y:%s\tU:%s\tV:%s\tAll:%s\n", y/NR, u/NR, v/NR, a/NR) }
-		')
-		CORRUPT_IMAGE=${3:-nlmeans_test}0.mkv
+		BASELINE=$(printf '%s\n' "$BASELINE" | avg_ssim | cut -f 2-5)
 		;;
 esac
-BASELINE_ALL=$(echo "$BASELINE" | cut -f 4 | cut -d : -f 2)
 echo "BASELINE=$CORRUPTION	$BASELINE" >> "$STATS"
 
+# XXX add an env var for nlmeans.glsl path
 cp nlmeans.glsl "$SHADER"
 sed -i '64,66d' "$SHADER"
 
@@ -182,17 +151,25 @@ for WDP in ${NLM_WDP_:-""}; do
 for RS in ${NLM_RS:-""}; do
 for PS in ${NLM_PS:-""}; do
 for RI in ${NLM_RI:-""}; do
-	S="$NLM_START"
-	FACTOR="$NLM_FACTOR"
-	unset -v SSIM SSIM_ALL OLD_SSIM OLD_SSIM_ALL
-	while :; do
-		shader
-		NEW_SSIM=$(ssim_tsv)
-		NEW_SSIM_ALL=$(echo "$NEW_SSIM" | cut -f 4 | cut -d : -f 2)
+	unset -v AVG_SSIM
+	i=0
+	while [ "$i" -lt "$REALIZATIONS" ]; do
+		unset -v SSIM SSIM_ALL OLD_SSIM OLD_SSIM_ALL
 
-		if expr "$NEW_SSIM_ALL" '<' "$BASELINE_ALL" >/dev/null; then
-			break
-		elif [ "$SSIM_ALL" ] && expr "$NEW_SSIM_ALL" '<=' "$SSIM_ALL" >/dev/null; then
+		# try starting the last good S value
+		if [ "$AVG_SSIM" ]; then
+			S=$(printf '%s\n' "$AVG_SSIM" | tail -n 1 | cut -f 1)
+		else
+			S="$NLM_START"
+		fi
+
+		FACTOR="$NLM_FACTOR"
+	while :; do
+		shader "${CORRUPT_IMAGE}$i.mkv"
+		NEW_SSIM=$(ssim_tsv)
+		NEW_SSIM_ALL=$(echo "$NEW_SSIM" | cut -f 4)
+
+		if [ "$SSIM_ALL" ] && expr "$NEW_SSIM_ALL" '<=' "$SSIM_ALL" >/dev/null; then
 			NEW_FACTOR=$(echo "scale=2; $FACTOR * $NLM_FACTOR_DECAY" | bc)
 			if expr "$NEW_FACTOR" '<=' 1 >/dev/null; then
 				S=$(echo "scale=2; $S / $FACTOR" | bc)
@@ -211,32 +188,34 @@ for RI in ${NLM_RI:-""}; do
 			S=$(echo "scale=2; $S * $FACTOR" | bc)
 		fi
 	done
-
-	if [ "$SSIM" ]; then
-		avg_ssim
-		echo "$PLANE=${S:+S=$S}${P:+:P=$P}${R:+:R=$R}${SS:+:SS=$SS}${RF:+:RF=$RF}${WD:+:WD=$WD}${WDT:+:WDT=$WDT}${WDP:+:WDP=$WDP}${RS:+:RS=$RS}${PS:+:PS=$PS}${RI:+:RI=$RI}	$SSIM" >> "$STATS"
-	fi
-done
-done
-done
-done
-done
-done
-done
-done
-done
-done
-done
-
-if [ "$REALIZATIONS" ]; then
-	i=0
-	while [ "$i" -lt "$REALIZATIONS" ]; do
-		rm "${CORRUPT_IMAGE%0.mkv}$i.mkv"
+		AVG_SSIM="${AVG_SSIM:+$AVG_SSIM
+}$S	$SSIM"
 		i=$((i+1))
 	done
-else
-	rm "$CORRUPT_IMAGE"
-fi
+
+	AVG_SSIM=$(printf '%s\n' "$AVG_SSIM" | avg_ssim)
+	S=$(printf '%s\n' "$AVG_SSIM" | cut -f 1)
+	YUVA=$(printf '%s\n' "$AVG_SSIM" | cut -f 2-)
+
+	# XXX this would be a lot better as a for loop w/ printf and eval
+	echo "$PLANE=S=${S}${P:+:P=$P}${R:+:R=$R}${SS:+:SS=$SS}${RF:+:RF=$RF}${WD:+:WD=$WD}${WDT:+:WDT=$WDT}${WDP:+:WDP=$WDP}${RS:+:RS=$RS}${PS:+:PS=$PS}${RI:+:RI=$RI}	$YUVA" >> "$STATS"
+done
+done
+done
+done
+done
+done
+done
+done
+done
+done
+done
+
+i=0
+while [ "$i" -lt "$REALIZATIONS" ]; do
+	rm "${CORRUPT_IMAGE}$i.mkv"
+	i=$((i+1))
+done
 
 rm "$SHADER" "$TMP" "$INPUT_IMAGE"
 
