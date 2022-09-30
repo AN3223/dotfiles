@@ -160,10 +160,12 @@ vec4 hook()
  * fine-grain control, might have other effects too. Always reduces patch area 
  * in comparison to square.
  *
- * 3: diamond
- * 2: vertical line
- * 1: horizontal line
  * 0: square
+ * 1: horizontal line
+ * 2: vertical line
+ * 3: diamond
+ * 4: triangle (pointing upward, center pixel is in the bottom-middle)
+ * 5: truncated triangle (last row halved)
  */
 #ifdef LUMA_raw
 #define PS 3
@@ -323,6 +325,12 @@ const float range = 255.0;
 #if P == 0 || P == 1 // 1x1
 #define FOR_PATCH(p) for (p = vec3(0); p.x <= 0; p.x++) for (int ri = 0; ri <= 0; ri++)
 const int p_area = 1;
+#elif PS == 5        // truncated triangle
+#define FOR_PATCH(p) for (p.y = -hp; p.y <= 0; p.y++) for (p.x = -abs(abs(p.y) - hp); p.x <= abs(abs(p.y) - hp)*int(p.y!=0); p.x++) for (int ri = 0; ri <= RI; ri++)
+const int p_area = int(pow(hp+1, 2)+hp)*(RI+1);
+#elif PS == 4        // triangle
+#define FOR_PATCH(p) for (p.y = -hp; p.y <= 0; p.y++) for (p.x = -abs(abs(p.y) - hp); p.x <= abs(abs(p.y) - hp); p.x++) for (int ri = 0; ri <= RI; ri++)
+const int p_area = int(pow(hp+1, 2)+P)*(RI+1);
 #elif PS == 3        // diamond
 #define FOR_PATCH(p) for (p.x = -hp; p.x <= hp; p.x++) for (p.y = -abs(abs(p.x) - hp); p.y <= abs(abs(p.x) - hp); p.y++) for (int ri = 0; ri <= RI; ri++)
 const int p_area = int(pow(hp+1, 2)*2+P)*(RI+1);
