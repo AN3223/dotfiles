@@ -158,9 +158,9 @@ vec4 hook()
  * 5: truncated triangle (last row halved)
  */
 #ifdef LUMA_raw
-#define PS 3
+#define PS 3 // XXX consider 4/5 as possible defaults
 #else
-#define PS 3
+#define PS 4
 #endif
 
 /* Rotational invariance
@@ -471,6 +471,8 @@ vec4 hook()
 		all_weights[r_index] = weight;
 		all_pixels[r_index] = load(r) * weight;
 #elif WD == 1 // cumulative moving average
+		/* XXX maybe early values can be kept in a small buffer for later 
+		 * evaluation instead of automatically accepting them */
 		vec4 wd_scale = 1.0/no_weights;
 		vec4 keeps = step(total_weight*wd_scale*WDT*exp(-wd_scale*WDP), weight);
 		weight *= keeps;
@@ -483,6 +485,8 @@ vec4 hook()
 #if M == 1 // Euclidean median
 		// Based on: https://arxiv.org/abs/1207.3056
 		// XXX currently this doesn't work with WD=2
+		// XXX this doesn't seem to work with RI either
+		// XXX probably doesn't work with T
 		vec3 r2;
 		vec4 wpdist_sum = vec4(0);
 		for (r.z = 0; r.z <= T; r.z++)
