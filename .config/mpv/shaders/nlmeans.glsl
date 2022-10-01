@@ -267,8 +267,9 @@ vec4 hook()
 /* Estimator
  *
  * 0: means
- * 1: Euclidean medians (extremely slow, may be better for heavy noise)
+ * 1: Euclidean medians (extremely slow, best for heavy noise)
  * 2: weight map (not a denoiser, intended for development use)
+ * 3: weighted median intensity (slow, good for heavy noise)
  */
 #ifdef LUMA_raw
 #define M 0
@@ -453,7 +454,7 @@ vec4 hook()
 	vec4 total_weight = vec4(1);
 	vec4 sum = HOOKED_texOff(0);
 
-#if WD == 2
+#if WD == 2 || M == 3
 	vec4 all_weights[r_area];
 	vec4 all_pixels[r_area];
 #elif WD == 1
@@ -486,9 +487,9 @@ vec4 hook()
 		weight *= ep_weight;
 #endif
 
-#if WD == 2 // true average
+#if WD == 2 || M == 3 // true average, weighted median intensity
 		all_weights[r_index] = weight;
-		all_pixels[r_index] = load(r) * weight;
+		all_pixels[r_index] = load(r);
 		r_index++;
 #elif WD == 1 // cumulative moving average
 		/* XXX maybe early values can be kept in a small buffer for later 
@@ -572,12 +573,30 @@ vec4 hook()
 
 	for (int i = 0; i < r_area; i++) {
 		vec4 keeps = step(avg_weight*WDT, all_weights[i]);
-		sum += all_pixels[i] * keeps;
-		total_weight += all_weights[i] * keeps;
+		all_weights[i] *= keeps;
+		sum += all_pixels[i] * all_weights[i];
+		total_weight += all_weights[i];
 	}
 #endif
 
-#if M == 2 // weight map
+#if M == 3 // weighted median intensity
+	const float hr_area = r_area/2;
+	vec4 result, resultw, is_median, gt, lt, gte, lte, neq;
+
+	result = vec4(0);
+	for (int i = 0; i < r_area; i++) {
+		gt = lt = vec4(0);
+		for (int j = 0; j < r_area; j++) {
+			gte = step(all_pixels[i]*all_weights[i], all_pixels[j]*all_weights[j]);
+			lte = step(all_pixels[j]*all_weights[j], all_pixels[i]*all_weights[i]);
+			neq = 1 - gte * lte;
+			gt += gte * neq;
+			lt += lte * neq;
+		}
+		is_median = step(gt, vec4(hr_area)) * step(lt, vec4(hr_area));
+		result += step(result, vec4(0)) * is_median * all_pixels[i];
+	}
+#elif M == 2 // weight map
 	vec4 result = total_weight * r_scale;
 #elif M == 1 // Euclidean median
 	vec4 result = minpx;
