@@ -301,17 +301,6 @@ vec4 hook()
 #define BF 1.0
 #endif
 
-/* Bounds checking
- *
- * Attempts to apply an appropriate amount of denoising to the edges of the 
- * image. The difference in quality usually imperceptible.
- *
- * 0: perform no bounds checking
- * 1: ignore out-of-bounds pixels (preferred)
- * 2: shift research zones to avoid out-of-bounds pixels (may be slow)
- */
-#define BOUNDS_CHECKING 1
-
 /* Shader code */
 
 #if RF && defined(LUMA_raw)
@@ -486,17 +475,6 @@ vec4 hook()
 	vec4 minpx = vec4(0);
 #endif
 
-#if BOUNDS_CHECKING == 2
-	vec2 px_pos = HOOKED_pos * input_size;
-	lower = min(vec2(hr), px_pos);
-	upper = min(vec2(hr), input_size - px_pos);
-	// try to extend sides opposite of truncated sides
-	lower = min(lower + (vec2(hr) - upper), px_pos);
-	upper = min(upper + (vec2(hr) - lower), input_size - px_pos);
-#else
-	lower = upper = vec3(hr);
-#endif
-
 #if EP
 	vec4 l = EP_LUMA_texOff(0);
 	vec4 ep_weight = pow(min(1-l, l)*2, step(l, vec4(0.5))*DP + step(vec4(0.5), l)*BP);
@@ -516,11 +494,6 @@ vec4 hook()
 
 #if EP
 		weight *= ep_weight;
-#endif
-
-#if BOUNDS_CHECKING == 1
-		vec2 abs_r = HOOKED_pos * input_size + vec2(r);
-		weight *= int(clamp(abs_r, vec2(0), input_size) == abs_r);
 #endif
 
 #if WD == 2 // true average
