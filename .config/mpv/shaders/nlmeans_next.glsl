@@ -311,7 +311,6 @@ vec4 hook()
 
 const int hp = P/2;
 const int hr = R/2;
-const float range = 255.0;
 
 // rotation
 #define ROTX(p) (cos(radians(ri)) * p.x - sin(radians(ri)) * p.y)
@@ -468,12 +467,12 @@ vec4 hook()
 
 	FOR_RESEARCH(r) {
 		// low pdiff -> high weight, high weight -> more blur
-		const float h = S*3.33;
+		const float h = S*0.013;
 		const float pdiff_scale = 1.0/(h*h);
 
 		vec4 pdiff_sq = vec4(0);
 		FOR_PATCH(p)
-			pdiff_sq += pow((HOOKED_texOff(p) - load(ROT(p)+r)) * range, vec4(2));
+			pdiff_sq += pow(HOOKED_texOff(p) - load(ROT(p)+r), vec4(2));
 		vec4 weight = exp(-pdiff_sq * p_scale * pdiff_scale);
 
 		weight *= exp(-pow(length(r*SD) * SS, 2));
