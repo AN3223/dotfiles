@@ -493,7 +493,7 @@ vec4 hook()
 		FOR_RESEARCH(r2) {
 			vec4 pdist = vec4(0);
 			FOR_PATCH(p)
-				pdist += pow((load(p+r) - load(ROT(p)+r2)) * 255, vec4(2));
+				pdist += pow(load(p+r) - load(ROT(p)+r2), vec4(2));
 			wpdist_sum += sqrt(pdist) * (1-weight);
 		}
 
@@ -573,7 +573,7 @@ vec4 hook()
 	}
 #elif M == 2 // weight map
 	result = total_weight * r_scale;
-#else // mean
+#elif M == 0 // mean
 	result = sum / total_weight;
 #endif
 
