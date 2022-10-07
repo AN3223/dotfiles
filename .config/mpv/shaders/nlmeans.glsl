@@ -382,48 +382,17 @@ const float p_scale = 1.0/p_area;
 vec4 load(vec3 off)
 {
 	switch (int(off.z)) {
-	case 0:
-		return TEX(HOOKED_pos + HOOKED_pt * vec2(off));
-#ifdef PREV1
-	case 1:
-		return imageLoad(PREV1, ivec2(HOOKED_pos * target_size + HOOKED_pt * vec2(off)));
-#endif
-#ifdef PREV2
-	case 2:
-		return imageLoad(PREV2, ivec2(HOOKED_pos * target_size + HOOKED_pt * vec2(off)));
-#endif
-#ifdef PREV3
-	case 3:
-		return imageLoad(PREV3, ivec2(HOOKED_pos * target_size + HOOKED_pt * vec2(off)));
-#endif
-#ifdef PREV4
-	case 4:
-		return imageLoad(PREV4, ivec2(HOOKED_pos * target_size + HOOKED_pt * vec2(off)));
-#endif
-#ifdef PREV5
-	case 5:
-		return imageLoad(PREV5, ivec2(HOOKED_pos * target_size + HOOKED_pt * vec2(off)));
-#endif
-#ifdef PREV6
-	case 6:
-		return imageLoad(PREV6, ivec2(HOOKED_pos * target_size + HOOKED_pt * vec2(off)));
-#endif
-#ifdef PREV7
-	case 7:
-		return imageLoad(PREV7, ivec2(HOOKED_pos * target_size + HOOKED_pt * vec2(off)));
-#endif
-#ifdef PREV8
-	case 8:
-		return imageLoad(PREV8, ivec2(HOOKED_pos * target_size + HOOKED_pt * vec2(off)));
-#endif
-#ifdef PREV9
-	case 9:
-		return imageLoad(PREV9, ivec2(HOOKED_pos * target_size + HOOKED_pt * vec2(off)));
-#endif
-#ifdef PREV10
-	case 10:
-		return imageLoad(PREV10, ivec2(HOOKED_pos * target_size + HOOKED_pt * vec2(off)));
-#endif
+	case 0:  return TEX(HOOKED_pos + HOOKED_pt * vec2(off));
+	case 1:  return imageLoad(PREV1,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1))));
+	case 2:  return imageLoad(PREV2,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2))));
+	case 3:  return imageLoad(PREV3,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV3))));
+	case 4:  return imageLoad(PREV4,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV4))));
+	case 5:  return imageLoad(PREV5,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV5))));
+	case 6:  return imageLoad(PREV6,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV6))));
+	case 7:  return imageLoad(PREV7,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV7))));
+	case 8:  return imageLoad(PREV8,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV8))));
+	case 9:  return imageLoad(PREV9,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV9))));
+	case 10: return imageLoad(PREV10, ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV10))));
 	}
 }
 #else
@@ -511,35 +480,17 @@ vec4 hook()
 #endif
 	}
 
-#ifdef PREV10
-	imageStore(PREV10, ivec2(HOOKED_pos*target_size), load(vec3(0,0,9)));
-#endif
-#ifdef PREV9
-	imageStore(PREV9, ivec2(HOOKED_pos*target_size), load(vec3(0,0,8)));
-#endif
-#ifdef PREV8
-	imageStore(PREV8, ivec2(HOOKED_pos*target_size), load(vec3(0,0,7)));
-#endif
-#ifdef PREV7
-	imageStore(PREV7, ivec2(HOOKED_pos*target_size), load(vec3(0,0,6)));
-#endif
-#ifdef PREV6
-	imageStore(PREV6, ivec2(HOOKED_pos*target_size), load(vec3(0,0,5)));
-#endif
-#ifdef PREV5
-	imageStore(PREV5, ivec2(HOOKED_pos*target_size), load(vec3(0,0,4)));
-#endif
-#ifdef PREV4
-	imageStore(PREV4, ivec2(HOOKED_pos*target_size), load(vec3(0,0,3)));
-#endif
-#ifdef PREV3
-	imageStore(PREV3, ivec2(HOOKED_pos*target_size), load(vec3(0,0,2)));
-#endif
-#ifdef PREV2
-	imageStore(PREV2, ivec2(HOOKED_pos*target_size), load(vec3(0,0,1)));
-#endif
-#ifdef PREV1
-	imageStore(PREV1, ivec2(HOOKED_pos*target_size), load(vec3(0)));
+#if T
+	imageStore(PREV10, ivec2(round(HOOKED_pos*imageSize(PREV10))), load(vec3(0,0,9)));
+	imageStore(PREV9,  ivec2(round(HOOKED_pos*imageSize(PREV9))),  load(vec3(0,0,8)));
+	imageStore(PREV8,  ivec2(round(HOOKED_pos*imageSize(PREV8))),  load(vec3(0,0,7)));
+	imageStore(PREV7,  ivec2(round(HOOKED_pos*imageSize(PREV7))),  load(vec3(0,0,6)));
+	imageStore(PREV6,  ivec2(round(HOOKED_pos*imageSize(PREV6))),  load(vec3(0,0,5)));
+	imageStore(PREV5,  ivec2(round(HOOKED_pos*imageSize(PREV5))),  load(vec3(0,0,4)));
+	imageStore(PREV4,  ivec2(round(HOOKED_pos*imageSize(PREV4))),  load(vec3(0,0,3)));
+	imageStore(PREV3,  ivec2(round(HOOKED_pos*imageSize(PREV3))),  load(vec3(0,0,2)));
+	imageStore(PREV2,  ivec2(round(HOOKED_pos*imageSize(PREV2))),  load(vec3(0,0,1)));
+	imageStore(PREV1,  ivec2(round(HOOKED_pos*imageSize(PREV1))),  load(vec3(0)));
 #endif
 
 #if WD == 2 // true average
