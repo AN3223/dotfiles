@@ -93,11 +93,13 @@ vec4 hook()
  * 	- Film (especially black and white):
  * 		- Disable chroma by removing the HOOK CHROMA lines above
  * 	- HQ (slow):
- * 		- LUMA=S=3:PS=3:WD=2
+ * 		- LUMA=S=3:PS=3:WD=2:RI=1
  * 		- CHROMA=PS=3
  * 	- LQ (fast):
  * 		- LUMA=P=1
  * 		- CHROMA=P=1
+ * 	- Sharp:
+ * 		- LUMA=S=4:AS=1:EP=0
  *
  * It is recommended to make multiple copies of this shader with settings 
  * tweaked for different types of content, and then dispatch the appropriate 
@@ -123,6 +125,28 @@ vec4 hook()
 #define P 3
 #define R 5
 #define SS 0.25
+#endif
+
+/* Adaptive sharpening
+ *
+ * Uses the blur incurred by denoising plus the weight map to perform an 
+ * unsharp mask that gets applied most strongly to edges.
+ *
+ * Increasing sharpness will increase noise, so S should usually be increased 
+ * to compensate.
+ *
+ * AS: 1 to enable, 0 to disable
+ * ASF: Sharpening factor, higher numbers make a sharper underlying image
+ * ASP (1>=ASP>=0): Weight power, lower numbers use more of the sharp image
+ */
+#ifdef LUMA_raw
+#define AS 0
+#define ASF 3.0
+#define ASP 0.375
+#else
+#define AS 0
+#define ASF 0.0
+#define ASP 0.0
 #endif
 
 /* Weight discard
@@ -480,6 +504,8 @@ vec4 hook()
 #endif
 	}
 
+	vec4 avg_weight = total_weight * r_scale;
+
 #if T
 	imageStore(PREV10, ivec2(round(HOOKED_pos*imageSize(PREV10))), load(vec3(0,0,9)));
 	imageStore(PREV9,  ivec2(round(HOOKED_pos*imageSize(PREV9))),  load(vec3(0,0,8)));
@@ -494,7 +520,6 @@ vec4 hook()
 #endif
 
 #if WD == 2 // true average
-	vec4 avg_weight = total_weight * r_scale;
 	total_weight = vec4(1);
 	sum = HOOKED_texOff(0);
 
@@ -523,9 +548,14 @@ vec4 hook()
 		result += step(result, vec4(0)) * is_median * all_pixels[i];
 	}
 #elif M == 2 // weight map
-	result = total_weight * r_scale;
+	result = avg_weight;
 #elif M == 0 // mean
 	result = sum / total_weight;
+#endif
+
+#if AS // adaptive sharpening
+	vec4 sharpened = HOOKED_texOff(0) + (HOOKED_texOff(0) - result) * ASF;
+	result = mix(sharpened, result, pow(avg_weight, vec4(1.0/(ASF*ASP))));
 #endif
 
 	return mix(HOOKED_texOff(0), result, BF);
