@@ -109,7 +109,7 @@ vec4 hook()
  * 		- LUMA=P=1
  * 		- CHROMA=P=1
  * 	- Sharp:
- * 		- LUMA=S=4:AS=1:EP=0
+ * 		- LUMA=S=4:AS=1:PS=3:EP=0
  *
  * It is recommended to make multiple copies of this shader with settings 
  * tweaked for different types of content, and then dispatch the appropriate 
@@ -152,7 +152,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define AS 0
 #define ASF 3.0
-#define ASP 0.375
+#define ASP 0.5
 #else
 #define AS 0
 #define ASF 0.0
