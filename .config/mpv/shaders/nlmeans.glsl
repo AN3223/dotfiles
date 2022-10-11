@@ -135,13 +135,13 @@ vec4 hook()
  * Increasing sharpness will increase noise, so S should usually be increased 
  * to compensate.
  *
- * AS: 1 to enable, 0 to disable
+ * AS: 2 for sharpening, 1 for sharpening+denoising, 0 to disable
  * ASF: Sharpening factor, higher numbers make a sharper underlying image
  * ASP (1>=ASP>=0): Weight power, lower numbers use more of the sharp image
  */
 #ifdef LUMA_raw
 #define AS 0
-#define ASF 3.0
+#define ASF 1.0
 #define ASP 0.5
 #else
 #define AS 0
@@ -555,7 +555,12 @@ vec4 hook()
 
 #if AS // adaptive sharpening
 	vec4 sharpened = HOOKED_texOff(0) + (HOOKED_texOff(0) - result) * ASF;
-	result = mix(sharpened, result, pow(avg_weight, vec4(1.0/(ASF*ASP))));
+	vec4 sharpening_power = pow(avg_weight, vec4(1.0/(ASF*ASP)));
+#endif
+#if AS == 1 // denoised
+	result = mix(sharpened, result, sharpening_power);
+#elif AS == 2 // noisy
+	result = mix(sharpened, HOOKED_texOff(0), sharpening_power);
 #endif
 
 	return mix(HOOKED_texOff(0), result, BF);
