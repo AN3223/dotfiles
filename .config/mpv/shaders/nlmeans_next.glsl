@@ -341,9 +341,7 @@ const int hp = P/2;
 const int hr = R/2;
 
 // rotation
-#define ROTX(p) (cos(radians(ri)) * p.x - sin(radians(ri)) * p.y)
-#define ROTY(p) (sin(radians(ri)) * p.y + cos(radians(ri)) * p.x)
-#define ROT(p) vec3(ROTX(p), ROTY(p), p.z)
+#define ROT(p) vec2((cos(radians(ri)) * (p).x - sin(radians(ri)) * (p).y), (sin(radians(ri)) * (p).y + cos(radians(ri)) * (p).x))
 
 // search shapes and their corresponding areas
 #define S_1X1(z,hz) for (z = vec3(0); z.x <= 0; z.x++)
@@ -487,14 +485,31 @@ vec4 hook()
 		const ivec2 offsets[4] = {ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0)};
 		#define gather(pos) (LUMA_mul * vec4(textureGatherOffsets(LUMA_raw, pos, offsets)))
 		pdiff_sq.x = dot(pow(gather(HOOKED_pos) - gather(HOOKED_pos+r.xy*HOOKED_pt), vec4(2)), vec4(1));
-#elif defined(LUMA_gather) && PS == 6 && RF == 0 && RI == 0 && T == 0
+#elif defined(LUMA_gather) && PS == 6 && RF == 0 && T == 0
+		// tiled even square patch comparison using textureGather
 		vec2 tile;
-		for (tile.x = -hp; tile.x < hp; tile.x+=2)
-			for (tile.y = -hp; tile.y < hp; tile.y+=2)
-				pdiff_sq.x += dot(pow(LUMA_gather(HOOKED_pos+tile*HOOKED_pt, 0) - LUMA_gather(HOOKED_pos+(r.xy+tile)*HOOKED_pt, 0), vec4(2)), vec4(1));
+		for (tile.x = -hp; tile.x < hp; tile.x+=2) {
+			for (tile.y = -hp; tile.y < hp; tile.y+=2) {
+				vec4 stationary = LUMA_gather(HOOKED_pos+tile*HOOKED_pt, 0);
+				int rotations = 0;
+				FOR_ROTATION {
+					vec4 rotator = LUMA_gather(HOOKED_pos+(ROT(tile+0.5)-0.5 + r.xy)*HOOKED_pt, 0);
+#if RI == 3
+					for (int i = 0; i < rotations; i++)
+						rotator = rotator.wxyz; // 90 degrees
+					rotations++;
+#elif RI == 1
+					for (int i = 0; i < rotations; i++)
+						rotator = rotator.wzyx; // 180 degrees
+					rotations++;
+#endif
+					pdiff_sq.x += dot(pow(stationary - rotator, vec4(2)), vec4(1));
+				}
+			}
+		}
 #else
 		FOR_PATCH(p)
-			pdiff_sq += pow(HOOKED_texOff(p) - load(ROT(p)+r), vec4(2));
+			pdiff_sq += pow(HOOKED_texOff(p) - load(vec3(ROT(p.xy), p.z) + r), vec4(2));
 #endif
 		vec4 weight = exp(-pdiff_sq * p_scale * pdiff_scale);
 
@@ -526,7 +541,7 @@ vec4 hook()
 		FOR_RESEARCH(r2) {
 			vec4 pdist = vec4(0);
 			FOR_PATCH(p)
-				pdist += pow(load(p+r) - load(ROT(p)+r2), vec4(2));
+				pdist += pow(load(p+r) - load(vec3(ROT(p.xy), p.z) + r2), vec4(2));
 			wpdist_sum += sqrt(pdist) * (1-weight);
 		}
 
