@@ -187,7 +187,7 @@ vec4 hook()
  * 3: diamond (symmetrical)
  * 4: triangle (pointing upward, center pixel is in the bottom-middle)
  * 5: truncated triangle (last row halved)
- * 6: offset square (accepts even and odd sizes)
+ * 6: even sized square
  */
 #ifdef LUMA_raw
 #define RS 3
@@ -348,7 +348,7 @@ const int hr = R/2;
 #define S_LINE_A(hz,Z) Z
 
 #define S_SQUARE(z,hz) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -hz; z.y <= hz; z.y++)
-#define S_SQUARE_OFF(z,hz) for (z.x = 0; z.x <= hz; z.x++) for (z.y = 0; z.y <= hz; z.y++)
+#define S_SQUARE_EVEN(z,hz) for (z.x = -hz; z.x < hz; z.x++) for (z.y = -hz; z.y < hz; z.y++)
 #define S_SQUARE_A(hz,Z) (Z*Z)
 
 // research shapes
@@ -358,7 +358,7 @@ const int hr = R/2;
 #define FOR_RESEARCH(r) FOR_FRAME S_1X1(r,hr)
 const int r_area = S_1X1_A(hr,R)*T1;
 #elif RS == 6
-#define FOR_RESEARCH(r) FOR_FRAME S_SQUARE_OFF(r,hr)
+#define FOR_RESEARCH(r) FOR_FRAME S_SQUARE_EVEN(r,hr)
 const int r_area = S_SQUARE_A(hr,R)*T1;
 #elif RS == 5
 #define FOR_RESEARCH(r) FOR_FRAME S_TRUNC_TRIANGLE(r,hr)
@@ -390,7 +390,7 @@ const int r_area = S_SQUARE_A(hr,R)*T1;
 #define FOR_PATCH(p) S_1X1(p,hp) for (float ri = 0; ri <= 0; ri++)
 const int p_area = S_1X1_A(hp,P)*RI1;
 #elif PS == 6
-#define FOR_PATCH(p) S_SQUARE_OFF(p,hp) FOR_ROTATION
+#define FOR_PATCH(p) S_SQUARE_EVEN(p,hp) FOR_ROTATION
 const int p_area = S_SQUARE_A(hp,P)*RI1;
 #elif PS == 5
 #define FOR_PATCH(p) S_TRUNC_TRIANGLE(p,hp) FOR_ROTATION
@@ -474,8 +474,11 @@ vec4 hook()
 		const ivec2 offsets[4] = {ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0)};
 		#define gather(pos) (LUMA_mul * vec4(textureGatherOffsets(LUMA_raw, pos, offsets)))
 		pdiff_sq.x = dot(pow(gather(HOOKED_pos) - gather(HOOKED_pos+r.xy*HOOKED_pt), vec4(2)), vec4(1));
-#elif defined(LUMA_gather) && P == 2 && PS == 6 && RF == 0 && RI == 0 && T == 0
-		pdiff_sq.x = dot(pow(LUMA_gather(HOOKED_pos, 0) - LUMA_gather(HOOKED_pos+r.xy*HOOKED_pt, 0), vec4(2)), vec4(1));
+#elif defined(LUMA_gather) && PS == 6 && RF == 0 && RI == 0 && T == 0
+		vec2 tile;
+		for (tile.x = -hp; tile.x < hp; tile.x+=2)
+			for (tile.y = -hp; tile.y < hp; tile.y+=2)
+				pdiff_sq.x += dot(pow(LUMA_gather(HOOKED_pos+tile*HOOKED_pt, 0) - LUMA_gather(HOOKED_pos+(r.xy+tile)*HOOKED_pt, 0), vec4(2)), vec4(1));
 #else
 		FOR_PATCH(p)
 			pdiff_sq += pow(HOOKED_texOff(p) - load(ROT(p)+r), vec4(2));
