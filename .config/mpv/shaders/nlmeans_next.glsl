@@ -108,8 +108,11 @@ vec4 hook()
  * 	- LQ (fast):
  * 		- LUMA=P=1
  * 		- CHROMA=P=1
- * 	- Sharp:
+ * 	- Sharpen+Denoise:
  * 		- LUMA=S=9:AS=1:EP=0
+ * 	- Sharpen only:
+ * 		- LUMA=S=9:AS=2:EP=0
+ * 		- CHROMA=S=9:AS=2:EP=0
  *
  * It is recommended to make multiple copies of this shader with settings 
  * tweaked for different types of content, and then dispatch the appropriate 
@@ -155,8 +158,8 @@ vec4 hook()
 #define ASP 0.25
 #else
 #define AS 0
-#define ASF 0.0
-#define ASP 0.0
+#define ASF 1.0
+#define ASP 0.25
 #endif
 
 /* Weight discard
