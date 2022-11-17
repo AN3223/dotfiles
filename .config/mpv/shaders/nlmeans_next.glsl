@@ -200,9 +200,9 @@ vec4 hook()
  * 1: horizontal line
  * 2: vertical line
  * 3: diamond (symmetrical)
- * 4: triangle (pointing upward, center pixel is in the bottom-middle)
+ * 4: triangle (pointing upward, textureGather optimized at P=3)
  * 5: truncated triangle (last row halved)
- * 6: even sized square
+ * 6: even sized square (textureGather optimized at any size)
  */
 #ifdef LUMA_raw
 #define RS 3
@@ -219,6 +219,8 @@ vec4 hook()
  *
  * The angle in degrees of each rotation is 360/(RI+1), so RI=1 will do a 
  * single 180 degree rotation, RI=3 will do three 90 degree rotations, etc.
+ *
+ * Rotation will disable textureGather optimization for PS=4.
  */
 #ifdef LUMA_raw
 #define RI 0
@@ -230,6 +232,7 @@ vec4 hook()
  *
  * Limitations:
  * 	- Slower, since each frame is researched
+ * 	- Disables textureGather optimizations
  * 	- Requires gpu-next and nlmeans_next.glsl
  * 	- Luma-only (this is a bug)
  * 	- Max 3840x3840 resolution, limit can be increased at the bottom of the shader
@@ -285,7 +288,8 @@ vec4 hook()
  *
  * Compares the pixel of interest against downscaled pixels.
  *
- * This will virtually always improves quality.
+ * This will virtually always improves quality, but will disable textureGather 
+ * optimizations.
  *
  * The downscale factor can be modified in the WIDTH/HEIGHT directives for the 
  * DOWNSCALED (for CHROMA, RGB) and DOWNSCALED_LUMA (LUMA only) textures near 
