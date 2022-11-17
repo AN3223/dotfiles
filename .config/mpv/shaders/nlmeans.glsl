@@ -93,7 +93,7 @@ vec4 hook()
  * 	- Film (especially black and white):
  * 		- Disable chroma by removing the HOOK CHROMA lines above
  * 	- HQ (slow):
- * 		- LUMA=S=3:PS=3:WD=2:RI=1
+ * 		- LUMA=P=4:R=9:PS=6:WD=2:RI=3
  * 		- CHROMA=PS=3
  * 	- LQ (fast):
  * 		- LUMA=P=1
