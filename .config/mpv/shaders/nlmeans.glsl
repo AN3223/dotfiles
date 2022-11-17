@@ -140,16 +140,16 @@ vec4 hook()
  *
  * AS: 2 for sharpening, 1 for sharpening+denoising, 0 to disable
  * ASF: Sharpening factor, higher numbers make a sharper underlying image
- * ASP (1>=ASP>=0): Weight power, lower numbers use more of the sharp image
+ * ASP: Weight power, higher numbers use more of the sharp image
  */
 #ifdef LUMA_raw
 #define AS 0
 #define ASF 1.0
-#define ASP 0.25
+#define ASP 4.0
 #else
 #define AS 0
 #define ASF 1.0
-#define ASP 0.25
+#define ASP 4.0
 #endif
 
 /* Weight discard
@@ -607,7 +607,7 @@ vec4 hook()
 
 #if AS // adaptive sharpening
 	vec4 sharpened = HOOKED_texOff(0) + (HOOKED_texOff(0) - result) * ASF;
-	vec4 sharpening_power = pow(avg_weight, vec4(1.0/(ASF*ASP)));
+	vec4 sharpening_power = pow(avg_weight, vec4(ASP));
 #endif
 #if AS == 1 // denoised
 	result = mix(sharpened, result, sharpening_power);
