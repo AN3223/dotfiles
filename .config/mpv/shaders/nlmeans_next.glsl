@@ -578,25 +578,18 @@ vec4 hook()
 	imageStore(PREV1,  ivec2(round(HOOKED_pos*imageSize(PREV1))),  load(vec3(0)));
 #endif
 
-#if WD == 1 // cumulative average
-	vec4 avg_weight = total_weight / no_weights;
-#else
 	vec4 avg_weight = total_weight * r_scale;
-#endif
 
 #if WD == 2 // true average
-	vec4 no_weights = vec4(1);
 	total_weight = vec4(1);
 	sum = HOOKED_texOff(0);
 
 	for (int i = 0; i < r_area; i++) {
 		vec4 keeps = step(avg_weight*WDT, all_weights[i]);
 		all_weights[i] *= keeps;
-		no_weights += keeps;
 		sum += all_pixels[i] * all_weights[i];
 		total_weight += all_weights[i];
 	}
-	avg_weight = total_weight / no_weights;
 #endif
 
 #if M == 3 // weighted median intensity
