@@ -101,7 +101,7 @@ vec4 hook()
  * 	- Sharpen+Denoise:
  * 		- LUMA=S=9:AS=1:EP=0
  * 	- HQ Sharpen+Denoise:
- * 		- LUMA=P=4:R=9:S=9:PS=6:AS=1:ASP=1.75:WD=2:RI=3:EP=0
+ * 		- LUMA=S=9:P=4:R=9:AS=1:ASP=1.75:WD=2:PS=6:RI=3:EP=0
  * 	- Sharpen only:
  * 		- LUMA=S=9:AS=2:EP=0
  * 		- CHROMA=S=9:AS=2:EP=0
