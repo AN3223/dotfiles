@@ -109,12 +109,12 @@ vec4 hook()
  * 		- LUMA=P=1
  * 		- CHROMA=P=1
  * 	- Sharpen+Denoise:
- * 		- LUMA=S=9:AS=1:EP=0
+ * 		- LUMA=S=9:AS=1
  * 	- HQ Sharpen+Denoise:
- * 		- LUMA=S=9:P=4:R=9:AS=1:ASP=1.75:WD=2:PS=6:RI=3:EP=0
+ * 		- LUMA=S=15:P=4:R=9:AS=1:ASP=1.75:WD=2:PS=6:RI=3
  * 	- Sharpen only:
- * 		- LUMA=S=9:AS=2:EP=0
- * 		- CHROMA=S=9:AS=2:EP=0
+ * 		- LUMA=S=9:AS=2
+ * 		- CHROMA=S=9:AS=2
  *
  * It is recommended to make multiple copies of this shader with settings 
  * tweaked for different types of content, and then dispatch the appropriate 
@@ -273,6 +273,8 @@ vec4 hook()
  * Reduces denoising around very bright/dark areas. The downscaling factor of 
  * EP_LUMA (located near the top of this shader) controls the area sampled for 
  * luminance (higher numbers consider more area).
+ *
+ * Only works with means estimator (M=0).
  *
  * EP: 1 to enable, 0 to disable
  * DP (starts at 1): EP strength on dark patches, 0 to fully denoise
@@ -476,11 +478,6 @@ vec4 hook()
 	vec4 minsum = vec4(0);
 #endif
 
-#if EP
-	vec4 l = EP_LUMA_texOff(0);
-	vec4 ep_weight = pow(min(1-l, l)*2, step(l, vec4(0.5))*DP + step(vec4(0.5), l)*BP);
-#endif
-
 	FOR_RESEARCH(r) {
 		// low pdiff -> high weight, high weight -> more blur
 		const float h = S*0.013;
@@ -520,10 +517,6 @@ vec4 hook()
 		vec4 weight = exp(-pdiff_sq * p_scale * pdiff_scale);
 
 		weight *= exp(-pow(length(r*SD) * SS, 2));
-
-#if EP
-		weight *= ep_weight;
-#endif
 
 #if WD == 2 || M == 3 // true average, weighted median intensity
 		all_weights[r_index] = weight;
@@ -618,9 +611,16 @@ vec4 hook()
 	vec4 sharpened = HOOKED_texOff(0) + (HOOKED_texOff(0) - result) * ASF;
 	vec4 sharpening_power = pow(avg_weight, vec4(ASP));
 #endif
-#if AS == 1 // denoised
+#if EP && M == 0 // extremes preserve
+	vec4 l = EP_LUMA_texOff(0);
+	vec4 ep_weight = pow(min(1-l, l)*2, step(l, vec4(0.5))*DP + step(vec4(0.5), l)*BP);
+	sum = (sum - HOOKED_texOff(0)) * ep_weight + HOOKED_texOff(0);
+	total_weight = (total_weight - 1) * ep_weight + 1;
+	result = sum / total_weight; // recompute result
+#endif
+#if AS == 1 // sharpen+denoise
 	result = mix(sharpened, result, sharpening_power);
-#elif AS == 2 // noisy
+#elif AS == 2 // sharpen only
 	result = mix(sharpened, HOOKED_texOff(0), sharpening_power);
 #endif
 
