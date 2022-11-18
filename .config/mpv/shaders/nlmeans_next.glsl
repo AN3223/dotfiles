@@ -314,6 +314,7 @@ vec4 hook()
  * 1: Euclidean medians (extremely slow, best for heavy noise)
  * 2: weight map (not a denoiser, intended for development use)
  * 3: weighted median intensity (slow, good for heavy noise)
+ * 4: maximum weight (not a denoiser, intended for development use)
  */
 #ifdef LUMA_raw
 #define M 0
@@ -477,6 +478,8 @@ vec4 hook()
 
 #if M == 1
 	vec4 minsum = vec4(0);
+#elif M == 4
+	vec4 maxweight = vec4(0);
 #endif
 
 	FOR_RESEARCH(r) {
@@ -556,6 +559,11 @@ vec4 hook()
 		// update minimums
 		minsum = (newmin * wpdist_sum) + (notmin * minsum);
 		result = (newmin * load(r))    + (notmin * result);
+#elif M == 4 // maximum weight
+		vec4 newmax = step(maxweight, weight);
+		vec4 notmax = 1 - newmax;
+		result = newmax * load(r) + notmax * result;
+		maxweight = max(maxweight, weight);
 #endif
 	}
 
