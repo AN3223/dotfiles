@@ -11,6 +11,7 @@ case "$bang" in
 	!kalpine) link="$KIWIX_URL/alpinelinux_en_all_maxi/A/$(kifix "$@")" ;;
 	!kaw|!karchwiki) link="$KIWIX_URL/archlinux_en_all_maxi/A/$(kifix "$@")" ;;
 	!km|!kmovies) link="$KIWIX_URL/wikipedia_en_movies_maxi/A/$(kifix "$@")" ;;
+	!kma|!kmath) link="$KIWIX_URL/wikipedia_en_mathematics_nopic/A/$(kifix "$@")" ;;
 	!kwt|!kwiktionary) IFS=_; link="$KIWIX_URL/wiktionary_en_all_nopic/A/$*" ;;
 esac
 
