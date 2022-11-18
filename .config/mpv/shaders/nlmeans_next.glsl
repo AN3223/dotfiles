@@ -79,6 +79,7 @@ vec4 hook()
 //!BIND PREV9
 //!BIND PREV10
 //!DESC Non-local means
+//!COMPONENTS 3
 
 /* User variables
  *

@@ -69,6 +69,7 @@ vec4 hook()
 //!BIND DOWNSCALED_LUMA
 //!BIND EP_LUMA
 //!DESC Non-local means
+//!COMPONENTS 3
 
 /* User variables
  *
