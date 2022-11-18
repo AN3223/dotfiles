@@ -275,16 +275,14 @@ vec4 hook()
  * EP_LUMA (located near the top of this shader) controls the area sampled for 
  * luminance (higher numbers consider more area).
  *
- * Only works with means estimator (M=0).
- *
  * EP: 1 to enable, 0 to disable
- * DP (starts at 1): EP strength on dark patches, 0 to fully denoise
- * BP (starts at 1): EP strength on bright patches, 0 to fully denoise
+ * DP: EP strength on dark patches, 0 to fully denoise
+ * BP: EP strength on bright patches, 0 to fully denoise
  */
 #ifdef LUMA_raw
 #define EP 1
-#define BP 3.0
-#define DP 1.0
+#define BP 0.75
+#define DP 0.25
 #endif
 
 /* Robust filtering
@@ -338,6 +336,8 @@ vec4 hook()
 #endif
 
 /* Shader code */
+
+#define EPSILON 0.00000000001
 
 #if RF && defined(LUMA_raw)
 #define TEX DOWNSCALED_LUMA_tex
@@ -620,13 +620,14 @@ vec4 hook()
 	vec4 sharpened = HOOKED_texOff(0) + (HOOKED_texOff(0) - result) * ASF;
 	vec4 sharpening_power = pow(avg_weight, vec4(ASP));
 #endif
-#if EP && M == 0 // extremes preserve
-	vec4 l = EP_LUMA_texOff(0);
-	vec4 ep_weight = pow(min(1-l, l)*2, step(l, vec4(0.5))*DP + step(vec4(0.5), l)*BP);
-	sum = (sum - HOOKED_texOff(0)) * ep_weight + HOOKED_texOff(0);
-	total_weight = (total_weight - 1) * ep_weight + 1;
-	result = sum / total_weight; // recompute result
+
+#if EP // extremes preserve
+	float luminance = EP_LUMA_texOff(0).x;
+	// epsilon is needed since pow(0,0) is undefined
+	float ep_weight = pow(max(min(1-luminance, luminance)*2, EPSILON), (luminance < 0.5 ? DP : BP));
+	result = mix(HOOKED_texOff(0), result, ep_weight);
 #endif
+
 #if AS == 1 // sharpen+denoise
 	result = mix(sharpened, result, sharpening_power);
 #elif AS == 2 // sharpen only
