@@ -79,7 +79,6 @@ vec4 hook()
 //!BIND PREV9
 //!BIND PREV10
 //!DESC Non-local means
-//!COMPONENTS 3
 
 /* User variables
  *
@@ -650,7 +649,7 @@ vec4 hook()
 	result = mix(sharpened, HOOKED_texOff(0), sharpening_power);
 #endif
 
-	return mix(HOOKED_texOff(0), result, BF);
+	return vec4(mix(HOOKED_texOff(0), result, BF).xyz, 0.0);
 }
 
 //!TEXTURE PREV1
