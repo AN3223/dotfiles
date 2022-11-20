@@ -86,11 +86,8 @@ vec4 hook()
  * S = denoising factor
  * P = patch size (odd number)
  * R = research size (odd number)
- * SS = spatial denoising factor
  *
  * A higher denoising factor will increase the denoising effect.
- *
- * With a higher spatial denoising factor, distant pixels will contribute less.
  *
  * Patch size should usually be 3. Higher values are not always better.
  *
@@ -135,12 +132,10 @@ vec4 hook()
 #define S 1.25
 #define P 3
 #define R 5
-#define SS 0.25
 #else
 #define S 1.50
 #define P 3
 #define R 5
-#define SS 0.25
 #endif
 
 /* Adaptive sharpening
@@ -186,6 +181,38 @@ vec4 hook()
 #define WD 1
 #define WDT 0.875
 #define WDP 6.0
+#endif
+
+/* Spatial kernel
+ *
+ * Increasing the spatial denoising factor (SS) reduces the weight of further 
+ * pixels.
+ *
+ * Spatial distortion instructs the spatial kernel to view that axis as 
+ * closer/further, for instance SD=(1,1,0.5) would make the temporal axis 
+ * appear closer and increase blur between frames.
+ *
+ * The intra-patch variants are experimental. They are intended to make large 
+ * patch sizes more useful. Impacts speed.
+ *
+ * SS: spatial denoising factor
+ * SD: spatial distortion (X, Y, time)
+ * PSS: intra-patch spatial denoising factor
+ * PST: enables intra-patch spatial kernel if P>=PST, 0 fully disables
+ * PSD: intra-patch spatial distortion (X, Y)
+ */
+#ifdef LUMA_raw
+#define SS 0.25
+#define SD vec3(1,1,1)
+#define PST 0
+#define PSS 0.0
+#define PSD vec2(1,1)
+#else
+#define SS 0.25
+#define SD vec3(1,1,1)
+#define PST 0
+#define PSS 0.0
+#define PSD vec2(1,1)
 #endif
 
 /* Search shape
@@ -244,29 +271,12 @@ vec4 hook()
  * struggle more with noise that persists across multiple frames, but can work 
  * very well on high quality video.
  *
- * For the spatial kernel, the distortion (SD) is a coefficient of the 
- * coordinates, with each component corresponding to an axis (X, Y, Z). For 
- * example:
- * 	- SD=(1,1,1): no distortion
- * 	- SD=(1,1,2): previous frames are twice as far away
- * 	- SD=(1,1,0.5): previous frames are half as far away
- * 	- SD=(1,1,0): previous frames are no further than the current frame
- *
- * SD is most useful for controlling motion blur, higher Z values produce less 
- * motion blur. SD only works if SS is greater than zero.
- *
- * The X and Y distortion of the spatial kernel can be controlled with SD too,
- * although I'm not aware of any practical use for them.
- *
  * T: number of frames used
- * SD: spatial distortion
  */
 #ifdef LUMA_raw
 #define T 0
-#define SD vec3(1,1,1)
 #else
 #define T 0
-#define SD vec3(1,1,1)
 #endif
 
 /* Extremes preserve
@@ -483,17 +493,17 @@ vec4 hook()
 #endif
 
 	FOR_RESEARCH(r) {
-		// low pdiff -> high weight, high weight -> more blur
 		const float h = S*0.013;
 		const float pdiff_scale = 1.0/(h*h);
 
 		vec4 pdiff_sq = vec4(0);
-#if defined(LUMA_gather) && P == 3 && PS == 4 && RF == 0 && RI == 0 && T == 0
+#if defined(LUMA_gather) && P == 3 && PS == 4 && RF == 0 && RI == 0 && T == 0 && PST == 0
 		const ivec2 offsets[4] = {ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0)};
 		#define gather(pos) (LUMA_mul * vec4(textureGatherOffsets(LUMA_raw, pos, offsets)))
 		pdiff_sq.x = dot(pow(gather(HOOKED_pos) - gather(HOOKED_pos+r.xy*HOOKED_pt), vec4(2)), vec4(1));
-#elif defined(LUMA_gather) && PS == 6 && RF == 0 && T == 0
+#elif defined(LUMA_gather) && PS == 6 && RF == 0 && T == 0 && PST == 0
 		// tiled even square patch comparison using textureGather
+		// XXX implement intra-patch spatial kernel
 		vec2 tile;
 		for (tile.x = -hp; tile.x < hp; tile.x+=2) {
 			for (tile.y = -hp; tile.y < hp; tile.y+=2) {
@@ -515,12 +525,18 @@ vec4 hook()
 			}
 		}
 #else
-		FOR_PATCH(p)
-			pdiff_sq += pow(HOOKED_texOff(p) - load(vec3(ROT(p.xy), p.z) + r), vec4(2));
+		FOR_PATCH(p) {
+			vec4 diff_sq = pow(HOOKED_texOff(p) - load(vec3(ROT(p.xy), p.z) + r), vec4(2));
+#if PST && P >= PST
+			float pdist = exp(-pow(length(p.xy*PSD)*PSS, 2));
+			diff_sq = pow(max(diff_sq, EPSILON), vec4(pdist));
 #endif
-		vec4 weight = exp(-pdiff_sq * p_scale * pdiff_scale);
+			pdiff_sq += diff_sq;
+		}
+#endif
 
-		weight *= exp(-pow(length(r*SD) * SS, 2));
+		vec4 weight = exp(-pdiff_sq * p_scale * pdiff_scale);
+		weight *= exp(-pow(length(r*SD)*SS, 2));
 
 #if WD == 2 || M == 3 // true average, weighted median intensity
 		all_weights[r_index] = weight;
