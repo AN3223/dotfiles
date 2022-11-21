@@ -639,6 +639,6 @@ vec4 hook()
 	result = mix(sharpened, HOOKED_texOff(0), sharpening_power);
 #endif
 
-	return vec4(mix(HOOKED_texOff(0), result, BF).xyz, 0.0);
+	return mix(HOOKED_texOff(0), result, BF);
 }
 
