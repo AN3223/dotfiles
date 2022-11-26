@@ -212,27 +212,35 @@ vec4 hook()
 #define PS 3
 #endif
 
-/* Rotational invariance
+/* Rotational/reflectional invariance
  *
- * Number of rotations to try for each patch comparison. Slow, but improves 
- * feature preservation, although greater rotations give diminishing returns.
+ * Number of rotations/reflections to try for each patch comparison. Slow, but 
+ * improves feature preservation, although adding more rotations/reflections 
+ * gives diminishing returns.
  *
  * The angle in degrees of each rotation is 360/(RI+1), so RI=1 will do a 
  * single 180 degree rotation, RI=3 will do three 90 degree rotations, etc.
  *
- * Rotation will disable textureGather optimization for PS=4.
+ * The textureGather optimization is only available with:
+ * - PS=4:RI=0
+ * - PS=6:RI=[013]:RFI=[01]
+ *
+ * RI: Rotational invariance
+ * RFI: Reflectional invariance
  */
 #ifdef LUMA_raw
 #define RI 3
+#define RFI 0
 #else
 #define RI 0
+#define RFI 0
 #endif
 
 /* Temporal denoising
  *
  * Limitations:
  * 	- Slower, since each frame is researched
- * 	- Requires gpu-next and nlmeans_temporal.glsl
+ * 	- Requires vo=gpu-next and nlmeans_temporal.glsl
  * 	- Luma-only (this is a bug)
  * 	- Buggy
  *
@@ -333,9 +341,6 @@ vec4 hook()
 const int hp = P/2;
 const int hr = R/2;
 
-// rotation
-#define ROT(p) vec2((cos(radians(ri)) * (p).x - sin(radians(ri)) * (p).y), (sin(radians(ri)) * (p).y + cos(radians(ri)) * (p).x))
-
 // search shapes and their corresponding areas
 #define S_1X1(z,hz) for (z = vec3(0); z.x <= 0; z.x++)
 #define S_1X1_A(hz,Z) 1
@@ -389,34 +394,37 @@ const int r_area = S_SQUARE_A(hr,R)*T1;
 
 // patch shapes
 #define RI1 (RI+1)
+#define RFI1 (RFI+1)
 #define FOR_ROTATION for (float ri = 0; ri < 360; ri+=360.0/RI1)
+#define FOR_REFLECTION for (float rfi = 45; rfi < 225; rfi+=180.0/RFI1)
 #if P == 0 || P == 1
-#define FOR_PATCH(p) S_1X1(p,hp) for (float ri = 0; ri <= 0; ri++)
-const int p_area = S_1X1_A(hp,P)*RI1;
+#define FOR_PATCH(p) S_1X1(p,hp) for (float ri = 0; ri <= 0; ri++) for (float rfi = 0; rfi <= 0; rfi++)
+const int p_area = S_1X1_A(hp,P);
 #elif PS == 6
-#define FOR_PATCH(p) S_SQUARE_EVEN(p,hp) FOR_ROTATION
-const int p_area = S_SQUARE_A(hp,P)*RI1;
+#define FOR_PATCH(p) S_SQUARE_EVEN(p,hp) FOR_ROTATION FOR_REFLECTION
+const int p_area = S_SQUARE_A(hp,P)*RI1*RFI1;
 #elif PS == 5
-#define FOR_PATCH(p) S_TRUNC_TRIANGLE(p,hp) FOR_ROTATION
-const int p_area = S_TRIANGLE_A(hp,hp)*RI1;
+#define FOR_PATCH(p) S_TRUNC_TRIANGLE(p,hp) FOR_ROTATION FOR_REFLECTION
+const int p_area = S_TRIANGLE_A(hp,hp)*RI1*RFI1;
 #elif PS == 4
-#define FOR_PATCH(p) S_TRIANGLE(p,hp) FOR_ROTATION
-const int p_area = S_TRIANGLE_A(hp,P)*RI1;
+#define FOR_PATCH(p) S_TRIANGLE(p,hp) FOR_ROTATION FOR_REFLECTION
+const int p_area = S_TRIANGLE_A(hp,P)*RI1*RFI1;
 #elif PS == 3
-#define FOR_PATCH(p) S_DIAMOND(p,hp) FOR_ROTATION
-const int p_area = S_DIAMOND_A(hp,P)*RI1;
+#define FOR_PATCH(p) S_DIAMOND(p,hp) FOR_ROTATION FOR_REFLECTION
+const int p_area = S_DIAMOND_A(hp,P)*RI1*RFI1;
 #elif PS == 2
-#define FOR_PATCH(p) S_VERTICAL(p,hp) FOR_ROTATION
-const int p_area = S_LINE_A(hp,P)*RI1;
+#define FOR_PATCH(p) S_VERTICAL(p,hp) FOR_ROTATION FOR_REFLECTION
+const int p_area = S_LINE_A(hp,P)*RI1*RFI1;
 #elif PS == 1
-#define FOR_PATCH(p) S_HORIZONTAL(p,hp) FOR_ROTATION
-const int p_area = S_LINE_A(hp,P)*RI1;
+#define FOR_PATCH(p) S_HORIZONTAL(p,hp) FOR_ROTATION FOR_REFLECTION
+const int p_area = S_LINE_A(hp,P)*RI1*RFI1;
 #elif PS == 0 && P == 2 // interpolated 2x2
-#define FOR_PATCH(p) S_SQUARE(p,0.5) FOR_ROTATION
-const int p_area = 4*RI1;
+// XXX remove and replace with a different shape
+#define FOR_PATCH(p) S_SQUARE(p,0.5) FOR_ROTATION FOR_REFLECTION
+const int p_area = 4*RI1*RFI1;
 #elif PS == 0
-#define FOR_PATCH(p) S_SQUARE(p,hp) FOR_ROTATION
-const int p_area = S_SQUARE_A(hp,P)*RI1;
+#define FOR_PATCH(p) S_SQUARE(p,hp) FOR_ROTATION FOR_REFLECTION
+const int p_area = S_SQUARE_A(hp,P)*RI1*RFI1;
 #endif
 
 const float r_scale = 1.0/r_area;
@@ -436,13 +444,38 @@ vec4 load(vec3 off)
 #define load(off) load_(off)
 #endif
 
+#if RI // rotation
+vec2 rot(vec2 p, float d)
+{
+	return vec2(
+		p.x * cos(radians(d)) - p.y * sin(radians(d)),
+		p.y * sin(radians(d)) + p.x * cos(radians(d))
+	);
+}
+#else
+#define rot(p, d) (p)
+#endif
+
+#if RFI // reflection
+vec2 ref(vec2 p, float d)
+{
+	return vec2(
+		p.x * cos(2*radians(d)) + p.y * sin(2*radians(d)),
+		p.y * sin(2*radians(d)) - p.x * cos(2*radians(d))
+	);
+}
+#else
+#define ref(p, d) (p)
+#endif
+
 vec4 patch_comparison(vec3 r)
 {
 	vec3 p;
 	vec4 pdiff_sq = vec4(0);
 
 	FOR_PATCH(p) {
-		vec4 diff_sq = pow(HOOKED_texOff(p) - load(vec3(ROT(p.xy), p.z) + r), vec4(2));
+		vec3 transformed_p = vec3(ref(rot(p.xy, ri), rfi), p.z);
+		vec4 diff_sq = pow(HOOKED_texOff(p) - load(transformed_p + r), vec4(2));
 #if PST && P >= PST
 		float pdist = exp(-pow(length(p.xy*PSD)*PSS, 2));
 		diff_sq = pow(max(diff_sq, EPSILON), vec4(pdist));
@@ -453,7 +486,7 @@ vec4 patch_comparison(vec3 r)
 	return pdiff_sq;
 }
 
-#if defined(LUMA_gather) && P == 3 && PS == 4 && RF == 0 && RI == 0 && PST == 0
+#if defined(LUMA_gather) && P == 3 && PS == 4 && RF == 0 && RI == 0 && RFI == 0 && PST == 0
 #define gather(pos) (LUMA_mul * vec4(textureGatherOffsets(LUMA_raw, pos, offsets)))
 vec4 patch_comparison_gather(vec3 r)
 {
@@ -465,7 +498,7 @@ vec4 patch_comparison_gather(vec3 r)
 
 	return pdiff_sq;
 }
-#elif defined(LUMA_gather) && PS == 6 && RF == 0 && PST == 0
+#elif defined(LUMA_gather) && PS == 6 && RF == 0 && (RI == 0 || RI == 1 || RI == 3) && (RFI == 0 || RFI == 1) && PST == 0
 // tiled even square patch comparison using textureGather
 // XXX implement intra-patch spatial kernel
 vec4 patch_comparison_gather(vec3 r)
@@ -477,19 +510,22 @@ vec4 patch_comparison_gather(vec3 r)
 	for (tile.x = -hp; tile.x < hp; tile.x+=2) {
 		for (tile.y = -hp; tile.y < hp; tile.y+=2) {
 			vec4 stationary = LUMA_gather(HOOKED_pos+tile*HOOKED_pt, 0);
-			int rotations = 0;
-			FOR_ROTATION {
-				vec4 rotator = LUMA_gather(HOOKED_pos+(ROT(tile+0.5)-0.5 + r.xy)*HOOKED_pt, 0);
-#if RI == 3
-				for (int i = 0; i < rotations; i++)
-					rotator = rotator.wxyz; // 90 degrees
-				rotations++;
-#elif RI == 1
-				for (int i = 0; i < rotations; i++)
-					rotator = rotator.wzyx; // 180 degrees
-				rotations++;
+
+			FOR_ROTATION FOR_REFLECTION {
+				/* gather order:
+				 * w z
+				 * x y
+				 */
+				vec4 transformer = LUMA_gather(HOOKED_pos+(ref(rot(tile+0.5,ri),rfi)-0.5 + r.xy)*HOOKED_pt, 0);
+#if RI
+				for (float i = 0; i < ri; i+=90)
+					transformer = transformer.wxyz; // rotate 90 degrees
 #endif
-				pdiff_sq.x += dot(pow(stationary - rotator, vec4(2)), vec4(1));
+#if RFI
+				for (float i = 45; i < rfi; i+=90)
+					transformer = transformer.wzxy;
+#endif
+				pdiff_sq.x += dot(pow(stationary - transformer, vec4(2)), vec4(1));
 			}
 		}
 	}
