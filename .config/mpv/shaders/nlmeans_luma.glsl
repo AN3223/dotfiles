@@ -228,7 +228,6 @@ vec4 hook()
  *
  * Limitations:
  * 	- Slower, since each frame is researched
- * 	- Disables textureGather optimizations
  * 	- Requires gpu-next and nlmeans_temporal.glsl
  * 	- Luma-only (this is a bug)
  * 	- Buggy
@@ -417,7 +416,6 @@ const float p_scale = 1.0/p_area;
 
 #define load_(off) TEX(HOOKED_pos + HOOKED_pt * vec2(off))
 
-// XXX use textureGather on the current frame
 #if T
 vec4 load(vec3 off)
 {
@@ -428,6 +426,70 @@ vec4 load(vec3 off)
 }
 #else
 #define load(off) load_(off)
+#endif
+
+vec4 patch_comparison(vec3 r)
+{
+	vec3 p;
+	vec4 pdiff_sq = vec4(0);
+
+	FOR_PATCH(p) {
+		vec4 diff_sq = pow(HOOKED_texOff(p) - load(vec3(ROT(p.xy), p.z) + r), vec4(2));
+#if PST && P >= PST
+		float pdist = exp(-pow(length(p.xy*PSD)*PSS, 2));
+		diff_sq = pow(max(diff_sq, EPSILON), vec4(pdist));
+#endif
+		pdiff_sq += diff_sq;
+	}
+
+	return pdiff_sq;
+}
+
+#if defined(LUMA_gather) && P == 3 && PS == 4 && RF == 0 && RI == 0 && PST == 0
+#define gather(pos) (LUMA_mul * vec4(textureGatherOffsets(LUMA_raw, pos, offsets)))
+vec4 patch_comparison_gather(vec3 r)
+{
+	vec3 p;
+	vec4 pdiff_sq = vec4(0);
+
+	const ivec2 offsets[4] = {ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0)};
+	pdiff_sq.x = dot(pow(gather(HOOKED_pos) - gather(HOOKED_pos+r.xy*HOOKED_pt), vec4(2)), vec4(1));
+
+	return pdiff_sq;
+}
+#elif defined(LUMA_gather) && PS == 6 && RF == 0 && PST == 0
+// tiled even square patch comparison using textureGather
+// XXX implement intra-patch spatial kernel
+vec4 patch_comparison_gather(vec3 r)
+{
+	vec3 p;
+	vec2 tile;
+	vec4 pdiff_sq = vec4(0);
+
+	for (tile.x = -hp; tile.x < hp; tile.x+=2) {
+		for (tile.y = -hp; tile.y < hp; tile.y+=2) {
+			vec4 stationary = LUMA_gather(HOOKED_pos+tile*HOOKED_pt, 0);
+			int rotations = 0;
+			FOR_ROTATION {
+				vec4 rotator = LUMA_gather(HOOKED_pos+(ROT(tile+0.5)-0.5 + r.xy)*HOOKED_pt, 0);
+#if RI == 3
+				for (int i = 0; i < rotations; i++)
+					rotator = rotator.wxyz; // 90 degrees
+				rotations++;
+#elif RI == 1
+				for (int i = 0; i < rotations; i++)
+					rotator = rotator.wzyx; // 180 degrees
+				rotations++;
+#endif
+				pdiff_sq.x += dot(pow(stationary - rotator, vec4(2)), vec4(1));
+			}
+		}
+	}
+
+	return pdiff_sq;
+}
+#else
+#define patch_comparison_gather patch_comparison
 #endif
 
 vec4 hook()
@@ -456,45 +518,7 @@ vec4 hook()
 		const float h = S*0.013;
 		const float pdiff_scale = 1.0/(h*h);
 
-		vec4 pdiff_sq = vec4(0);
-#if defined(LUMA_gather) && P == 3 && PS == 4 && RF == 0 && RI == 0 && T == 0 && PST == 0
-		const ivec2 offsets[4] = {ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0)};
-		#define gather(pos) (LUMA_mul * vec4(textureGatherOffsets(LUMA_raw, pos, offsets)))
-		pdiff_sq.x = dot(pow(gather(HOOKED_pos) - gather(HOOKED_pos+r.xy*HOOKED_pt), vec4(2)), vec4(1));
-#elif defined(LUMA_gather) && PS == 6 && RF == 0 && T == 0 && PST == 0
-		// tiled even square patch comparison using textureGather
-		// XXX implement intra-patch spatial kernel
-		vec2 tile;
-		for (tile.x = -hp; tile.x < hp; tile.x+=2) {
-			for (tile.y = -hp; tile.y < hp; tile.y+=2) {
-				vec4 stationary = LUMA_gather(HOOKED_pos+tile*HOOKED_pt, 0);
-				int rotations = 0;
-				FOR_ROTATION {
-					vec4 rotator = LUMA_gather(HOOKED_pos+(ROT(tile+0.5)-0.5 + r.xy)*HOOKED_pt, 0);
-#if RI == 3
-					for (int i = 0; i < rotations; i++)
-						rotator = rotator.wxyz; // 90 degrees
-					rotations++;
-#elif RI == 1
-					for (int i = 0; i < rotations; i++)
-						rotator = rotator.wzyx; // 180 degrees
-					rotations++;
-#endif
-					pdiff_sq.x += dot(pow(stationary - rotator, vec4(2)), vec4(1));
-				}
-			}
-		}
-#else
-		FOR_PATCH(p) {
-			vec4 diff_sq = pow(HOOKED_texOff(p) - load(vec3(ROT(p.xy), p.z) + r), vec4(2));
-#if PST && P >= PST
-			float pdist = exp(-pow(length(p.xy*PSD)*PSS, 2));
-			diff_sq = pow(max(diff_sq, EPSILON), vec4(pdist));
-#endif
-			pdiff_sq += diff_sq;
-		}
-#endif
-
+		vec4 pdiff_sq = r.z == 0 ? patch_comparison_gather(r) : patch_comparison(r);
 		vec4 weight = exp(-pdiff_sq * p_scale * pdiff_scale);
 		weight *= exp(-pow(length(r*SD)*SS, 2));
 
