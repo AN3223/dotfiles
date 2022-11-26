@@ -427,7 +427,7 @@ vec4 load(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0: return load_(off);
-	//Tload
+	//cfg_T_load
 	}
 }
 #else
@@ -548,7 +548,7 @@ vec4 hook()
 	}
 
 #if T
-//Tstore
+	//cfg_T_store
 #endif
 
 	vec4 avg_weight = total_weight * r_scale;

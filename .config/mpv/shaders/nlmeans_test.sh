@@ -14,6 +14,8 @@
 # script's directory.
 # 
 
+# XXX refactor to use nlmeans_cfg
+
 # Starting point for S
 NLM_START=${NLM_START:-0.25}
 
