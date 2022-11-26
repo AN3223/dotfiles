@@ -330,14 +330,6 @@ vec4 hook()
 
 #define EPSILON 0.00000000001
 
-#if RF && defined(LUMA_raw)
-#define TEX RF_LUMA_tex
-#elif RF
-#define TEX RF_tex
-#else
-#define TEX HOOKED_tex
-#endif
-
 const int hp = P/2;
 const int hr = R/2;
 
@@ -392,13 +384,22 @@ const int r_area = 4*T1;
 const int r_area = S_SQUARE_A(hr,R)*T1;
 #endif
 
-// patch shapes
 #define RI1 (RI+1)
 #define RFI1 (RFI+1)
+#if RI
 #define FOR_ROTATION for (float ri = 0; ri < 360; ri+=360.0/RI1)
+#else
+#define FOR_ROTATION
+#endif
+#if RFI
 #define FOR_REFLECTION for (float rfi = 45; rfi < 225; rfi+=180.0/RFI1)
+#else
+#define FOR_REFLECTION
+#endif
+
+// patch shapes
 #if P == 0 || P == 1
-#define FOR_PATCH(p) S_1X1(p,hp) for (float ri = 0; ri <= 0; ri++) for (float rfi = 0; rfi <= 0; rfi++)
+#define FOR_PATCH(p) S_1X1(p,hp) FOR_ROTATION FOR_REFLECTION
 const int p_area = S_1X1_A(hp,P);
 #elif PS == 6
 #define FOR_PATCH(p) S_SQUARE_EVEN(p,hp) FOR_ROTATION FOR_REFLECTION
@@ -430,7 +431,16 @@ const int p_area = S_SQUARE_A(hp,P)*RI1*RFI1;
 const float r_scale = 1.0/r_area;
 const float p_scale = 1.0/p_area;
 
-#define load_(off) TEX(HOOKED_pos + HOOKED_pt * vec2(off))
+#if RF && defined(LUMA_raw)
+#define TEX RF_LUMA_tex
+#elif RF
+#define TEX RF_tex
+#else
+#define TEX HOOKED_tex
+#endif
+
+#define load_(off)  HOOKED_tex(HOOKED_pos + HOOKED_pt * vec2(off))
+#define load2_(off) TEX(HOOKED_pos + HOOKED_pt * vec2(off))
 
 #if T
 vec4 load(vec3 off)
@@ -440,8 +450,16 @@ vec4 load(vec3 off)
 	//cfg_T_load
 	}
 }
+vec4 load2(vec3 off)
+{
+	switch (int(off.z)) {
+	case 0: return load2_(off);
+	//cfg_T_load
+	}
+}
 #else
 #define load(off) load_(off)
+#define load2(off) load2_(off)
 #endif
 
 #if RI // rotation
@@ -468,14 +486,14 @@ vec2 ref(vec2 p, float d)
 #define ref(p, d) (p)
 #endif
 
-vec4 patch_comparison(vec3 r)
+vec4 patch_comparison(vec3 r, vec3 r2)
 {
 	vec3 p;
 	vec4 pdiff_sq = vec4(0);
 
 	FOR_PATCH(p) {
 		vec3 transformed_p = vec3(ref(rot(p.xy, ri), rfi), p.z);
-		vec4 diff_sq = pow(HOOKED_texOff(p) - load(transformed_p + r), vec4(2));
+		vec4 diff_sq = pow(load(p + r2) - load2(transformed_p + r), vec4(2));
 #if PST && P >= PST
 		float pdist = exp(-pow(length(p.xy*PSD)*PSS, 2));
 		diff_sq = pow(max(diff_sq, EPSILON), vec4(pdist));
@@ -483,40 +501,35 @@ vec4 patch_comparison(vec3 r)
 		pdiff_sq += diff_sq;
 	}
 
-	return pdiff_sq;
+	return pdiff_sq * p_scale;
 }
 
 #if defined(LUMA_gather) && P == 3 && PS == 4 && RF == 0 && RI == 0 && RFI == 0 && PST == 0
-#define gather(pos) (LUMA_mul * vec4(textureGatherOffsets(LUMA_raw, pos, offsets)))
-vec4 patch_comparison_gather(vec3 r)
+#define gather(off) (LUMA_mul * vec4(textureGatherOffsets(LUMA_raw, HOOKED_pos+(off)*HOOKED_pt, offsets)))
+vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
-	vec3 p;
-	vec4 pdiff_sq = vec4(0);
-
-	const ivec2 offsets[4] = {ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0)};
-	pdiff_sq.x = dot(pow(gather(HOOKED_pos) - gather(HOOKED_pos+r.xy*HOOKED_pt), vec4(2)), vec4(1));
-
-	return pdiff_sq;
+	const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
+	return vec4(dot(pow(gather(r2.xy) - gather(r.xy), vec4(2)), vec4(1)), 0, 0 ,0);
 }
 #elif defined(LUMA_gather) && PS == 6 && RF == 0 && (RI == 0 || RI == 1 || RI == 3) && (RFI == 0 || RFI == 1) && PST == 0
+#define gather(off) LUMA_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
 // tiled even square patch comparison using textureGather
 // XXX implement intra-patch spatial kernel
-vec4 patch_comparison_gather(vec3 r)
+vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
-	vec3 p;
 	vec2 tile;
 	vec4 pdiff_sq = vec4(0);
 
+	/* gather order:
+	 * w z
+	 * x y
+	 */
 	for (tile.x = -hp; tile.x < hp; tile.x+=2) {
 		for (tile.y = -hp; tile.y < hp; tile.y+=2) {
-			vec4 stationary = LUMA_gather(HOOKED_pos+tile*HOOKED_pt, 0);
+			vec4 stationary = gather(tile + r2.xy);
 
 			FOR_ROTATION FOR_REFLECTION {
-				/* gather order:
-				 * w z
-				 * x y
-				 */
-				vec4 transformer = LUMA_gather(HOOKED_pos+(ref(rot(tile+0.5,ri),rfi)-0.5 + r.xy)*HOOKED_pt, 0);
+				vec4 transformer = gather(ref(rot(tile + 0.5, ri), rfi) - 0.5 + r.xy);
 #if RI
 				for (float i = 0; i < ri; i+=90)
 					transformer = transformer.wxyz; // rotate 90 degrees
@@ -542,7 +555,7 @@ vec4 hook()
 	vec3 p = vec3(0);
 	int r_index = 0;
 	vec4 total_weight = vec4(1);
-	vec4 sum = HOOKED_texOff(0);
+	vec4 sum = load(vec3(0));
 	vec4 result = vec4(0);
 
 #if WD == 2 || M == 3
@@ -562,8 +575,8 @@ vec4 hook()
 		const float h = S*0.013;
 		const float pdiff_scale = 1.0/(h*h);
 
-		vec4 pdiff_sq = r.z == 0 ? patch_comparison_gather(r) : patch_comparison(r);
-		vec4 weight = exp(-pdiff_sq * p_scale * pdiff_scale);
+		vec4 pdiff_sq = r.z == 0 ? patch_comparison_gather(r, vec3(0)) : patch_comparison(r, vec3(0));
+		vec4 weight = exp(-pdiff_sq * pdiff_scale);
 		weight *= exp(-pow(length(r*SD)*SS, 2));
 
 #if WD == 2 || M == 3 // true average, weighted median intensity
@@ -583,12 +596,15 @@ vec4 hook()
 
 #if M == 1 // Euclidean median
 		// Based on: https://arxiv.org/abs/1207.3056
+		/* XXX Behavior changed w/ 0ef96d05a854a752048b80b08178d4823b62f1ef
+		 *
+		 * Now it requires rotation in order to behave similar to before that 
+		 * commit. Maybe it was inappropriately rotating before?
+		 */
 		vec3 r2;
 		vec4 wpdist_sum = vec4(0);
 		FOR_RESEARCH(r2) {
-			vec4 pdist = vec4(0);
-			FOR_PATCH(p)
-				pdist += pow(load(p+r) - load(vec3(ROT(p.xy), p.z) + r2), vec4(2));
+			vec4 pdist = (r.z + r2.z) == 0 ? patch_comparison_gather(r, r2) : patch_comparison(r, r2);
 			wpdist_sum += sqrt(pdist) * (1-weight);
 		}
 
@@ -597,7 +613,7 @@ vec4 hook()
 		result += step(result, vec4(0)) * load(r);
 
 		// find new minimums, exclude zeros
-		vec4 newmin = step(wpdist_sum, minsum) - step(wpdist_sum, vec4(0));
+		vec4 newmin = step(wpdist_sum, minsum) * (1-step(wpdist_sum, vec4(0)));
 		vec4 notmin = 1 - newmin;
 
 		// update minimums
@@ -619,7 +635,7 @@ vec4 hook()
 
 #if WD == 2 // true average
 	total_weight = vec4(1);
-	sum = HOOKED_texOff(0);
+	sum = load(vec3(0));
 
 	for (int i = 0; i < r_area; i++) {
 		vec4 keeps = step(avg_weight*WDT, all_weights[i]);
@@ -652,7 +668,7 @@ vec4 hook()
 #endif
 
 #if AS // adaptive sharpening
-	vec4 sharpened = HOOKED_texOff(0) + (HOOKED_texOff(0) - result) * ASF;
+	vec4 sharpened = load(vec3(0)) + (load(vec3(0)) - result) * ASF;
 	vec4 sharpening_power = pow(avg_weight, vec4(ASP));
 #endif
 
@@ -660,15 +676,15 @@ vec4 hook()
 	float luminance = EP_LUMA_texOff(0).x;
 	// epsilon is needed since pow(0,0) is undefined
 	float ep_weight = pow(max(min(1-luminance, luminance)*2, EPSILON), (luminance < 0.5 ? DP : BP));
-	result = mix(HOOKED_texOff(0), result, ep_weight);
+	result = mix(load(vec3(0)), result, ep_weight);
 #endif
 
 #if AS == 1 // sharpen+denoise
 	result = mix(sharpened, result, sharpening_power);
 #elif AS == 2 // sharpen only
-	result = mix(sharpened, HOOKED_texOff(0), sharpening_power);
+	result = mix(sharpened, load(vec3(0)), sharpening_power);
 #endif
 
-	return mix(HOOKED_texOff(0), result, BF);
+	return mix(load(vec3(0)), result, BF);
 }
 
