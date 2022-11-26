@@ -415,16 +415,19 @@ const int p_area = S_SQUARE_A(hp,P)*RI1;
 const float r_scale = 1.0/r_area;
 const float p_scale = 1.0/p_area;
 
+#define load_(off) TEX(HOOKED_pos + HOOKED_pt * vec2(off))
+
+// XXX use textureGather on the current frame
 #if T
 vec4 load(vec3 off)
 {
 	switch (int(off.z)) {
-	case 0:  return TEX(HOOKED_pos + HOOKED_pt * vec2(off));
+	case 0: return load_(off);
 	//Tload
 	}
 }
 #else
-#define load(off) TEX(HOOKED_pos + HOOKED_pt * vec2(off))
+#define load(off) load_(off)
 #endif
 
 vec4 hook()
