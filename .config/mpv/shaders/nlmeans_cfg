@@ -1,0 +1,76 @@
+#!/usr/bin/awk -f
+
+BEGIN {
+	len = split(ENVIRON["LUMA"] ENVIRON["CHROMA"], opts, ":")
+	for (i = 1; i <= len; i++) {
+		split(opts[i], var_val, "=")
+		if (var_val[1] == "T")
+			T = var_val[2]
+		else if (var_val[1] == "T_RES")
+			T_RES = var_val[2]
+	}
+}
+
+/^\/\/!SAVE/ { texture = $2 }
+
+/^\/\/!WIDTH/ || /^\/\/!HEIGHT/ {
+	len = split(ENVIRON["CHROMA"], opts, ":")
+	for (i = 1; i <= len; i++) {
+		split(opts[i], var_val, "=")
+		if (var_val[2] > 0 && var_val[1] == texture) {
+			printf("%s %s %s %s\n", $1, $2, var_val[2], $4)
+			next
+		}
+	}
+
+	len = split(ENVIRON["LUMA"], opts, ":")
+	for (i = 1; i <= len; i++) {
+		split(opts[i], var_val, "=")
+		if (var_val[2] > 0 && var_val[1] "_LUMA" == texture) {
+			printf("%s %s %s %s\n", $1, $2, var_val[2], $4)
+			next
+		}
+	}
+}
+
+/^#ifdef LUMA_raw$/       { plane = "LUMA" }
+/^#el/ && plane == "LUMA" { plane = "CHROMA" }
+
+/^#define/ {
+	len = split(ENVIRON[plane], opts, ":")
+	for (i = 1; i <= len; i++) {
+		split(opts[i], var_val, "=")
+		if ($2 == var_val[1]) {
+			if ($2 == "EP" || $2 == "RF")
+				printf("#define %s %s\n", var_val[1], (var_val[2] > 0))
+			else
+				printf("#define %s %s\n", var_val[1], var_val[2])
+			next
+		}
+	}
+}
+
+T > 0 && /^\/\/!DESC Non-local means$/ {
+	for (i = 1; i <= T; i++)
+		printf("//!BIND PREV%d\n", i)
+}
+
+T > 0 && /\/\/Tload/ {
+	for (i = 1; i <= T; i++)
+		printf("\tcase %d: return imageLoad(PREV%d, ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV%d))));\n", i, i, i)
+	next
+}
+
+T > 0 && /\/\/Tstore/ {
+	for (i = T; i > 0; i--)
+		printf("\timageStore(PREV%d, ivec2(round(HOOKED_pos*imageSize(PREV%d))), load(vec3(0,0,%d)));\n", i, i, i-1)
+	next
+}
+
+{ print $0 }
+
+END {
+	for (i = 1; i <= T; i++)
+		printf("//!TEXTURE PREV%d\n//!SIZE %d %d\n//!FORMAT r32f\n//!STORAGE\n\n", i, T_RES, T_RES)
+}
+

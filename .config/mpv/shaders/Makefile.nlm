@@ -1,0 +1,25 @@
+#!/usr/bin/make -f
+T=3
+T_RES=3840
+
+all: nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_sharpen_only.glsl nlmeans_temporal.glsl
+
+# TODO: make this a function of nlmeans_cfg so it can be combined with other settings
+nlmeans_luma.glsl: nlmeans.glsl
+	sed '/\/\/!HOOK CHROMA/d' < nlmeans.glsl > nlmeans_luma.glsl
+
+nlmeans_hq.glsl: nlmeans.glsl
+	env LUMA=P=4:R=9:PS=6:WD=2:RI=3 CHROMA=PS=3 ./nlmeans_cfg < nlmeans.glsl > nlmeans_hq.glsl
+
+nlmeans_lq.glsl: nlmeans.glsl
+	env LUMA=P=1:RF=1.25 CHROMA=P=1 ./nlmeans_cfg < nlmeans.glsl > nlmeans_lq.glsl
+
+nlmeans_sharpen_denoise.glsl: nlmeans.glsl
+	env LUMA=S=9:AS=1 ./nlmeans_cfg < nlmeans.glsl > nlmeans_sharpen_denoise.glsl
+
+nlmeans_sharpen_only.glsl: nlmeans.glsl
+	env LUMA=S=9:AS=2 CHROMA=S=9:AS=2 ./nlmeans_cfg < nlmeans.glsl > nlmeans_sharpen_only.glsl
+
+nlmeans_temporal.glsl: nlmeans.glsl
+	env LUMA=T=$(T):T_RES=$(T_RES) ./nlmeans_cfg < nlmeans.glsl > nlmeans_temporal.glsl
+

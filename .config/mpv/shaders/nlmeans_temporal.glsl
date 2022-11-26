@@ -24,9 +24,9 @@
 //!HOOK RGB
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
+//!SAVE RF
 //!WIDTH HOOKED.w 2.0 /
 //!HEIGHT HOOKED.h 2.0 /
-//!SAVE DOWNSCALED
 
 vec4 hook()
 {
@@ -38,9 +38,9 @@ vec4 hook()
 //!HOOK RGB
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
+//!SAVE RF_LUMA
 //!WIDTH HOOKED.w 1.25 /
 //!HEIGHT HOOKED.h 1.25 /
-//!SAVE DOWNSCALED_LUMA
 
 vec4 hook()
 {
@@ -51,10 +51,10 @@ vec4 hook()
 //!HOOK CHROMA
 //!HOOK RGB
 //!BIND HOOKED
-//!DESC Non-local means (EP downscale)
+//!DESC Non-local means (downscale)
+//!SAVE EP
 //!WIDTH HOOKED.w 3 /
 //!HEIGHT HOOKED.h 3 /
-//!SAVE EP_LUMA
 
 vec4 hook()
 {
@@ -65,19 +65,12 @@ vec4 hook()
 //!HOOK CHROMA
 //!HOOK RGB
 //!BIND HOOKED
-//!BIND DOWNSCALED
-//!BIND DOWNSCALED_LUMA
-//!BIND EP_LUMA
+//!BIND RF
+//!BIND RF_LUMA
+//!BIND EP
 //!BIND PREV1
 //!BIND PREV2
 //!BIND PREV3
-//!BIND PREV4
-//!BIND PREV5
-//!BIND PREV6
-//!BIND PREV7
-//!BIND PREV8
-//!BIND PREV9
-//!BIND PREV10
 //!DESC Non-local means
 
 /* User variables
@@ -86,9 +79,9 @@ vec4 hook()
  * P = patch size (odd number)
  * R = research size (odd number)
  *
- * A higher denoising factor will increase the denoising effect.
+ * The denoising factor controls the level of blur, higher is blurrier.
  *
- * Patch size should usually be 3. Higher values are not always better.
+ * Patch size should usually be 3. Higher values are slower and not always better.
  *
  * Research size should be at least 3. Higher values are usually better, but 
  * slower and offer diminishing returns.
@@ -96,36 +89,19 @@ vec4 hook()
  * It is usually preferable to denoise chroma and luma differently, so the user 
  * variables for luma and chroma are split.
  *
- * Suggested settings (assume defaults for unspecified parameters):
- * 	- Film (especially black and white):
- * 		- Disable chroma by removing the HOOK CHROMA lines above
- * 	- HQ (slow):
- * 		- LUMA=P=4:R=9:PS=6:WD=2:RI=3
- * 		- CHROMA=PS=3
- * 	- LQ (fast):
- * 		- LUMA=P=1
- * 		- CHROMA=P=1
- * 	- Sharpen+Denoise:
- * 		- LUMA=S=9:AS=1
- * 	- HQ Sharpen+Denoise:
- * 		- LUMA=S=15:P=4:R=9:AS=1:ASP=1.75:WD=2:PS=6:RI=3
- * 	- Sharpen only:
- * 		- LUMA=S=9:AS=2
- * 		- CHROMA=S=9:AS=2
- *
- * It is recommended to make multiple copies of this shader with settings 
- * tweaked for different types of content, and then dispatch the appropriate 
- * one via keybinds in input.conf, e.g.:
+ * The recommended usage of this shader and its variants is to add them to 
+ * input.conf and then dispatch the appropriate shader via a keybind during 
+ * media playback. Here is an example input.conf entry:
  *
  * F4 no-osd change-list glsl-shaders toggle "~~/shaders/nlmeans_luma.glsl"; show-text "Non-local means (LUMA only)"
  *
- * The shader can also be enabled by default in mpv.conf:
+ * These shaders can also be enabled by default in mpv.conf, for example:
  *
  * glsl-shaders='~~/shaders/nlmeans.glsl'
  *
- * Both of the examples above assume the shader(s) being located in a 
- * subdirectory named "shaders" inside of mpv's config directory. Refer to the 
- * mpv documentation for more details.
+ * Both of the examples above assume the shaders are located in a subdirectory 
+ * named "shaders" within mpv's config directory. Refer to the mpv 
+ * documentation for more details.
  */
 #ifdef LUMA_raw
 #define S 1.25
@@ -260,11 +236,9 @@ vec4 hook()
  * Limitations:
  * 	- Slower, since each frame is researched
  * 	- Disables textureGather optimizations
- * 	- Requires gpu-next and nlmeans_next.glsl
+ * 	- Requires gpu-next and nlmeans_temporal.glsl
  * 	- Luma-only (this is a bug)
- * 	- Max 3840x3840 resolution, limit can be increased at the bottom of the shader
- * 	- Max 10 frames, also hardcoded
- * 	- Might be buggy
+ * 	- Buggy
  *
  * Gather samples across multiple frames. May cause motion blur and may 
  * struggle more with noise that persists across multiple frames, but can work 
@@ -273,7 +247,7 @@ vec4 hook()
  * T: number of frames used
  */
 #ifdef LUMA_raw
-#define T 0
+#define T 3
 #else
 #define T 0
 #endif
@@ -281,7 +255,7 @@ vec4 hook()
 /* Extremes preserve
  *
  * Reduces denoising around very bright/dark areas. The downscaling factor of 
- * EP_LUMA (located near the top of this shader) controls the area sampled for 
+ * EP (located near the top of this shader) controls the area sampled for 
  * luminance (higher numbers consider more area).
  *
  * EP: 1 to enable, 0 to disable
@@ -302,8 +276,8 @@ vec4 hook()
  * optimizations.
  *
  * The downscale factor can be modified in the WIDTH/HEIGHT directives for the 
- * DOWNSCALED (for CHROMA, RGB) and DOWNSCALED_LUMA (LUMA only) textures near 
- * the top of this shader, higher numbers increase blur.
+ * RF texture (for CHROMA, RGB) and RF_LUMA (LUMA only) textures near the top 
+ * of this shader, higher numbers increase blur.
  *
  * Any notation of RF as a positive number should be assumed to be referring to 
  * the downscaling factor, e.g., RF=3 means RF is enabled and the downscaling 
@@ -349,9 +323,9 @@ vec4 hook()
 #define EPSILON 0.00000000001
 
 #if RF && defined(LUMA_raw)
-#define TEX DOWNSCALED_LUMA_tex
+#define TEX RF_LUMA_tex
 #elif RF
-#define TEX DOWNSCALED_tex
+#define TEX RF_tex
 #else
 #define TEX HOOKED_tex
 #endif
@@ -453,16 +427,9 @@ vec4 load(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0:  return TEX(HOOKED_pos + HOOKED_pt * vec2(off));
-	case 1:  return imageLoad(PREV1,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1))));
-	case 2:  return imageLoad(PREV2,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2))));
-	case 3:  return imageLoad(PREV3,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV3))));
-	case 4:  return imageLoad(PREV4,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV4))));
-	case 5:  return imageLoad(PREV5,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV5))));
-	case 6:  return imageLoad(PREV6,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV6))));
-	case 7:  return imageLoad(PREV7,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV7))));
-	case 8:  return imageLoad(PREV8,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV8))));
-	case 9:  return imageLoad(PREV9,  ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV9))));
-	case 10: return imageLoad(PREV10, ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV10))));
+	case 1: return imageLoad(PREV1, ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1))));
+	case 2: return imageLoad(PREV2, ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2))));
+	case 3: return imageLoad(PREV3, ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV3))));
 	}
 }
 #else
@@ -583,16 +550,9 @@ vec4 hook()
 	}
 
 #if T
-	imageStore(PREV10, ivec2(round(HOOKED_pos*imageSize(PREV10))), load(vec3(0,0,9)));
-	imageStore(PREV9,  ivec2(round(HOOKED_pos*imageSize(PREV9))),  load(vec3(0,0,8)));
-	imageStore(PREV8,  ivec2(round(HOOKED_pos*imageSize(PREV8))),  load(vec3(0,0,7)));
-	imageStore(PREV7,  ivec2(round(HOOKED_pos*imageSize(PREV7))),  load(vec3(0,0,6)));
-	imageStore(PREV6,  ivec2(round(HOOKED_pos*imageSize(PREV6))),  load(vec3(0,0,5)));
-	imageStore(PREV5,  ivec2(round(HOOKED_pos*imageSize(PREV5))),  load(vec3(0,0,4)));
-	imageStore(PREV4,  ivec2(round(HOOKED_pos*imageSize(PREV4))),  load(vec3(0,0,3)));
-	imageStore(PREV3,  ivec2(round(HOOKED_pos*imageSize(PREV3))),  load(vec3(0,0,2)));
-	imageStore(PREV2,  ivec2(round(HOOKED_pos*imageSize(PREV2))),  load(vec3(0,0,1)));
-	imageStore(PREV1,  ivec2(round(HOOKED_pos*imageSize(PREV1))),  load(vec3(0)));
+	imageStore(PREV3, ivec2(round(HOOKED_pos*imageSize(PREV3))), load(vec3(0,0,2)));
+	imageStore(PREV2, ivec2(round(HOOKED_pos*imageSize(PREV2))), load(vec3(0,0,1)));
+	imageStore(PREV1, ivec2(round(HOOKED_pos*imageSize(PREV1))), load(vec3(0,0,0)));
 #endif
 
 	vec4 avg_weight = total_weight * r_scale;
@@ -637,7 +597,7 @@ vec4 hook()
 #endif
 
 #if EP // extremes preserve
-	float luminance = EP_LUMA_texOff(0).x;
+	float luminance = EP_texOff(0).x;
 	// epsilon is needed since pow(0,0) is undefined
 	float ep_weight = pow(max(min(1-luminance, luminance)*2, EPSILON), (luminance < 0.5 ? DP : BP));
 	result = mix(HOOKED_texOff(0), result, ep_weight);
@@ -663,41 +623,6 @@ vec4 hook()
 //!STORAGE
 
 //!TEXTURE PREV3
-//!SIZE 3840 3840
-//!FORMAT r32f
-//!STORAGE
-
-//!TEXTURE PREV4
-//!SIZE 3840 3840
-//!FORMAT r32f
-//!STORAGE
-
-//!TEXTURE PREV5
-//!SIZE 3840 3840
-//!FORMAT r32f
-//!STORAGE
-
-//!TEXTURE PREV6
-//!SIZE 3840 3840
-//!FORMAT r32f
-//!STORAGE
-
-//!TEXTURE PREV7
-//!SIZE 3840 3840
-//!FORMAT r32f
-//!STORAGE
-
-//!TEXTURE PREV8
-//!SIZE 3840 3840
-//!FORMAT r32f
-//!STORAGE
-
-//!TEXTURE PREV9
-//!SIZE 3840 3840
-//!FORMAT r32f
-//!STORAGE
-
-//!TEXTURE PREV10
 //!SIZE 3840 3840
 //!FORMAT r32f
 //!STORAGE

@@ -101,7 +101,7 @@ vec4 hook()
  * documentation for more details.
  */
 #ifdef LUMA_raw
-#define S 1.25
+#define S 9
 #define P 3
 #define R 5
 #else
@@ -123,7 +123,7 @@ vec4 hook()
  * ASP: Weight power, higher numbers use more of the sharp image
  */
 #ifdef LUMA_raw
-#define AS 0
+#define AS 1
 #define ASF 1.0
 #define ASP 4.0
 #else

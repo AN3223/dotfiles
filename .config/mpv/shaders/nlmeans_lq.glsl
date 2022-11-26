@@ -102,11 +102,11 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define S 1.25
-#define P 3
+#define P 1
 #define R 5
 #else
 #define S 1.50
-#define P 3
+#define P 1
 #define R 5
 #endif
 
@@ -281,7 +281,7 @@ vec4 hook()
  * factor is set to 3.
  */
 #ifdef LUMA_raw
-#define RF 0
+#define RF 1
 #else
 #define RF 1
 #endif
