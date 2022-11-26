@@ -52,7 +52,7 @@ vec4 hook()
 //!HOOK RGB
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
-//!SAVE EP
+//!SAVE EP_LUMA
 //!WIDTH HOOKED.w 3 /
 //!HEIGHT HOOKED.h 3 /
 
@@ -67,7 +67,7 @@ vec4 hook()
 //!BIND HOOKED
 //!BIND RF
 //!BIND RF_LUMA
-//!BIND EP
+//!BIND EP_LUMA
 //!BIND PREV1
 //!BIND PREV2
 //!BIND PREV3
@@ -265,6 +265,10 @@ vec4 hook()
 #define EP 1
 #define BP 0.75
 #define DP 0.25
+#else
+#define EP 0
+#define BP 0.0
+#define DP 0.0
 #endif
 
 /* Robust filtering
@@ -624,7 +628,7 @@ vec4 hook()
 #endif
 
 #if EP // extremes preserve
-	float luminance = EP_texOff(0).x;
+	float luminance = EP_LUMA_texOff(0).x;
 	// epsilon is needed since pow(0,0) is undefined
 	float ep_weight = pow(max(min(1-luminance, luminance)*2, EPSILON), (luminance < 0.5 ? DP : BP));
 	result = mix(HOOKED_texOff(0), result, ep_weight);
