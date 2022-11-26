@@ -8,8 +8,15 @@ BEGIN {
 			T = var_val[2]
 		else if (var_val[1] == "T_RES")
 			T_RES = var_val[2]
+		else if (opts[i] == "CHROMA_DISABLE")
+			CHROMA_DISABLE = 1
+		else if (opts[i] == "LUMA_DISABLE")
+			LUMA_DISABLE = 1
 	}
 }
+
+/^\/\/!HOOK LUMA$/   && LUMA_DISABLE   { next }
+/^\/\/!HOOK CHROMA$/ && CHROMA_DISABLE { next }
 
 /^\/\/!SAVE/ { texture = $2 }
 
