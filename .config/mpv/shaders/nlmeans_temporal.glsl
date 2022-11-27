@@ -516,12 +516,11 @@ vec4 patch_comparison(vec3 r, vec3 r2)
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
 	const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
-	return vec4(dot(pow(gather(r2.xy) - gather(r.xy), vec4(2)), vec4(1)), 0, 0 ,0);
+	return vec4(dot(pow(gather(r2.xy) - gather(r.xy), vec4(2)), vec4(1)), 0, 0 ,0) * p_scale;
 }
 #elif defined(LUMA_gather) && PS == 6 && RF == 0 && (RI == 0 || RI == 1 || RI == 3) && (RFI == 0 || RFI == 1)
 #define gather(off) LUMA_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
 // tiled even square patch comparison using textureGather
-// XXX the output is different from the non-gather function
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
 	vec2 tile;
@@ -561,7 +560,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 		}
 	}
 
-	return pdiff_sq;
+	return pdiff_sq * p_scale;
 }
 #else
 #define patch_comparison_gather patch_comparison
