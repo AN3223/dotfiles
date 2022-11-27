@@ -507,10 +507,10 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 	const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
 	return vec4(dot(pow(gather(r2.xy) - gather(r.xy), vec4(2)), vec4(1)), 0, 0 ,0);
 }
-#elif defined(LUMA_gather) && PS == 6 && RF == 0 && (RI == 0 || RI == 1 || RI == 3) && (RFI == 0 || RFI == 1) && PST == 0
+#elif defined(LUMA_gather) && PS == 6 && RF == 0 && (RI == 0 || RI == 1 || RI == 3) && (RFI == 0 || RFI == 1)
 #define gather(off) LUMA_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
 // tiled even square patch comparison using textureGather
-// XXX implement intra-patch spatial kernel
+// XXX the output is different from the non-gather function
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
 	vec2 tile;
@@ -534,7 +534,18 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 				for (float i = 45; i < rfi; i+=90)
 					transformer = transformer.wzxy;
 #endif
-				pdiff_sq.x += dot(pow(stationary - transformer, vec4(2)), vec4(1));
+
+				vec4 diff_sq = pow(stationary - transformer, vec4(2));
+#if PST && P >= PST // XXX untested
+				vec4 pdist = vec4(
+					exp(-pow(length((tile+vec2(0,1))*PSD)*PSS, 2)),
+					exp(-pow(length((tile+vec2(1,1))*PSD)*PSS, 2)),
+					exp(-pow(length((tile+vec2(1,0))*PSD)*PSS, 2)),
+					exp(-pow(length((tile+vec2(0,0))*PSD)*PSS, 2))
+				);
+				diff_sq = pow(max(diff_sq, EPSILON), pdist);
+#endif
+				pdiff_sq.x += dot(diff_sq, vec4(1));
 			}
 		}
 	}
