@@ -2,7 +2,7 @@
 T=3
 T_RES=3840
 
-all: nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_anime.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_sharpen_only.glsl nlmeans_temporal.glsl
+all: nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_anime.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_anime_sharpen_denoise.glsl nlmeans_sharpen_only.glsl nlmeans_temporal.glsl
 
 nlmeans_luma.glsl: nlmeans.glsl
 	env CHROMA=CHROMA_DISABLE ./nlmeans_cfg < nlmeans.glsl > nlmeans_luma.glsl
@@ -19,8 +19,14 @@ nlmeans_lq.glsl: nlmeans.glsl
 nlmeans_sharpen_denoise.glsl: nlmeans.glsl
 	env LUMA=S=9:AS=1 ./nlmeans_cfg < nlmeans.glsl > nlmeans_sharpen_denoise.glsl
 
+nlmeans_anime_sharpen_denoise.glsl: nlmeans.glsl
+	env LUMA=S=7.5:AS=1:WD=2:SS=0.0:EP=0 CHROMA=S=2.5:SS=0.0 ./nlmeans_cfg < nlmeans.glsl > nlmeans_anime_sharpen_denoise.glsl
+
 nlmeans_sharpen_only.glsl: nlmeans.glsl
 	env LUMA=S=9:AS=2 CHROMA=S=9:AS=2 ./nlmeans_cfg < nlmeans.glsl > nlmeans_sharpen_only.glsl
+
+nlmeans_anime_sharpen_only.glsl: nlmeans.glsl
+	env LUMA=S=7.5:AS=2:WD=2:SS=0.0:EP=0 CHROMA=S=2.5:AS=2:SS=0.0 ./nlmeans_cfg < nlmeans.glsl > nlmeans_anime_sharpen_only.glsl
 
 nlmeans_temporal.glsl: nlmeans.glsl
 	env LUMA=T=$(T):T_RES=$(T_RES) ./nlmeans_cfg < nlmeans.glsl > nlmeans_temporal.glsl
