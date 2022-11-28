@@ -76,8 +76,8 @@ vec4 hook()
 /* User variables
  *
  * S = denoising factor
- * P = patch size (odd number)
- * R = research size (odd number)
+ * P = patch size
+ * R = research size
  *
  * The denoising factor controls the level of blur, higher is blurrier.
  *
@@ -333,8 +333,17 @@ vec4 hook()
 
 #define EPSILON 0.00000000001
 
+#if PS != 6
+const float hp = int(P/2) - 0.5*(1-(P%2));
+#else
 const int hp = P/2;
+#endif
+
+#if RS != 6
+const float hr = int(R/2) - 0.5*(1-(R%2));
+#else
 const int hr = R/2;
+#endif
 
 // search shapes and their corresponding areas
 #define S_1X1(z,hz) for (z = vec3(0); z.x <= 0; z.x++)
@@ -379,9 +388,6 @@ const int r_area = S_LINE_A(hr,R)*T1;
 #elif RS == 1
 #define FOR_RESEARCH(r) FOR_FRAME S_HORIZONTAL(r,hr)
 const int r_area = S_LINE_A(hr,R)*T1;
-#elif RS == 0 && R == 2 // interpolated 2x2
-#define FOR_RESEARCH(r) FOR_FRAME S_SQUARE(r,0.5)
-const int r_area = 4*T1;
 #elif RS == 0
 #define FOR_RESEARCH(r) FOR_FRAME S_SQUARE(r,hr)
 const int r_area = S_SQUARE_A(hr,R)*T1;
@@ -389,11 +395,13 @@ const int r_area = S_SQUARE_A(hr,R)*T1;
 
 #define RI1 (RI+1)
 #define RFI1 (RFI+1)
+
 #if RI
 #define FOR_ROTATION for (float ri = 0; ri < 360; ri+=360.0/RI1)
 #else
 #define FOR_ROTATION
 #endif
+
 #if RFI
 #define FOR_REFLECTION for (float rfi = 45; rfi < 225; rfi+=180.0/RFI1)
 #else
@@ -422,10 +430,6 @@ const int p_area = S_LINE_A(hp,P)*RI1*RFI1;
 #elif PS == 1
 #define FOR_PATCH(p) S_HORIZONTAL(p,hp) FOR_ROTATION FOR_REFLECTION
 const int p_area = S_LINE_A(hp,P)*RI1*RFI1;
-#elif PS == 0 && P == 2 // interpolated 2x2
-// XXX remove and replace with a different shape
-#define FOR_PATCH(p) S_SQUARE(p,0.5) FOR_ROTATION FOR_REFLECTION
-const int p_area = 4*RI1*RFI1;
 #elif PS == 0
 #define FOR_PATCH(p) S_SQUARE(p,hp) FOR_ROTATION FOR_REFLECTION
 const int p_area = S_SQUARE_A(hp,P)*RI1*RFI1;
