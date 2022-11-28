@@ -539,7 +539,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 #endif
 
 				vec4 diff_sq = pow(stationary - transformer, vec4(2));
-#if PST && P >= PST // XXX untested
+#if PST && P >= PST
 				vec4 pdist = vec4(
 					exp(-pow(length((tile+vec2(0,1))*PSD)*PSS, 2)),
 					exp(-pow(length((tile+vec2(1,1))*PSD)*PSS, 2)),
