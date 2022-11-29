@@ -64,13 +64,13 @@ T > 0 && /^\/\/!DESC Non-local means$/ {
 
 T > 0 && /\/\/cfg_T_load/ {
 	for (i = 1; i <= T; i++)
-		printf("\tcase %d: return imageLoad(PREV%d, ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV%d))));\n", i, i, i)
+		printf("\tcase %d: return imageLoad(PREV%d, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV%d)));\n", i, i, i)
 	next
 }
 
 T > 0 && /\/\/cfg_T_store/ {
 	for (i = T; i > 0; i--)
-		printf("\timageStore(PREV%d, ivec2(round(HOOKED_pos*imageSize(PREV%d))), load2(vec3(0,0,%d)));\n", i, i, i-1)
+		printf("\timageStore(PREV%d, ivec2(HOOKED_pos*imageSize(PREV%d)), load2(vec3(0,0,%d)));\n", i, i, i-1)
 	next
 }
 
