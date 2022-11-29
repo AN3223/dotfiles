@@ -101,6 +101,9 @@ vec4 hook()
 //!BIND RF
 //!BIND RF_LUMA
 //!BIND EP_LUMA
+//!BIND PREV1
+//!BIND PREV2
+//!BIND PREV3
 //!DESC Non-local means
 
 /* User variables
@@ -121,13 +124,13 @@ vec4 hook()
  * slower and offer diminishing returns.
  */
 #ifdef LUMA_raw
-#define S 5
-#define P 1
-#define R 3
+#define S 9
+#define P 3
+#define R 5
 #else
 #define S 1.50
-#define P 1
-#define R 3
+#define P 3
+#define R 5
 #endif
 
 /* Adaptive sharpening
@@ -143,7 +146,7 @@ vec4 hook()
  * ASP: Weight power, higher numbers use more of the sharp image
  */
 #ifdef LUMA_raw
-#define AS 0
+#define AS 1
 #define ASF 1.0
 #define ASP 4.0
 #else
@@ -274,7 +277,7 @@ vec4 hook()
  * T: number of frames used
  */
 #ifdef LUMA_raw
-#define T 0
+#define T 3
 #else
 #define T 0
 #endif
@@ -315,7 +318,7 @@ vec4 hook()
  * factor is set to 3.
  */
 #ifdef LUMA_raw
-#define RF 1
+#define RF 0
 #else
 #define RF 1
 #endif
@@ -474,14 +477,18 @@ vec4 load(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0: return load_(off);
-	//cfg_T_load
+	case 1: return imageLoad(PREV1, ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1))));
+	case 2: return imageLoad(PREV2, ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2))));
+	case 3: return imageLoad(PREV3, ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV3))));
 	}
 }
 vec4 load2(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0: return load2_(off);
-	//cfg_T_load
+	case 1: return imageLoad(PREV1, ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1))));
+	case 2: return imageLoad(PREV2, ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2))));
+	case 3: return imageLoad(PREV3, ivec2(round((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV3))));
 	}
 }
 #else
@@ -672,7 +679,9 @@ vec4 hook()
 	}
 
 #if T
-	//cfg_T_store
+	imageStore(PREV3, ivec2(round(HOOKED_pos*imageSize(PREV3))), load2(vec3(0,0,2)));
+	imageStore(PREV2, ivec2(round(HOOKED_pos*imageSize(PREV2))), load2(vec3(0,0,1)));
+	imageStore(PREV1, ivec2(round(HOOKED_pos*imageSize(PREV1))), load2(vec3(0,0,0)));
 #endif
 
 	vec4 avg_weight = total_weight * r_scale;
@@ -731,4 +740,19 @@ vec4 hook()
 
 	return mix(poi, result, BF);
 }
+
+//!TEXTURE PREV1
+//!SIZE 3840 3840
+//!FORMAT r32f
+//!STORAGE
+
+//!TEXTURE PREV2
+//!SIZE 3840 3840
+//!FORMAT r32f
+//!STORAGE
+
+//!TEXTURE PREV3
+//!SIZE 3840 3840
+//!FORMAT r32f
+//!STORAGE
 

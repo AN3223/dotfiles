@@ -121,11 +121,11 @@ vec4 hook()
  * slower and offer diminishing returns.
  */
 #ifdef LUMA_raw
-#define S 1.25
+#define S 3
 #define P 4
 #define R 9
 #else
-#define S 1.50
+#define S 3
 #define P 3
 #define R 5
 #endif
@@ -171,7 +171,7 @@ vec4 hook()
 #define WDT 0.875
 #define WDP 6.0
 #else
-#define WD 1
+#define WD 2
 #define WDT 0.875
 #define WDP 6.0
 #endif

@@ -121,13 +121,13 @@ vec4 hook()
  * slower and offer diminishing returns.
  */
 #ifdef LUMA_raw
-#define S 5
-#define P 1
-#define R 3
+#define S 7.5
+#define P 4
+#define R 9
 #else
-#define S 1.50
-#define P 1
-#define R 3
+#define S 2.5
+#define P 3
+#define R 5
 #endif
 
 /* Adaptive sharpening
@@ -167,11 +167,11 @@ vec4 hook()
  * WDP (WD=1): Higher numbers reduce the threshold more for small sample sizes
  */
 #ifdef LUMA_raw
-#define WD 1
+#define WD 2
 #define WDT 0.875
 #define WDP 6.0
 #else
-#define WD 1
+#define WD 2
 #define WDT 0.875
 #define WDP 6.0
 #endif
@@ -195,13 +195,13 @@ vec4 hook()
  * PSD: intra-patch spatial distortion (X, Y)
  */
 #ifdef LUMA_raw
-#define SS 0.25
+#define SS 0.0
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
 #else
-#define SS 0.25
+#define SS 0.0
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
@@ -229,10 +229,10 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define RS 3
-#define PS 4
+#define PS 6
 #else
 #define RS 3
-#define PS 4
+#define PS 3
 #endif
 
 /* Rotational/reflectional invariance
@@ -252,7 +252,7 @@ vec4 hook()
  * RFI: Reflectional invariance
  */
 #ifdef LUMA_raw
-#define RI 0
+#define RI 3
 #define RFI 0
 #else
 #define RI 0
@@ -290,7 +290,7 @@ vec4 hook()
  * BP: EP strength on bright patches, 0 to fully denoise
  */
 #ifdef LUMA_raw
-#define EP 1
+#define EP 0
 #define BP 0.75
 #define DP 0.25
 #else
@@ -315,7 +315,7 @@ vec4 hook()
  * factor is set to 3.
  */
 #ifdef LUMA_raw
-#define RF 1
+#define RF 0
 #else
 #define RF 1
 #endif

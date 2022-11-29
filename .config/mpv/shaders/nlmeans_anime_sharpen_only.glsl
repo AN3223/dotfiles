@@ -19,6 +19,39 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+/* The recommended usage of this shader and its variants is to add them to 
+ * input.conf and then dispatch the appropriate shader via a keybind during 
+ * media playback. Here is an example input.conf entry:
+ *
+ * F4 no-osd change-list glsl-shaders toggle "~~/shaders/nlmeans_luma.glsl"; show-text "Non-local means (LUMA only)"
+ *
+ * These shaders can also be enabled by default in mpv.conf, for example:
+ *
+ * glsl-shaders='~~/shaders/nlmeans.glsl'
+ *
+ * Both of the examples above assume the shaders are located in a subdirectory 
+ * named "shaders" within mpv's config directory. Refer to the mpv 
+ * documentation for more details.
+ *
+ * This shader is highly configurable via user variables below. Although the 
+ * default settings should offer good quality at a reasonable speed, you are 
+ * encouraged to tweak them to your preferences. Be mindful that different 
+ * settings may have different quality and/or speed characteristics.
+ *
+ * Denoising is most useful for noisy content. If there is no perceptible 
+ * noise, you probably won't see a positive difference.
+ *
+ * Highly noisy content requires a high denoising factor, which will incur a 
+ * high loss of detail. The default settings are generally tuned for low noise 
+ * and high detail preservation.
+ *
+ * The denoiser will not work properly if the content has been upscaled 
+ * beforehand, whether it was done by you or the content creator.
+ *
+ * You will probably get better speeds with --vo=gpu-next if available, 
+ * different --gpu-api will likely vary in performance as well.
+ */
+
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
@@ -72,9 +105,13 @@ vec4 hook()
 
 /* User variables
  *
- * S = denoising factor
- * P = patch size (odd number)
- * R = research size (odd number)
+ * It is usually preferable to denoise chroma and luma differently, so the user 
+ * variables for luma and chroma are split.
+ */
+
+/* S = denoising factor
+ * P = patch size
+ * R = research size
  *
  * The denoising factor controls the level of blur, higher is blurrier.
  *
@@ -82,23 +119,6 @@ vec4 hook()
  *
  * Research size should be at least 3. Higher values are usually better, but 
  * slower and offer diminishing returns.
- *
- * It is usually preferable to denoise chroma and luma differently, so the user 
- * variables for luma and chroma are split.
- *
- * The recommended usage of this shader and its variants is to add them to 
- * input.conf and then dispatch the appropriate shader via a keybind during 
- * media playback. Here is an example input.conf entry:
- *
- * F4 no-osd change-list glsl-shaders toggle "~~/shaders/nlmeans_luma.glsl"; show-text "Non-local means (LUMA only)"
- *
- * These shaders can also be enabled by default in mpv.conf, for example:
- *
- * glsl-shaders='~~/shaders/nlmeans.glsl'
- *
- * Both of the examples above assume the shaders are located in a subdirectory 
- * named "shaders" within mpv's config directory. Refer to the mpv 
- * documentation for more details.
  */
 #ifdef LUMA_raw
 #define S 7.5
@@ -115,8 +135,8 @@ vec4 hook()
  * Uses the blur incurred by denoising plus the weight map to perform an 
  * unsharp mask that gets applied most strongly to edges.
  *
- * Increasing sharpness will increase noise, so S should usually be increased 
- * to compensate.
+ * Sharpening will amplify noise, so the denoising factor (S) should usually be 
+ * increased to compensate.
  *
  * AS: 2 for sharpening, 1 for sharpening+denoising, 0 to disable
  * ASF: Sharpening factor, higher numbers make a sharper underlying image
@@ -134,13 +154,14 @@ vec4 hook()
 
 /* Weight discard
  *
- * Discard weights that fall below a threshold based on the average weight. 
- * This causes areas with less noise to receive less blur.
+ * Discard weights that fall below a fraction of the average weight. This culls 
+ * the most dissimilar samples from the blur, yielding a much more pleasant 
+ * result, especially around edges.
  * 
  * WD:
- * 	- 2: true average, very good quality, but slower and uses more memory
- * 	- 1: moving cumulative average, inaccurate, tends to blur directionally
- * 	- 0: disable
+ * 	- 2: True average. Very good quality, but slower and uses more memory.
+ * 	- 1: Moving cumulative average. Inaccurate, tends to blur directionally.
+ * 	- 0: Disable
  *
  * WDT: Threshold coefficient, higher numbers discard more
  * WDP (WD=1): Higher numbers reduce the threshold more for small sample sizes
@@ -150,7 +171,7 @@ vec4 hook()
 #define WDT 0.875
 #define WDP 6.0
 #else
-#define WD 1
+#define WD 2
 #define WDT 0.875
 #define WDP 6.0
 #endif
@@ -164,8 +185,8 @@ vec4 hook()
  * closer/further, for instance SD=(1,1,0.5) would make the temporal axis 
  * appear closer and increase blur between frames.
  *
- * The intra-patch variants are experimental. They are intended to make large 
- * patch sizes more useful. Impacts speed.
+ * The intra-patch variants do not yet have well-understood effects. They are 
+ * intended to make large patch sizes more useful. Likely significantly slower.
  *
  * SS: spatial denoising factor
  * SD: spatial distortion (X, Y, time)
@@ -189,12 +210,14 @@ vec4 hook()
 
 /* Search shape
  *
- * Useful for making searches with areas between 1x1, 3x3, 5x5, etc. for
- * fine-grain control. Might have other effects too, such as directional blur 
- * for asymmetrical shapes. Each shape reduces search area in comparison to 
- * square.
+ * Determines the shape of patches and research zones. Different shapes have 
+ * different speed and quality characteristics. Every shape is smaller than 
+ * square, with the exception of square itself.
  *
  * PS applies applies to patches, RS applies to research zones.
+ *
+ * For PS it is highly recommended to stick to textureGather optimized shapes, 
+ * these will run much faster on GPUs that support textureGather.
  *
  * 0: square (symmetrical)
  * 1: horizontal line
@@ -202,7 +225,7 @@ vec4 hook()
  * 3: diamond (symmetrical)
  * 4: triangle (pointing upward, textureGather optimized at P=3)
  * 5: truncated triangle (last row halved)
- * 6: even sized square (textureGather optimized at any size)
+ * 6: even sized square (textureGather optimized at any P size)
  */
 #ifdef LUMA_raw
 #define RS 3
@@ -223,7 +246,7 @@ vec4 hook()
  *
  * The textureGather optimization is only available with:
  * - PS=4:RI=0
- * - PS=6:RI=[013]:RFI=[01]
+ * - PS=6:RI={0,1,3}:RFI={0,1}
  *
  * RI: Rotational invariance
  * RFI: Reflectional invariance
@@ -238,15 +261,15 @@ vec4 hook()
 
 /* Temporal denoising
  *
- * Limitations:
- * 	- Slower, since each frame is researched
+ * Caveats:
+ * 	- Slower, each frame needs to be researched
  * 	- Requires vo=gpu-next and nlmeans_temporal.glsl
  * 	- Luma-only (this is a bug)
  * 	- Buggy
  *
  * Gather samples across multiple frames. May cause motion blur and may 
- * struggle more with noise that persists across multiple frames, but can work 
- * very well on high quality video.
+ * struggle more with noise that persists across multiple frames (compression 
+ * noise, repeating frames), but can work very well on high quality video.
  *
  * T: number of frames used
  */
@@ -280,7 +303,7 @@ vec4 hook()
  *
  * Compares the pixel of interest against downscaled pixels.
  *
- * This will virtually always improves quality, but will disable textureGather 
+ * This will virtually always improve quality, but will disable textureGather 
  * optimizations.
  *
  * The downscale factor can be modified in the WIDTH/HEIGHT directives for the 
@@ -300,9 +323,9 @@ vec4 hook()
 /* Estimator
  *
  * 0: means
- * 1: Euclidean medians (extremely slow, best for heavy noise)
+ * 1: Euclidean medians (extremely slow, may be good for heavy noise)
  * 2: weight map (not a denoiser, intended for development use)
- * 3: weighted median intensity (slow, good for heavy noise)
+ * 3: weighted median intensity (slow, may be good for heavy noise)
  * 4: maximum weight (not a denoiser, intended for development use)
  */
 #ifdef LUMA_raw
@@ -315,8 +338,8 @@ vec4 hook()
  *
  * The amount to blur the pixel of interest with the estimated pixel. For the 
  * means estimator this should always be 1.0, since it already blurs against 
- * the pixel of interest and the level of blur can be controlled with the S 
- * macro.
+ * the pixel of interest and the level of blur can be controlled with the 
+ * denoising factor (S).
  *
  * BF (1>=BF>=0): blur factor, 1 being the estimation, 0 being the raw input
  */
@@ -330,8 +353,17 @@ vec4 hook()
 
 #define EPSILON 0.00000000001
 
+#if PS == 6
 const int hp = P/2;
+#else
+const float hp = int(P/2) - 0.5*(1-(P%2));
+#endif
+
+#if RS == 6
 const int hr = R/2;
+#else
+const float hr = int(R/2) - 0.5*(1-(R%2));
+#endif
 
 // search shapes and their corresponding areas
 #define S_1X1(z,hz) for (z = vec3(0); z.x <= 0; z.x++)
@@ -376,9 +408,6 @@ const int r_area = S_LINE_A(hr,R)*T1;
 #elif RS == 1
 #define FOR_RESEARCH(r) FOR_FRAME S_HORIZONTAL(r,hr)
 const int r_area = S_LINE_A(hr,R)*T1;
-#elif RS == 0 && R == 2 // interpolated 2x2
-#define FOR_RESEARCH(r) FOR_FRAME S_SQUARE(r,0.5)
-const int r_area = 4*T1;
 #elif RS == 0
 #define FOR_RESEARCH(r) FOR_FRAME S_SQUARE(r,hr)
 const int r_area = S_SQUARE_A(hr,R)*T1;
@@ -386,11 +415,13 @@ const int r_area = S_SQUARE_A(hr,R)*T1;
 
 #define RI1 (RI+1)
 #define RFI1 (RFI+1)
+
 #if RI
 #define FOR_ROTATION for (float ri = 0; ri < 360; ri+=360.0/RI1)
 #else
 #define FOR_ROTATION
 #endif
+
 #if RFI
 #define FOR_REFLECTION for (float rfi = 45; rfi < 225; rfi+=180.0/RFI1)
 #else
@@ -419,10 +450,6 @@ const int p_area = S_LINE_A(hp,P)*RI1*RFI1;
 #elif PS == 1
 #define FOR_PATCH(p) S_HORIZONTAL(p,hp) FOR_ROTATION FOR_REFLECTION
 const int p_area = S_LINE_A(hp,P)*RI1*RFI1;
-#elif PS == 0 && P == 2 // interpolated 2x2
-// XXX remove and replace with a different shape
-#define FOR_PATCH(p) S_SQUARE(p,0.5) FOR_ROTATION FOR_REFLECTION
-const int p_area = 4*RI1*RFI1;
 #elif PS == 0
 #define FOR_PATCH(p) S_SQUARE(p,hp) FOR_ROTATION FOR_REFLECTION
 const int p_area = S_SQUARE_A(hp,P)*RI1*RFI1;
@@ -539,7 +566,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 #endif
 
 				vec4 diff_sq = pow(stationary - transformer, vec4(2));
-#if PST && P >= PST // XXX untested
+#if PST && P >= PST
 				vec4 pdist = vec4(
 					exp(-pow(length((tile+vec2(0,1))*PSD)*PSS, 2)),
 					exp(-pow(length((tile+vec2(1,1))*PSD)*PSS, 2)),
@@ -561,12 +588,13 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 
 vec4 hook()
 {
+	vec4 poi = load(vec3(0)); // pixel of interest
 	vec3 r = vec3(0);
 	vec3 p = vec3(0);
-	int r_index = 0;
 	vec4 total_weight = vec4(1);
-	vec4 sum = load(vec3(0));
+	vec4 sum = poi;
 	vec4 result = vec4(0);
+	int r_index = 0;
 
 #if WD == 2 || M == 3
 	vec4 all_weights[r_area];
@@ -601,6 +629,12 @@ vec4 hook()
 		no_weights += keeps;
 #endif
 
+		/* XXX Not 100% sure if load or load2 should be used here WRT RF. load2 is 
+		 * the old behavior.
+		 *
+		 * In my opinion load looks better, but this should be tested with the test 
+		 * script whenever that is finally cleaned up and fixed
+		 */
 		sum += load(r) * weight;
 		total_weight += weight;
 
@@ -645,7 +679,7 @@ vec4 hook()
 
 #if WD == 2 // true average
 	total_weight = vec4(1);
-	sum = load(vec3(0));
+	sum = poi;
 
 	for (int i = 0; i < r_area; i++) {
 		vec4 keeps = step(avg_weight*WDT, all_weights[i]);
@@ -656,7 +690,7 @@ vec4 hook()
 #endif
 
 #if M == 3 // weighted median intensity
-	const float hr_area = r_area/2;
+	const float hr_area = r_area/2.0;
 	vec4 is_median, gt, lt, gte, lte, neq;
 
 	for (int i = 0; i < r_area; i++) {
@@ -678,7 +712,7 @@ vec4 hook()
 #endif
 
 #if AS // adaptive sharpening
-	vec4 sharpened = load(vec3(0)) + (load(vec3(0)) - result) * ASF;
+	vec4 sharpened = poi + (poi - result) * ASF;
 	vec4 sharpening_power = pow(avg_weight, vec4(ASP));
 #endif
 
@@ -686,15 +720,15 @@ vec4 hook()
 	float luminance = EP_LUMA_texOff(0).x;
 	// epsilon is needed since pow(0,0) is undefined
 	float ep_weight = pow(max(min(1-luminance, luminance)*2, EPSILON), (luminance < 0.5 ? DP : BP));
-	result = mix(load(vec3(0)), result, ep_weight);
+	result = mix(poi, result, ep_weight);
 #endif
 
 #if AS == 1 // sharpen+denoise
 	result = mix(sharpened, result, sharpening_power);
 #elif AS == 2 // sharpen only
-	result = mix(sharpened, load(vec3(0)), sharpening_power);
+	result = mix(sharpened, poi, sharpening_power);
 #endif
 
-	return mix(load(vec3(0)), result, BF);
+	return mix(poi, result, BF);
 }
 
