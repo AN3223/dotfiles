@@ -277,7 +277,7 @@ vec4 hook()
  * T: number of frames used
  */
 #ifdef LUMA_raw
-#define T 3
+#define T 2
 #else
 #define T 0
 #endif

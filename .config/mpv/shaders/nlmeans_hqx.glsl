@@ -101,9 +101,6 @@ vec4 hook()
 //!BIND RF
 //!BIND RF_LUMA
 //!BIND EP_LUMA
-//!BIND PREV1
-//!BIND PREV2
-//!BIND PREV3
 //!DESC Non-local means
 
 /* User variables
@@ -124,13 +121,13 @@ vec4 hook()
  * slower and offer diminishing returns.
  */
 #ifdef LUMA_raw
-#define S 1.25
-#define P 3
-#define R 5
+#define S 3
+#define P 5
+#define R 19
 #else
-#define S 1.50
-#define P 3
-#define R 5
+#define S 3
+#define P 5
+#define R 19
 #endif
 
 /* Adaptive sharpening
@@ -170,11 +167,11 @@ vec4 hook()
  * WDP (WD=1): Higher numbers reduce the threshold more for small sample sizes
  */
 #ifdef LUMA_raw
-#define WD 1
+#define WD 2
 #define WDT 0.875
 #define WDP 6.0
 #else
-#define WD 1
+#define WD 2
 #define WDT 0.875
 #define WDP 6.0
 #endif
@@ -232,10 +229,10 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define RS 3
-#define PS 4
+#define PS 3
 #else
 #define RS 3
-#define PS 4
+#define PS 3
 #endif
 
 /* Rotational/reflectional invariance
@@ -255,10 +252,10 @@ vec4 hook()
  * RFI: Reflectional invariance
  */
 #ifdef LUMA_raw
-#define RI 0
+#define RI 3
 #define RFI 0
 #else
-#define RI 0
+#define RI 3
 #define RFI 0
 #endif
 
@@ -277,7 +274,7 @@ vec4 hook()
  * T: number of frames used
  */
 #ifdef LUMA_raw
-#define T 2
+#define T 0
 #else
 #define T 0
 #endif
@@ -293,7 +290,7 @@ vec4 hook()
  * BP: EP strength on bright patches, 0 to fully denoise
  */
 #ifdef LUMA_raw
-#define EP 1
+#define EP 0
 #define BP 0.75
 #define DP 0.25
 #else
@@ -318,7 +315,7 @@ vec4 hook()
  * factor is set to 3.
  */
 #ifdef LUMA_raw
-#define RF 0
+#define RF 1
 #else
 #define RF 1
 #endif
@@ -477,18 +474,14 @@ vec4 load(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0: return load_(off);
-	case 1: return imageLoad(PREV1, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1)));
-	case 2: return imageLoad(PREV2, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2)));
-	case 3: return imageLoad(PREV3, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV3)));
+	//cfg_T_load
 	}
 }
 vec4 load2(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0: return load2_(off);
-	case 1: return imageLoad(PREV1, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1)));
-	case 2: return imageLoad(PREV2, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2)));
-	case 3: return imageLoad(PREV3, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV3)));
+	//cfg_T_load
 	}
 }
 #else
@@ -679,9 +672,7 @@ vec4 hook()
 	}
 
 #if T
-	imageStore(PREV3, ivec2(HOOKED_pos*imageSize(PREV3)), load2(vec3(0,0,2)));
-	imageStore(PREV2, ivec2(HOOKED_pos*imageSize(PREV2)), load2(vec3(0,0,1)));
-	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), load2(vec3(0,0,0)));
+	//cfg_T_store
 #endif
 
 	vec4 avg_weight = total_weight * r_scale;
@@ -740,19 +731,4 @@ vec4 hook()
 
 	return mix(poi, result, BF);
 }
-
-//!TEXTURE PREV1
-//!SIZE 3840 3840
-//!FORMAT r32f
-//!STORAGE
-
-//!TEXTURE PREV2
-//!SIZE 3840 3840
-//!FORMAT r32f
-//!STORAGE
-
-//!TEXTURE PREV3
-//!SIZE 3840 3840
-//!FORMAT r32f
-//!STORAGE
 

@@ -4,21 +4,22 @@ ANIME_LUMA=S=7.5:WD=2:SS=0.0:EP=0
 ANIME=S=2.5:WD=2:SS=0.0
 HQ_LUMA=S=3:P=4:R=9:PS=6:WD=2:RI=3
 HQ=S=3:PS=3:WD=2
-#XXX TEMPORAL
+HQX_LUMA=P=5:R=19:PS=3:RF=1.25:EP=0:$(HQ_LUMA)
+HQX=P=5:R=19:RI=3:$(HQ)
+TEMPORAL_LUMA=T=2:T_FRAME=3:T_RES=3840
 
-T=3
-T_RES=3840
-
-all: nlmeans_anime.glsl nlmeans_temporal.glsl nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_anime_hq.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_anime_sharpen_denoise.glsl nlmeans_temporal_sharpen_denoise.glsl nlmeans_sharpen_only.glsl nlmeans_anime_sharpen_only.glsl nlmeans_temporal_sharpen_only.glsl
+all: nlmeans_anime.glsl nlmeans_temporal.glsl nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_hqx.glsl nlmeans_anime_hq.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_anime_sharpen_denoise.glsl nlmeans_temporal_sharpen_denoise.glsl nlmeans_sharpen_only.glsl nlmeans_anime_sharpen_only.glsl nlmeans_temporal_sharpen_only.glsl
 
 nlmeans_anime.glsl: nlmeans.glsl
 	env LUMA=$(ANIME_LUMA) CHROMA=$(ANIME) ./nlmeans_cfg < $? > $@
 nlmeans_temporal.glsl: nlmeans.glsl
-	env LUMA=T=$(T):T_RES=$(T_RES) ./nlmeans_cfg < $? > $@
+	env LUMA=$(TEMPORAL_LUMA) ./nlmeans_cfg < $? > $@
 nlmeans_luma.glsl: nlmeans.glsl
 	env CHROMA=CHROMA_DISABLE ./nlmeans_cfg < $? > $@
 nlmeans_hq.glsl: nlmeans.glsl
 	env LUMA=$(HQ_LUMA) CHROMA=$(HQ) ./nlmeans_cfg < $? > $@
+nlmeans_hqx.glsl: nlmeans.glsl
+	env LUMA=$(HQX_LUMA) CHROMA=$(HQX) ./nlmeans_cfg < $? > $@
 nlmeans_anime_hq.glsl: nlmeans.glsl
 	env LUMA=$(ANIME_LUMA):$(HQ_LUMA) CHROMA=$(ANIME):$(HQ) ./nlmeans_cfg < $? > $@
 nlmeans_lq.glsl: nlmeans.glsl
@@ -28,11 +29,11 @@ nlmeans_sharpen_denoise.glsl: nlmeans.glsl
 nlmeans_anime_sharpen_denoise.glsl: nlmeans.glsl
 	env LUMA=S=7.5:AS=1:$(ANIME_LUMA) CHROMA=$(ANIME) ./nlmeans_cfg < $? > $@
 nlmeans_temporal_sharpen_denoise.glsl: nlmeans.glsl
-	env LUMA=S=9:AS=1:T=$(T):T_RES=$(T_RES) ./nlmeans_cfg < $? > $@
+	env LUMA=S=9:AS=1:$(TEMPORAL_LUMA) ./nlmeans_cfg < $? > $@
 nlmeans_sharpen_only.glsl: nlmeans.glsl
 	env LUMA=S=9:AS=2 CHROMA=S=9:AS=2 ./nlmeans_cfg < $? > $@
 nlmeans_anime_sharpen_only.glsl: nlmeans.glsl
 	env LUMA=S=7.5:AS=2:$(ANIME_LUMA) CHROMA=AS=2:$(ANIME) ./nlmeans_cfg < $? > $@
 nlmeans_temporal_sharpen_only.glsl: nlmeans.glsl
-	env LUMA=S=9:AS=2:T=$(T):T_RES=$(T_RES) CHROMA=S=9:AS=2 ./nlmeans_cfg < $? > $@
+	env LUMA=S=9:AS=2:$(TEMPORAL_LUMA) CHROMA=S=9:AS=2 ./nlmeans_cfg < $? > $@
 
