@@ -327,7 +327,7 @@ vec4 hook()
  *
  * 0: means
  * 1: Euclidean medians (extremely slow, may be good for heavy noise)
- * 2: weight map (not a denoiser, intended for development use)
+ * 2: weight map (not a denoiser, maybe useful for generating image masks)
  * 3: weighted median intensity (slow, may be good for heavy noise)
  * 4: maximum weight (not a denoiser, intended for development use)
  */
