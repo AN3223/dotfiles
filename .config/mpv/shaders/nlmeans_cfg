@@ -4,8 +4,8 @@ BEGIN {
 	len = split(ENVIRON["LUMA"] ENVIRON["CHROMA"], opts, ":")
 	for (i = 1; i <= len; i++) {
 		split(opts[i], var_val, "=")
-		if (var_val[1] == "T_FRAME")
-			T_FRAME = var_val[2]
+		if (var_val[1] == "T_FRAME_LIMIT")
+			T_FRAME_LIMIT = var_val[2]
 		else if (var_val[1] == "T_RES")
 			T_RES = var_val[2]
 		else if (opts[i] == "CHROMA_DISABLE")
@@ -57,19 +57,19 @@ BEGIN {
 	}
 }
 
-T_FRAME > 0 && /^\/\/!DESC Non-local means$/ {
-	for (i = 1; i <= T_FRAME; i++)
+T_FRAME_LIMIT > 0 && /^\/\/!DESC Non-local means$/ {
+	for (i = 1; i <= T_FRAME_LIMIT; i++)
 		printf("//!BIND PREV%d\n", i)
 }
 
-T_FRAME > 0 && /\/\/cfg_T_load/ {
-	for (i = 1; i <= T_FRAME; i++)
+T_FRAME_LIMIT > 0 && /\/\/cfg_T_load/ {
+	for (i = 1; i <= T_FRAME_LIMIT; i++)
 		printf("\tcase %d: return imageLoad(PREV%d, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV%d)));\n", i, i, i)
 	next
 }
 
-T_FRAME > 0 && /\/\/cfg_T_store/ {
-	for (i = T_FRAME; i > 0; i--)
+T_FRAME_LIMIT > 0 && /\/\/cfg_T_store/ {
+	for (i = T_FRAME_LIMIT; i > 0; i--)
 		printf("\timageStore(PREV%d, ivec2(HOOKED_pos*imageSize(PREV%d)), load2(vec3(0,0,%d)));\n", i, i, i-1)
 	next
 }
@@ -77,7 +77,7 @@ T_FRAME > 0 && /\/\/cfg_T_store/ {
 { print $0 }
 
 END {
-	for (i = 1; i <= T_FRAME; i++)
+	for (i = 1; i <= T_FRAME_LIMIT; i++)
 		printf("//!TEXTURE PREV%d\n//!SIZE %d %d\n//!FORMAT r32f\n//!STORAGE\n\n", i, T_RES, T_RES)
 }
 
