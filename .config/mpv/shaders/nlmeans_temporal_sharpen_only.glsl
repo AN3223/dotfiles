@@ -320,7 +320,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define RF 0
 #else
-#define RF 1
+#define RF 0
 #endif
 
 /* Estimator

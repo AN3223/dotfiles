@@ -72,8 +72,8 @@ vec4 hook()
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
 //!SAVE RF_LUMA
-//!WIDTH HOOKED.w 1.25 /
-//!HEIGHT HOOKED.h 1.25 /
+//!WIDTH HOOKED.w 2.0 /
+//!HEIGHT HOOKED.h 2.0 /
 
 vec4 hook()
 {
@@ -229,7 +229,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define RS 3
-#define PS 4
+#define PS 3
 #else
 #define RS 3
 #define PS 4
@@ -315,7 +315,7 @@ vec4 hook()
  * factor is set to 3.
  */
 #ifdef LUMA_raw
-#define RF 0
+#define RF 1
 #else
 #define RF 1
 #endif

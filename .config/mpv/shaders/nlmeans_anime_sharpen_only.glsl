@@ -72,8 +72,8 @@ vec4 hook()
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
 //!SAVE RF_LUMA
-//!WIDTH HOOKED.w 1.25 /
-//!HEIGHT HOOKED.h 1.25 /
+//!WIDTH HOOKED.w 2.0 /
+//!HEIGHT HOOKED.h 2.0 /
 
 vec4 hook()
 {
@@ -121,11 +121,11 @@ vec4 hook()
  * slower and offer diminishing returns.
  */
 #ifdef LUMA_raw
-#define S 7.5
+#define S 9
 #define P 3
 #define R 5
 #else
-#define S 2.5
+#define S 9
 #define P 3
 #define R 5
 #endif
@@ -229,7 +229,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define RS 3
-#define PS 4
+#define PS 3
 #else
 #define RS 3
 #define PS 4
@@ -317,7 +317,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define RF 0
 #else
-#define RF 1
+#define RF 0
 #endif
 
 /* Estimator
