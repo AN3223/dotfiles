@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Profile description: Very experimental and buggy. Sharpen without denoising.
+// Profile description: Slow, but higher quality. Sharpen and denoise.
 
 /* The recommended usage of this shader and its variants is to add them to 
  * input.conf and then dispatch the appropriate shader via a keybind during 
@@ -103,9 +103,6 @@ vec4 hook()
 //!BIND RF
 //!BIND RF_LUMA
 //!BIND EP_LUMA
-//!BIND PREV1
-//!BIND PREV2
-//!BIND PREV3
 //!DESC Non-local means
 
 /* User variables
@@ -127,10 +124,10 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define S 9
-#define P 3
-#define R 5
+#define P 4
+#define R 9
 #else
-#define S 9
+#define S 3
 #define P 3
 #define R 5
 #endif
@@ -148,11 +145,11 @@ vec4 hook()
  * ASP: Weight power, higher numbers use more of the sharp image
  */
 #ifdef LUMA_raw
-#define AS 2
+#define AS 1
 #define ASF 1.0
-#define ASP 4.0
+#define ASP 1.25
 #else
-#define AS 2
+#define AS 0
 #define ASF 1.0
 #define ASP 4.0
 #endif
@@ -172,11 +169,11 @@ vec4 hook()
  * WDP (WD=1): Higher numbers reduce the threshold more for small sample sizes
  */
 #ifdef LUMA_raw
-#define WD 1
+#define WD 2
 #define WDT 0.875
 #define WDP 6.0
 #else
-#define WD 1
+#define WD 2
 #define WDT 0.875
 #define WDP 6.0
 #endif
@@ -234,10 +231,10 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define RS 3
-#define PS 4
+#define PS 6
 #else
 #define RS 3
-#define PS 4
+#define PS 3
 #endif
 
 /* Rotational/reflectional invariance
@@ -257,7 +254,7 @@ vec4 hook()
  * RFI: Reflectional invariance
  */
 #ifdef LUMA_raw
-#define RI 0
+#define RI 3
 #define RFI 0
 #else
 #define RI 0
@@ -279,7 +276,7 @@ vec4 hook()
  * T: number of frames used
  */
 #ifdef LUMA_raw
-#define T 2
+#define T 0
 #else
 #define T 0
 #endif
@@ -322,7 +319,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define RF 0
 #else
-#define RF 0
+#define RF 1
 #endif
 
 /* Estimator
@@ -511,18 +508,14 @@ vec4 load(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0: return load_(off);
-	case 1: return imageLoad(PREV1, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1)));
-	case 2: return imageLoad(PREV2, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2)));
-	case 3: return imageLoad(PREV3, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV3)));
+	//cfg_T_load
 	}
 }
 vec4 load2(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0: return load2_(off);
-	case 1: return imageLoad(PREV1, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1)));
-	case 2: return imageLoad(PREV2, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2)));
-	case 3: return imageLoad(PREV3, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV3)));
+	//cfg_T_load
 	}
 }
 #else
@@ -713,9 +706,7 @@ vec4 hook()
 	}
 
 #if T
-	imageStore(PREV3, ivec2(HOOKED_pos*imageSize(PREV3)), load2(vec3(0,0,2)));
-	imageStore(PREV2, ivec2(HOOKED_pos*imageSize(PREV2)), load2(vec3(0,0,1)));
-	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), load2(vec3(0,0,0)));
+	//cfg_T_store
 #endif
 
 	vec4 avg_weight = total_weight * r_scale;
@@ -774,19 +765,4 @@ vec4 hook()
 
 	return mix(poi, result, BF);
 }
-
-//!TEXTURE PREV1
-//!SIZE 3840 3840
-//!FORMAT r32f
-//!STORAGE
-
-//!TEXTURE PREV2
-//!SIZE 3840 3840
-//!FORMAT r32f
-//!STORAGE
-
-//!TEXTURE PREV3
-//!SIZE 3840 3840
-//!FORMAT r32f
-//!STORAGE
 

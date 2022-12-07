@@ -339,7 +339,8 @@ vec4 hook()
 /* Starting weight
  *
  * This can be used to modify the weight of the pixel-of-interest. Lower 
- * numbers give less weight to the pixel-of-interest.
+ * numbers give less weight to the pixel-of-interest, which may help handle 
+ * heavy noise.
  *
  * EPSILON may be used in place of zero to avoid divide-by-zero errors.
  */

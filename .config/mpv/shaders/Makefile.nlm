@@ -8,6 +8,12 @@ HQ_DESC=Slow, but higher quality.
 HQ_LUMA=S=3:P=4:R=9:PS=6:WD=2:RI=3
 HQ=S=3:PS=3:WD=2
 
+HEAVY_DESC=Tuned for heavy noise.
+HEAVY=SW=EPSILON
+
+MEDIUM_DESC=Tuned for medium noise.
+MEDIUM=SW=0.5
+
 HQX_DESC=Very slow, should offer the best quality.
 HQX_LUMA=P=5:R=19:PS=3:RF=1.25:EP=0:$(HQ_LUMA)
 HQX=P=5:R=19:RI=3:$(HQ)
@@ -25,10 +31,17 @@ SHARPEN_ONLY=S=9:AS=2:RF=0
 SHARPEN_DENOISE_DESC=Sharpen and denoise.
 SHARPEN_DENOISE=AS=1:$(SHARPEN_ONLY)
 
+HQ_SHARPEN_DENOISE=ASP=1.25:$(SHARPEN_DENOISE)
+HQ_SHARPEN_ONLY=ASP=1.25:$(SHARPEN_ONLY)
+
 LUMA_DESC=Luma only, saves some time by not processing the chroma plane.
 
-all: nlmeans_anime.glsl nlmeans_temporal.glsl nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_hqx.glsl nlmeans_anime_hq.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_anime_sharpen_denoise.glsl nlmeans_temporal_sharpen_denoise.glsl nlmeans_sharpen_only.glsl nlmeans_anime_sharpen_only.glsl nlmeans_temporal_sharpen_only.glsl
+all: nlmeans_heavy.glsl nlmeans_medium.glsl nlmeans_anime.glsl nlmeans_temporal.glsl nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_hq_heavy.glsl nlmeans_hq_medium.glsl nlmeans_hqx.glsl nlmeans_anime_hq.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_anime_sharpen_denoise.glsl nlmeans_temporal_sharpen_denoise.glsl nlmeans_hq_sharpen_denoise.glsl nlmeans_sharpen_only.glsl nlmeans_anime_sharpen_only.glsl nlmeans_temporal_sharpen_only.glsl nlmeans_hq_sharpen_only.glsl
 
+nlmeans_heavy.glsl: nlmeans.glsl
+	env DESC="$(HEAVY_DESC)" LUMA=$(HEAVY) CHROMA=$(HEAVY) ./nlmeans_cfg < $? > $@
+nlmeans_medium.glsl: nlmeans.glsl
+	env DESC="$(MEDIUM_DESC)" LUMA=$(MEDIUM) CHROMA=$(MEDIUM) ./nlmeans_cfg < $? > $@
 nlmeans_anime.glsl: nlmeans.glsl
 	env DESC="$(ANIME_DESC)" LUMA=$(ANIME_LUMA) CHROMA=$(ANIME) ./nlmeans_cfg < $? > $@
 nlmeans_temporal.glsl: nlmeans.glsl
@@ -37,22 +50,32 @@ nlmeans_luma.glsl: nlmeans.glsl
 	env DESC="$(LUMA_DESC)" CHROMA=CHROMA_DISABLE ./nlmeans_cfg < $? > $@
 nlmeans_hq.glsl: nlmeans.glsl
 	env DESC="$(HQ_DESC)" LUMA=$(HQ_LUMA) CHROMA=$(HQ) ./nlmeans_cfg < $? > $@
+nlmeans_hq_heavy.glsl: nlmeans.glsl
+	env DESC="$(HQ_DESC) $(HEAVY_DESC)" LUMA=$(HEAVY):$(HQ_LUMA) CHROMA=$(HEAVY):$(HQ) ./nlmeans_cfg < $? > $@
+nlmeans_hq_medium.glsl: nlmeans.glsl
+	env DESC="$(HQ_DESC) $(MEDIUM_DESC)" LUMA=$(MEDIUM):$(HQ_LUMA) CHROMA=$(MEDIUM):$(HQ) ./nlmeans_cfg < $? > $@
 nlmeans_hqx.glsl: nlmeans.glsl
 	env DESC="$(HQX_DESC)" LUMA=$(HQX_LUMA) CHROMA=$(HQX) ./nlmeans_cfg < $? > $@
 nlmeans_anime_hq.glsl: nlmeans.glsl
 	env DESC="$(ANIME_DESC) $(HQ_DESC)" LUMA=$(ANIME_LUMA):$(HQ_LUMA) CHROMA=$(ANIME):$(HQ) ./nlmeans_cfg < $? > $@
 nlmeans_lq.glsl: nlmeans.glsl
 	env DESC="$(LQ_DESC)" LUMA=$(LQ_LUMA) CHROMA=$(LQ) ./nlmeans_cfg < $? > $@
+
 nlmeans_sharpen_denoise.glsl: nlmeans.glsl
 	env DESC="$(SHARPEN_DENOISE_DESC)" LUMA=$(SHARPEN_DENOISE) ./nlmeans_cfg < $? > $@
 nlmeans_anime_sharpen_denoise.glsl: nlmeans.glsl
 	env DESC="$(ANIME_DESC) $(SHARPEN_DENOISE_DESC)" LUMA=$(SHARPEN_DENOISE):$(ANIME_LUMA) CHROMA=$(ANIME) ./nlmeans_cfg < $? > $@
 nlmeans_temporal_sharpen_denoise.glsl: nlmeans.glsl
 	env DESC="$(TEMPORAL_DESC) $(SHARPEN_DENOISE_DESC)" LUMA=$(SHARPEN_DENOISE):$(TEMPORAL_LUMA) ./nlmeans_cfg < $? > $@
+nlmeans_hq_sharpen_denoise.glsl: nlmeans.glsl
+	env DESC="$(HQ_DESC) $(SHARPEN_DENOISE_DESC)" LUMA=$(HQ_SHARPEN_DENOISE):$(HQ_LUMA) CHROMA=$(HQ) ./nlmeans_cfg < $? > $@
+
 nlmeans_sharpen_only.glsl: nlmeans.glsl
 	env DESC="$(SHARPEN_ONLY_DESC)" LUMA=$(SHARPEN_ONLY) CHROMA=$(SHARPEN_ONLY) ./nlmeans_cfg < $? > $@
 nlmeans_anime_sharpen_only.glsl: nlmeans.glsl
 	env DESC="$(ANIME_DESC) $(SHARPEN_ONLY_DESC)" LUMA=$(SHARPEN_ONLY):$(ANIME_LUMA) CHROMA=$(SHARPEN_ONLY):$(ANIME) ./nlmeans_cfg < $? > $@
 nlmeans_temporal_sharpen_only.glsl: nlmeans.glsl
 	env DESC="$(TEMPORAL_DESC) $(SHARPEN_ONLY_DESC)" LUMA=$(SHARPEN_ONLY):$(TEMPORAL_LUMA) CHROMA=$(SHARPEN_ONLY) ./nlmeans_cfg < $? > $@
+nlmeans_hq_sharpen_only.glsl: nlmeans.glsl
+	env DESC="$(HQ_DESC) $(SHARPEN_ONLY_DESC)" LUMA=$(HQ_SHARPEN_ONLY):$(HQ_LUMA) CHROMA=$(SHARPEN_ONLY):$(HQ) ./nlmeans_cfg < $? > $@
 
