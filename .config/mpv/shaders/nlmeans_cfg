@@ -57,6 +57,8 @@ BEGIN {
 	}
 }
 
+/\/\/cfg_desc/ { printf("// Profile description: %s\n", ENVIRON["DESC"]); next; }
+
 T_FRAME_LIMIT > 0 && /^\/\/!DESC Non-local means$/ {
 	for (i = 1; i <= T_FRAME_LIMIT; i++)
 		printf("//!BIND PREV%d\n", i)

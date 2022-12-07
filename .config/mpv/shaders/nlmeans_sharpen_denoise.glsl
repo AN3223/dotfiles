@@ -19,6 +19,8 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+// Profile description: Sharpen and denoise.
+
 /* The recommended usage of this shader and its variants is to add them to 
  * input.conf and then dispatch the appropriate shader via a keybind during 
  * media playback. Here is an example input.conf entry:
