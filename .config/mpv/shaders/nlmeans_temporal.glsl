@@ -304,7 +304,7 @@ vec4 hook()
 
 /* Robust filtering
  *
- * Compares the pixel of interest against downscaled pixels.
+ * Compares the pixel-of-interest against downscaled pixels.
  *
  * This will virtually always improve quality, but will disable textureGather 
  * optimizations.
@@ -337,11 +337,36 @@ vec4 hook()
 #define M 0
 #endif
 
+/* Starting weight
+ *
+ * This can be used to modify the weight of the pixel-of-interest. Lower 
+ * numbers give less weight to the pixel-of-interest.
+ *
+ * EPSILON may be used in place of zero to avoid divide-by-zero errors.
+ */
+#ifdef LUMA_raw
+#define SW 1.0
+#else
+#define SW 1.0
+#endif
+
+/* Patch donut
+ *
+ * If enabled, ignores center pixel of patch comparisons.
+ *
+ * Disables textureGather optimizations.
+ */
+#ifdef LUMA_raw
+#define PD 0
+#else
+#define PD 0
+#endif
+
 /* Blur factor
  *
- * The amount to blur the pixel of interest with the estimated pixel. For the 
+ * The amount to blur the pixel-of-interest with the estimated pixel. For the 
  * means estimator this should always be 1.0, since it already blurs against 
- * the pixel of interest and the level of blur can be controlled with the 
+ * the pixel-of-interest and the level of blur can be controlled with the 
  * denoising factor (S).
  *
  * BF (1>=BF>=0): blur factor, 1 being the estimation, 0 being the raw input
@@ -368,52 +393,52 @@ const int hr = R/2;
 const float hr = int(R/2) - 0.5*(1-(R%2));
 #endif
 
-// search shapes and their corresponding areas
-#define S_1X1(z,hz) for (z = vec3(0); z.x <= 0; z.x++)
-#define S_1X1_A(hz,Z) 1
+// donut increment, increments without landing on (0,0,0)
+#define DINCR(z,c) (z.c++,(z.c += int(z == vec3(0))))
 
-#define S_TRIANGLE(z,hz) for (z.y = -hz; z.y <= 0; z.y++) for (z.x = -abs(abs(z.y) - hz); z.x <= abs(abs(z.y) - hz); z.x++)
-#define S_TRUNC_TRIANGLE(z,hz) for (z.y = -hz; z.y <= 0; z.y++) for (z.x = -abs(abs(z.y) - hz); z.x <= abs(abs(z.y) - hz)*int(z.y!=0); z.x++)
+// search shapes and their corresponding areas
+#define S_1X1(z) for (z = vec3(0); z.x <= 0; z.x++)
+
+#define S_TRIANGLE(z,hz,incr) for (z.y = -hz; z.y <= 0; z.y++) for (z.x = -abs(abs(z.y) - hz); z.x <= abs(abs(z.y) - hz); incr)
+#define S_TRUNC_TRIANGLE(z,hz,incr) for (z.y = -hz; z.y <= 0; z.y++) for (z.x = -abs(abs(z.y) - hz); z.x <= abs(abs(z.y) - hz)*int(z.y!=0); incr)
 #define S_TRIANGLE_A(hz,Z) int(pow(hz, 2)+Z)
 
-#define S_DIAMOND(z,hz) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -abs(abs(z.x) - hz); z.y <= abs(abs(z.x) - hz); z.y++)
+#define S_DIAMOND(z,hz,incr) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -abs(abs(z.x) - hz); z.y <= abs(abs(z.x) - hz); incr)
 #define S_DIAMOND_A(hz,Z) int(pow(hz, 2)*2+Z)
 
-#define S_VERTICAL(z,hz) for (z.x = 0; z.x <= 0; z.x++) for (z.y = -hz; z.y <= hz; z.y++)
-#define S_HORIZONTAL(z,hz) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = 0; z.y <= 0; z.y++)
-#define S_LINE_A(hz,Z) Z
+#define S_VERTICAL(z,hz,incr) for (z.x = 0; z.x <= 0; z.x++) for (z.y = -hz; z.y <= hz; incr)
+#define S_HORIZONTAL(z,hz,incr) for (z.x = -hz; z.x <= hz; incr) for (z.y = 0; z.y <= 0; z.y++)
 
-#define S_SQUARE(z,hz) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -hz; z.y <= hz; z.y++)
-#define S_SQUARE_EVEN(z,hz) for (z.x = -hz; z.x < hz; z.x++) for (z.y = -hz; z.y < hz; z.y++)
-#define S_SQUARE_A(hz,Z) (Z*Z)
+#define S_SQUARE(z,hz,incr) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -hz; z.y <= hz; incr)
+#define S_SQUARE_EVEN(z,hz,incr) for (z.x = -hz; z.x < hz; z.x++) for (z.y = -hz; z.y < hz; incr)
 
 // research shapes
 #define T1 (T+1)
 #define FOR_FRAME for (r.z = 0; r.z < T1; r.z++)
 #if R == 0 || R == 1
-#define FOR_RESEARCH(r) FOR_FRAME S_1X1(r,hr)
-const int r_area = S_1X1_A(hr,R)*T1;
+#define FOR_RESEARCH(r) FOR_FRAME S_1X1(r)
+const int r_area = T1-1;
 #elif RS == 6
-#define FOR_RESEARCH(r) FOR_FRAME S_SQUARE_EVEN(r,hr)
-const int r_area = S_SQUARE_A(hr,R)*T1;
+#define FOR_RESEARCH(r) FOR_FRAME S_SQUARE_EVEN(r,hr,DINCR(r,y))
+const int r_area = R*R*T1-1;
 #elif RS == 5
-#define FOR_RESEARCH(r) FOR_FRAME S_TRUNC_TRIANGLE(r,hr)
-const int r_area = S_TRIANGLE_A(hr,hr)*T1;
+#define FOR_RESEARCH(r) FOR_FRAME S_TRUNC_TRIANGLE(r,hr,DINCR(r,x))
+const int r_area = S_TRIANGLE_A(hr,hr)*T1-1;
 #elif RS == 4
-#define FOR_RESEARCH(r) FOR_FRAME S_TRIANGLE(r,hr)
-const int r_area = S_TRIANGLE_A(hr,R)*T1;
+#define FOR_RESEARCH(r) FOR_FRAME S_TRIANGLE(r,hr,DINCR(r,x))
+const int r_area = S_TRIANGLE_A(hr,R)*T1-1;
 #elif RS == 3
-#define FOR_RESEARCH(r) FOR_FRAME S_DIAMOND(r,hr)
-const int r_area = S_DIAMOND_A(hr,R)*T1;
+#define FOR_RESEARCH(r) FOR_FRAME S_DIAMOND(r,hr,DINCR(r,y))
+const int r_area = S_DIAMOND_A(hr,R)*T1-1;
 #elif RS == 2
-#define FOR_RESEARCH(r) FOR_FRAME S_VERTICAL(r,hr)
-const int r_area = S_LINE_A(hr,R)*T1;
+#define FOR_RESEARCH(r) FOR_FRAME S_VERTICAL(r,hr,DINCR(r,y))
+const int r_area = R*T1-1;
 #elif RS == 1
-#define FOR_RESEARCH(r) FOR_FRAME S_HORIZONTAL(r,hr)
-const int r_area = S_LINE_A(hr,R)*T1;
+#define FOR_RESEARCH(r) FOR_FRAME S_HORIZONTAL(r,hr,DINCR(r,x))
+const int r_area = R*T1-1;
 #elif RS == 0
-#define FOR_RESEARCH(r) FOR_FRAME S_SQUARE(r,hr)
-const int r_area = S_SQUARE_A(hr,R)*T1;
+#define FOR_RESEARCH(r) FOR_FRAME S_SQUARE(r,hr,DINCR(r,y))
+const int r_area = R*R*T1-1;
 #endif
 
 #define RI1 (RI+1)
@@ -431,31 +456,37 @@ const int r_area = S_SQUARE_A(hr,R)*T1;
 #define FOR_REFLECTION
 #endif
 
+#if PD
+#define PINCR DINCR
+#else
+#define PINCR(z,c) (z.c++)
+#endif
+
 // patch shapes
 #if P == 0 || P == 1
-#define FOR_PATCH(p) S_1X1(p,hp) FOR_ROTATION FOR_REFLECTION
-const int p_area = S_1X1_A(hp,P);
+#define FOR_PATCH(p) S_1X1(p) FOR_ROTATION FOR_REFLECTION
+const int p_area = 1;
 #elif PS == 6
-#define FOR_PATCH(p) S_SQUARE_EVEN(p,hp) FOR_ROTATION FOR_REFLECTION
-const int p_area = S_SQUARE_A(hp,P)*RI1*RFI1;
+#define FOR_PATCH(p) S_SQUARE_EVEN(p,hp,PINCR(p,y)) FOR_ROTATION FOR_REFLECTION
+const int p_area = (P*P-PD)*RI1*RFI1;
 #elif PS == 5
-#define FOR_PATCH(p) S_TRUNC_TRIANGLE(p,hp) FOR_ROTATION FOR_REFLECTION
-const int p_area = S_TRIANGLE_A(hp,hp)*RI1*RFI1;
+#define FOR_PATCH(p) S_TRUNC_TRIANGLE(p,hp,PINCR(p,x)) FOR_ROTATION FOR_REFLECTION
+const int p_area = (S_TRIANGLE_A(hp,hp) - PD)*RI1*RFI1;
 #elif PS == 4
-#define FOR_PATCH(p) S_TRIANGLE(p,hp) FOR_ROTATION FOR_REFLECTION
-const int p_area = S_TRIANGLE_A(hp,P)*RI1*RFI1;
+#define FOR_PATCH(p) S_TRIANGLE(p,hp,PINCR(p,x)) FOR_ROTATION FOR_REFLECTION
+const int p_area = (S_TRIANGLE_A(hp,P) - PD)*RI1*RFI1;
 #elif PS == 3
-#define FOR_PATCH(p) S_DIAMOND(p,hp) FOR_ROTATION FOR_REFLECTION
-const int p_area = S_DIAMOND_A(hp,P)*RI1*RFI1;
+#define FOR_PATCH(p) S_DIAMOND(p,hp,PINCR(p,y)) FOR_ROTATION FOR_REFLECTION
+const int p_area = (S_DIAMOND_A(hp,P) - PD)*RI1*RFI1;
 #elif PS == 2
-#define FOR_PATCH(p) S_VERTICAL(p,hp) FOR_ROTATION FOR_REFLECTION
-const int p_area = S_LINE_A(hp,P)*RI1*RFI1;
+#define FOR_PATCH(p) S_VERTICAL(p,hp,PINCR(p,y)) FOR_ROTATION FOR_REFLECTION
+const int p_area = (P-PD)*RI1*RFI1;
 #elif PS == 1
-#define FOR_PATCH(p) S_HORIZONTAL(p,hp) FOR_ROTATION FOR_REFLECTION
-const int p_area = S_LINE_A(hp,P)*RI1*RFI1;
+#define FOR_PATCH(p) S_HORIZONTAL(p,hp,PINCR(p,x)) FOR_ROTATION FOR_REFLECTION
+const int p_area = (P-PD)*RI1*RFI1;
 #elif PS == 0
-#define FOR_PATCH(p) S_SQUARE(p,hp) FOR_ROTATION FOR_REFLECTION
-const int p_area = S_SQUARE_A(hp,P)*RI1*RFI1;
+#define FOR_PATCH(p) S_SQUARE(p,hp,PINCR(p,y)) FOR_ROTATION FOR_REFLECTION
+const int p_area = (P*P-PD)*RI1*RFI1;
 #endif
 
 const float r_scale = 1.0/r_area;
@@ -538,14 +569,14 @@ vec4 patch_comparison(vec3 r, vec3 r2)
 	return pdiff_sq * p_scale;
 }
 
-#if defined(LUMA_gather) && P == 3 && PS == 4 && RF == 0 && RI == 0 && RFI == 0 && PST == 0
+#if defined(LUMA_gather) && P == 3 && PS == 4 && RF == 0 && PD == 0 && RI == 0 && RFI == 0 && PST == 0
 #define gather(off) (LUMA_mul * vec4(textureGatherOffsets(LUMA_raw, HOOKED_pos+(off)*HOOKED_pt, offsets)))
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
 	const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
 	return vec4(dot(pow(gather(r2.xy) - gather(r.xy), vec4(2)), vec4(1)), 0, 0 ,0) * p_scale;
 }
-#elif defined(LUMA_gather) && PS == 6 && RF == 0 && (RI == 0 || RI == 1 || RI == 3) && (RFI == 0 || RFI == 1)
+#elif defined(LUMA_gather) && PS == 6 && RF == 0 && PD == 0 && (RI == 0 || RI == 1 || RI == 3) && (RFI == 0 || RFI == 1)
 #define gather(off) LUMA_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
 // tiled even square patch comparison using textureGather
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
@@ -595,11 +626,11 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 
 vec4 hook()
 {
-	vec4 poi = load(vec3(0)); // pixel of interest
+	vec4 poi = load(vec3(0)); // pixel-of-interest
 	vec3 r = vec3(0);
 	vec3 p = vec3(0);
-	vec4 total_weight = vec4(1);
-	vec4 sum = poi;
+	vec4 total_weight = vec4(SW);
+	vec4 sum = poi * SW;
 	vec4 result = vec4(0);
 	int r_index = 0;
 
@@ -687,8 +718,8 @@ vec4 hook()
 	vec4 avg_weight = total_weight * r_scale;
 
 #if WD == 2 // true average
-	total_weight = vec4(1);
-	sum = poi;
+	total_weight = vec4(SW);
+	sum = poi * SW;
 
 	for (int i = 0; i < r_area; i++) {
 		vec4 keeps = step(avg_weight*WDT, all_weights[i]);
