@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Profile description: Tuned for anime/cartoons, may be useful for other content too. Sharpen and denoise.
+// Profile description: Tuned for anime/cartoons, may be useful for other content, may be too aggressive for some anime. Sharpen and denoise.
 
 /* The recommended usage of this shader and its variants is to add them to 
  * input.conf and then dispatch the appropriate shader via a keybind during 
