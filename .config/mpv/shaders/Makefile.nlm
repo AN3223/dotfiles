@@ -22,7 +22,7 @@ ANIME_DESC=Tuned for anime/cartoons, may be useful for other content too.
 ANIME_LUMA=S=7.5:PS=3:WD=2:SS=0.0:RF=2.0:EP=0
 ANIME=S=7.5:WD=2:SS=0.0
 
-TEMPORAL_DESC=Very experimental and buggy.
+TEMPORAL_DESC=Very experimental and buggy, limited to vo=gpu-next.
 TEMPORAL_LUMA=T=2:T_FRAME_LIMIT=3:T_RES=3840
 
 SHARPEN_ONLY_DESC=Sharpen without denoising.
