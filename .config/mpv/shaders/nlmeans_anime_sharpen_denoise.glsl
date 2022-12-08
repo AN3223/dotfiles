@@ -127,7 +127,7 @@ vec4 hook()
 #define P 3
 #define R 5
 #else
-#define S 2.5
+#define S 7.5
 #define P 3
 #define R 5
 #endif
