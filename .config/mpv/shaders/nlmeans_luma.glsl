@@ -408,32 +408,41 @@ const float hr = int(R/2) - 0.5*(1-(R%2));
 #define S_SQUARE(z,hz,incr) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -hz; z.y <= hz; incr)
 #define S_SQUARE_EVEN(z,hz,incr) for (z.x = -hz; z.x < hz; z.x++) for (z.y = -hz; z.y < hz; incr)
 
-// research shapes
 #define T1 (T+1)
+
 #define FOR_FRAME for (r.z = 0; r.z < T1; r.z++)
+
+// XXX This should be ever-so-slightly better? I can't see much difference.
+#if RF
+#define RINCR(z,c) (z.c++)
+#else
+#define RINCR DINCR
+#endif
+
+// research shapes
 #if R == 0 || R == 1
 #define FOR_RESEARCH(r) FOR_FRAME S_1X1(r)
 const int r_area = T1-1;
 #elif RS == 6
-#define FOR_RESEARCH(r) FOR_FRAME S_SQUARE_EVEN(r,hr,DINCR(r,y))
+#define FOR_RESEARCH(r) FOR_FRAME S_SQUARE_EVEN(r,hr,RINCR(r,y))
 const int r_area = R*R*T1-1;
 #elif RS == 5
-#define FOR_RESEARCH(r) FOR_FRAME S_TRUNC_TRIANGLE(r,hr,DINCR(r,x))
+#define FOR_RESEARCH(r) FOR_FRAME S_TRUNC_TRIANGLE(r,hr,RINCR(r,x))
 const int r_area = S_TRIANGLE_A(hr,hr)*T1-1;
 #elif RS == 4
-#define FOR_RESEARCH(r) FOR_FRAME S_TRIANGLE(r,hr,DINCR(r,x))
+#define FOR_RESEARCH(r) FOR_FRAME S_TRIANGLE(r,hr,RINCR(r,x))
 const int r_area = S_TRIANGLE_A(hr,R)*T1-1;
 #elif RS == 3
-#define FOR_RESEARCH(r) FOR_FRAME S_DIAMOND(r,hr,DINCR(r,y))
+#define FOR_RESEARCH(r) FOR_FRAME S_DIAMOND(r,hr,RINCR(r,y))
 const int r_area = S_DIAMOND_A(hr,R)*T1-1;
 #elif RS == 2
-#define FOR_RESEARCH(r) FOR_FRAME S_VERTICAL(r,hr,DINCR(r,y))
+#define FOR_RESEARCH(r) FOR_FRAME S_VERTICAL(r,hr,RINCR(r,y))
 const int r_area = R*T1-1;
 #elif RS == 1
-#define FOR_RESEARCH(r) FOR_FRAME S_HORIZONTAL(r,hr,DINCR(r,x))
+#define FOR_RESEARCH(r) FOR_FRAME S_HORIZONTAL(r,hr,RINCR(r,x))
 const int r_area = R*T1-1;
 #elif RS == 0
-#define FOR_RESEARCH(r) FOR_FRAME S_SQUARE(r,hr,DINCR(r,y))
+#define FOR_RESEARCH(r) FOR_FRAME S_SQUARE(r,hr,RINCR(r,y))
 const int r_area = R*R*T1-1;
 #endif
 
