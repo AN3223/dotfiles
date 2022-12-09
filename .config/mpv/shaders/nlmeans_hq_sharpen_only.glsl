@@ -623,14 +623,15 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 vec4 hook()
 {
 	vec4 poi = load(vec3(0)); // pixel-of-interest
-	vec3 r = vec3(0);
-	vec3 p = vec3(0);
 	vec4 total_weight = vec4(SW);
 	vec4 sum = poi * SW;
 	vec4 result = vec4(0);
-	int r_index = 0;
+
+	vec3 r = vec3(0);
+	vec3 p = vec3(0);
 
 #if WD == 2 || M == 3
+	int r_index = 0;
 	vec4 all_weights[r_area];
 	vec4 all_pixels[r_area];
 #elif WD == 1
@@ -647,7 +648,7 @@ vec4 hook()
 		const float h = S*0.013;
 		const float pdiff_scale = 1.0/(h*h);
 
-		vec4 pdiff_sq = r.z == 0 ? patch_comparison_gather(r, vec3(0)) : patch_comparison(r, vec3(0));
+		vec4 pdiff_sq = (r.z == 0) ? patch_comparison_gather(r, vec3(0)) : patch_comparison(r, vec3(0));
 		vec4 weight = exp(-pdiff_sq * pdiff_scale);
 		weight *= exp(-pow(length(r*SD)*SS, 2));
 
@@ -658,7 +659,7 @@ vec4 hook()
 #elif WD == 1 // cumulative moving average
 		// XXX maybe keep early samples in a small buffer?
 		vec4 wd_scale = 1.0/no_weights;
-		vec4 keeps = step(total_weight*wd_scale*WDT*exp(-wd_scale*WDP), weight);
+		vec4 keeps = step(total_weight*wd_scale * WDT*exp(-wd_scale*WDP), weight);
 		weight *= keeps;
 		no_weights += keeps;
 #endif
