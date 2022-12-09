@@ -106,7 +106,7 @@ vec4 hook()
 //!BIND PREV1
 //!BIND PREV2
 //!BIND PREV3
-//!DESC Non-local means
+//!DESC Non-local means (nlmeans_temporal_sharpen_denoise.glsl)
 
 /* User variables
  *

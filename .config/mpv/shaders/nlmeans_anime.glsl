@@ -103,7 +103,7 @@ vec4 hook()
 //!BIND RF
 //!BIND RF_LUMA
 //!BIND EP_LUMA
-//!DESC Non-local means
+//!DESC Non-local means (nlmeans_anime.glsl)
 
 /* User variables
  *

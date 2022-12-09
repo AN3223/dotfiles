@@ -64,6 +64,8 @@ T_FRAME_LIMIT > 0 && /^\/\/!DESC Non-local means$/ {
 		printf("//!BIND PREV%d\n", i)
 }
 
+/^\/\/!DESC Non-local means$/ { printf("//!DESC Non-local means (%s)\n", ENVIRON["FILENAME"]); next; }
+
 T_FRAME_LIMIT > 0 && /\/\/cfg_T_load/ {
 	for (i = 1; i <= T_FRAME_LIMIT; i++)
 		printf("\tcase %d: return imageLoad(PREV%d, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV%d)));\n", i, i, i)
