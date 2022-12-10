@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Profile description: Tuned for anime/cartoons, may be useful for other content, may be too aggressive for some anime. Slow, but higher quality.
+// Profile description: Tuned for anime/cartoons, may be useful for other content. Slow, but higher quality.
 
 /* The recommended usage of this shader and its variants is to add them to 
  * input.conf and then dispatch the appropriate shader via a keybind during 
@@ -123,11 +123,11 @@ vec4 hook()
  * slower and offer diminishing returns.
  */
 #ifdef LUMA_raw
-#define S 7.5
+#define S 3
 #define P 4
 #define R 7
 #else
-#define S 7.5
+#define S 3
 #define P 3
 #define R 5
 #endif

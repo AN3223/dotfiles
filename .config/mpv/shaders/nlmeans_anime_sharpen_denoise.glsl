@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Profile description: Tuned for anime/cartoons, may be useful for other content, may be too aggressive for some anime. Sharpen and denoise.
+// Profile description: Tuned for anime/cartoons, may be useful for other content. Sharpen and denoise.
 
 /* The recommended usage of this shader and its variants is to add them to 
  * input.conf and then dispatch the appropriate shader via a keybind during 
@@ -127,7 +127,7 @@ vec4 hook()
 #define P 3
 #define R 5
 #else
-#define S 7.5
+#define S 3
 #define P 3
 #define R 5
 #endif
