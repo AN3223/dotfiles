@@ -273,12 +273,17 @@ vec4 hook()
  * struggle more with noise that persists across multiple frames (compression 
  * noise, repeating frames), but can work very well on high quality video.
  *
+ * Motion estimation (ME) should improve quality without impacting performance.
+ *
  * T: number of frames used
+ * ME: motion estimation, 0 for none, 1 for max weight, 2 for weighted avg
  */
 #ifdef LUMA_raw
 #define T 0
+#define ME 2
 #else
 #define T 0
+#define ME 0
 #endif
 
 /* Extremes preserve
@@ -328,7 +333,6 @@ vec4 hook()
  * 1: Euclidean medians (extremely slow, may be good for heavy noise)
  * 2: weight map (not a denoiser, maybe useful for generating image masks)
  * 3: weighted median intensity (slow, may be good for heavy noise)
- * 4: maximum weight (not a denoiser, intended for development use)
  */
 #ifdef LUMA_raw
 #define M 0
@@ -425,28 +429,28 @@ const float hr = int(R/2) - 0.5*(1-(R%2));
 
 // research shapes
 #if R == 0 || R == 1
-#define FOR_RESEARCH(r) FOR_FRAME S_1X1(r)
+#define FOR_RESEARCH(r) S_1X1(r)
 const int r_area = T1-1;
 #elif RS == 6
-#define FOR_RESEARCH(r) FOR_FRAME S_SQUARE_EVEN(r,hr,RINCR(r,y))
+#define FOR_RESEARCH(r) S_SQUARE_EVEN(r,hr,RINCR(r,y))
 const int r_area = R*R*T1-1;
 #elif RS == 5
-#define FOR_RESEARCH(r) FOR_FRAME S_TRUNC_TRIANGLE(r,hr,RINCR(r,x))
+#define FOR_RESEARCH(r) S_TRUNC_TRIANGLE(r,hr,RINCR(r,x))
 const int r_area = S_TRIANGLE_A(hr,hr)*T1-1;
 #elif RS == 4
-#define FOR_RESEARCH(r) FOR_FRAME S_TRIANGLE(r,hr,RINCR(r,x))
+#define FOR_RESEARCH(r) S_TRIANGLE(r,hr,RINCR(r,x))
 const int r_area = S_TRIANGLE_A(hr,R)*T1-1;
 #elif RS == 3
-#define FOR_RESEARCH(r) FOR_FRAME S_DIAMOND(r,hr,RINCR(r,y))
+#define FOR_RESEARCH(r) S_DIAMOND(r,hr,RINCR(r,y))
 const int r_area = S_DIAMOND_A(hr,R)*T1-1;
 #elif RS == 2
-#define FOR_RESEARCH(r) FOR_FRAME S_VERTICAL(r,hr,RINCR(r,y))
+#define FOR_RESEARCH(r) S_VERTICAL(r,hr,RINCR(r,y))
 const int r_area = R*T1-1;
 #elif RS == 1
-#define FOR_RESEARCH(r) FOR_FRAME S_HORIZONTAL(r,hr,RINCR(r,x))
+#define FOR_RESEARCH(r) S_HORIZONTAL(r,hr,RINCR(r,x))
 const int r_area = R*T1-1;
 #elif RS == 0
-#define FOR_RESEARCH(r) FOR_FRAME S_SQUARE(r,hr,RINCR(r,y))
+#define FOR_RESEARCH(r) S_SQUARE(r,hr,RINCR(r,y))
 const int r_area = R*R*T1-1;
 #endif
 
@@ -638,6 +642,15 @@ vec4 hook()
 
 	vec3 r = vec3(0);
 	vec3 p = vec3(0);
+	vec3 me = vec3(0);
+
+#if T && ME == 1
+	vec3 me_tmp = vec3(0);
+	float maxweight = 0;
+#elif T && ME == 2
+	vec3 me_sum = vec3(0);
+	float me_weight = 0;
+#endif
 
 #if WD == 2 || M == 3
 	int r_index = 0;
@@ -649,21 +662,20 @@ vec4 hook()
 
 #if M == 1
 	vec4 minsum = vec4(0);
-#elif M == 4
-	vec4 maxweight = vec4(0);
 #endif
 
+	FOR_FRAME {
 	FOR_RESEARCH(r) {
 		const float h = S*0.013;
 		const float pdiff_scale = 1.0/(h*h);
 
-		vec4 pdiff_sq = (r.z == 0) ? patch_comparison_gather(r, vec3(0)) : patch_comparison(r, vec3(0));
+		vec4 pdiff_sq = (r.z == 0) ? patch_comparison_gather(r+me, vec3(0)) : patch_comparison(r+me, vec3(0));
 		vec4 weight = exp(-pdiff_sq * pdiff_scale);
 		weight *= exp(-pow(length(r*SD)*SS, 2));
 
 #if WD == 2 || M == 3 // true average, weighted median intensity
 		all_weights[r_index] = weight;
-		all_pixels[r_index] = load(r);
+		all_pixels[r_index] = load(r+me);
 		r_index++;
 #elif WD == 1 // cumulative moving average
 		// XXX maybe keep early samples in a small buffer?
@@ -679,7 +691,7 @@ vec4 hook()
 		 * In my opinion load looks better, but this should be tested with the test 
 		 * script whenever that is finally cleaned up and fixed
 		 */
-		sum += load(r) * weight;
+		sum += load(r+me) * weight;
 		total_weight += weight;
 
 #if M == 1 // Euclidean median
@@ -689,16 +701,17 @@ vec4 hook()
 		 * Now it requires rotation in order to behave similar to before that 
 		 * commit. Maybe it was inappropriately rotating before?
 		 */
+		// XXX might not work w/ ME
 		vec3 r2;
 		vec4 wpdist_sum = vec4(0);
-		FOR_RESEARCH(r2) {
-			vec4 pdist = (r.z + r2.z) == 0 ? patch_comparison_gather(r, r2) : patch_comparison(r, r2);
+		FOR_FRAME FOR_RESEARCH(r2) {
+			vec4 pdist = (r.z + r2.z) == 0 ? patch_comparison_gather(r+me, r2+me) : patch_comparison(r+me, r2+me);
 			wpdist_sum += sqrt(pdist) * (1-weight);
 		}
 
 		// initialize minsum and result
 		minsum += step(minsum, vec4(0)) * wpdist_sum;
-		result += step(result, vec4(0)) * load(r);
+		result += step(result, vec4(0)) * load(r+me);
 
 		// find new minimums, exclude zeros
 		vec4 newmin = step(wpdist_sum, minsum) * (1-step(wpdist_sum, vec4(0)));
@@ -706,14 +719,29 @@ vec4 hook()
 
 		// update minimums
 		minsum = (newmin * wpdist_sum) + (notmin * minsum);
-		result = (newmin * load(r))    + (notmin * result);
-#elif M == 4 // maximum weight
-		vec4 newmax = step(maxweight, weight);
-		vec4 notmax = 1 - newmax;
-		result = newmax * load(r) + notmax * result;
-		maxweight = max(maxweight, weight);
+		result = (newmin * load(r+me)) + (notmin * result);
 #endif
-	}
+
+#if T && ME == 1
+		float is_max = step(maxweight, weight.x);
+		me_tmp = (vec3(r.xy,0)+me) * is_max + me_tmp * (1 - is_max);
+		maxweight = max(maxweight, weight.x);
+#elif T && ME == 2
+		me_sum += (vec3(r.xy,0)+me) * weight.x;
+		me_weight += weight.x;
+#endif
+	} // FOR_RESEARCH
+
+#if T && ME == 1
+		me = me_tmp;
+		me_tmp = vec3(0);
+		maxweight = 0;
+#elif T && ME == 2
+		me = round(me_sum / me_weight);
+		me_sum = vec3(0);
+		me_weight = 0;
+#endif
+	} // FOR_FRAME
 
 #if T
 	//cfg_T_store
