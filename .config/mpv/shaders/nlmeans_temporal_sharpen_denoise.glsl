@@ -672,12 +672,35 @@ vec4 hook()
 #endif
 
 	FOR_FRAME {
+#if T && ME == 1
+	if (r.z > 0) {
+		me = me_tmp;
+		me_tmp = vec3(0);
+		maxweight = 0;
+	}
+#elif T && ME == 2
+	if (r.z > 0) {
+		me = round(me_sum / me_weight);
+		me_sum = vec3(0);
+		me_weight = 0;
+	}
+#endif
 	FOR_RESEARCH(r) {
 		const float h = S*0.013;
 		const float pdiff_scale = 1.0/(h*h);
 
 		vec4 pdiff_sq = (r.z == 0) ? patch_comparison_gather(r+me, vec3(0)) : patch_comparison(r+me, vec3(0));
 		vec4 weight = exp(-pdiff_sq * pdiff_scale);
+
+#if T && ME == 1
+		float is_max = step(maxweight, weight.x);
+		me_tmp = (vec3(r.xy,0)+me) * is_max + me_tmp * (1 - is_max);
+		maxweight = max(maxweight, weight.x);
+#elif T && ME == 2
+		me_sum += (vec3(r.xy,0)+me) * weight.x;
+		me_weight += weight.x;
+#endif
+
 		weight *= exp(-pow(length(r*SD)*SS, 2));
 
 #if WD == 2 || M == 3 // true average, weighted median intensity
@@ -728,26 +751,7 @@ vec4 hook()
 		minsum = (newmin * wpdist_sum) + (notmin * minsum);
 		result = (newmin * load(r+me)) + (notmin * result);
 #endif
-
-#if T && ME == 1
-		float is_max = step(maxweight, weight.x);
-		me_tmp = (vec3(r.xy,0)+me) * is_max + me_tmp * (1 - is_max);
-		maxweight = max(maxweight, weight.x);
-#elif T && ME == 2
-		me_sum += (vec3(r.xy,0)+me) * weight.x;
-		me_weight += weight.x;
-#endif
 	} // FOR_RESEARCH
-
-#if T && ME == 1
-		me = me_tmp;
-		me_tmp = vec3(0);
-		maxweight = 0;
-#elif T && ME == 2
-		me = round(me_sum / me_weight);
-		me_sum = vec3(0);
-		me_weight = 0;
-#endif
 	} // FOR_FRAME
 
 #if T
