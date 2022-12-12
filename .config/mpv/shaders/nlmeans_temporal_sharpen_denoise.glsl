@@ -283,7 +283,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define T 2
-#define ME 2
+#define ME 1
 #else
 #define T 0
 #define ME 0
