@@ -667,13 +667,13 @@ vec4 hook()
 	FOR_FRAME {
 #if T && ME == 1
 	if (r.z > 0) {
-		me = me_tmp;
+		me += me_tmp;
 		me_tmp = vec3(0);
 		maxweight = 0;
 	}
 #elif T && ME == 2
 	if (r.z > 0) {
-		me = round(me_sum / me_weight);
+		me += round(me_sum / me_weight);
 		me_sum = vec3(0);
 		me_weight = 0;
 	}
@@ -686,11 +686,10 @@ vec4 hook()
 		vec4 weight = exp(-pdiff_sq * pdiff_scale);
 
 #if T && ME == 1
-		float is_max = step(maxweight, weight.x);
-		me_tmp = (vec3(r.xy,0)+me) * is_max + me_tmp * (1 - is_max);
+		me_tmp = vec3(r.xy,0) * step(maxweight, weight.x) + me_tmp * (1 - step(maxweight, weight.x));
 		maxweight = max(maxweight, weight.x);
 #elif T && ME == 2
-		me_sum += (vec3(r.xy,0)+me) * weight.x;
+		me_sum += vec3(r.xy,0) * weight.x;
 		me_weight += weight.x;
 #endif
 
