@@ -539,6 +539,8 @@ vec4 load2(vec3 off)
 #define load2(off) load2_(off)
 #endif
 
+vec4 poi = load(vec3(0)); // pixel-of-interest
+
 #if RI // rotation
 vec2 rot(vec2 p, float d)
 {
@@ -588,6 +590,15 @@ vec4 poi_patch = gather(0);
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
 	return vec4(dot(pow(poi_patch - gather(r.xy), vec4(2)), vec4(1)), 0, 0 ,0) * p_scale;
+}
+#elif defined(LUMA_gather) && P == 3 && PS == 3 && RF == 0 && PD == 0 && RI == 0 && RFI == 0 && PST == 0 && M != 1
+#define gather(off) (LUMA_mul * vec4(textureGatherOffsets(LUMA_raw, HOOKED_pos+(off)*HOOKED_pt, offsets)))
+const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
+vec4 poi_patch = gather(0);
+vec4 patch_comparison_gather(vec3 r, vec3 r2)
+{
+	float pdiff_sq = dot(pow(poi_patch - gather(r.xy), vec4(2)), vec4(1)) + pow(poi.x - load(r).x, 2);
+	return vec4(pdiff_sq, 0, 0 ,0) * p_scale;
 }
 #elif defined(LUMA_gather) && PS == 6 && RF == 0 && PD == 0 && (RI == 0 || RI == 1 || RI == 3) && (RFI == 0 || RFI == 1)
 #define gather(off) LUMA_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
@@ -639,7 +650,6 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 
 vec4 hook()
 {
-	vec4 poi = load(vec3(0)); // pixel-of-interest
 	vec4 total_weight = vec4(SW);
 	vec4 sum = poi * SW;
 	vec4 result = vec4(0);
