@@ -9,10 +9,10 @@ HQ_LUMA=S=3:P=4:R=7:PS=6:WD=2:RI=3:EP=0
 HQ=S=3:PS=3:WD=2
 
 HEAVY_DESC=Tuned for heavy noise.
-HEAVY=SW=EPSILON
+HEAVY=SW=EPSILON:EP=0
 
 MEDIUM_DESC=Tuned for medium noise.
-MEDIUM=SW=0.5
+MEDIUM=SW=0.5:$(HEAVY)
 
 HQX_DESC=Very slow, should offer the best quality.
 HQX_LUMA=P=5:R=19:PS=3:RF=1.25:$(HQ_LUMA)
