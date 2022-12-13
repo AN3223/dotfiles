@@ -349,9 +349,9 @@ vec4 hook()
  * EPSILON may be used in place of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
-#define SW 1.0
+#define SW 0.5
 #else
-#define SW 1.0
+#define SW 0.5
 #endif
 
 /* Patch donut

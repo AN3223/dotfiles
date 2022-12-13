@@ -19,8 +19,8 @@ HQX_LUMA=P=5:R=19:PS=3:RF=1.25:$(HQ_LUMA)
 HQX=P=5:R=19:RI=3:$(HQ)
 
 ANIME_DESC=Tuned for anime/cartoons, may be useful for other content.
-ANIME_LUMA=S=3:PS=3:WD=2:SS=0.0:RF=2.0:EP=0
-ANIME=S=3:WD=2:SS=0.0
+ANIME_LUMA=S=3:PS=3:WD=2:SS=0.0:RF=2.0:EP=0:$(MEDIUM)
+ANIME=S=3:WD=2:SS=0.0:$(MEDIUM)
 
 TEMPORAL_DESC=Very experimental and buggy, limited to vo=gpu-next.
 TEMPORAL_LUMA=T=2:T_FRAME_LIMIT=3:T_RES_W=1920:T_RES_H=1080
