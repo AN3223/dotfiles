@@ -234,7 +234,7 @@ vec4 hook()
 #define PS 3
 #else
 #define RS 3
-#define PS 4
+#define PS 3
 #endif
 
 /* Rotational/reflectional invariance
