@@ -584,20 +584,36 @@ vec4 patch_comparison(vec3 r, vec3 r2)
 }
 
 #if defined(LUMA_gather) && P == 3 && PS == 4 && RF == 0 && PD == 0 && RI == 0 && RFI == 0 && PST == 0 && M != 1
-#define gather(off) (LUMA_mul * vec4(textureGatherOffsets(LUMA_raw, HOOKED_pos+(off)*HOOKED_pt, offsets)))
+#define gather(off) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, offsets)))
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
 vec4 poi_patch = gather(0);
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
-	return vec4(dot(pow(poi_patch - gather(r.xy), vec4(2)), vec4(1)), 0, 0 ,0) * p_scale;
+	return vec4(dot(pow(poi_patch - gather(r), vec4(2)), vec4(1)), 0, 0 ,0) * p_scale;
 }
-#elif defined(LUMA_gather) && P == 3 && PS == 3 && RF == 0 && PD == 0 && RI == 0 && RFI == 0 && PST == 0 && M != 1
-#define gather(off) (LUMA_mul * vec4(textureGatherOffsets(LUMA_raw, HOOKED_pos+(off)*HOOKED_pt, offsets)))
+#elif defined(LUMA_gather) && P == 3 && PS == 3 && RF == 0 && PD == 0 && PST == 0 && M != 1 && (RI == 0 || RI == 1 || RI == 3) && (RFI == 0 || RFI == 1)
+#define gather(off) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, offsets)))
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
 vec4 poi_patch = gather(0);
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
-	float pdiff_sq = dot(pow(poi_patch - gather(r.xy), vec4(2)), vec4(1)) + pow(poi.x - load(r).x, 2);
+	float pdiff_sq = 0;
+	vec4 transformer = gather(r);
+
+	FOR_ROTATION {
+		FOR_REFLECTION {
+			pdiff_sq += dot(pow(poi_patch - transformer, vec4(2)), vec4(1));
+#if RFI == 1
+			transformer = transformer.zyxw;
+#endif
+		}
+#if RI == 3
+		transformer = transformer.wxyz;
+#elif RI == 1
+		transformer = transformer.zwxy;
+#endif
+	}
+	pdiff_sq += pow(poi.x - load(r).x, 2) * RI1 * RFI1;
 	return vec4(pdiff_sq, 0, 0 ,0) * p_scale;
 }
 #elif defined(LUMA_gather) && PS == 6 && RF == 0 && PD == 0 && (RI == 0 || RI == 1 || RI == 3) && (RFI == 0 || RFI == 1)
