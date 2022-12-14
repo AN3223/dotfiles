@@ -231,7 +231,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define RS 3
-#define PS 4
+#define PS 3
 #else
 #define RS 3
 #define PS 4
@@ -254,8 +254,8 @@ vec4 hook()
  * RFI (0 to 2): Reflectional invariance
  */
 #ifdef LUMA_raw
-#define RI 0
-#define RFI 0
+#define RI 3
+#define RFI 2
 #else
 #define RI 0
 #define RFI 0
