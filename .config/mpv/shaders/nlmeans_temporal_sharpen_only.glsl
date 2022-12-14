@@ -258,8 +258,8 @@ vec4 hook()
  * RFI (0 to 2): Reflectional invariance
  */
 #ifdef LUMA_raw
-#define RI 3
-#define RFI 2
+#define RI 0
+#define RFI 0
 #else
 #define RI 0
 #define RFI 0
@@ -328,7 +328,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define RF 0
 #else
-#define RF 0
+#define RF 1
 #endif
 
 /* Estimator
