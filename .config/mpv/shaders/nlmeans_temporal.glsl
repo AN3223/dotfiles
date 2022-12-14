@@ -251,10 +251,10 @@ vec4 hook()
  *
  * The textureGather optimization is only available with:
  * - PS=4:RI=0
- * - PS=6:RI={0,1,3}:RFI={0,1}
+ * - PS=6:RI={0,1,3}
  *
  * RI: Rotational invariance
- * RFI: Reflectional invariance
+ * RFI (0 to 2): Reflectional invariance
  */
 #ifdef LUMA_raw
 #define RI 0
@@ -468,7 +468,7 @@ const int r_area = R_AREA(R*R);
 #endif
 
 #if RFI
-#define FOR_REFLECTION for (float rfi = 45; rfi < 225; rfi+=180.0/RFI1)
+#define FOR_REFLECTION for (int rfi = 0; rfi < RFI1; rfi++)
 #else
 #define FOR_REFLECTION
 #endif
@@ -561,12 +561,13 @@ vec2 rot(vec2 p, float d)
 #endif
 
 #if RFI // reflection
-vec2 ref(vec2 p, float d)
+vec2 ref(vec2 p, int d)
 {
-	return vec2(
-		p.x * cos(2*radians(d)) + p.y * sin(2*radians(d)),
-		p.y * sin(2*radians(d)) - p.x * cos(2*radians(d))
-	);
+	switch (d) {
+	case 0: return p;
+	case 1: return p * vec2(1, -1);
+	case 2: return p * vec2(-1, 1);
+	}
 }
 #else
 #define ref(p, d) (p)
@@ -598,7 +599,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
 	return vec4(dot(pow(poi_patch - gather(r), vec4(2)), vec4(1)), 0, 0 ,0) * p_scale;
 }
-#elif defined(LUMA_gather) && P == 3 && PS == 3 && RF == 0 && PD == 0 && PST == 0 && M != 1 && (RI == 0 || RI == 1 || RI == 3) && (RFI == 0 || RFI == 1)
+#elif defined(LUMA_gather) && P == 3 && PS == 3 && RF == 0 && PD == 0 && PST == 0 && M != 1 && (RI == 0 || RI == 1 || RI == 3)
 #define gather(off) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, offsets)))
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
 vec4 poi_patch = gather(0);
@@ -610,8 +611,12 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 	FOR_ROTATION {
 		FOR_REFLECTION {
 			pdiff_sq += dot(pow(poi_patch - transformer, vec4(2)), vec4(1));
-#if RFI == 1
-			transformer = transformer.zyxw;
+#if RFI
+			switch(rfi) {
+			case 0: transformer = transformer.zyxw; break;
+			case 1: transformer = transformer.zwxy; break; // undoes last mirror, performs another mirror
+			case 2: transformer = transformer.zyxw; break; // undoes last mirror
+			}
 #endif
 		}
 #if RI == 3
@@ -623,7 +628,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 	pdiff_sq += pow(poi.x - load(r).x, 2) * RI1 * RFI1;
 	return vec4(pdiff_sq, 0, 0 ,0) * p_scale;
 }
-#elif defined(LUMA_gather) && PS == 6 && RF == 0 && PD == 0 && (RI == 0 || RI == 1 || RI == 3) && (RFI == 0 || RFI == 1)
+#elif defined(LUMA_gather) && PS == 6 && RF == 0 && PD == 0 && (RI == 0 || RI == 1 || RI == 3)
 #define gather(off) LUMA_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
 // tiled even square patch comparison using textureGather
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
@@ -637,7 +642,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 	 */
 	for (tile.x = -hp; tile.x < hp; tile.x+=2) {
 		for (tile.y = -hp; tile.y < hp; tile.y+=2) {
-			vec4 stationary = gather(tile + r2.xy);
+			vec4 poi_patch = gather(tile + r2.xy);
 
 			FOR_ROTATION FOR_REFLECTION {
 				vec4 transformer = gather(ref(rot(tile + 0.5, ri), rfi) - 0.5 + r.xy);
@@ -645,12 +650,14 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 				for (float i = 0; i < ri; i+=90)
 					transformer = transformer.wxyz; // rotate 90 degrees
 #endif
-#if RFI
-				for (float i = 45; i < rfi; i+=90)
-					transformer = transformer.wzxy;
+#if RFI // XXX output is a little off
+				switch(rfi) {
+				case 1: transformer = transformer.zyxw; break;
+				case 2: transformer = transformer.xwzy; break;
+				}
 #endif
 
-				vec4 diff_sq = pow(stationary - transformer, vec4(2));
+				vec4 diff_sq = pow(poi_patch - transformer, vec4(2));
 #if PST && P >= PST
 				vec4 pdist = vec4(
 					exp(-pow(length((tile+vec2(0,1))*PSD)*PSS, 2)),
