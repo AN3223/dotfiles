@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Profile description: Tuned for anime/cartoons, may be useful for other content. Slow, but higher quality.
+// Profile description: Slow, tuned for anime/cartoons with ringing and/or medium noise, may be useful for other content. Slow, but higher quality.
 
 /* The recommended usage of this shader and its variants is to add them to 
  * input.conf and then dispatch the appropriate shader via a keybind during 
@@ -74,8 +74,8 @@ vec4 hook()
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
 //!SAVE RF_LUMA
-//!WIDTH HOOKED.w 1.25 /
-//!HEIGHT HOOKED.h 1.25 /
+//!WIDTH HOOKED.w 2.0 /
+//!HEIGHT HOOKED.h 2.0 /
 
 vec4 hook()
 {
@@ -103,7 +103,7 @@ vec4 hook()
 //!BIND RF
 //!BIND RF_LUMA
 //!BIND EP_LUMA
-//!DESC Non-local means (nlmeans_anime_hq.glsl)
+//!DESC Non-local means (nlmeans_anime_hq_medium.glsl)
 
 /* User variables
  *
@@ -322,7 +322,7 @@ vec4 hook()
  * factor is set to 3.
  */
 #ifdef LUMA_raw
-#define RF 0
+#define RF 1
 #else
 #define RF 1
 #endif
@@ -349,9 +349,9 @@ vec4 hook()
  * EPSILON may be used in place of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
-#define SW 1.0
+#define SW 0.5
 #else
-#define SW 1.0
+#define SW 0.5
 #endif
 
 /* Patch donut

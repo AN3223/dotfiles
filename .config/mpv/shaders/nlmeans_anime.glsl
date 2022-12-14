@@ -74,8 +74,8 @@ vec4 hook()
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
 //!SAVE RF_LUMA
-//!WIDTH HOOKED.w 2.0 /
-//!HEIGHT HOOKED.h 2.0 /
+//!WIDTH HOOKED.w 1.25 /
+//!HEIGHT HOOKED.h 1.25 /
 
 vec4 hook()
 {
@@ -254,8 +254,8 @@ vec4 hook()
  * RFI (0 to 2): Reflectional invariance
  */
 #ifdef LUMA_raw
-#define RI 0
-#define RFI 0
+#define RI 3
+#define RFI 2
 #else
 #define RI 0
 #define RFI 0
@@ -322,7 +322,7 @@ vec4 hook()
  * factor is set to 3.
  */
 #ifdef LUMA_raw
-#define RF 1
+#define RF 0
 #else
 #define RF 1
 #endif
@@ -349,9 +349,9 @@ vec4 hook()
  * EPSILON may be used in place of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
-#define SW 0.5
+#define SW 1.0
 #else
-#define SW 0.5
+#define SW 1.0
 #endif
 
 /* Patch donut
