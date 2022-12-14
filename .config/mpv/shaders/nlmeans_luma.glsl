@@ -220,7 +220,7 @@ vec4 hook()
  * 0: square (symmetrical)
  * 1: horizontal line
  * 2: vertical line
- * 3: diamond (symmetrical)
+ * 3: diamond (symmetrical, textureGather optimized at P=3)
  * 4: triangle (pointing upward, textureGather optimized at P=3)
  * 5: truncated triangle (last row halved)
  * 6: even sized square (textureGather optimized at any P size)
@@ -243,8 +243,9 @@ vec4 hook()
  * single 180 degree rotation, RI=3 will do three 90 degree rotations, etc.
  *
  * The textureGather optimization is only available with:
- * - PS=4:RI=0
- * - PS=6:RI={0,1,3}
+ * - PS=3:RI={0,1,3}:RFI={0,1,2}
+ * - PS=4:RI=0:RFI=0
+ * - PS=6:RI={0,1,3}:RFI={0,1,2}
  *
  * RI: Rotational invariance
  * RFI (0 to 2): Reflectional invariance
