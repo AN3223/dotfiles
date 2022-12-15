@@ -1,4 +1,5 @@
 #!/usr/bin/make -f
+# Usually used like: ./Makefile.nlm -B
 
 NO_ROTATE=RI=0:RFI=0
 

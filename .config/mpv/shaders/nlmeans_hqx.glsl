@@ -21,8 +21,8 @@
 
 // Profile description: Very slow, should offer the best quality.
 
-/* The recommended usage of this shader and its variants is to add them to 
- * input.conf and then dispatch the appropriate shader via a keybind during 
+/* The recommended usage of this shader and its variant profiles is to add them 
+ * to input.conf and then dispatch the appropriate shader via a keybind during 
  * media playback. Here is an example input.conf entry:
  *
  * F4 no-osd change-list glsl-shaders toggle "~~/shaders/nlmeans_luma.glsl"; show-text "Non-local means (LUMA only)"
@@ -37,21 +37,59 @@
  *
  * This shader is highly configurable via user variables below. Although the 
  * default settings should offer good quality at a reasonable speed, you are 
- * encouraged to tweak them to your preferences. Be mindful that different 
- * settings may have different quality and/or speed characteristics.
+ * encouraged to tweak them to your preferences. Be mindful that certain 
+ * settings may greatly affect speed.
  *
  * Denoising is most useful for noisy content. If there is no perceptible 
  * noise, you probably won't see a positive difference.
  *
- * Highly noisy content requires a high denoising factor, which will incur a 
- * high loss of detail. The default settings are generally tuned for low noise 
- * and high detail preservation.
+ * The default settings are generally tuned for low noise and high detail 
+ * preservation. The "medium" and "heavy" profiles are tuned for higher levels 
+ * of noise.
  *
  * The denoiser will not work properly if the content has been upscaled 
- * beforehand, whether it was done by you or the content creator.
+ * beforehand, whether it was done by you or someone down the line. Consider 
+ * issuing a command to downscale in the mpv console, like so:
  *
- * You will probably get better speeds with --vo=gpu-next if available, 
- * different --gpu-api will likely vary in performance as well.
+ * vf toggle scale=-2:720
+ *
+ * ...replacing 720 with whatever resolution seems appropriate. Rerun the 
+ * command to undo the downscale. It may take some trial-and-error to find the 
+ * proper resolution.
+ */
+
+/* Regarding speed
+ *
+ * Speed may vary wildly for different vo and gpu-api settings. Generally 
+ * vo=gpu-next and gpu-api=vulkan are recommended for the best speed, but this 
+ * may be different for your system.
+ *
+ * If your GPU doesn't support textureGather, or if you are on a version of mpv 
+ * prior to 0.35.0, then consider setting RI/RFI to 0, or try the LQ and VLQ 
+ * profiles.
+ *
+ * textureGather is LUMA only and limited to the following configurations:
+ *
+ * - PS=3:P=3:PST=0:RI={0,1,3}:RFI={0,1,2}:M!=1
+ *   - Default, very fast, rotations and reflections should be free
+ *   - If this is unusually slow then try changing gpu-api and vo
+ *   - If it's still slow, try setting RI/RFI to 0.
+ *
+ * - PS=4:P=3:RI=0:RFI=0:PST=0:M!=1
+ *   - Performs about the same as the PS=3 version
+ *   - Worse quality, since patch shape is smaller and asymmetric
+ *   - Rotations/reflections not supported
+ *   - Consider this deprecated
+ *
+ * - PS=6:RI={0,1,3}:RFI={0,1,2}
+ *   - Currently the only scalable variant
+ *   - Patch shape is asymmetric on two axis
+ *   - Rotations should have very little speed impact
+ *   - Reflections may have a significant speed impact
+ *
+ * Options which always disable textureGather:
+ * 	- RF
+ * 	- PD
  */
 
 //!HOOK LUMA
@@ -117,10 +155,15 @@ vec4 hook()
  *
  * The denoising factor controls the level of blur, higher is blurrier.
  *
- * Patch size should usually be 3. Higher values are slower and not always better.
+ * Patch size should usually be an odd number greater than or equal to 3. 
+ * Higher values are slower and not always better.
  *
- * Research size should be at least 3. Higher values are usually better, but 
- * slower and offer diminishing returns.
+ * Research size usually be an odd number greater than or equal to 3. Higher 
+ * values are usually better, but slower and offer diminishing returns.
+ *
+ * Even numbered patch/research sizes will sample between pixels. It's not 
+ * known whether this is ever useful behavior or not. This is incompatible with 
+ * textureGather optimizations.
  */
 #ifdef LUMA_raw
 #define S 3
@@ -154,6 +197,19 @@ vec4 hook()
 #define ASP 4.0
 #endif
 
+/* Starting weight
+ *
+ * Lower numbers give less weight to the pixel-of-interest, which may help 
+ * handle higher noise levels, ringing, and may be useful for other things too?
+ *
+ * EPSILON should be used instead of zero to avoid divide-by-zero errors.
+ */
+#ifdef LUMA_raw
+#define SW 1.0
+#else
+#define SW 1.0
+#endif
+
 /* Weight discard
  *
  * Discard weights that fall below a fraction of the average weight. This culls 
@@ -178,56 +234,21 @@ vec4 hook()
 #define WDP 6.0
 #endif
 
-/* Spatial kernel
- *
- * Increasing the spatial denoising factor (SS) reduces the weight of further 
- * pixels.
- *
- * Spatial distortion instructs the spatial kernel to view that axis as 
- * closer/further, for instance SD=(1,1,0.5) would make the temporal axis 
- * appear closer and increase blur between frames.
- *
- * The intra-patch variants do not yet have well-understood effects. They are 
- * intended to make large patch sizes more useful. Likely significantly slower.
- *
- * SS: spatial denoising factor
- * SD: spatial distortion (X, Y, time)
- * PSS: intra-patch spatial denoising factor
- * PST: enables intra-patch spatial kernel if P>=PST, 0 fully disables
- * PSD: intra-patch spatial distortion (X, Y)
- */
-#ifdef LUMA_raw
-#define SS 0.25
-#define SD vec3(1,1,1)
-#define PST 0
-#define PSS 0.0
-#define PSD vec2(1,1)
-#else
-#define SS 0.25
-#define SD vec3(1,1,1)
-#define PST 0
-#define PSS 0.0
-#define PSD vec2(1,1)
-#endif
-
 /* Search shape
  *
  * Determines the shape of patches and research zones. Different shapes have 
- * different speed and quality characteristics. Every shape is smaller than 
- * square, with the exception of square itself.
+ * different speed and quality characteristics. Every shape (besides square) is 
+ * smaller than square.
  *
  * PS applies applies to patches, RS applies to research zones.
  *
- * For PS it is highly recommended to stick to textureGather optimized shapes, 
- * these will run much faster on GPUs that support textureGather.
- *
  * 0: square (symmetrical)
- * 1: horizontal line
- * 2: vertical line
- * 3: diamond (symmetrical, textureGather optimized at P=3)
- * 4: triangle (pointing upward, textureGather optimized at P=3)
- * 5: truncated triangle (last row halved)
- * 6: even sized square (textureGather optimized at any P size)
+ * 1: horizontal line (asymmetric)
+ * 2: vertical line (asymmetric)
+ * 3: diamond (symmetrical)
+ * 4: triangle (asymmetric, pointing upward)
+ * 5: truncated triangle (asymmetric on two axis, last row halved)
+ * 6: even sized square (asymmetric on two axis)
  */
 #ifdef LUMA_raw
 #define RS 3
@@ -245,11 +266,6 @@ vec4 hook()
  *
  * The angle in degrees of each rotation is 360/(RI+1), so RI=1 will do a 
  * single 180 degree rotation, RI=3 will do three 90 degree rotations, etc.
- *
- * The textureGather optimization is only available with:
- * - PS=3:RI={0,1,3}:RFI={0,1,2}
- * - PS=4:RI=0:RFI=0
- * - PS=6:RI={0,1,3}:RFI={0,1,2}
  *
  * RI: Rotational invariance
  * RFI (0 to 2): Reflectional invariance
@@ -274,7 +290,7 @@ vec4 hook()
  * struggle more with noise that persists across multiple frames (compression 
  * noise, repeating frames), but can work very well on high quality video.
  *
- * Motion estimation (ME) should improve quality without impacting performance.
+ * Motion estimation (ME) should improve quality without impacting speed.
  *
  * T: number of frames used
  * ME: motion estimation, 0 for none, 1 for max weight, 2 for weighted avg
@@ -285,6 +301,38 @@ vec4 hook()
 #else
 #define T 0
 #define ME 0
+#endif
+
+/* Spatial kernel
+ *
+ * Increasing the spatial denoising factor (SS) reduces the weight of further 
+ * pixels.
+ *
+ * Spatial distortion instructs the spatial kernel to view that axis as 
+ * closer/further, for instance SD=(1,1,0.5) would make the temporal axis 
+ * appear closer and increase blur between frames.
+ *
+ * The intra-patch variants do not yet have well-understood effects. They are 
+ * intended to make large patch sizes more useful. Likely slower.
+ *
+ * SS: spatial denoising factor
+ * SD: spatial distortion (X, Y, time)
+ * PSS: intra-patch spatial denoising factor
+ * PST: enables intra-patch spatial kernel if P>=PST, 0 fully disables
+ * PSD: intra-patch spatial distortion (X, Y)
+ */
+#ifdef LUMA_raw
+#define SS 0.25
+#define SD vec3(1,1,1)
+#define PST 0
+#define PSS 0.0
+#define PSD vec2(1,1)
+#else
+#define SS 0.25
+#define SD vec3(1,1,1)
+#define PST 0
+#define PSS 0.0
+#define PSD vec2(1,1)
 #endif
 
 /* Extremes preserve
@@ -311,15 +359,15 @@ vec4 hook()
  *
  * Compares the pixel-of-interest against downscaled pixels.
  *
- * This will virtually always improve quality, but will disable textureGather 
- * optimizations.
+ * This will virtually always improve quality, but will always disable 
+ * textureGather optimizations.
  *
  * The downscale factor can be modified in the WIDTH/HEIGHT directives for the 
  * RF texture (for CHROMA, RGB) and RF_LUMA (LUMA only) textures near the top 
  * of this shader, higher numbers increase blur.
  *
  * Any notation of RF as a positive number should be assumed to be referring to 
- * the downscaling factor, e.g., RF=3 means RF is enabled and the downscaling 
+ * the downscaling factor, e.g., RF=3 means RF is set to 1 and the downscaling 
  * factor is set to 3.
  */
 #ifdef LUMA_raw
@@ -329,6 +377,8 @@ vec4 hook()
 #endif
 
 /* Estimator
+ *
+ * Don't change this setting.
  *
  * 0: means
  * 1: Euclidean medians (extremely slow, may be good for heavy noise)
@@ -341,25 +391,11 @@ vec4 hook()
 #define M 0
 #endif
 
-/* Starting weight
- *
- * This can be used to modify the weight of the pixel-of-interest. Lower 
- * numbers give less weight to the pixel-of-interest, which may help handle 
- * heavy noise.
- *
- * EPSILON may be used in place of zero to avoid divide-by-zero errors.
- */
-#ifdef LUMA_raw
-#define SW 1.0
-#else
-#define SW 1.0
-#endif
-
 /* Patch donut
  *
  * If enabled, ignores center pixel of patch comparisons.
  *
- * Disables textureGather optimizations.
+ * Not sure if this is any use? May be removed at any time.
  */
 #ifdef LUMA_raw
 #define PD 0
@@ -369,12 +405,8 @@ vec4 hook()
 
 /* Blur factor
  *
- * The amount to blur the pixel-of-interest with the estimated pixel. For the 
- * means estimator this should always be 1.0, since it already blurs against 
- * the pixel-of-interest and the level of blur can be controlled with the 
- * denoising factor (S).
- *
- * BF (1>=BF>=0): blur factor, 1 being the estimation, 0 being the raw input
+ * 0 to 1, only useful for alternative estimators. You're probably looking for 
+ * "S" (denoising factor), go back to the top of the shader!
  */
 #ifdef LUMA_raw
 #define BF 1.0
@@ -389,16 +421,17 @@ vec4 hook()
 #if PS == 6
 const int hp = P/2;
 #else
-const float hp = int(P/2) - 0.5*(1-(P%2));
+const float hp = int(P/2) - 0.5*(1-(P%2)); // sample between pixels for even patch sizes
 #endif
 
 #if RS == 6
 const int hr = R/2;
 #else
-const float hr = int(R/2) - 0.5*(1-(R%2));
+const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even research sizes
 #endif
 
 // donut increment, increments without landing on (0,0,0)
+// much faster than a "continue" statement
 #define DINCR(z,c) (z.c++,(z.c += int(z == vec3(0))))
 
 // search shapes and their corresponding areas
@@ -420,7 +453,7 @@ const float hr = int(R/2) - 0.5*(1-(R%2));
 #define T1 (T+1)
 #define FOR_FRAME for (r.z = 0; r.z < T1; r.z++)
 
-// XXX This should be ever-so-slightly better? I can't see much difference.
+// Skip comparing the pixel-of-interest against itself, unless RF is enabled
 #if RF
 #define RINCR(z,c) (z.c++)
 #else
@@ -587,6 +620,7 @@ vec4 patch_comparison(vec3 r, vec3 r2)
 
 #if defined(LUMA_gather) && P == 3 && PS == 4 && RF == 0 && PD == 0 && RI == 0 && RFI == 0 && PST == 0 && M != 1
 #define gather(off) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, offsets)))
+// (DEPRECATED) 3x3 triangle patch_comparison_gather
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
 vec4 poi_patch = gather(0);
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
@@ -595,6 +629,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 }
 #elif defined(LUMA_gather) && P == 3 && PS == 3 && RF == 0 && PD == 0 && PST == 0 && M != 1 && (RI == 0 || RI == 1 || RI == 3)
 #define gather(off) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, offsets)))
+// 3x3 diamond patch_comparison_gather
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
 vec4 poi_patch = gather(0);
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
@@ -624,7 +659,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 }
 #elif defined(LUMA_gather) && PS == 6 && RF == 0 && PD == 0 && (RI == 0 || RI == 1 || RI == 3)
 #define gather(off) LUMA_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
-// tiled even square patch comparison using textureGather
+// tiled even square patch_comparison_gather
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
 	vec2 tile;
@@ -682,34 +717,34 @@ vec4 hook()
 	vec3 p = vec3(0);
 	vec3 me = vec3(0);
 
-#if T && ME == 1
+#if T && ME == 1 // temporal & motion estimation
 	vec3 me_tmp = vec3(0);
 	float maxweight = 0;
-#elif T && ME == 2
+#elif T && ME == 2 // temporal & motion estimation
 	vec3 me_sum = vec3(0);
 	float me_weight = 0;
 #endif
 
-#if WD == 2 || M == 3
+#if WD == 2 || M == 3 // weight discard, weighted median intensities
 	int r_index = 0;
 	vec4 all_weights[r_area];
 	vec4 all_pixels[r_area];
-#elif WD == 1
+#elif WD == 1 // weight discard
 	vec4 no_weights = vec4(1);
 #endif
 
-#if M == 1
+#if M == 1 // Euclidean medians
 	vec4 minsum = vec4(0);
 #endif
 
 	FOR_FRAME {
-#if T && ME == 1
+#if T && ME == 1 // temporal & motion estimation
 	if (r.z > 0) {
 		me += me_tmp;
 		me_tmp = vec3(0);
 		maxweight = 0;
 	}
-#elif T && ME == 2
+#elif T && ME == 2 // temporal & motion estimation
 	if (r.z > 0) {
 		me += round(me_sum / me_weight);
 		me_sum = vec3(0);
@@ -717,27 +752,27 @@ vec4 hook()
 	}
 #endif
 	FOR_RESEARCH(r) {
+		// main NLM logic
 		const float h = S*0.013;
 		const float pdiff_scale = 1.0/(h*h);
-
 		vec4 pdiff_sq = (r.z == 0) ? patch_comparison_gather(r+me, vec3(0)) : patch_comparison(r+me, vec3(0));
 		vec4 weight = exp(-pdiff_sq * pdiff_scale);
 
-#if T && ME == 1
+#if T && ME == 1 // temporal & motion estimation
 		me_tmp = vec3(r.xy,0) * step(maxweight, weight.x) + me_tmp * (1 - step(maxweight, weight.x));
 		maxweight = max(maxweight, weight.x);
-#elif T && ME == 2
+#elif T && ME == 2 // temporal & motion estimation
 		me_sum += vec3(r.xy,0) * weight.x;
 		me_weight += weight.x;
 #endif
 
-		weight *= exp(-pow(length(r*SD)*SS, 2));
+		weight *= exp(-pow(length(r*SD)*SS, 2)); // spatial kernel
 
-#if WD == 2 || M == 3 // true average, weighted median intensity
+#if WD == 2 || M == 3 // weight discard, weighted median intensity
 		all_weights[r_index] = weight;
 		all_pixels[r_index] = load(r+me);
 		r_index++;
-#elif WD == 1 // cumulative moving average
+#elif WD == 1 // weight discard
 		// XXX maybe keep early samples in a small buffer?
 		vec4 wd_scale = 1.0/no_weights;
 		vec4 keeps = step(total_weight*wd_scale * WDT*exp(-wd_scale*WDP), weight);
@@ -745,22 +780,11 @@ vec4 hook()
 		no_weights += keeps;
 #endif
 
-		/* XXX Not 100% sure if load or load2 should be used here WRT RF. load2 is 
-		 * the old behavior.
-		 *
-		 * In my opinion load looks better, but this should be tested with the test 
-		 * script whenever that is finally cleaned up and fixed
-		 */
 		sum += load(r+me) * weight;
 		total_weight += weight;
 
 #if M == 1 // Euclidean median
 		// Based on: https://arxiv.org/abs/1207.3056
-		/* XXX Behavior changed w/ 0ef96d05a854a752048b80b08178d4823b62f1ef
-		 *
-		 * Now it requires rotation in order to behave similar to before that 
-		 * commit. Maybe it was inappropriately rotating before?
-		 */
 		// XXX might not work w/ ME
 		vec3 r2;
 		vec4 wpdist_sum = vec4(0);
@@ -784,7 +808,7 @@ vec4 hook()
 	} // FOR_RESEARCH
 	} // FOR_FRAME
 
-#if T
+#if T // temporal
 	//cfg_T_store
 #endif
 
@@ -831,7 +855,7 @@ vec4 hook()
 
 #if EP // extremes preserve
 	float luminance = EP_LUMA_texOff(0).x;
-	// epsilon is needed since pow(0,0) is undefined
+	// EPSILON is needed since pow(0,0) is undefined
 	float ep_weight = pow(max(min(1-luminance, luminance)*2, EPSILON), (luminance < 0.5 ? DP : BP));
 	result = mix(poi, result, ep_weight);
 #endif

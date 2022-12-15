@@ -1,4 +1,6 @@
 #!/usr/bin/awk -f
+# This script modifies/generates preprocessor/GLSL code for nlmeans. Usage 
+# examples can be found in Makefile.nlm
 
 BEGIN {
 	len = split(ENVIRON["LUMA"] ENVIRON["CHROMA"], opts, ":")
