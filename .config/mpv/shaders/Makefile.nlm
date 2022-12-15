@@ -1,8 +1,14 @@
 #!/usr/bin/make -f
 
-LQ_DESC=Somewhat fast, significantly worse quality. Primarily for very old/weak GPUs.
-LQ_LUMA=S=5:P=1:R=3:RF=1.25:RI=0:RFI=0
-LQ=P=1:R=3
+NO_ROTATE=RI=0:RFI=0
+
+VLQ_DESC=Use this if you have an old GPU or an mpv release before 0.35.0
+VLQ_LUMA=S=5:P=1:R=3:WD=1:RF=1.25:$(NO_ROTATE)
+VLQ=P=1:R=3:WD=1
+
+LQ_DESC=Faster, but lower quality.
+LQ_LUMA=S=1.25:R=3:WD=1
+LQ=WD=1
 
 HQ_DESC=Slow, but higher quality.
 HQ_LUMA=S=3:P=4:PS=6:RI=3:RFI=0:EP=0
@@ -23,11 +29,11 @@ ANIME_LUMA=S=3:PS=3:SS=0.0:EP=0
 ANIME=S=3:SS=0.0
 
 ANIME_MEDIUM_DESC=Slow, tuned for anime/cartoons with ringing and/or medium noise, may be useful for other content.
-ANIME_MEDIUM_LUMA=$(ANIME_LUMA):RI=0:RFI=0:RF=2.0:$(MEDIUM)
+ANIME_MEDIUM_LUMA=$(ANIME_LUMA):$(NO_ROTATE):RF=2.0:$(MEDIUM)
 ANIME_MEDIUM=$(ANIME):$(MEDIUM)
 
 TEMPORAL_DESC=Very experimental and buggy, limited to vo=gpu-next.
-TEMPORAL_LUMA=T=2:T_FRAME_LIMIT=3:T_RES_W=1920:T_RES_H=1080:RI=0:RFI=0
+TEMPORAL_LUMA=T=2:T_FRAME_LIMIT=3:T_RES_W=1920:T_RES_H=1080:$(NO_ROTATE)
 
 SHARPEN_ONLY_DESC=Sharpen without denoising.
 SHARPEN_ONLY=S=9:AS=2
@@ -40,7 +46,7 @@ HQ_SHARPEN_ONLY=ASP=1.25:$(SHARPEN_ONLY)
 
 LUMA_DESC=Luma only, saves some time by not processing the chroma plane.
 
-all: nlmeans_heavy.glsl nlmeans_medium.glsl nlmeans_anime.glsl nlmeans_anime_medium.glsl nlmeans_temporal.glsl nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_hq_heavy.glsl nlmeans_hq_medium.glsl nlmeans_hqx.glsl nlmeans_anime_hq.glsl nlmeans_anime_hq_medium.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_temporal_sharpen_denoise.glsl nlmeans_hq_sharpen_denoise.glsl nlmeans_sharpen_only.glsl nlmeans_temporal_sharpen_only.glsl nlmeans_hq_sharpen_only.glsl
+all: nlmeans_heavy.glsl nlmeans_medium.glsl nlmeans_anime.glsl nlmeans_anime_medium.glsl nlmeans_temporal.glsl nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_hq_heavy.glsl nlmeans_hq_medium.glsl nlmeans_hqx.glsl nlmeans_anime_hq.glsl nlmeans_anime_hq_medium.glsl nlmeans_vlq.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_temporal_sharpen_denoise.glsl nlmeans_hq_sharpen_denoise.glsl nlmeans_sharpen_only.glsl nlmeans_temporal_sharpen_only.glsl nlmeans_hq_sharpen_only.glsl
 
 nlmeans_heavy.glsl: nlmeans.glsl
 	env DESC="$(HEAVY_DESC)" FILENAME=$@ LUMA=$(HEAVY) CHROMA=$(HEAVY) ./nlmeans_cfg < $? > $@
@@ -66,6 +72,8 @@ nlmeans_anime_hq.glsl: nlmeans.glsl
 	env DESC="$(ANIME_DESC) $(HQ_DESC)" FILENAME=$@ LUMA=$(HQ_LUMA):$(ANIME_LUMA) CHROMA=$(HQ):$(ANIME) ./nlmeans_cfg < $? > $@
 nlmeans_anime_hq_medium.glsl: nlmeans.glsl
 	env DESC="$(ANIME_MEDIUM_DESC) $(HQ_DESC)" FILENAME=$@ LUMA=$(HQ_LUMA):$(ANIME_MEDIUM_LUMA) CHROMA=$(HQ):$(ANIME_MEDIUM) ./nlmeans_cfg < $? > $@
+nlmeans_vlq.glsl: nlmeans.glsl
+	env DESC="$(VLQ_DESC)" FILENAME=$@ LUMA=$(VLQ_LUMA) CHROMA=$(VLQ) ./nlmeans_cfg < $? > $@
 nlmeans_lq.glsl: nlmeans.glsl
 	env DESC="$(LQ_DESC)" FILENAME=$@ LUMA=$(LQ_LUMA) CHROMA=$(LQ) ./nlmeans_cfg < $? > $@
 
