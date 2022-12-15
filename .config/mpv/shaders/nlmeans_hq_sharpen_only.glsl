@@ -125,7 +125,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define S 9
 #define P 4
-#define R 7
+#define R 5
 #else
 #define S 9
 #define P 3
