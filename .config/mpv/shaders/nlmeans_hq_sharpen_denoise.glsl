@@ -191,7 +191,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define AS 1
 #define ASF 1.0
-#define ASP 1.25
+#define ASP 4.0
 #else
 #define AS 0
 #define ASF 1.0
