@@ -161,9 +161,10 @@ vec4 hook()
  * Research size usually be an odd number greater than or equal to 3. Higher 
  * values are usually better, but slower and offer diminishing returns.
  *
- * Even numbered patch/research sizes will sample between pixels. It's not 
- * known whether this is ever useful behavior or not. This is incompatible with 
- * textureGather optimizations.
+ * Even numbered patch/research sizes will sample between pixels unless PS=6. 
+ * It's not known whether this is ever useful behavior or not. This is 
+ * incompatible with textureGather optimizations, so enable RF when using even 
+ * patch/research sizes.
  */
 #ifdef LUMA_raw
 #define S 9
@@ -542,16 +543,15 @@ const int p_area = P_AREA(P*P);
 const float r_scale = 1.0/r_area;
 const float p_scale = 1.0/p_area;
 
-#if RF && defined(LUMA_raw)
-#define TEX RF_LUMA_tex
-#elif RF
-#define TEX RF_tex
-#else
-#define TEX HOOKED_tex
-#endif
-
 #define load_(off)  HOOKED_tex(HOOKED_pos + HOOKED_pt * vec2(off))
-#define load2_(off) TEX(HOOKED_pos + HOOKED_pt * vec2(off))
+
+#if RF && defined(LUMA_raw)
+#define load2_(off) RF_LUMA_tex(HOOKED_pos + HOOKED_pt * vec2(off))
+#elif RF
+#define load2_(off) RF_tex(HOOKED_pos + HOOKED_pt * vec2(off))
+#else
+#define load2_(off) HOOKED_tex(HOOKED_pos + HOOKED_pt * vec2(off))
+#endif
 
 #if T
 vec4 load(vec3 off)
@@ -618,7 +618,10 @@ vec4 patch_comparison(vec3 r, vec3 r2)
 	return pdiff_sq * p_scale;
 }
 
-#if defined(LUMA_gather) && P == 3 && PS == 4 && RF == 0 && PD == 0 && RI == 0 && RFI == 0 && PST == 0 && M != 1
+#define NO_GATHER (PD == 0 && RF == 0) // never textureGather if any of these conditions are false
+#define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3)
+
+#if defined(LUMA_gather) && (PS == 4 && P == 3) && (RI == 0 && RFI == 0) && PST == 0 && M != 1 && NO_GATHER
 #define gather(off) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, offsets)))
 // (DEPRECATED) 3x3 triangle patch_comparison_gather
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
@@ -627,7 +630,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
 	return vec4(dot(pow(poi_patch - gather(r), vec4(2)), vec4(1)), 0, 0 ,0) * p_scale;
 }
-#elif defined(LUMA_gather) && P == 3 && PS == 3 && RF == 0 && PD == 0 && PST == 0 && M != 1 && (RI == 0 || RI == 1 || RI == 3)
+#elif defined(LUMA_gather) && (PS == 3 && P == 3) && PST == 0 && M != 1 && REGULAR_ROTATIONS && NO_GATHER
 #define gather(off) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, offsets)))
 // 3x3 diamond patch_comparison_gather
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
@@ -657,7 +660,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 	pdiff_sq += pow(poi.x - load(r).x, 2) * RI1 * RFI1;
 	return vec4(pdiff_sq, 0, 0 ,0) * p_scale;
 }
-#elif defined(LUMA_gather) && PS == 6 && RF == 0 && PD == 0 && (RI == 0 || RI == 1 || RI == 3)
+#elif defined(LUMA_gather) && PS == 6 && REGULAR_ROTATIONS && NO_GATHER
 #define gather(off) LUMA_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
 // tiled even square patch_comparison_gather
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
