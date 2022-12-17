@@ -194,11 +194,11 @@ vec4 hook()
 #ifdef LUMA_raw
 #define AS 0
 #define ASF 1.0
-#define ASP 4.0
+#define ASP 2.0
 #else
 #define AS 0
 #define ASF 1.0
-#define ASP 4.0
+#define ASP 2.0
 #endif
 
 /* Starting weight
@@ -230,11 +230,11 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 2
-#define WDT 0.875
+#define WDT 1.0
 #define WDP 6.0
 #else
 #define WD 2
-#define WDT 0.875
+#define WDT 1.0
 #define WDP 6.0
 #endif
 
