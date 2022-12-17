@@ -739,7 +739,9 @@ vec4 hook()
 	vec4 all_weights[r_area];
 	vec4 all_pixels[r_area];
 #elif WD == 1 // weight discard
-	vec4 no_weights = vec4(1);
+	vec4 no_weights = vec4(0);
+	vec4 discard_total_weight = vec4(0);
+	vec4 discard_sum = vec4(0);
 #endif
 
 #if M == 1 // Euclidean medians
@@ -747,13 +749,13 @@ vec4 hook()
 #endif
 
 	FOR_FRAME {
-#if T && ME == 1 // temporal & motion estimation
+#if T && ME == 1 // temporal & motion estimation max weight
 	if (r.z > 0) {
 		me += me_tmp;
 		me_tmp = vec3(0);
 		maxweight = 0;
 	}
-#elif T && ME == 2 // temporal & motion estimation
+#elif T && ME == 2 // temporal & motion estimation weighted average
 	if (r.z > 0) {
 		me += round(me_sum / me_weight);
 		me_sum = vec3(0);
@@ -767,10 +769,10 @@ vec4 hook()
 		vec4 pdiff_sq = (r.z == 0) ? patch_comparison_gather(r+me, vec3(0)) : patch_comparison(r+me, vec3(0));
 		vec4 weight = exp(-pdiff_sq * pdiff_scale);
 
-#if T && ME == 1 // temporal & motion estimation
+#if T && ME == 1 // temporal & motion estimation max weight
 		me_tmp = vec3(r.xy,0) * step(maxweight, weight.x) + me_tmp * (1 - step(maxweight, weight.x));
 		maxweight = max(maxweight, weight.x);
-#elif T && ME == 2 // temporal & motion estimation
+#elif T && ME == 2 // temporal & motion estimation weighted average
 		me_sum += vec3(r.xy,0) * weight.x;
 		me_weight += weight.x;
 #endif
@@ -783,9 +785,10 @@ vec4 hook()
 		r_index++;
 #elif WD == 1 // weight discard
 		// XXX maybe keep early samples in a small buffer?
-		vec4 wd_scale = 1.0/no_weights;
+		vec4 wd_scale = 1.0/max(no_weights, 1);
 		vec4 keeps = step(total_weight*wd_scale * WDT*exp(-wd_scale*WDP), weight);
-		weight *= keeps;
+		discard_sum += load(r+me) * weight * (1 - keeps);
+		discard_total_weight += weight * (1 - keeps);
 		no_weights += keeps;
 #endif
 
@@ -822,17 +825,26 @@ vec4 hook()
 #endif
 
 	vec4 avg_weight = total_weight * r_scale;
+	vec4 old_avg_weight = avg_weight;
 
 #if WD == 2 // true average
 	total_weight = vec4(0);
 	sum = vec4(0);
+	vec4 no_weights = vec4(0);
 
 	for (int i = 0; i < r_area; i++) {
 		vec4 keeps = step(avg_weight*WDT, all_weights[i]);
 		all_weights[i] *= keeps;
 		sum += all_pixels[i] * all_weights[i];
 		total_weight += all_weights[i];
+		no_weights += keeps;
 	}
+#elif WD == 1 // moving cumulative average
+	total_weight -= discard_total_weight;
+	sum -= discard_sum;
+#endif
+#if WD // weight discard
+	avg_weight = total_weight / no_weights;
 #endif
 
 	total_weight += SW;
@@ -862,7 +874,7 @@ vec4 hook()
 
 #if AS // adaptive sharpening
 	vec4 sharpened = poi + (poi - result) * ASF;
-	vec4 sharpening_power = pow(avg_weight, vec4(ASP));
+	vec4 sharpening_power = pow(old_avg_weight, vec4(ASP));
 #endif
 
 #if EP // extremes preserve
