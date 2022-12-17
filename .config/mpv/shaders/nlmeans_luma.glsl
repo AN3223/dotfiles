@@ -718,8 +718,8 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 
 vec4 hook()
 {
-	vec4 total_weight = vec4(SW);
-	vec4 sum = poi * SW;
+	vec4 total_weight = vec4(0);
+	vec4 sum = vec4(0);
 	vec4 result = vec4(0);
 
 	vec3 r = vec3(0);
@@ -824,8 +824,8 @@ vec4 hook()
 	vec4 avg_weight = total_weight * r_scale;
 
 #if WD == 2 // true average
-	total_weight = vec4(SW);
-	sum = poi * SW;
+	total_weight = vec4(0);
+	sum = vec4(0);
 
 	for (int i = 0; i < r_area; i++) {
 		vec4 keeps = step(avg_weight*WDT, all_weights[i]);
@@ -834,6 +834,9 @@ vec4 hook()
 		total_weight += all_weights[i];
 	}
 #endif
+
+	total_weight += SW;
+	sum += poi * SW;
 
 #if M == 3 // weighted median intensity
 	const float hr_area = r_area/2.0;
