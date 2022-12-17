@@ -70,7 +70,7 @@
  *
  * textureGather is LUMA only and limited to the following configurations:
  *
- * - PS=3:P=3:PST=0:RI={0,1,3}:RFI={0,1,2}:M!=1
+ * - PS={3,7}:P=3:PST=0:RI={0,1,3}:RFI={0,1,2}:M!=1
  *   - Default, very fast, rotations and reflections should be free
  *   - If this is unusually slow then try changing gpu-api and vo
  *   - If it's still slow, try setting RI/RFI to 0.
@@ -253,6 +253,7 @@ vec4 hook()
  * 4: triangle (asymmetric, pointing upward)
  * 5: truncated triangle (asymmetric on two axis, last row halved)
  * 6: even sized square (asymmetric on two axis)
+ * 7: plus (symmetrical)
  */
 #ifdef LUMA_raw
 #define RS 3
@@ -451,6 +452,9 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 #define S_VERTICAL(z,hz,incr) for (z.x = 0; z.x <= 0; z.x++) for (z.y = -hz; z.y <= hz; incr)
 #define S_HORIZONTAL(z,hz,incr) for (z.x = -hz; z.x <= hz; incr) for (z.y = 0; z.y <= 0; z.y++)
 
+#define S_PLUS(z,hz,incr) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -hz * int(z.x == 0); z.y <= hz * int(z.x == 0); incr)
+#define S_PLUS_A(hz,Z) (Z*2 - 1)
+
 #define S_SQUARE(z,hz,incr) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -hz; z.y <= hz; incr)
 #define S_SQUARE_EVEN(z,hz,incr) for (z.x = -hz; z.x < hz; z.x++) for (z.y = -hz; z.y < hz; incr)
 
@@ -470,6 +474,9 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 #if R == 0 || R == 1
 #define FOR_RESEARCH(r) S_1X1(r)
 const int r_area = R_AREA(1);
+#elif RS == 7
+#define FOR_RESEARCH(r) S_PLUS(r,hr,RINCR(r,y))
+const int r_area = R_AREA(S_PLUS_A(hr,R));
 #elif RS == 6
 #define FOR_RESEARCH(r) S_SQUARE_EVEN(r,hr,RINCR(r,y))
 const int r_area = R_AREA(R*R);
@@ -520,6 +527,9 @@ const int r_area = R_AREA(R*R);
 #if P == 0 || P == 1
 #define FOR_PATCH(p) S_1X1(p) FOR_ROTATION FOR_REFLECTION
 const int p_area = P_AREA(1);
+#elif PS == 7
+#define FOR_PATCH(p) S_PLUS(p,hp,PINCR(p,y)) FOR_ROTATION FOR_REFLECTION
+const int p_area = P_AREA(S_PLUS_A(hp,P));
 #elif PS == 6
 #define FOR_PATCH(p) S_SQUARE_EVEN(p,hp,PINCR(p,y)) FOR_ROTATION FOR_REFLECTION
 const int p_area = P_AREA(P*P);
@@ -637,9 +647,9 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
 	return vec4(dot(pow(poi_patch - gather(r), vec4(2)), vec4(1)), 0, 0 ,0) * p_scale;
 }
-#elif defined(LUMA_gather) && (PS == 3 && P == 3) && PST == 0 && M != 1 && REGULAR_ROTATIONS && NO_GATHER
+#elif defined(LUMA_gather) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && M != 1 && REGULAR_ROTATIONS && NO_GATHER
 #define gather(off) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, offsets)))
-// 3x3 diamond patch_comparison_gather
+// 3x3 diamond/plus patch_comparison_gather
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
 vec4 poi_patch = gather(0);
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
