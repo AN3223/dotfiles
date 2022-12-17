@@ -164,7 +164,7 @@ vec4 hook()
  * Research size usually be an odd number greater than or equal to 3. Higher 
  * values are usually better, but slower and offer diminishing returns.
  *
- * Even numbered patch/research sizes will sample between pixels unless PS=6. 
+ * Even-numbered patch/research sizes will sample between pixels unless PS=6. 
  * It's not known whether this is ever useful behavior or not. This is 
  * incompatible with textureGather optimizations, so enable RF when using even 
  * patch/research sizes.
