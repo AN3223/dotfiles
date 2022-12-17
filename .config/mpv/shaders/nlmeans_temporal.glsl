@@ -638,24 +638,25 @@ vec4 patch_comparison(vec3 r, vec3 r2)
 #define NO_GATHER (PD == 0 && RF == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3)
 
+#define gather_offs(off) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, offsets)))
+#define gather(off) HOOKED_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
+
 #if defined(LUMA_gather) && (PS == 4 && P == 3) && (RI == 0 && RFI == 0) && PST == 0 && M != 1 && NO_GATHER
-#define gather(off) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, offsets)))
 // (DEPRECATED) 3x3 triangle patch_comparison_gather
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
-vec4 poi_patch = gather(0);
+vec4 poi_patch = gather_offs(0);
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
-	return vec4(dot(pow(poi_patch - gather(r), vec4(2)), vec4(1)), 0, 0 ,0) * p_scale;
+	return vec4(dot(pow(poi_patch - gather_offs(r), vec4(2)), vec4(1)), 0, 0 ,0) * p_scale;
 }
 #elif defined(LUMA_gather) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && M != 1 && REGULAR_ROTATIONS && NO_GATHER
-#define gather(off) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, offsets)))
 // 3x3 diamond/plus patch_comparison_gather
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
-vec4 poi_patch = gather(0);
+vec4 poi_patch = gather_offs(0);
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
 	float pdiff_sq = 0;
-	vec4 transformer = gather(r);
+	vec4 transformer = gather_offs(r);
 
 	FOR_ROTATION {
 		FOR_REFLECTION {
@@ -678,7 +679,6 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 	return vec4(pdiff_sq, 0, 0 ,0) * p_scale;
 }
 #elif defined(LUMA_gather) && PS == 6 && REGULAR_ROTATIONS && NO_GATHER
-#define gather(off) LUMA_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
 // tiled even square patch_comparison_gather
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
