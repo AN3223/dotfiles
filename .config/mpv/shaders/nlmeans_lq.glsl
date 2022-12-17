@@ -203,7 +203,9 @@ vec4 hook()
  * Lower numbers give less weight to the pixel-of-interest, which may help 
  * handle higher noise levels, ringing, and may be useful for other things too?
  *
- * EPSILON should be used instead of zero to avoid divide-by-zero errors.
+ * EPSILON should be used instead of zero to avoid divide-by-zero errors. The 
+ * avg_weight variable may be used to make SW adapt to the local noise level, 
+ * e.g., SW=max(avg_weight, EPSILON)
  */
 #ifdef LUMA_raw
 #define SW 1.0

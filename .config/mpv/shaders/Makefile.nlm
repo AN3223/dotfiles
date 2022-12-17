@@ -16,7 +16,7 @@ HQ_LUMA=S=3:P=4:PS=6:RI=3:RFI=0:EP=0
 HQ=S=3:PS=3
 
 HEAVY_DESC=Tuned for heavy noise.
-HEAVY=SW=EPSILON:EP=0
+HEAVY=SW="max(avg_weight,EPSILON)":EP=0
 
 MEDIUM_DESC=Tuned for medium noise.
 MEDIUM=SW=0.5:$(HEAVY)
