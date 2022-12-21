@@ -208,9 +208,9 @@ vec4 hook()
  * e.g., SW=max(avg_weight, EPSILON)
  */
 #ifdef LUMA_raw
-#define SW max(avg_weight,EPSILON)
+#define SW EPSILON
 #else
-#define SW max(avg_weight,EPSILON)
+#define SW EPSILON
 #endif
 
 /* Weight discard
