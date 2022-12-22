@@ -68,22 +68,8 @@ vec4 hook()
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (MEANIP_SQ)
-//!BIND MEANIP
-//!WIDTH MEANIP.w
-//!HEIGHT MEANIP.h
-//!SAVE MEANIP_SQ
-
-vec4 hook()
-{
-	return MEANIP_texOff(0) * MEANIP_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter (A)
-//!BIND MEANIP_SQ
+//!BIND MEANIP
 //!BIND CORRIP
 //!SAVE A
 
@@ -91,8 +77,9 @@ vec4 hook()
 
 vec4 hook()
 {
-	vec4 cov = CORRIP_texOff(0) - MEANIP_SQ_texOff(0);
-	return cov / (cov + E);
+	vec4 var = CORRIP_texOff(0) - MEANIP_texOff(0) * MEANIP_texOff(0);
+	vec4 cov = var;
+	return cov / (var + E);
 }
 
 //!HOOK LUMA

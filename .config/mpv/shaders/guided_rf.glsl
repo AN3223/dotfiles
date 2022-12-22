@@ -123,38 +123,9 @@ vec4 hook()
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (MEANI_SQ)
-//!BIND MEANI
-//!WIDTH MEANI.w
-//!HEIGHT MEANI.h
-//!SAVE MEANI_SQ
-
-vec4 hook()
-{
-	return MEANI_texOff(0) * MEANI_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (MEANIXP)
+//!DESC Guided filter (A)
 //!BIND MEANI
 //!BIND MEANP
-//!WIDTH MEANP.w
-//!HEIGHT MEANP.h
-//!SAVE MEANIXP
-
-vec4 hook()
-{
-	return MEANI_texOff(0) * MEANP_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (A)
-//!BIND MEANI_SQ
-//!BIND MEANIXP
 //!BIND CORRI
 //!BIND CORRP
 //!SAVE A
@@ -163,8 +134,8 @@ vec4 hook()
 
 vec4 hook()
 {
-	vec4 var = CORRI_texOff(0) - MEANI_SQ_texOff(0);
-	vec4 cov = CORRP_texOff(0) - MEANIXP_texOff(0);
+	vec4 var = CORRI_texOff(0) - MEANI_texOff(0) * MEANI_texOff(0);
+	vec4 cov = CORRP_texOff(0) - MEANI_texOff(0) * MEANP_texOff(0);
 	return cov / (var + E);
 }
 
