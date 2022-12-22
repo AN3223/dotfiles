@@ -30,8 +30,8 @@
 //!HOOK RGB
 //!DESC Guided filter (P)
 //!BIND HOOKED
-//!WIDTH HOOKED.w 1.125 /
-//!HEIGHT HOOKED.h 1.125 /
+//!WIDTH HOOKED.w 1.25 /
+//!HEIGHT HOOKED.h 1.25 /
 //!SAVE P
 
 vec4 hook()
