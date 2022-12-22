@@ -30,8 +30,8 @@
 //!HOOK RGB
 //!DESC Guided filter (MEANIP)
 //!BIND HOOKED
-//!WIDTH HOOKED.w 1.125 /
-//!HEIGHT HOOKED.h 1.125 /
+//!WIDTH HOOKED.w 2.0 /
+//!HEIGHT HOOKED.h 2.0 /
 //!SAVE MEANIP
 
 vec4 hook()
