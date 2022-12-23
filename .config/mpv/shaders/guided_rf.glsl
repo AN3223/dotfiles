@@ -16,22 +16,45 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* Guided filter guided by the downscaled image. Output is currently junk!
+/* Guided filter guided by the downscaled image. Output is currently the same 
+ * as guided.glsl, and utilizing the downscaling yields junk!
  * 
- * The radius can be adjusted with the downscaling factors below. The E 
- * variable can be found in the "Guided filter (A)" stage.
+ * The radius can be adjusted with the "Guided Filter (MEANIP)" downscaling 
+ * factors below. Higher numbers give a bigger radius.
  *
- * The quality is not very good compared to non-local means, may be useful for 
- * fast & heavy denoising though?
+ * The E variable can be found in the "Guided filter (A)" stage.
+ *
+ * The subsampling (fast guided filter) can be adjusted with the "Guided Filter
+ * (I)" downscaling factor below. Higher numbers are faster.
+ *
+ * The subsampling of the guide (a la RF in NLM) can be adjusted with the 
+ * "Guided Filters (P)" downscaling factor. Higher numbers downscale more.
+ *
+ * The quality is not very good compared to NLM, may be useful for fast & heavy
+ * denoising though? Or even as a substitution to RF within NLM!
  */
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!DESC Guided filter (I)
+//!BIND HOOKED
+//!WIDTH HOOKED.w 1.0 /
+//!HEIGHT HOOKED.h 1.0 /
+//!SAVE I
+
+vec4 hook()
+{
+	return HOOKED_texOff(0);
+}
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
 //!DESC Guided filter (P)
 //!BIND HOOKED
-//!WIDTH HOOKED.w 1.0 /
-//!HEIGHT HOOKED.h 1.0 /
+//!WIDTH I.w 1.0 /
+//!HEIGHT I.h 1.0 /
 //!SAVE P
 
 vec4 hook()
@@ -43,14 +66,14 @@ vec4 hook()
 //!HOOK CHROMA
 //!HOOK RGB
 //!DESC Guided filter (MEANI)
-//!BIND HOOKED
-//!WIDTH HOOKED.w 2.0 /
-//!HEIGHT HOOKED.h 2.0 /
+//!BIND I
+//!WIDTH I.w 2.0 /
+//!HEIGHT I.h 2.0 /
 //!SAVE MEANI
 
 vec4 hook()
 {
-	return HOOKED_texOff(0);
+	return I_texOff(0);
 }
 
 //!HOOK LUMA
@@ -71,25 +94,29 @@ vec4 hook()
 //!HOOK CHROMA
 //!HOOK RGB
 //!DESC Guided filter (I_SQ)
-//!BIND HOOKED
+//!BIND I
+//!WIDTH I.w
+//!HEIGHT I.h
 //!SAVE I_SQ
 
 vec4 hook()
 {
-	return HOOKED_texOff(0) * HOOKED_texOff(0);
+	return I_texOff(0) * I_texOff(0);
 }
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
 //!DESC Guided filter (IXP)
-//!BIND HOOKED
+//!BIND I
 //!BIND P
+//!WIDTH I.w
+//!HEIGHT I.h
 //!SAVE IXP
 
 vec4 hook()
 {
-	return HOOKED_texOff(0) * P_texOff(0);
+	return I_texOff(0) * P_texOff(0);
 }
 
 //!HOOK LUMA
@@ -128,6 +155,8 @@ vec4 hook()
 //!BIND MEANP
 //!BIND CORRI
 //!BIND CORRP
+//!WIDTH I.w
+//!HEIGHT I.h
 //!SAVE A
 
 #define E 0.001
@@ -146,6 +175,8 @@ vec4 hook()
 //!BIND A
 //!BIND MEANI
 //!BIND MEANP
+//!WIDTH I.w
+//!HEIGHT I.h
 //!SAVE B
 
 vec4 hook()

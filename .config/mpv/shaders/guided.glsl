@@ -18,21 +18,26 @@
 
 /* "Self-guided" guided filter implementation using bilinear instead of box.
  * 
- * The radius can be adjusted with the downscaling factors below. The E 
- * variable can be found in the "Guided filter (A)" stage.
+ * The radius can be adjusted with the "Guided Filter (MEANIP)" downscaling 
+ * factors below. Higher numbers give a bigger radius.
  *
- * The quality is not very good compared to non-local means, may be useful for 
- * fast & heavy denoising though?
+ * The E variable can be found in the "Guided filter (A)" stage.
+ *
+ * The subsampling (fast guided filter) can be adjusted with the "Guided Filter
+ * (IP)" downscaling factor below. Higher numbers are faster.
+ *
+ * The quality is not very good compared to NLM, may be useful for fast & heavy
+ * denoising though? Or even as a substitution to RF within NLM!
  */
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (MEANIP)
+//!DESC Guided filter (IP)
 //!BIND HOOKED
-//!WIDTH HOOKED.w 2.0 /
-//!HEIGHT HOOKED.h 2.0 /
-//!SAVE MEANIP
+//!WIDTH HOOKED.w 1.0 /
+//!HEIGHT HOOKED.h 1.0 /
+//!SAVE IP
 
 vec4 hook()
 {
@@ -42,13 +47,29 @@ vec4 hook()
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
+//!DESC Guided filter (MEANIP)
+//!BIND IP
+//!WIDTH IP.w 2.0 /
+//!HEIGHT IP.h 2.0 /
+//!SAVE MEANIP
+
+vec4 hook()
+{
+	return IP_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
 //!DESC Guided filter (IP_SQ)
-//!BIND HOOKED
+//!BIND IP
+//!WIDTH IP.w
+//!HEIGHT IP.h
 //!SAVE IP_SQ
 
 vec4 hook()
 {
-	return HOOKED_texOff(0) * HOOKED_texOff(0);
+	return IP_texOff(0) * IP_texOff(0);
 }
 
 //!HOOK LUMA
@@ -71,6 +92,8 @@ vec4 hook()
 //!DESC Guided filter (A)
 //!BIND MEANIP
 //!BIND CORRIP
+//!WIDTH IP.w
+//!HEIGHT IP.h
 //!SAVE A
 
 #define E 0.001
@@ -88,6 +111,8 @@ vec4 hook()
 //!DESC Guided filter (B)
 //!BIND A
 //!BIND MEANIP
+//!WIDTH IP.w
+//!HEIGHT IP.h
 //!SAVE B
 
 vec4 hook()
