@@ -30,8 +30,8 @@
 //!HOOK RGB
 //!DESC Guided filter (P)
 //!BIND HOOKED
-//!WIDTH HOOKED.w 1.25 /
-//!HEIGHT HOOKED.h 1.25 /
+//!WIDTH HOOKED.w 1.0 /
+//!HEIGHT HOOKED.h 1.0 /
 //!SAVE P
 
 vec4 hook()
@@ -44,8 +44,8 @@ vec4 hook()
 //!HOOK RGB
 //!DESC Guided filter (MEANI)
 //!BIND HOOKED
-//!WIDTH HOOKED.w 1.125 /
-//!HEIGHT HOOKED.h 1.125 /
+//!WIDTH HOOKED.w 2.0 /
+//!HEIGHT HOOKED.h 2.0 /
 //!SAVE MEANI
 
 vec4 hook()
@@ -58,8 +58,8 @@ vec4 hook()
 //!HOOK RGB
 //!DESC Guided filter (MEANP)
 //!BIND P
-//!WIDTH P.w 1.125 /
-//!HEIGHT P.h 1.125 /
+//!WIDTH MEANI.w
+//!HEIGHT MEANI.h
 //!SAVE MEANP
 
 vec4 hook()
