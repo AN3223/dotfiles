@@ -458,7 +458,7 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 #define S_SQUARE_EVEN(z,hz,incr) for (z.x = -hz; z.x < hz; z.x++) for (z.y = -hz; z.y < hz; incr)
 
 #define T1 (T+1)
-#define FOR_FRAME for (r.z = 0; r.z < T1; r.z++)
+#define FOR_FRAME(r) for (r.z = 0; r.z < T1; r.z++)
 
 // Skip comparing the pixel-of-interest against itself, unless RF is enabled
 #if RF
@@ -754,7 +754,7 @@ vec4 hook()
 	vec4 minsum = vec4(0);
 #endif
 
-	FOR_FRAME {
+	FOR_FRAME(r) {
 #if T && ME == 1 // temporal & motion estimation max weight
 	if (r.z > 0) {
 		me += me_tmp;
@@ -790,7 +790,6 @@ vec4 hook()
 		all_pixels[r_index] = load(r+me);
 		r_index++;
 #elif WD == 1 // weight discard
-		// XXX maybe keep early samples in a small buffer?
 		vec4 wd_scale = 1.0/max(no_weights, 1);
 		vec4 keeps = step(total_weight*wd_scale * WDT*exp(-wd_scale*WDP), weight);
 		discard_sum += load(r+me) * weight * (1 - keeps);
@@ -803,25 +802,21 @@ vec4 hook()
 
 #if M == 1 // Euclidean median
 		// Based on: https://arxiv.org/abs/1207.3056
-		// XXX might not work w/ ME
+		// XXX might not work with ME
 		vec3 r2;
 		vec4 wpdist_sum = vec4(0);
-		FOR_FRAME FOR_RESEARCH(r2) {
+		FOR_FRAME(r2) FOR_RESEARCH(r2) {
 			vec4 pdist = (r.z + r2.z) == 0 ? patch_comparison_gather(r+me, r2+me) : patch_comparison(r+me, r2+me);
 			wpdist_sum += sqrt(pdist) * (1-weight);
 		}
 
-		// initialize minsum and result
-		minsum += step(minsum, vec4(0)) * wpdist_sum;
-		result += step(result, vec4(0)) * load(r+me);
+		vec4 newmin = step(wpdist_sum, minsum); // wpdist_sum <= minsum
+		newmin *= 1 - step(wpdist_sum, vec4(0)); // && wpdist_sum > 0
+		newmin += step(minsum, vec4(0)); // || minsum <= 0
+		newmin = min(newmin, 1);
 
-		// find new minimums, exclude zeros
-		vec4 newmin = step(wpdist_sum, minsum) * (1-step(wpdist_sum, vec4(0)));
-		vec4 notmin = 1 - newmin;
-
-		// update minimums
-		minsum = (newmin * wpdist_sum) + (notmin * minsum);
-		result = (newmin * load(r+me)) + (notmin * result);
+		minsum = (newmin * wpdist_sum) + ((1-newmin) * minsum);
+		result = (newmin * load(r+me)) + ((1-newmin) * result);
 #endif
 	} // FOR_RESEARCH
 	} // FOR_FRAME
