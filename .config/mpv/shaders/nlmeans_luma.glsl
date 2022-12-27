@@ -502,35 +502,35 @@ const int r_area = R_AREA(R*R);
 #define PINCR(z,c) (z.c++)
 #endif
 
-#define P_AREA(a) ((a - PD) * RI1 * RFI1)
+#define P_AREA(a) (a - PD)
 
 // patch shapes
 #if P == 0 || P == 1
-#define FOR_PATCH(p) S_1X1(p) FOR_ROTATION FOR_REFLECTION
+#define FOR_PATCH(p) S_1X1(p)
 const int p_area = P_AREA(1);
 #elif PS == 7
-#define FOR_PATCH(p) S_PLUS(p,hp,PINCR(p,y)) FOR_ROTATION FOR_REFLECTION
+#define FOR_PATCH(p) S_PLUS(p,hp,PINCR(p,y))
 const int p_area = P_AREA(S_PLUS_A(hp,P));
 #elif PS == 6
-#define FOR_PATCH(p) S_SQUARE_EVEN(p,hp,PINCR(p,y)) FOR_ROTATION FOR_REFLECTION
+#define FOR_PATCH(p) S_SQUARE_EVEN(p,hp,PINCR(p,y))
 const int p_area = P_AREA(P*P);
 #elif PS == 5
-#define FOR_PATCH(p) S_TRUNC_TRIANGLE(p,hp,PINCR(p,x)) FOR_ROTATION FOR_REFLECTION
+#define FOR_PATCH(p) S_TRUNC_TRIANGLE(p,hp,PINCR(p,x))
 const int p_area = P_AREA(S_TRIANGLE_A(hp,hp));
 #elif PS == 4
-#define FOR_PATCH(p) S_TRIANGLE(p,hp,PINCR(p,x)) FOR_ROTATION FOR_REFLECTION
+#define FOR_PATCH(p) S_TRIANGLE(p,hp,PINCR(p,x))
 const int p_area = P_AREA(S_TRIANGLE_A(hp,P));
 #elif PS == 3
-#define FOR_PATCH(p) S_DIAMOND(p,hp,PINCR(p,y)) FOR_ROTATION FOR_REFLECTION
+#define FOR_PATCH(p) S_DIAMOND(p,hp,PINCR(p,y))
 const int p_area = P_AREA(S_DIAMOND_A(hp,P));
 #elif PS == 2
-#define FOR_PATCH(p) S_VERTICAL(p,hp,PINCR(p,y)) FOR_ROTATION FOR_REFLECTION
+#define FOR_PATCH(p) S_VERTICAL(p,hp,PINCR(p,y))
 const int p_area = P_AREA(P);
 #elif PS == 1
-#define FOR_PATCH(p) S_HORIZONTAL(p,hp,PINCR(p,x)) FOR_ROTATION FOR_REFLECTION
+#define FOR_PATCH(p) S_HORIZONTAL(p,hp,PINCR(p,x))
 const int p_area = P_AREA(P);
 #elif PS == 0
-#define FOR_PATCH(p) S_SQUARE(p,hp,PINCR(p,y)) FOR_ROTATION FOR_REFLECTION
+#define FOR_PATCH(p) S_SQUARE(p,hp,PINCR(p,y))
 const int p_area = P_AREA(P*P);
 #endif
 
@@ -595,19 +595,23 @@ vec2 ref(vec2 p, int d)
 vec4 patch_comparison(vec3 r, vec3 r2)
 {
 	vec3 p;
-	vec4 pdiff_sq = vec4(0);
+	vec4 min_rot = vec4(p_area);
 
-	FOR_PATCH(p) {
-		vec3 transformed_p = vec3(ref(rot(p.xy, ri), rfi), p.z);
-		vec4 diff_sq = pow(load(p + r2) - load2(transformed_p + r), vec4(2));
+	FOR_ROTATION FOR_REFLECTION {
+		vec4 pdiff_sq = vec4(0);
+		FOR_PATCH(p) {
+			vec3 transformed_p = vec3(ref(rot(p.xy, ri), rfi), p.z);
+			vec4 diff_sq = pow(load(p + r2) - load2(transformed_p + r), vec4(2));
 #if PST && P >= PST
-		float pdist = exp(-pow(length(p.xy*PSD)*PSS, 2));
-		diff_sq = pow(max(diff_sq, EPSILON), vec4(pdist));
+			float pdist = exp(-pow(length(p.xy*PSD)*PSS, 2));
+			diff_sq = pow(max(diff_sq, EPSILON), vec4(pdist));
 #endif
-		pdiff_sq += diff_sq;
+			pdiff_sq += diff_sq;
+		}
+		min_rot = min(min_rot, pdiff_sq);
 	}
 
-	return pdiff_sq * p_scale;
+	return min_rot * p_scale;
 }
 
 #define NO_GATHER (PD == 0 && RF == 0) // never textureGather if any of these conditions are false
@@ -622,7 +626,7 @@ const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
 vec4 poi_patch = gather_offs(0);
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
-	return vec4(dot(pow(poi_patch - gather_offs(r), vec4(2)), vec4(1)), 0, 0 ,0) * p_scale;
+	return vec4(dot(pow(poi_patch - gather_offs(r), vec4(2)), vec4(1)), 0, 0, 0) * p_scale;
 }
 #elif defined(LUMA_gather) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && M != 1 && REGULAR_ROTATIONS && NO_GATHER
 // 3x3 diamond/plus patch_comparison_gather
@@ -630,12 +634,12 @@ const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
 vec4 poi_patch = gather_offs(0);
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
-	float pdiff_sq = 0;
+	float min_rot = p_area - 1;
 	vec4 transformer = gather_offs(r);
-
 	FOR_ROTATION {
 		FOR_REFLECTION {
-			pdiff_sq += dot(pow(poi_patch - transformer, vec4(2)), vec4(1));
+			float diff_sq = dot(pow(poi_patch - transformer, vec4(2)), vec4(1));
+			min_rot = min(diff_sq, min_rot);
 #if RFI
 			switch(rfi) {
 			case 0: transformer = transformer.zyxw; break;
@@ -650,53 +654,52 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 		transformer = transformer.zwxy;
 #endif
 	}
-	pdiff_sq += pow(poi.x - load(r).x, 2) * RI1 * RFI1;
-	return vec4(pdiff_sq, 0, 0 ,0) * p_scale;
+	return vec4(min_rot + pow(poi.x - load(r).x, 2), 0, 0, 0) * p_scale;
 }
 #elif defined(LUMA_gather) && PS == 6 && REGULAR_ROTATIONS && NO_GATHER
 // tiled even square patch_comparison_gather
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
 	vec2 tile;
-	vec4 pdiff_sq = vec4(0);
+	float min_rot = p_area;
 
 	/* gather order:
 	 * w z
 	 * x y
 	 */
-	for (tile.x = -hp; tile.x < hp; tile.x+=2) {
-		for (tile.y = -hp; tile.y < hp; tile.y+=2) {
+	FOR_ROTATION FOR_REFLECTION {
+		float pdiff_sq = 0;
+		for (tile.x = -hp; tile.x < hp; tile.x+=2) for (tile.y = -hp; tile.y < hp; tile.y+=2) {
 			vec4 poi_patch = gather(tile + r2.xy);
+			vec4 transformer = gather(ref(rot(tile + 0.5, ri), rfi) - 0.5 + r.xy);
 
-			FOR_ROTATION FOR_REFLECTION {
-				vec4 transformer = gather(ref(rot(tile + 0.5, ri), rfi) - 0.5 + r.xy);
 #if RI
-				for (float i = 0; i < ri; i+=90)
-					transformer = transformer.wxyz; // rotate 90 degrees
+			for (float i = 0; i < ri; i+=90)
+				transformer = transformer.wxyz; // rotate 90 degrees
 #endif
 #if RFI // XXX output is a little off
-				switch(rfi) {
-				case 1: transformer = transformer.zyxw; break;
-				case 2: transformer = transformer.xwzy; break;
-				}
+			switch(rfi) {
+			case 1: transformer = transformer.zyxw; break;
+			case 2: transformer = transformer.xwzy; break;
+			}
 #endif
 
-				vec4 diff_sq = pow(poi_patch - transformer, vec4(2));
+			vec4 diff_sq = pow(poi_patch - transformer, vec4(2));
 #if PST && P >= PST
-				vec4 pdist = vec4(
-					exp(-pow(length((tile+vec2(0,1))*PSD)*PSS, 2)),
-					exp(-pow(length((tile+vec2(1,1))*PSD)*PSS, 2)),
-					exp(-pow(length((tile+vec2(1,0))*PSD)*PSS, 2)),
-					exp(-pow(length((tile+vec2(0,0))*PSD)*PSS, 2))
-				);
-				diff_sq = pow(max(diff_sq, EPSILON), pdist);
+			vec4 pdist = vec4(
+				exp(-pow(length((tile+vec2(0,1))*PSD)*PSS, 2)),
+				exp(-pow(length((tile+vec2(1,1))*PSD)*PSS, 2)),
+				exp(-pow(length((tile+vec2(1,0))*PSD)*PSS, 2)),
+				exp(-pow(length((tile+vec2(0,0))*PSD)*PSS, 2))
+			);
+			diff_sq = pow(max(diff_sq, EPSILON), pdist);
 #endif
-				pdiff_sq.x += dot(diff_sq, vec4(1));
-			}
+			pdiff_sq += dot(diff_sq, vec4(1));
 		}
+		min_rot = min(min_rot, pdiff_sq);
 	}
 
-	return pdiff_sq * p_scale;
+	return vec4(min_rot, 0, 0, 0) * p_scale;
 }
 #else
 #define patch_comparison_gather patch_comparison
