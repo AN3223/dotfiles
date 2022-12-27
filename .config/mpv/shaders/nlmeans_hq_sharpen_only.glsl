@@ -205,12 +205,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 2
-#define ASF 3
-#define ASP 2.0
+#define ASF 4
+#define ASP 1
 #else
 #define AS 2
-#define ASF 3
-#define ASP 2.0
+#define ASF 4
+#define ASP 1
 #endif
 
 /* Starting weight
