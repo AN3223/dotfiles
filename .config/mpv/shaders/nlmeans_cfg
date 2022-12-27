@@ -5,8 +5,8 @@
 BEGIN {
 	HOOKS = "LUMA:CHROMA:RGB"
 
-	len = split(ENVIRON["CFG"], opts, ":")
-	for (i = 1; i <= len; i++) {
+	split(ENVIRON["CFG"], opts, ":")
+	for (i in opts) {
 		split(opts[i], var_val, "=")
 		if (var_val[1] == "HOOKS")
 			HOOKS = var_val[2]
@@ -51,8 +51,8 @@ function downscale(name, scale) {
 		RF = (planes[p] == "LUMA") ? 0 : 2.0
 		EP = (planes[p] == "LUMA") ? 3.0 : 0
 
-		len = split(ENVIRON[planes[p]], opts, ":")
-		for (i = 1; i <= len; i++) {
+		split(ENVIRON[planes[p]], opts, ":")
+		for (i in opts) {
 			split(opts[i], var_val, "=")
 			if (var_val[1] == "RF")
 				RF = var_val[2]
@@ -89,11 +89,11 @@ function downscale(name, scale) {
 /^#el/ && plane == "LUMA" { plane = "CHROMA" }
 
 /^#define/ {
-	len = split(ENVIRON[plane], opts, ":")
-	for (i = 1; i <= len; i++) {
+	split(ENVIRON[plane], opts, ":")
+	for (i in opts) {
 		split(opts[i], var_val, "=")
 		if ($2 == var_val[1]) {
-			if ($2 == "EP" || $2 == "RF")
+			if ($2 ~ /^(RF|EP)$/)
 				printf("#define %s %s\n", var_val[1], (var_val[2] > 0))
 			else
 				printf("#define %s %s\n", var_val[1], var_val[2])
