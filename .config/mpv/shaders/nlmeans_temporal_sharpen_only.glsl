@@ -98,22 +98,8 @@
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
 //!SAVE RF
-//!WIDTH HOOKED.w 2.0 /
-//!HEIGHT HOOKED.h 2.0 /
-
-vec4 hook()
-{
-	return HOOKED_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!BIND HOOKED
-//!DESC Non-local means (downscale)
-//!SAVE RF_LUMA
-//!WIDTH HOOKED.w 1.25 /
-//!HEIGHT HOOKED.h 1.25 /
+//!WIDTH HOOKED.w 2 /
+//!HEIGHT HOOKED.h 2 /
 
 vec4 hook()
 {
@@ -139,7 +125,6 @@ vec4 hook()
 //!HOOK RGB
 //!BIND HOOKED
 //!BIND RF
-//!BIND RF_LUMA
 //!BIND EP_LUMA
 //!BIND PREV1
 //!BIND PREV2

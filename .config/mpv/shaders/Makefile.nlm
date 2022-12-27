@@ -1,6 +1,9 @@
 #!/usr/bin/make -f
 # Usually used like: ./Makefile.nlm -B
 
+# reiterates RF and EP so nlmeans_cfg knows what to generate
+DEFAULT_DESC=Default profile, general purpose, tuned for low noise
+
 NO_ROTATE=RI=0:RFI=0
 
 VLQ_DESC=Use this if you have an old GPU or an mpv release before 0.35.0
@@ -34,7 +37,8 @@ ANIME_MEDIUM_LUMA=$(ANIME_LUMA):$(NO_ROTATE):RF=2.0:$(MEDIUM)
 ANIME_MEDIUM=$(ANIME):$(MEDIUM)
 
 TEMPORAL_DESC=Very experimental and buggy, limited to vo=gpu-next.
-TEMPORAL_LUMA=T=2:T_FRAME_LIMIT=3:T_RES_W=1920:T_RES_H=1080:$(NO_ROTATE)
+TEMPORAL_LUMA=T=2:$(NO_ROTATE)
+TEMPORAL_CFG=T_FRAME_LIMIT=3:T_RES_W=1920:T_RES_H=1080
 
 SHARPEN_ONLY_DESC=Sharpen without denoising.
 SHARPEN_ONLY=S=9:AS=2
@@ -47,7 +51,7 @@ LUMA_DESC=Luma only, saves some time by not processing the chroma plane.
 all: nlmeans.glsl nlmeans_heavy.glsl nlmeans_medium.glsl nlmeans_anime.glsl nlmeans_anime_medium.glsl nlmeans_temporal.glsl nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_hq_heavy.glsl nlmeans_hq_medium.glsl nlmeans_hqx.glsl nlmeans_anime_hq.glsl nlmeans_anime_hq_medium.glsl nlmeans_vlq.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_temporal_sharpen_denoise.glsl nlmeans_hq_sharpen_denoise.glsl nlmeans_sharpen_only.glsl nlmeans_temporal_sharpen_only.glsl nlmeans_hq_sharpen_only.glsl
 
 nlmeans.glsl: nlmeans_template
-	env DESC="Default profile, general purpose, tuned for low noise" FILENAME=$@ ./nlmeans_cfg < $? > $@
+	env DESC="$(DEFAULT_DESC)" FILENAME=$@ ./nlmeans_cfg < $? > $@
 nlmeans_heavy.glsl: nlmeans_template
 	env DESC="$(HEAVY_DESC)" FILENAME=$@ LUMA=$(HEAVY) CHROMA=$(HEAVY) ./nlmeans_cfg < $? > $@
 nlmeans_medium.glsl: nlmeans_template
@@ -57,9 +61,9 @@ nlmeans_anime.glsl: nlmeans_template
 nlmeans_anime_medium.glsl: nlmeans_template
 	env DESC="$(ANIME_MEDIUM_DESC)" FILENAME=$@ LUMA=$(ANIME_MEDIUM_LUMA) CHROMA=$(ANIME_MEDIUM) ./nlmeans_cfg < $? > $@
 nlmeans_temporal.glsl: nlmeans_template
-	env DESC="$(TEMPORAL_DESC)" FILENAME=$@ LUMA=$(TEMPORAL_LUMA) ./nlmeans_cfg < $? > $@
+	env DESC="$(TEMPORAL_DESC)" FILENAME=$@ LUMA=$(TEMPORAL_LUMA) CFG=$(TEMPORAL_CFG) ./nlmeans_cfg < $? > $@
 nlmeans_luma.glsl: nlmeans_template
-	env DESC="$(LUMA_DESC)" FILENAME=$@ CHROMA=CHROMA_DISABLE ./nlmeans_cfg < $? > $@
+	env DESC="$(LUMA_DESC)" FILENAME=$@ CFG=HOOKS=LUMA ./nlmeans_cfg < $? > $@
 nlmeans_hq.glsl: nlmeans_template
 	env DESC="$(HQ_DESC)" FILENAME=$@ LUMA=$(HQ_LUMA) CHROMA=$(HQ) ./nlmeans_cfg < $? > $@
 nlmeans_hq_heavy.glsl: nlmeans_template
@@ -80,14 +84,14 @@ nlmeans_lq.glsl: nlmeans_template
 nlmeans_sharpen_denoise.glsl: nlmeans_template
 	env DESC="$(SHARPEN_DENOISE_DESC)" FILENAME=$@ LUMA=$(SHARPEN_DENOISE) ./nlmeans_cfg < $? > $@
 nlmeans_temporal_sharpen_denoise.glsl: nlmeans_template
-	env DESC="$(TEMPORAL_DESC) $(SHARPEN_DENOISE_DESC)" FILENAME=$@ LUMA=$(SHARPEN_DENOISE):$(TEMPORAL_LUMA) ./nlmeans_cfg < $? > $@
+	env DESC="$(TEMPORAL_DESC) $(SHARPEN_DENOISE_DESC)" FILENAME=$@ LUMA=$(SHARPEN_DENOISE):$(TEMPORAL_LUMA) CFG=$(TEMPORAL_CFG) ./nlmeans_cfg < $? > $@
 nlmeans_hq_sharpen_denoise.glsl: nlmeans_template
 	env DESC="$(HQ_DESC) $(SHARPEN_DENOISE_DESC)" FILENAME=$@ LUMA=$(SHARPEN_DENOISE):$(HQ_LUMA) CHROMA=$(HQ) ./nlmeans_cfg < $? > $@
 
 nlmeans_sharpen_only.glsl: nlmeans_template
 	env DESC="$(SHARPEN_ONLY_DESC)" FILENAME=$@ LUMA=$(SHARPEN_ONLY) CHROMA=$(SHARPEN_ONLY) ./nlmeans_cfg < $? > $@
 nlmeans_temporal_sharpen_only.glsl: nlmeans_template
-	env DESC="$(TEMPORAL_DESC) $(SHARPEN_ONLY_DESC)" FILENAME=$@ LUMA=$(SHARPEN_ONLY):$(TEMPORAL_LUMA) CHROMA=$(SHARPEN_ONLY) ./nlmeans_cfg < $? > $@
+	env DESC="$(TEMPORAL_DESC) $(SHARPEN_ONLY_DESC)" FILENAME=$@ LUMA=$(SHARPEN_ONLY):$(TEMPORAL_LUMA) CHROMA=$(SHARPEN_ONLY) CFG=$(TEMPORAL_CFG) ./nlmeans_cfg < $? > $@
 nlmeans_hq_sharpen_only.glsl: nlmeans_template
 	env DESC="$(HQ_DESC) $(SHARPEN_ONLY_DESC)" FILENAME=$@ LUMA=$(SHARPEN_ONLY):$(HQ_LUMA) CHROMA=$(SHARPEN_ONLY):$(HQ) ./nlmeans_cfg < $? > $@
 

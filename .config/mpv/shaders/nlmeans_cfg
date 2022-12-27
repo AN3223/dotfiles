@@ -3,45 +3,86 @@
 # examples can be found in Makefile.nlm
 
 BEGIN {
-	len = split(ENVIRON["LUMA"] ENVIRON["CHROMA"], opts, ":")
+	HOOKS = "LUMA:CHROMA:RGB"
+
+	len = split(ENVIRON["CFG"], opts, ":")
 	for (i = 1; i <= len; i++) {
 		split(opts[i], var_val, "=")
-		if (var_val[1] == "T_FRAME_LIMIT")
+		if (var_val[1] == "HOOKS")
+			HOOKS = var_val[2]
+		else if (var_val[1] == "T_FRAME_LIMIT")
 			T_FRAME_LIMIT = var_val[2]
 		else if (var_val[1] == "T_RES_W")
 			T_RES_W = var_val[2]
 		else if (var_val[1] == "T_RES_H")
 			T_RES_H = var_val[2]
-		else if (opts[i] == "CHROMA_DISABLE")
-			CHROMA_DISABLE = 1
-		else if (opts[i] == "LUMA_DISABLE")
-			LUMA_DISABLE = 1
 	}
 }
 
-/^\/\/!HOOK LUMA$/   && LUMA_DISABLE   { next }
-/^\/\/!HOOK CHROMA$/ && CHROMA_DISABLE { next }
+/\/\/cfg_desc/ { printf("// Profile description: %s\n", ENVIRON["DESC"]); next; }
 
-/^\/\/!SAVE/ { texture = $2 }
+# Prints //!HOOK for each HOOKED plane and //!BIND HOOKED
+function hooks() {
+	split(HOOKS, hooks_arr, ":")
+	for (i in hooks_arr)
+		printf("//!HOOK %s\n", hooks_arr[i])
+	printf("%s\n", "//!BIND HOOKED")
+}
 
-/^\/\/!WIDTH/ || /^\/\/!HEIGHT/ {
-	len = split(ENVIRON["CHROMA"], opts, ":")
-	for (i = 1; i <= len; i++) {
-		split(opts[i], var_val, "=")
-		if (var_val[2] > 0 && var_val[1] == texture) {
-			printf("%s %s %s %s\n", $1, $2, var_val[2], $4)
-			next
+function downscale(name, scale) {
+	hooks()
+	printf("%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
+		"//!DESC Non-local means (downscale)",
+		"//!SAVE " name,
+		"//!WIDTH HOOKED.w " scale " /",
+		"//!HEIGHT HOOKED.h " scale " /",
+		"vec4 hook()",
+		"{",
+		"	return HOOKED_texOff(0);",
+		"}")
+	TEXTURES = TEXTURES ? (TEXTURES ":" name) : name
+}
+
+# Shader stages preceding NLM
+/\/\/cfg_pre/ {
+	split("CHROMA LUMA", planes)
+	for (p in planes) {
+		# sets defaults for RF/EP, should be the same as nlmeans_template
+		RF = (planes[p] == "LUMA") ? 0 : 2.0
+		EP = (planes[p] == "LUMA") ? 3.0 : 0
+
+		len = split(ENVIRON[planes[p]], opts, ":")
+		for (i = 1; i <= len; i++) {
+			split(opts[i], var_val, "=")
+			if (var_val[1] == "RF")
+				RF = var_val[2]
+			else if (var_val[1] == "EP")
+				EP = var_val[2]
 		}
-	}
 
-	len = split(ENVIRON["LUMA"], opts, ":")
-	for (i = 1; i <= len; i++) {
-		split(opts[i], var_val, "=")
-		if (var_val[2] > 0 && var_val[1] "_LUMA" == texture) {
-			printf("%s %s %s %s\n", $1, $2, var_val[2], $4)
-			next
-		}
+		tex_suffix = (planes[p] == "LUMA") ? "_LUMA" : ""
+		if (RF)
+			downscale("RF" tex_suffix, RF)
+		if (EP)
+			downscale("EP" tex_suffix, EP)
 	}
+	next
+}
+
+# NLM HOOK block
+/\/\/cfg_hook/ {
+	hooks()
+
+	split(TEXTURES, tex_arr, ":")
+	for (i in tex_arr)
+		printf("//!BIND %s\n", tex_arr[i])
+
+	for (i = 1; i <= T_FRAME_LIMIT; i++)
+		printf("//!BIND PREV%d\n", i)
+
+	printf("//!DESC Non-local means (%s)\n", ENVIRON["FILENAME"])
+
+	next
 }
 
 /^#ifdef LUMA_raw$/       { plane = "LUMA" }
@@ -61,22 +102,13 @@ BEGIN {
 	}
 }
 
-/\/\/cfg_desc/ { printf("// Profile description: %s\n", ENVIRON["DESC"]); next; }
-
-T_FRAME_LIMIT > 0 && /^\/\/!DESC Non-local means$/ {
-	for (i = 1; i <= T_FRAME_LIMIT; i++)
-		printf("//!BIND PREV%d\n", i)
-}
-
-/^\/\/!DESC Non-local means$/ { printf("//!DESC Non-local means (%s)\n", ENVIRON["FILENAME"]); next; }
-
-T_FRAME_LIMIT > 0 && /\/\/cfg_T_load/ {
+/\/\/cfg_T_load/ {
 	for (i = 1; i <= T_FRAME_LIMIT; i++)
 		printf("\tcase %d: return imageLoad(PREV%d, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV%d)));\n", i, i, i)
 	next
 }
 
-T_FRAME_LIMIT > 0 && /\/\/cfg_T_store/ {
+/\/\/cfg_T_store/ {
 	for (i = T_FRAME_LIMIT; i > 0; i--)
 		printf("\timageStore(PREV%d, ivec2(HOOKED_pos*imageSize(PREV%d)), load2(vec3(0,0,%d)));\n", i, i, i-1)
 	next

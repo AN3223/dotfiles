@@ -98,36 +98,8 @@
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
 //!SAVE RF
-//!WIDTH HOOKED.w 2.0 /
-//!HEIGHT HOOKED.h 2.0 /
-
-vec4 hook()
-{
-	return HOOKED_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!BIND HOOKED
-//!DESC Non-local means (downscale)
-//!SAVE RF_LUMA
-//!WIDTH HOOKED.w 1.25 /
-//!HEIGHT HOOKED.h 1.25 /
-
-vec4 hook()
-{
-	return HOOKED_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!BIND HOOKED
-//!DESC Non-local means (downscale)
-//!SAVE EP_LUMA
-//!WIDTH HOOKED.w 3 /
-//!HEIGHT HOOKED.h 3 /
+//!WIDTH HOOKED.w 2 /
+//!HEIGHT HOOKED.h 2 /
 
 vec4 hook()
 {
@@ -139,8 +111,6 @@ vec4 hook()
 //!HOOK RGB
 //!BIND HOOKED
 //!BIND RF
-//!BIND RF_LUMA
-//!BIND EP_LUMA
 //!DESC Non-local means (nlmeans_medium.glsl)
 
 /* User variables
@@ -570,14 +540,12 @@ vec4 load(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0: return load_(off);
-	//cfg_T_load
 	}
 }
 vec4 load2(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0: return load2_(off);
-	//cfg_T_load
 	}
 }
 #else
@@ -822,7 +790,6 @@ vec4 hook()
 	} // FOR_FRAME
 
 #if T // temporal
-	//cfg_T_store
 #endif
 
 	vec4 avg_weight = total_weight * r_scale;
