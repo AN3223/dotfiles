@@ -1,7 +1,6 @@
 #!/usr/bin/make -f
 # Usually used like: ./Makefile.nlm -B
 
-# reiterates RF and EP so nlmeans_cfg knows what to generate
 DEFAULT_DESC=Default profile, general purpose, tuned for low noise
 
 NO_ROTATE=RI=0:RFI=0
