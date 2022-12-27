@@ -6,10 +6,6 @@ DEFAULT_DESC=Default profile, general purpose, tuned for low noise
 
 NO_ROTATE=RI=0:RFI=0
 
-VLQ_DESC=Use this if you have an old GPU or an mpv release before 0.35.0
-VLQ_LUMA=S=5:P=1:R=3:WD=1:RF=1.25:$(NO_ROTATE)
-VLQ=P=1:R=3:WD=1
-
 LQ_DESC=Faster, but lower quality.
 LQ_LUMA=S=1.25:R=3:WD=1:$(NO_ROTATE)
 LQ=WD=1
@@ -48,7 +44,7 @@ SHARPEN_DENOISE=AS=1:$(SHARPEN_ONLY)
 
 LUMA_DESC=Luma only, saves some time by not processing the chroma plane.
 
-all: nlmeans.glsl nlmeans_heavy.glsl nlmeans_medium.glsl nlmeans_anime.glsl nlmeans_anime_medium.glsl nlmeans_temporal.glsl nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_hq_heavy.glsl nlmeans_hq_medium.glsl nlmeans_hqx.glsl nlmeans_anime_hq.glsl nlmeans_anime_hq_medium.glsl nlmeans_vlq.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_temporal_sharpen_denoise.glsl nlmeans_hq_sharpen_denoise.glsl nlmeans_sharpen_only.glsl nlmeans_temporal_sharpen_only.glsl nlmeans_hq_sharpen_only.glsl
+all: nlmeans.glsl nlmeans_heavy.glsl nlmeans_medium.glsl nlmeans_anime.glsl nlmeans_anime_medium.glsl nlmeans_temporal.glsl nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_hq_heavy.glsl nlmeans_hq_medium.glsl nlmeans_hqx.glsl nlmeans_anime_hq.glsl nlmeans_anime_hq_medium.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_temporal_sharpen_denoise.glsl nlmeans_hq_sharpen_denoise.glsl nlmeans_sharpen_only.glsl nlmeans_temporal_sharpen_only.glsl nlmeans_hq_sharpen_only.glsl
 
 nlmeans.glsl: nlmeans_template
 	env DESC="$(DEFAULT_DESC)" FILENAME=$@ ./nlmeans_cfg < $? > $@
@@ -76,8 +72,6 @@ nlmeans_anime_hq.glsl: nlmeans_template
 	env DESC="$(ANIME_DESC) $(HQ_DESC)" FILENAME=$@ LUMA=$(HQ_LUMA):$(ANIME_LUMA) CHROMA=$(HQ):$(ANIME) ./nlmeans_cfg < $? > $@
 nlmeans_anime_hq_medium.glsl: nlmeans_template
 	env DESC="$(ANIME_MEDIUM_DESC) $(HQ_DESC)" FILENAME=$@ LUMA=$(HQ_LUMA):$(ANIME_MEDIUM_LUMA) CHROMA=$(HQ):$(ANIME_MEDIUM) ./nlmeans_cfg < $? > $@
-nlmeans_vlq.glsl: nlmeans_template
-	env DESC="$(VLQ_DESC)" FILENAME=$@ LUMA=$(VLQ_LUMA) CHROMA=$(VLQ) ./nlmeans_cfg < $? > $@
 nlmeans_lq.glsl: nlmeans_template
 	env DESC="$(LQ_DESC)" FILENAME=$@ LUMA=$(LQ_LUMA) CHROMA=$(LQ) ./nlmeans_cfg < $? > $@
 
