@@ -897,7 +897,7 @@ vec4 hook()
 
 #if AS // adaptive sharpening
 	vec4 sharpened = poi + (poi - result) * ASF;
-	vec4 sharpening_power = pow(old_avg_weight, vec4(ASP));
+	vec4 sharpening_power = pow(avg_weight, vec4(ASP));
 #endif
 
 #if EP // extremes preserve
