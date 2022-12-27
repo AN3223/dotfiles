@@ -331,6 +331,9 @@ vec4 hook()
 
 /* Robust filtering
  *
+ * This setting is dependent on code generation from nlmeans_cfg, so this 
+ * setting can only be enabled via nlmeans_cfg.
+ *
  * Compares the pixel-of-interest against downscaled pixels.
  *
  * This will virtually always improve quality, but will always disable 
