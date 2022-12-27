@@ -39,7 +39,7 @@ SHARPEN_ONLY_DESC=Sharpen without denoising.
 SHARPEN_ONLY=AS=2:ASF=3
 
 SHARPEN_DENOISE_DESC=Sharpen and denoise.
-SHARPEN_DENOISE=AS=1:S=10
+SHARPEN_DENOISE=AS=1:S=10:ASF=1.5
 
 LUMA_DESC=Luma only, saves some time by not processing the chroma plane.
 

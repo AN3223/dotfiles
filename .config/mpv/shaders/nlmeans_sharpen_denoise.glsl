@@ -220,7 +220,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 1.0
+#define ASF 1.5
 #define ASP 2.0
 #else
 #define AS 0
