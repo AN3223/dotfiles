@@ -200,7 +200,7 @@ vec4 hook()
  * patch/research sizes.
  */
 #ifdef LUMA_raw
-#define S 9
+#define S 10
 #define P 3
 #define R 5
 #else

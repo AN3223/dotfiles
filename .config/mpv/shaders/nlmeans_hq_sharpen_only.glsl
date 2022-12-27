@@ -182,11 +182,11 @@ vec4 hook()
  * patch/research sizes.
  */
 #ifdef LUMA_raw
-#define S 9
+#define S 3
 #define P 4
 #define R 5
 #else
-#define S 9
+#define S 3
 #define P 3
 #define R 5
 #endif
@@ -205,11 +205,11 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 2
-#define ASF 1.0
+#define ASF 3
 #define ASP 2.0
 #else
 #define AS 2
-#define ASF 1.0
+#define ASF 3
 #define ASP 2.0
 #endif
 
