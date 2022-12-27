@@ -97,13 +97,57 @@
 //!HOOK RGB
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
-//!SAVE RF
+//!SAVE PRERF
 //!WIDTH HOOKED.w 2 /
 //!HEIGHT HOOKED.h 2 /
 
 vec4 hook()
 {
 	return HOOKED_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!BIND HOOKED
+//!DESC Non-local means (undownscale)
+//!BIND PRERF
+//!SAVE RF
+//!WIDTH HOOKED.w
+//!HEIGHT HOOKED.h
+
+vec4 hook()
+{
+	return PRERF_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!BIND HOOKED
+//!DESC Non-local means (downscale)
+//!SAVE PRERF_LUMA
+//!WIDTH HOOKED.w 1.25 /
+//!HEIGHT HOOKED.h 1.25 /
+
+vec4 hook()
+{
+	return HOOKED_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!BIND HOOKED
+//!DESC Non-local means (undownscale)
+//!BIND PRERF_LUMA
+//!SAVE RF_LUMA
+//!WIDTH HOOKED.w
+//!HEIGHT HOOKED.h
+
+vec4 hook()
+{
+	return PRERF_LUMA_texOff(0);
 }
 
 //!HOOK LUMA
@@ -125,6 +169,7 @@ vec4 hook()
 //!HOOK RGB
 //!BIND HOOKED
 //!BIND RF
+//!BIND RF_LUMA
 //!BIND EP_LUMA
 //!DESC Non-local means (nlmeans_sharpen_only.glsl)
 
@@ -363,7 +408,7 @@ vec4 hook()
  * factor is set to 3.
  */
 #ifdef LUMA_raw
-#define RF 0
+#define RF 1
 #else
 #define RF 1
 #endif
@@ -546,11 +591,15 @@ const float p_scale = 1.0/p_area;
 #define load_(off)  HOOKED_tex(HOOKED_pos + HOOKED_pt * vec2(off))
 
 #if RF && defined(LUMA_raw)
-#define load2_(off) RF_LUMA_tex(HOOKED_pos + HOOKED_pt * vec2(off))
+#define load2_(off) RF_LUMA_tex(RF_LUMA_pos + RF_LUMA_pt * vec2(off))
+#define gather_offs(off) (RF_LUMA_mul * vec4(textureGatherOffsets(RF_LUMA_raw, RF_LUMA_pos + vec2(off) * RF_LUMA_pt, offsets)))
+#define gather(off) RF_LUMA_gather(RF_LUMA_pos + (off)*RF_LUMA_pt, 0)
 #elif RF
-#define load2_(off) RF_tex(HOOKED_pos + HOOKED_pt * vec2(off))
+#define load2_(off) RF_tex(RF_pos + RF_pt * vec2(off))
 #else
 #define load2_(off) HOOKED_tex(HOOKED_pos + HOOKED_pt * vec2(off))
+#define gather_offs(off) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, offsets)))
+#define gather(off) HOOKED_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
 #endif
 
 #if T
@@ -620,11 +669,8 @@ vec4 patch_comparison(vec3 r, vec3 r2)
 	return min_rot * p_scale;
 }
 
-#define NO_GATHER (PD == 0 && RF == 0) // never textureGather if any of these conditions are false
+#define NO_GATHER (PD == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3)
-
-#define gather_offs(off) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, offsets)))
-#define gather(off) HOOKED_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
 
 #if defined(LUMA_gather) && (PS == 4 && P == 3) && (RI == 0 && RFI == 0) && PST == 0 && M != 1 && NO_GATHER
 // (DEPRECATED) 3x3 triangle patch_comparison_gather
@@ -660,7 +706,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 		transformer = transformer.zwxy;
 #endif
 	}
-	return vec4(min_rot + pow(poi.x - load(r).x, 2), 0, 0, 0) * p_scale;
+	return vec4(min_rot + pow(poi.x - load2(r).x, 2), 0, 0, 0) * p_scale;
 }
 #elif defined(LUMA_gather) && PS == 6 && REGULAR_ROTATIONS && NO_GATHER
 // tiled even square patch_comparison_gather

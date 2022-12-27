@@ -30,16 +30,30 @@ function hooks() {
 }
 
 function downscale(name, scale) {
+	prename = (name ~ /^RF/) ? ("PRE" name) : (name)
 	hooks()
 	printf("%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
 		"//!DESC Non-local means (downscale)",
-		"//!SAVE " name,
+		"//!SAVE " prename,
 		"//!WIDTH HOOKED.w " scale " /",
 		"//!HEIGHT HOOKED.h " scale " /",
 		"vec4 hook()",
 		"{",
 		"	return HOOKED_texOff(0);",
 		"}")
+	if (name ~ /^RF/) {
+		hooks()
+		printf("%s\n%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
+			"//!DESC Non-local means (undownscale)",
+			"//!BIND " prename,
+			"//!SAVE " name,
+			"//!WIDTH HOOKED.w",
+			"//!HEIGHT HOOKED.h",
+			"vec4 hook()",
+			"{",
+			"	return " prename "_texOff(0);",
+			"}")
+	}
 	TEXTURES = TEXTURES ? (TEXTURES ":" name) : name
 }
 
@@ -48,7 +62,7 @@ function downscale(name, scale) {
 	split("CHROMA LUMA", planes)
 	for (p in planes) {
 		# sets defaults for RF/EP, should be the same as nlmeans_template
-		RF = (planes[p] == "LUMA") ? 0 : 2.0
+		RF = (planes[p] == "LUMA") ? 1.25 : 2.0
 		EP = (planes[p] == "LUMA") ? 3.0 : 0
 
 		split(ENVIRON[planes[p]], opts, ":")
