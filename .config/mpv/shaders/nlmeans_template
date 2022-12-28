@@ -218,7 +218,7 @@
  *
  * Number of rotations/reflections to try for each patch comparison. Slow, but 
  * improves feature preservation, although adding more rotations/reflections 
- * gives diminishing returns.
+ * gives diminishing returns. The most similar rotation/reflection will be used.
  *
  * The angle in degrees of each rotation is 360/(RI+1), so RI=1 will do a 
  * single 180 degree rotation, RI=3 will do three 90 degree rotations, etc.
