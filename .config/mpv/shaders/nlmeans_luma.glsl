@@ -75,12 +75,6 @@
  *   - If this is unusually slow then try changing gpu-api and vo
  *   - If it's still slow, try setting RI/RFI to 0.
  *
- * - PS=4:P=3:RI=0:RFI=0:PST=0:M!=1
- *   - Performs about the same as the PS=3 version
- *   - Worse quality, since patch shape is smaller and asymmetric
- *   - Rotations/reflections not supported
- *   - Consider this deprecated
- *
  * - PS=6:RI={0,1,3}:RFI={0,1,2}
  *   - Currently the only scalable variant
  *   - Patch shape is asymmetric on two axis
@@ -660,15 +654,7 @@ vec4 patch_comparison(vec3 r, vec3 r2)
 #define NO_GATHER (PD == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3)
 
-#if defined(LUMA_gather) && (PS == 4 && P == 3) && (RI == 0 && RFI == 0) && PST == 0 && M != 1 && NO_GATHER
-// (DEPRECATED) 3x3 triangle patch_comparison_gather
-const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
-vec4 poi_patch = gather_offs(0);
-vec4 patch_comparison_gather(vec3 r, vec3 r2)
-{
-	return vec4(dot(pow(poi_patch - gather_offs(r), vec4(2)), vec4(1)), 0, 0, 0) * p_scale;
-}
-#elif defined(LUMA_gather) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && M != 1 && REGULAR_ROTATIONS && NO_GATHER
+#if defined(LUMA_gather) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && M != 1 && REGULAR_ROTATIONS && NO_GATHER
 // 3x3 diamond/plus patch_comparison_gather
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
 vec4 poi_patch = gather_offs(0);
