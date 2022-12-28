@@ -261,7 +261,7 @@ vec4 hook()
  * WDP (WD=1): Higher numbers reduce the threshold more for small sample sizes
  */
 #ifdef LUMA_raw
-#define WD 2
+#define WD 1
 #define WDT 1.0
 #define WDP 6.0
 #else
