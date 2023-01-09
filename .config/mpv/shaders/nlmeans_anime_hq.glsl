@@ -878,7 +878,10 @@ vec4 hook()
 	result = sum / total_weight;
 #endif
 
-#if AS // adaptive sharpening
+#if AS == 1 // sharpen+denoise
+	vec4 sharpened = result + (poi - result) * ASF;
+	vec4 sharpening_power = pow(avg_weight, vec4(ASP));
+#elif AS == 2 // sharpen only
 	vec4 sharpened = poi + (poi - result) * ASF;
 	vec4 sharpening_power = pow(avg_weight, vec4(ASP));
 #endif
