@@ -195,7 +195,7 @@ vec4 hook()
 #define P 3
 #define R 5
 #else
-#define S 1.50
+#define S 10
 #define P 3
 #define R 5
 #endif
@@ -217,8 +217,8 @@ vec4 hook()
 #define ASF 1.5
 #define ASP 2.0
 #else
-#define AS 0
-#define ASF 1.0
+#define AS 1
+#define ASF 1.5
 #define ASP 2.0
 #endif
 

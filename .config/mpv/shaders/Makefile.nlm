@@ -75,11 +75,11 @@ nlmeans_lq.glsl: nlmeans_template
 	env DESC="$(LQ_DESC)" FILENAME=$@ LUMA=$(LQ_LUMA) CHROMA=$(LQ) ./nlmeans_cfg < $? > $@
 
 nlmeans_sharpen_denoise.glsl: nlmeans_template
-	env DESC="$(SHARPEN_DENOISE_DESC)" FILENAME=$@ LUMA=$(SHARPEN_DENOISE) ./nlmeans_cfg < $? > $@
+	env DESC="$(SHARPEN_DENOISE_DESC)" FILENAME=$@ LUMA=$(SHARPEN_DENOISE) CHROMA=$(SHARPEN_DENOISE) ./nlmeans_cfg < $? > $@
 nlmeans_temporal_sharpen_denoise.glsl: nlmeans_template
-	env DESC="$(TEMPORAL_DESC) $(SHARPEN_DENOISE_DESC)" FILENAME=$@ LUMA=$(SHARPEN_DENOISE):$(TEMPORAL_LUMA) CFG=$(TEMPORAL_CFG) ./nlmeans_cfg < $? > $@
+	env DESC="$(TEMPORAL_DESC) $(SHARPEN_DENOISE_DESC)" FILENAME=$@ LUMA=$(SHARPEN_DENOISE):$(TEMPORAL_LUMA) CHROMA=$(SHARPEN_DENOISE) CFG=$(TEMPORAL_CFG) ./nlmeans_cfg < $? > $@
 nlmeans_hq_sharpen_denoise.glsl: nlmeans_template
-	env DESC="$(HQ_DESC) $(SHARPEN_DENOISE_DESC)" FILENAME=$@ LUMA=$(SHARPEN_DENOISE):$(HQ_LUMA) CHROMA=$(HQ) ./nlmeans_cfg < $? > $@
+	env DESC="$(HQ_DESC) $(SHARPEN_DENOISE_DESC)" FILENAME=$@ LUMA=$(SHARPEN_DENOISE):$(HQ_LUMA) CHROMA=$(SHARPEN_DENOISE):$(HQ) ./nlmeans_cfg < $? > $@
 
 nlmeans_sharpen_only.glsl: nlmeans_template
 	env DESC="$(SHARPEN_ONLY_DESC)" FILENAME=$@ LUMA=$(SHARPEN_ONLY) CHROMA=$(SHARPEN_ONLY) ./nlmeans_cfg < $? > $@
