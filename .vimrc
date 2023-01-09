@@ -8,11 +8,6 @@ let &t_EI = "\<Esc>[2 q"
 " workaround for https://github.com/vim/vim/issues/9014
 let &t_TI = "\<Esc>[>4;2m"
 let &t_TE = "\<Esc>[>4m"
-" https://github.com/vim/vim/issues/11766
-let &t_BE = ""
-let &t_BD = "\e[?2004l"
-exec "set t_PS=\e[200~"
-exec "set t_PE=\e[201~"
 
 "- ESSENTIALS -"
 
