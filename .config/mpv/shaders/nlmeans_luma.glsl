@@ -100,7 +100,7 @@ vec4 hook()
 
 //!HOOK LUMA
 //!BIND HOOKED
-//!DESC Non-local means (undownscale)
+//!DESC Non-local means (unscale)
 //!BIND PRERF
 //!SAVE RF
 //!WIDTH HOOKED.w
@@ -125,7 +125,7 @@ vec4 hook()
 
 //!HOOK LUMA
 //!BIND HOOKED
-//!DESC Non-local means (undownscale)
+//!DESC Non-local means (unscale)
 //!BIND PRERF_LUMA
 //!SAVE RF_LUMA
 //!WIDTH HOOKED.w

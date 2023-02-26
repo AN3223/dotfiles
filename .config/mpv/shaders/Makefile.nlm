@@ -10,7 +10,7 @@ LQ_LUMA=S=1.25:R=3:WD=1:$(NO_ROTATE)
 LQ=WD=1
 
 HQ_DESC=Slow, but higher quality.
-HQ_LUMA=S=3:P=4:PS=6:RI=3:RFI=0:EP=0
+HQ_LUMA=S=3:P=4:PS=6:RI=3:RFI=0:RF=guided.glsl:EP=0
 HQ=S=3:PS=3
 
 HEAVY_DESC=Tuned for heavy noise.

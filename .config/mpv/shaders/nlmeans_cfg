@@ -16,44 +16,99 @@ BEGIN {
 			T_RES_W = var_val[2]
 		else if (var_val[1] == "T_RES_H")
 			T_RES_H = var_val[2]
+		else if (var_val[1] == "WIDTH")
+			WIDTH = var_val[2]
+		else if (var_val[1] == "HEIGHT")
+			HEIGHT = var_val[2]
 	}
 }
 
 /\/\/cfg_desc/ { printf("// Profile description: %s\n", ENVIRON["DESC"]); next; }
 
 # Prints //!HOOK for each HOOKED plane and //!BIND HOOKED
-function hooks() {
+function hooks(no_bind) {
 	split(HOOKS, hooks_arr, ":")
 	for (i in hooks_arr)
 		printf("//!HOOK %s\n", hooks_arr[i])
-	printf("%s\n", "//!BIND HOOKED")
+	if (!no_bind)
+		printf("%s\n", "//!BIND HOOKED")
 }
 
-function downscale(name, scale) {
-	prename = (name ~ /^RF/) ? ("PRE" name) : (name)
-	hooks()
-	printf("%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
-		"//!DESC Non-local means (downscale)",
-		"//!SAVE " prename,
-		"//!WIDTH HOOKED.w " scale " /",
-		"//!HEIGHT HOOKED.h " scale " /",
-		"vec4 hook()",
-		"{",
-		"	return HOOKED_texOff(0);",
-		"}")
-	if (name ~ /^RF/) {
+function inject_shader(shader, tex_name) {
+	print("// The following is shader code injected from " shader)
+	shader_hook = shader_save = 0
+	split("", intern_texs) # arr of internal texture names
+	while (getline line < shader == 1) {
+		split(line, words, "[[:space:]]")
+		if (words[1] == "//!HOOK") { 
+			if (!shader_hook) {
+				shader_hook = 1 # mark start of HOOK block
+				hooks(1) # inject our hooks into the shader
+			}
+			continue
+		} else if (words[1] == "//!SAVE") {
+			shader_save = 1
+			intern_texs[length(intern_texs)+1] = words[2]
+			print(words[1], "INJCT_" words[2])
+			continue
+		} else if (line !~ /^\/\/!/) { 
+			if (shader_hook && !shader_save) # end of final HOOK block
+				print("//!SAVE " tex_name)
+			shader_hook = shader_save = 0
+		}
+
+		# prefix all occurrences of internal texture names
+		for (i in intern_texs) {
+			done = ""
+			needle = shader_hook ? intern_texs[i] : intern_texs[i] "_" # lax query within HOOK blocks
+			while (idx = index(line, needle)) {
+				if (idx == 1 || substr(line, idx-1, 1) ~ /[[:space:](]/) {
+					done = done substr(line, 1, idx-1) "INJCT_" needle
+					line = substr(line, idx + length(needle))
+				} else {
+					done = done substr(line, 1, idx-1) needle
+					line = substr(line, idx + length(needle))
+				}
+			}
+			line = done line
+		}
+
+		print(line)
+	}
+
+	print("// End of source code injected from " shader)
+}
+
+function robust_filter(name, scale) {
+	prefixed_name = (name ~ /^RF/) ? ("PRE" name) : (name)
+	if (scale !~ /^[0-9][.]?[0-9]*$/) {
+		inject_shader(scale, name)
+	} else {
 		hooks()
-		printf("%s\n%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
-			"//!DESC Non-local means (undownscale)",
-			"//!BIND " prename,
-			"//!SAVE " name,
-			"//!WIDTH HOOKED.w",
-			"//!HEIGHT HOOKED.h",
+		printf("%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
+			"//!DESC Non-local means (downscale)",
+			"//!SAVE " prefixed_name,
+			"//!WIDTH HOOKED.w " scale " /",
+			"//!HEIGHT HOOKED.h " scale " /",
 			"vec4 hook()",
 			"{",
-			"	return " prename "_texOff(0);",
+			"	return HOOKED_texOff(0);",
 			"}")
+		if (name ~ /^RF/) {
+			hooks()
+			printf("%s\n%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
+				"//!DESC Non-local means (unscale)",
+				"//!BIND " prefixed_name,
+				"//!SAVE " name,
+				"//!WIDTH " (WIDTH ? WIDTH : "HOOKED.w"),
+				"//!HEIGHT " (HEIGHT ? HEIGHT : "HOOKED.h"),
+				"vec4 hook()",
+				"{",
+				"	return " prefixed_name "_texOff(0);",
+				"}")
+		}
 	}
+	
 	TEXTURES = TEXTURES ? (TEXTURES ":" name) : name
 }
 
@@ -65,20 +120,24 @@ function downscale(name, scale) {
 		RF = (planes[p] == "LUMA") ? 1.25 : 2.0
 		EP = (planes[p] == "LUMA") ? 3.0 : 0
 
+		RF_parsed = EP_parsed = 0 # prevent parsing opts multiple times
 		split(ENVIRON[planes[p]], opts, ":")
 		for (i in opts) {
 			split(opts[i], var_val, "=")
-			if (var_val[1] == "RF")
+			if (!RF_parsed && var_val[1] == "RF") {
 				RF = var_val[2]
-			else if (var_val[1] == "EP")
+				RF_parsed = 1
+			} else if (!EP_parsed && var_val[1] == "EP") {
 				EP = var_val[2]
+				EP_parsed = 1
+			}
 		}
 
 		tex_suffix = (planes[p] == "LUMA") ? "_LUMA" : ""
 		if (RF)
-			downscale("RF" tex_suffix, RF)
+			robust_filter("RF" tex_suffix, RF)
 		if (EP)
-			downscale("EP" tex_suffix, EP)
+			robust_filter("EP" tex_suffix, EP)
 	}
 	next
 }
@@ -95,6 +154,11 @@ function downscale(name, scale) {
 		printf("//!BIND PREV%d\n", i)
 
 	printf("//!DESC Non-local means (%s)\n", ENVIRON["FILENAME"])
+
+	if (WIDTH)
+		print("//!WIDTH " WIDTH)
+	if (HEIGHT)
+		print("//!HEIGHT " HEIGHT)
 
 	next
 }
