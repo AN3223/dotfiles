@@ -91,35 +91,6 @@
 //!HOOK RGB
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
-//!SAVE PRERF
-//!WIDTH HOOKED.w 2 /
-//!HEIGHT HOOKED.h 2 /
-
-vec4 hook()
-{
-	return HOOKED_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!BIND HOOKED
-//!DESC Non-local means (unscale)
-//!BIND PRERF
-//!SAVE RF
-//!WIDTH HOOKED.w
-//!HEIGHT HOOKED.h
-
-vec4 hook()
-{
-	return PRERF_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!BIND HOOKED
-//!DESC Non-local means (downscale)
 //!SAVE PRERF_LUMA
 //!WIDTH HOOKED.w 2.0 /
 //!HEIGHT HOOKED.h 2.0 /
@@ -148,8 +119,21 @@ vec4 hook()
 //!HOOK CHROMA
 //!HOOK RGB
 //!BIND HOOKED
-//!BIND RF
+//!DESC Non-local means (share)
 //!BIND RF_LUMA
+//!SAVE RF
+
+vec4 hook()
+{
+	return RF_LUMA_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!BIND HOOKED
+//!BIND RF_LUMA
+//!BIND RF
 //!DESC Non-local means (nlmeans_anime_medium.glsl)
 
 /* User variables
@@ -572,7 +556,7 @@ const float p_scale = 1.0/p_area;
 #if RF && defined(LUMA_raw)
 #define load2_(off) RF_LUMA_tex(RF_LUMA_pos + RF_LUMA_pt * vec2(off))
 #define gather_offs(off) (RF_LUMA_mul * vec4(textureGatherOffsets(RF_LUMA_raw, RF_LUMA_pos + vec2(off) * RF_LUMA_pt, offsets)))
-#define gather(off) RF_LUMA_gather(RF_LUMA_pos + (off)*RF_LUMA_pt, 0)
+#define gather(off) RF_LUMA_gather(RF_LUMA_pos + (off) * RF_LUMA_pt, 0)
 #elif RF
 #define load2_(off) RF_tex(RF_pos + RF_pt * vec2(off))
 #else

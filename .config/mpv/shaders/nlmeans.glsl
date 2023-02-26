@@ -86,14 +86,47 @@
  * 	- PD
  */
 
+// The following is shader code injected from guided.glsl
+/* vi: ft=c
+ *
+ * Copyright (c) 2022 an3223 <ethanr2048@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify it 
+ * under the terms of the GNU Lesser General Public License as published by 
+ * the Free Software Foundation, either version 2.1 of the License, or (at 
+ * your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License 
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License 
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/* "Self-guided" guided filter implementation using bilinear instead of box.
+ * 
+ * The radius can be adjusted with the "Guided Filter (MEANIP)" downscaling 
+ * factors below. Higher numbers give a bigger radius.
+ *
+ * The E variable can be found in the "Guided filter (A)" stage.
+ *
+ * The subsampling (fast guided filter) can be adjusted with the "Guided Filter
+ * (IP)" downscaling factor below. Higher numbers are faster.
+ *
+ * The quality is not very good compared to NLM, may be useful for fast & heavy
+ * denoising though? Or even as a substitution to RF within NLM!
+ */
+
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
+//!DESC Guided filter (IP)
 //!BIND HOOKED
-//!DESC Non-local means (downscale)
-//!SAVE PRERF
-//!WIDTH HOOKED.w 2 /
-//!HEIGHT HOOKED.h 2 /
+//!WIDTH HOOKED.w 1.0 /
+//!HEIGHT HOOKED.h 1.0 /
+//!SAVE INJCT_IP
 
 vec4 hook()
 {
@@ -103,47 +136,122 @@ vec4 hook()
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!BIND HOOKED
-//!DESC Non-local means (unscale)
-//!BIND PRERF
-//!SAVE RF
-//!WIDTH HOOKED.w
-//!HEIGHT HOOKED.h
+//!DESC Guided filter (MEANIP)
+//!BIND INJCT_IP
+//!WIDTH INJCT_IP.w 2.0 /
+//!HEIGHT INJCT_IP.h 2.0 /
+//!SAVE INJCT_MEANIP
 
 vec4 hook()
 {
-	return PRERF_texOff(0);
+	return INJCT_IP_texOff(0);
 }
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!BIND HOOKED
-//!DESC Non-local means (downscale)
-//!SAVE PRERF_LUMA
-//!WIDTH HOOKED.w 1.25 /
-//!HEIGHT HOOKED.h 1.25 /
+//!DESC Guided filter (INJCT_IP_SQ)
+//!BIND INJCT_IP
+//!WIDTH INJCT_IP.w
+//!HEIGHT INJCT_IP.h
+//!SAVE INJCT_IP_SQ
 
 vec4 hook()
 {
-	return HOOKED_texOff(0);
+	return INJCT_IP_texOff(0) * INJCT_IP_texOff(0);
 }
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
+//!DESC Guided filter (CORRIP)
+//!BIND INJCT_IP_SQ
+//!WIDTH INJCT_MEANIP.w
+//!HEIGHT INJCT_MEANIP.h
+//!SAVE INJCT_CORRIP
+
+vec4 hook()
+{
+	return INJCT_IP_SQ_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!DESC Guided filter (A)
+//!BIND INJCT_MEANIP
+//!BIND INJCT_CORRIP
+//!WIDTH INJCT_IP.w
+//!HEIGHT INJCT_IP.h
+//!SAVE INJCT_A
+
+#define E 0.001
+
+vec4 hook()
+{
+	vec4 var = INJCT_CORRIP_texOff(0) - INJCT_MEANIP_texOff(0) * INJCT_MEANIP_texOff(0);
+	vec4 cov = var;
+	return cov / (var + E);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!DESC Guided filter (B)
+//!BIND INJCT_A
+//!BIND INJCT_MEANIP
+//!WIDTH INJCT_IP.w
+//!HEIGHT INJCT_IP.h
+//!SAVE INJCT_B
+
+vec4 hook()
+{
+	return INJCT_MEANIP_texOff(0) - INJCT_A_texOff(0) * INJCT_MEANIP_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!DESC Guided filter (MEANA)
+//!BIND INJCT_A
+//!WIDTH INJCT_MEANIP.w
+//!HEIGHT INJCT_MEANIP.h
+//!SAVE INJCT_MEANA
+
+vec4 hook()
+{
+	return INJCT_A_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!DESC Guided filter (MEANB)
+//!BIND INJCT_B
+//!WIDTH INJCT_MEANIP.w
+//!HEIGHT INJCT_MEANIP.h
+//!SAVE INJCT_MEANB
+
+vec4 hook()
+{
+	return INJCT_B_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!DESC Guided filter
 //!BIND HOOKED
-//!DESC Non-local means (unscale)
-//!BIND PRERF_LUMA
+//!BIND INJCT_MEANA
+//!BIND INJCT_MEANB
 //!SAVE RF_LUMA
-//!WIDTH HOOKED.w
-//!HEIGHT HOOKED.h
 
 vec4 hook()
 {
-	return PRERF_LUMA_texOff(0);
+	return INJCT_MEANA_texOff(0) * HOOKED_texOff(0) + INJCT_MEANB_texOff(0);
 }
 
+// End of source code injected from guided.glsl
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
@@ -162,9 +270,22 @@ vec4 hook()
 //!HOOK CHROMA
 //!HOOK RGB
 //!BIND HOOKED
-//!BIND RF
+//!DESC Non-local means (share)
+//!BIND RF_LUMA
+//!SAVE RF
+
+vec4 hook()
+{
+	return RF_LUMA_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!BIND HOOKED
 //!BIND RF_LUMA
 //!BIND EP_LUMA
+//!BIND RF
 //!DESC Non-local means (nlmeans.glsl)
 
 /* User variables
@@ -587,7 +708,7 @@ const float p_scale = 1.0/p_area;
 #if RF && defined(LUMA_raw)
 #define load2_(off) RF_LUMA_tex(RF_LUMA_pos + RF_LUMA_pt * vec2(off))
 #define gather_offs(off) (RF_LUMA_mul * vec4(textureGatherOffsets(RF_LUMA_raw, RF_LUMA_pos + vec2(off) * RF_LUMA_pt, offsets)))
-#define gather(off) RF_LUMA_gather(RF_LUMA_pos + (off)*RF_LUMA_pt, 0)
+#define gather(off) RF_LUMA_gather(RF_LUMA_pos + (off) * RF_LUMA_pt, 0)
 #elif RF
 #define load2_(off) RF_tex(RF_pos + RF_pt * vec2(off))
 #else
