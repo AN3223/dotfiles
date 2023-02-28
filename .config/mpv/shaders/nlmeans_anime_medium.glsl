@@ -584,6 +584,7 @@ vec4 load2(vec3 off)
 #endif
 
 vec4 poi = load(vec3(0)); // pixel-of-interest
+vec4 poi2 = load2(vec3(0)); // guide pixel-of-interest
 
 #if RI // rotation
 vec2 rot(vec2 p, float d)
@@ -619,7 +620,7 @@ vec4 patch_comparison(vec3 r, vec3 r2)
 		vec4 pdiff_sq = vec4(0);
 		FOR_PATCH(p) {
 			vec3 transformed_p = vec3(ref(rot(p.xy, ri), rfi), p.z);
-			vec4 diff_sq = pow(load(p + r2) - load2(transformed_p + r), vec4(2));
+			vec4 diff_sq = pow(load2(p + r2) - load2(transformed_p + r), vec4(2));
 #if PST && P >= PST
 			float pdist = exp(-pow(length(p.xy*PSD)*PSS, 2));
 			diff_sq = pow(max(diff_sq, EPSILON), vec4(pdist));
@@ -661,7 +662,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 		transformer = transformer.zwxy;
 #endif
 	}
-	return vec4(min_rot + pow(poi.x - load2(r).x, 2), 0, 0, 0) * p_scale;
+	return vec4(min_rot + pow(poi2.x - load2(r).x, 2), 0, 0, 0) * p_scale;
 }
 #elif defined(LUMA_gather) && PS == 6 && REGULAR_ROTATIONS && NO_GATHER
 // tiled even square patch_comparison_gather
