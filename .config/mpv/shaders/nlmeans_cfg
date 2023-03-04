@@ -34,6 +34,7 @@ function hooks(no_bind) {
 		printf("%s\n", "//!BIND HOOKED")
 }
 
+# XXX handle TEXTURE blocks
 function inject_shader(shader, tex_name) {
 	print("// The following is shader code injected from " shader)
 	shader_hook = shader_save = 0
@@ -45,6 +46,8 @@ function inject_shader(shader, tex_name) {
 				shader_hook = 1 # mark start of HOOK block
 				hooks(1) # inject our hooks into the shader
 			}
+			continue
+		} else if (words[1] == "//!WHEN") {
 			continue
 		} else if (words[1] == "//!SAVE") {
 			shader_save = 1

@@ -41,12 +41,18 @@ SHARPEN_ONLY=AS=2:ASF=4:ASP=1
 SHARPEN_DENOISE_DESC=Sharpen and denoise.
 SHARPEN_DENOISE=AS=1:S=10:ASF=1.5
 
+2X_DESC=Experimental upscaler
+2X_LUMA=S=1.5:RF=FSRCNNX_x2_8-0-4-1.glsl:SF=2:SW=0.5:EP=0
+2X_CFG=HOOKS=LUMA:WIDTH="HOOKED.w 2 *":HEIGHT="HOOKED.h 2 *"
+
 LUMA_DESC=Luma only, saves some time by not processing the chroma plane.
 
-all: nlmeans.glsl nlmeans_heavy.glsl nlmeans_medium.glsl nlmeans_anime.glsl nlmeans_anime_medium.glsl nlmeans_temporal.glsl nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_hq_heavy.glsl nlmeans_hq_medium.glsl nlmeans_hqx.glsl nlmeans_anime_hq.glsl nlmeans_anime_hq_medium.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_temporal_sharpen_denoise.glsl nlmeans_hq_sharpen_denoise.glsl nlmeans_sharpen_only.glsl nlmeans_temporal_sharpen_only.glsl nlmeans_hq_sharpen_only.glsl
+all: nlmeans.glsl nlmeans_2x.glsl nlmeans_heavy.glsl nlmeans_medium.glsl nlmeans_anime.glsl nlmeans_anime_medium.glsl nlmeans_temporal.glsl nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_hq_heavy.glsl nlmeans_hq_medium.glsl nlmeans_hqx.glsl nlmeans_anime_hq.glsl nlmeans_anime_hq_medium.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_temporal_sharpen_denoise.glsl nlmeans_hq_sharpen_denoise.glsl nlmeans_sharpen_only.glsl nlmeans_temporal_sharpen_only.glsl nlmeans_hq_sharpen_only.glsl
 
 nlmeans.glsl: nlmeans_template
 	env DESC="$(DEFAULT_DESC)" FILENAME=$@ ./nlmeans_cfg < $? > $@
+nlmeans_2x.glsl: nlmeans_template
+	env DESC="$(2X_DESC)" FILENAME=$@ CFG=$(2X_CFG) LUMA=$(2X_LUMA) ./nlmeans_cfg < $? > $@
 nlmeans_heavy.glsl: nlmeans_template
 	env DESC="$(HEAVY_DESC)" FILENAME=$@ LUMA=$(HEAVY) CHROMA=$(HEAVY) ./nlmeans_cfg < $? > $@
 nlmeans_medium.glsl: nlmeans_template
