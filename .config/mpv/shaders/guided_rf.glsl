@@ -16,8 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* Guided filter guided by the downscaled image. Output is currently the same 
- * as guided.glsl, and utilizing the downscaling yields junk!
+/* Guided filter guided by the downscaled image. Quality doesn't seem any better.
  * 
  * The radius can be adjusted with the "Guided Filter (MEANIP)" downscaling 
  * factors below. Higher numbers give a bigger radius.
@@ -27,11 +26,8 @@
  * The subsampling (fast guided filter) can be adjusted with the "Guided Filter
  * (I)" downscaling factor below. Higher numbers are faster.
  *
- * The subsampling of the guide (a la RF in NLM) can be adjusted with the 
- * "Guided Filters (P)" downscaling factor. Higher numbers downscale more.
- *
- * The quality is not very good compared to NLM, may be useful for fast & heavy
- * denoising though? Or even as a substitution to RF within NLM!
+ * The subsampling of the guide can be adjusted with the "Guided Filters 
+ * (PREP)" downscaling factor. Higher numbers downscale more.
  */
 
 //!HOOK LUMA
@@ -51,15 +47,29 @@ vec4 hook()
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (P)
+//!DESC Guided filter (PREP)
 //!BIND HOOKED
 //!WIDTH I.w 1.0 /
 //!HEIGHT I.h 1.0 /
-//!SAVE P
+//!SAVE PREP
 
 vec4 hook()
 {
 	return HOOKED_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!DESC Guided filter (P)
+//!BIND PREP
+//!WIDTH I.w
+//!HEIGHT I.h
+//!SAVE P
+
+vec4 hook()
+{
+	return PREP_texOff(0);
 }
 
 //!HOOK LUMA

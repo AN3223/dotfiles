@@ -25,9 +25,6 @@
  *
  * The subsampling (fast guided filter) can be adjusted with the "Guided Filter
  * (IP)" downscaling factor below. Higher numbers are faster.
- *
- * The quality is not very good compared to NLM, may be useful for fast & heavy
- * denoising though? Or even as a substitution to RF within NLM!
  */
 
 //!HOOK LUMA
