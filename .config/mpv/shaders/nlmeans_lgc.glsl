@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Profile description: Very experimental and buggy, limited to vo=gpu-next. Sharpen without denoising.
+// Profile description: Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
 
 /* The recommended usage of this shader and its variant profiles is to add them 
  * to input.conf and then dispatch the appropriate shader via a keybind during 
@@ -86,172 +86,7 @@
  * 	- PD
  */
 
-// The following is shader code injected from guided.glsl
-/* vi: ft=c
- *
- * Copyright (c) 2022 an3223 <ethanr2048@gmail.com>
- *
- * This program is free software: you can redistribute it and/or modify it 
- * under the terms of the GNU Lesser General Public License as published by 
- * the Free Software Foundation, either version 2.1 of the License, or (at 
- * your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License 
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License 
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
- */
-
-/* "Self-guided" guided filter implementation using bilinear instead of box.
- * 
- * The radius can be adjusted with the "Guided Filter (MEANIP)" downscaling 
- * factors below. Higher numbers give a bigger radius.
- *
- * The E variable can be found in the "Guided filter (A)" stage.
- *
- * The subsampling (fast guided filter) can be adjusted with the "Guided Filter
- * (IP)" downscaling factor below. Higher numbers are faster.
- */
-
-//!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (IP)
-//!BIND HOOKED
-//!WIDTH HOOKED.w 1.0 /
-//!HEIGHT HOOKED.h 1.0 /
-//!SAVE INJCT_IP
-
-vec4 hook()
-{
-	return HOOKED_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (MEANIP)
-//!BIND INJCT_IP
-//!WIDTH INJCT_IP.w 2.0 /
-//!HEIGHT INJCT_IP.h 2.0 /
-//!SAVE INJCT_MEANIP
-
-vec4 hook()
-{
-	return INJCT_IP_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (INJCT_IP_SQ)
-//!BIND INJCT_IP
-//!WIDTH INJCT_IP.w
-//!HEIGHT INJCT_IP.h
-//!SAVE INJCT_IP_SQ
-
-vec4 hook()
-{
-	return INJCT_IP_texOff(0) * INJCT_IP_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (CORRIP)
-//!BIND INJCT_IP_SQ
-//!WIDTH INJCT_MEANIP.w
-//!HEIGHT INJCT_MEANIP.h
-//!SAVE INJCT_CORRIP
-
-vec4 hook()
-{
-	return INJCT_IP_SQ_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (A)
-//!BIND INJCT_MEANIP
-//!BIND INJCT_CORRIP
-//!WIDTH INJCT_IP.w
-//!HEIGHT INJCT_IP.h
-//!SAVE INJCT_A
-
-#define E 0.001
-
-vec4 hook()
-{
-	vec4 var = INJCT_CORRIP_texOff(0) - INJCT_MEANIP_texOff(0) * INJCT_MEANIP_texOff(0);
-	vec4 cov = var;
-	return cov / (var + E);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (B)
-//!BIND INJCT_A
-//!BIND INJCT_MEANIP
-//!WIDTH INJCT_IP.w
-//!HEIGHT INJCT_IP.h
-//!SAVE INJCT_B
-
-vec4 hook()
-{
-	return INJCT_MEANIP_texOff(0) - INJCT_A_texOff(0) * INJCT_MEANIP_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (MEANA)
-//!BIND INJCT_A
-//!WIDTH INJCT_MEANIP.w
-//!HEIGHT INJCT_MEANIP.h
-//!SAVE INJCT_MEANA
-
-vec4 hook()
-{
-	return INJCT_A_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (MEANB)
-//!BIND INJCT_B
-//!WIDTH INJCT_MEANIP.w
-//!HEIGHT INJCT_MEANIP.h
-//!SAVE INJCT_MEANB
-
-vec4 hook()
-{
-	return INJCT_B_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter
-//!BIND HOOKED
-//!BIND INJCT_MEANA
-//!BIND INJCT_MEANB
-//!SAVE RF_LUMA
-
-vec4 hook()
-{
-	return INJCT_MEANA_texOff(0) * HOOKED_texOff(0) + INJCT_MEANB_texOff(0);
-}
-
-// End of source code injected from guided.glsl
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
 //!BIND HOOKED
 //!DESC Non-local means (downscale)
 //!SAVE EP_LUMA
@@ -263,30 +98,22 @@ vec4 hook()
 	return HOOKED_texOff(0);
 }
 
-//!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!BIND HOOKED
 //!DESC Non-local means (share)
-//!BIND RF_LUMA
+//!BIND LUMA
 //!SAVE RF
 
 vec4 hook()
 {
-	return RF_LUMA_texOff(0);
+	return LUMA_texOff(0);
 }
 
-//!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!BIND HOOKED
-//!BIND RF_LUMA
 //!BIND EP_LUMA
 //!BIND RF
-//!BIND PREV1
-//!BIND PREV2
-//!BIND PREV3
-//!DESC Non-local means (nlmeans_temporal_sharpen_only.glsl)
+//!DESC Non-local means (nlmeans_lgc.glsl)
 
 /* User variables
  *
@@ -316,7 +143,7 @@ vec4 hook()
 #define P 3
 #define R 5
 #else
-#define S 1.50
+#define S 0.5
 #define P 3
 #define R 5
 #endif
@@ -334,13 +161,13 @@ vec4 hook()
  * ASP: Weight power, higher numbers use more of the sharp image
  */
 #ifdef LUMA_raw
-#define AS 2
-#define ASF 4
-#define ASP 1
+#define AS 0
+#define ASF 1.0
+#define ASP 2.0
 #else
-#define AS 2
-#define ASF 4
-#define ASP 1
+#define AS 0
+#define ASF 1.0
+#define ASP 2.0
 #endif
 
 /* Starting weight
@@ -355,7 +182,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define SW 1.0
 #else
-#define SW 1.0
+#define SW EPSILON
 #endif
 
 /* Weight discard
@@ -373,7 +200,7 @@ vec4 hook()
  * WDP (WD=1): Higher numbers reduce the threshold more for small sample sizes
  */
 #ifdef LUMA_raw
-#define WD 1
+#define WD 2
 #define WDT 1.0
 #define WDP 6.0
 #else
@@ -420,8 +247,8 @@ vec4 hook()
  * RFI (0 to 2): Reflectional invariance
  */
 #ifdef LUMA_raw
-#define RI 0
-#define RFI 0
+#define RI 3
+#define RFI 2
 #else
 #define RI 0
 #define RFI 0
@@ -445,7 +272,7 @@ vec4 hook()
  * ME: motion estimation, 0 for none, 1 for max weight, 2 for weighted avg
  */
 #ifdef LUMA_raw
-#define T 2
+#define T 0
 #define ME 1
 #else
 #define T 0
@@ -523,7 +350,7 @@ vec4 hook()
  * factor is set to 3.
  */
 #ifdef LUMA_raw
-#define RF 1
+#define RF 0
 #else
 #define RF 1
 #endif
@@ -729,18 +556,12 @@ vec4 load(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0: return load_(off);
-	case 1: return imageLoad(PREV1, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1)));
-	case 2: return imageLoad(PREV2, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2)));
-	case 3: return imageLoad(PREV3, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV3)));
 	}
 }
 vec4 load2(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0: return load2_(off);
-	case 1: return imageLoad(PREV1, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1)));
-	case 2: return imageLoad(PREV2, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2)));
-	case 3: return imageLoad(PREV3, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV3)));
 	}
 }
 #else
@@ -979,9 +800,6 @@ vec4 hook()
 	} // FOR_FRAME
 
 #if T // temporal
-	imageStore(PREV3, ivec2(HOOKED_pos*imageSize(PREV3)), load2(vec3(0,0,2)));
-	imageStore(PREV2, ivec2(HOOKED_pos*imageSize(PREV2)), load2(vec3(0,0,1)));
-	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), load2(vec3(0,0,0)));
 #endif
 
 	vec4 avg_weight = total_weight * r_scale;
@@ -1055,19 +873,4 @@ vec4 hook()
 
 	return mix(poi, result, BF);
 }
-
-//!TEXTURE PREV1
-//!SIZE 1920 1080
-//!FORMAT r32f
-//!STORAGE
-
-//!TEXTURE PREV2
-//!SIZE 1920 1080
-//!FORMAT r32f
-//!STORAGE
-
-//!TEXTURE PREV3
-//!SIZE 1920 1080
-//!FORMAT r32f
-//!STORAGE
 
