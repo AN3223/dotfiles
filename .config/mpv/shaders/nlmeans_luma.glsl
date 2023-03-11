@@ -501,7 +501,24 @@ vec4 hook()
 #define RF 1
 #endif
 
-// Scaling factor, should be the same as the shader's scaling factor
+/* Blur factor
+ *
+ * 0 to 1, only useful for alternative estimators. You're probably looking for 
+ * "S" (denoising factor), go back to the top of the shader!
+ */
+#ifdef LUMA_raw
+#define BF 1.0
+#else
+#define BF 1.0
+#endif
+
+/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
+/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
+/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
+/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
+/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
+
+// Scaling factor (should match WIDTH/HEIGHT)
 #ifdef LUMA_raw
 #define SF 1
 #else
@@ -509,8 +526,6 @@ vec4 hook()
 #endif
 
 /* Estimator
- *
- * Don't change this setting.
  *
  * 0: means
  * 1: Euclidean medians (extremely slow, may be good for heavy noise)
@@ -523,27 +538,18 @@ vec4 hook()
 #define M 0
 #endif
 
-/* Patch donut
- *
- * If enabled, ignores center pixel of patch comparisons.
- *
- * Not sure if this is any use? May be removed at any time.
- */
+// Patch donut (probably useless)
 #ifdef LUMA_raw
 #define PD 0
 #else
 #define PD 0
 #endif
 
-/* Blur factor
- *
- * 0 to 1, only useful for alternative estimators. You're probably looking for 
- * "S" (denoising factor), go back to the top of the shader!
- */
+// Duplicate 1st weight
 #ifdef LUMA_raw
-#define BF 1.0
+#define D1W 0
 #else
-#define BF 1.0
+#define D1W 0
 #endif
 
 /* Shader code */
@@ -689,6 +695,10 @@ const float p_scale = 1.0/p_area;
 #define load2_(off) RF_LUMA_tex(RF_LUMA_pos + RF_LUMA_pt * vec2(off))
 #define gather_offs(off, off_arr) (RF_LUMA_mul * vec4(textureGatherOffsets(RF_LUMA_raw, RF_LUMA_pos + vec2(off) * RF_LUMA_pt, off_arr)))
 #define gather(off) RF_LUMA_gather(RF_LUMA_pos + (off) * RF_LUMA_pt, 0)
+#elif RF && D1W
+#define load2_(off) RF_tex(RF_pos + RF_pt * vec2(off))
+#define gather_offs(off, off_arr) (RF_mul * vec4(textureGatherOffsets(RF_raw, RF_pos + vec2(off) * RF_pt, off_arr)))
+#define gather(off) RF_gather(RF_pos + (off) * RF_pt, 0)
 #elif RF
 #define load2_(off) RF_tex(RF_pos + RF_pt * vec2(off))
 #else
@@ -768,7 +778,7 @@ vec4 patch_comparison(vec3 r, vec3 r2)
 #define NO_GATHER (PD == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3)
 
-#if defined(LUMA_gather) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && M != 1 && REGULAR_ROTATIONS && NO_GATHER
+#if (defined(LUMA_gather) || D1W) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && M != 1 && REGULAR_ROTATIONS && NO_GATHER
 // 3x3 diamond/plus patch_comparison_gather
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
 const ivec2 offsets_sf[4] = { ivec2(0,-1) * SF, ivec2(-1,0) * SF, ivec2(0,1) * SF, ivec2(1,0) * SF };
@@ -797,7 +807,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 	}
 	return vec4(min_rot + pow(poi2.x - load2(r).x, 2), 0, 0, 0) * p_scale;
 }
-#elif defined(LUMA_gather) && PS == 6 && REGULAR_ROTATIONS && NO_GATHER
+#elif (defined(LUMA_gather) || D1W) && PS == 6 && REGULAR_ROTATIONS && NO_GATHER
 // tiled even square patch_comparison_gather
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
@@ -905,6 +915,10 @@ vec4 hook()
 #elif T && ME == 2 // temporal & motion estimation weighted average
 		me_sum += vec3(r.xy,0) * weight.x;
 		me_weight += weight.x;
+#endif
+
+#if D1W
+		weight = vec4(weight.x);
 #endif
 
 		weight *= exp(-pow(length(r*SD)*SS, 2)); // spatial kernel

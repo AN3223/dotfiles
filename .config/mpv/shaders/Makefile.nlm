@@ -47,8 +47,8 @@ SHARPEN_DENOISE=AS=1:S=10:ASF=1.5
 
 LGC_DESC=Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
 LGC_LUMA=RF=0
-LGC=RF=SHARE_LUMA:$(HEAVY):S=0.5
-LGC_CFG=HOOKS=CHROMA
+LGC=RF=SHARE_LUMA:D1W=1:S=10:RI=3:RF=2:$(HEAVY)
+LGC_CFG=HOOKS=CHROMA:WIDTH=LUMA.w:HEIGHT=LUMA.h
 
 LUMA_DESC=Luma only, saves some time by not processing the chroma plane.
 
