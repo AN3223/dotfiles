@@ -82,6 +82,22 @@ function inject_shader(shader, tex_name) {
 	print("// End of source code injected from " shader)
 }
 
+function extremes_preserve(scale) {
+	hooks(1)
+	printf("%s\n%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
+		"//!DESC Non-local means (downscale)",
+		"//!WIDTH LUMA.w " scale " /",
+		"//!HEIGHT LUMA.h " scale " /",
+		"//!BIND LUMA",
+		"//!SAVE EP",
+		"vec4 hook()",
+		"{",
+		"	return LUMA_texOff(0);",
+		"}")
+	TEXTURES = TEXTURES ? (TEXTURES ":" "EP") : "EP"
+}
+
+# XXX EP split into another function; could probably simplify this a lot
 function robust_filter(name, scale) {
 	prefixed_name = (name ~ /^RF/) ? ("PRE" name) : (name)
 	if (scale ~ /^SHARE_/) {
@@ -150,8 +166,9 @@ function robust_filter(name, scale) {
 		tex_suffix = (planes[p] == "LUMA") ? "_LUMA" : ""
 		if (RF)
 			robust_filter("RF" tex_suffix, RF)
+
 		if (EP)
-			robust_filter("EP" tex_suffix, EP)
+			extremes_preserve(EP)
 	}
 	next
 }

@@ -252,15 +252,15 @@ vec4 hook()
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!BIND HOOKED
 //!DESC Non-local means (downscale)
-//!SAVE EP_LUMA
-//!WIDTH HOOKED.w 3 /
-//!HEIGHT HOOKED.h 3 /
+//!WIDTH LUMA.w 3 /
+//!HEIGHT LUMA.h 3 /
+//!BIND LUMA
+//!SAVE EP
 
 vec4 hook()
 {
-	return HOOKED_texOff(0);
+	return LUMA_texOff(0);
 }
 
 //!HOOK LUMA
@@ -281,7 +281,7 @@ vec4 hook()
 //!HOOK RGB
 //!BIND HOOKED
 //!BIND RF_LUMA
-//!BIND EP_LUMA
+//!BIND EP
 //!BIND RF
 //!DESC Non-local means (nlmeans_sharpen_only.glsl)
 
@@ -1043,7 +1043,7 @@ vec4 hook()
 #endif
 
 #if EP // extremes preserve
-	float luminance = EP_LUMA_texOff(0).x;
+	float luminance = EP_texOff(0).x;
 	// EPSILON is needed since pow(0,0) is undefined
 	float ep_weight = pow(max(min(1-luminance, luminance)*2, EPSILON), (luminance < 0.5 ? DP : BP));
 	result = mix(poi, result, ep_weight);

@@ -894,7 +894,7 @@ vec4 hook()
 #endif
 
 #if EP // extremes preserve
-	float luminance = EP_LUMA_texOff(0).x;
+	float luminance = EP_texOff(0).x;
 	// EPSILON is needed since pow(0,0) is undefined
 	float ep_weight = pow(max(min(1-luminance, luminance)*2, EPSILON), (luminance < 0.5 ? DP : BP));
 	result = mix(poi, result, ep_weight);
