@@ -145,7 +145,7 @@ vec4 hook()
 #define P 3
 #define R 5
 #else
-#define S 10
+#define S 0.125
 #define P 3
 #define R 5
 #endif
@@ -184,7 +184,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define SW 1.0
 #else
-#define SW EPSILON
+#define SW 1.0
 #endif
 
 /* Weight discard
