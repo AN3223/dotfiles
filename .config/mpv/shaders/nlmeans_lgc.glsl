@@ -147,7 +147,7 @@ vec4 hook()
 #else
 #define S 0.125
 #define P 3
-#define R 5
+#define R 3
 #endif
 
 /* Adaptive sharpening
@@ -206,7 +206,7 @@ vec4 hook()
 #define WDT 1.0
 #define WDP 6.0
 #else
-#define WD 2
+#define WD 1
 #define WDT 1.0
 #define WDP 6.0
 #endif
@@ -253,7 +253,7 @@ vec4 hook()
 #define RFI 2
 #else
 #define RI 3
-#define RFI 0
+#define RFI 2
 #endif
 
 /* Temporal denoising
