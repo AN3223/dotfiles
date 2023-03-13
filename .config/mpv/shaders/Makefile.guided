@@ -1,0 +1,9 @@
+#!/usr/bin/make -f
+# Usually used like: ./Makefile.guided -B
+
+all: guided_s_fast.glsl
+
+guided_s_fast.glsl: guided_s.glsl
+	env OPTS=IP=2 ./guided_cfg < $? > $@
+
+

@@ -16,7 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* Guided filter guided by the downscaled image. Quality doesn't seem any better.
+/* "Self-guided" guided filter implementation using bilinear instead of box.
  * 
  * The radius can be adjusted with the "Guided Filter (MEANIP)" downscaling 
  * factors below. Higher numbers give a bigger radius.
@@ -24,20 +24,17 @@
  * The E variable can be found in the "Guided filter (A)" stage.
  *
  * The subsampling (fast guided filter) can be adjusted with the "Guided Filter
- * (I)" downscaling factor below. Higher numbers are faster.
- *
- * The subsampling of the guide can be adjusted with the "Guided Filters 
- * (PREP)" downscaling factor. Higher numbers downscale more.
+ * (IP)" downscaling factor below. Higher numbers are faster.
  */
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (I)
+//!DESC Guided filter (IP)
 //!BIND HOOKED
 //!WIDTH HOOKED.w 1.0 /
 //!HEIGHT HOOKED.h 1.0 /
-//!SAVE I
+//!SAVE IP
 
 vec4 hook()
 {
@@ -47,134 +44,61 @@ vec4 hook()
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (PREP)
-//!BIND HOOKED
-//!WIDTH I.w 1.0 /
-//!HEIGHT I.h 1.0 /
-//!SAVE PREP
+//!DESC Guided filter (MEANIP)
+//!BIND IP
+//!WIDTH IP.w 2.0 /
+//!HEIGHT IP.h 2.0 /
+//!SAVE MEANIP
 
 vec4 hook()
 {
-	return HOOKED_texOff(0);
+	return IP_texOff(0);
 }
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (P)
-//!BIND PREP
-//!WIDTH I.w
-//!HEIGHT I.h
-//!SAVE P
+//!DESC Guided filter (IP_SQ)
+//!BIND IP
+//!WIDTH IP.w
+//!HEIGHT IP.h
+//!SAVE IP_SQ
 
 vec4 hook()
 {
-	return PREP_texOff(0);
+	return IP_texOff(0) * IP_texOff(0);
 }
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (MEANI)
-//!BIND I
-//!WIDTH I.w 2.0 /
-//!HEIGHT I.h 2.0 /
-//!SAVE MEANI
+//!DESC Guided filter (CORRIP)
+//!BIND IP_SQ
+//!WIDTH MEANIP.w
+//!HEIGHT MEANIP.h
+//!SAVE CORRIP
 
 vec4 hook()
 {
-	return I_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (MEANP)
-//!BIND P
-//!WIDTH MEANI.w
-//!HEIGHT MEANI.h
-//!SAVE MEANP
-
-vec4 hook()
-{
-	return P_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (I_SQ)
-//!BIND I
-//!WIDTH I.w
-//!HEIGHT I.h
-//!SAVE I_SQ
-
-vec4 hook()
-{
-	return I_texOff(0) * I_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (IXP)
-//!BIND I
-//!BIND P
-//!WIDTH I.w
-//!HEIGHT I.h
-//!SAVE IXP
-
-vec4 hook()
-{
-	return I_texOff(0) * P_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (CORRI)
-//!BIND I_SQ
-//!WIDTH MEANI.w
-//!HEIGHT MEANI.h
-//!SAVE CORRI
-
-vec4 hook()
-{
-	return I_SQ_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (CORRP)
-//!BIND IXP
-//!WIDTH MEANI.w
-//!HEIGHT MEANI.h
-//!SAVE CORRP
-
-vec4 hook()
-{
-	return IXP_texOff(0);
+	return IP_SQ_texOff(0);
 }
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
 //!DESC Guided filter (A)
-//!BIND MEANI
-//!BIND MEANP
-//!BIND CORRI
-//!BIND CORRP
-//!WIDTH I.w
-//!HEIGHT I.h
+//!BIND MEANIP
+//!BIND CORRIP
+//!WIDTH IP.w
+//!HEIGHT IP.h
 //!SAVE A
 
 #define E 0.001
 
 vec4 hook()
 {
-	vec4 var = CORRI_texOff(0) - MEANI_texOff(0) * MEANI_texOff(0);
-	vec4 cov = CORRP_texOff(0) - MEANI_texOff(0) * MEANP_texOff(0);
+	vec4 var = CORRIP_texOff(0) - MEANIP_texOff(0) * MEANIP_texOff(0);
+	vec4 cov = var;
 	return cov / (var + E);
 }
 
@@ -183,15 +107,14 @@ vec4 hook()
 //!HOOK RGB
 //!DESC Guided filter (B)
 //!BIND A
-//!BIND MEANI
-//!BIND MEANP
-//!WIDTH I.w
-//!HEIGHT I.h
+//!BIND MEANIP
+//!WIDTH IP.w
+//!HEIGHT IP.h
 //!SAVE B
 
 vec4 hook()
 {
-	return MEANP_texOff(0) - A_texOff(0) * MEANI_texOff(0);
+	return MEANIP_texOff(0) - A_texOff(0) * MEANIP_texOff(0);
 }
 
 //!HOOK LUMA
@@ -199,8 +122,8 @@ vec4 hook()
 //!HOOK RGB
 //!DESC Guided filter (MEANA)
 //!BIND A
-//!WIDTH MEANI.w
-//!HEIGHT MEANI.h
+//!WIDTH MEANIP.w
+//!HEIGHT MEANIP.h
 //!SAVE MEANA
 
 vec4 hook()
@@ -213,8 +136,8 @@ vec4 hook()
 //!HOOK RGB
 //!DESC Guided filter (MEANB)
 //!BIND B
-//!WIDTH MEANI.w
-//!HEIGHT MEANI.h
+//!WIDTH MEANIP.w
+//!HEIGHT MEANIP.h
 //!SAVE MEANB
 
 vec4 hook()

@@ -86,7 +86,7 @@
  * 	- PD
  */
 
-// The following is shader code injected from guided.glsl
+// The following is shader code injected from guided_s.glsl
 /* vi: ft=c
  *
  * Copyright (c) 2022 an3223 <ethanr2048@gmail.com>
@@ -248,7 +248,7 @@ vec4 hook()
 	return INJCT_MEANA_texOff(0) * HOOKED_texOff(0) + INJCT_MEANB_texOff(0);
 }
 
-// End of source code injected from guided.glsl
+// End of source code injected from guided_s.glsl
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB

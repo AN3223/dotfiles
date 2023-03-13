@@ -1,0 +1,56 @@
+#!/usr/bin/awk -f
+
+BEGIN {
+	split(ENVIRON["OPTS"], opts, ":")
+	split("LUMA,CHROMA,RGB", HOOKS, ",")
+
+	for (i in opts) {
+		split(opts[i], var_val, "=")
+		if (var_val[1] == "HOOKS")
+			split(var_val[2], HOOKS, ",")
+	}
+}
+
+/^#define/ {
+	for (i in opts) {
+		split(opts[i], var_val, "=")
+		if ($2 == var_val[1]) {
+			printf("#define %s %s\n", var_val[1], var_val[2])
+			next
+		}
+	}
+}
+
+function hooks() {
+	for (i in HOOKS)
+		print("//!HOOK " HOOKS[i])
+}
+
+{
+	if ($1 == "//!HOOK") {
+		if (!hook_mark) {
+			hook_mark = 1
+			hooks()
+		}
+		next
+	} else {
+		hook_mark = 0
+	}
+}
+
+# set stage to the contents of the parenthesis in DESC
+/^\/\/!DESC/ { stage = substr($4, 2, length($4)-2) }
+
+/^\/\/!(WIDTH|HEIGHT)/ {
+	for (i in opts) {
+		split(opts[i], var_val, "=")
+		if (stage == var_val[1]) {
+			print($1, $2, var_val[2], $4)
+			next
+		}
+	}
+}
+
+{ print($0) }
+
+

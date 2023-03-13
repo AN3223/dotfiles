@@ -3,7 +3,7 @@
 # examples can be found in Makefile.nlm
 
 BEGIN {
-	HOOKS = "LUMA:CHROMA:RGB"
+	HOOKS = "LUMA,CHROMA,RGB"
 
 	split(ENVIRON["CFG"], opts, ":")
 	for (i in opts) {
@@ -21,15 +21,16 @@ BEGIN {
 		else if (var_val[1] == "HEIGHT")
 			HEIGHT = var_val[2]
 	}
+
+	split(HOOKS, HOOKS, ",")
 }
 
 /\/\/cfg_desc/ { printf("// Profile description: %s\n", ENVIRON["DESC"]); next; }
 
 # Prints //!HOOK for each HOOKED plane and //!BIND HOOKED
 function hooks(no_bind) {
-	split(HOOKS, hooks_arr, ":")
-	for (i in hooks_arr)
-		printf("//!HOOK %s\n", hooks_arr[i])
+	for (i in HOOKS)
+		printf("//!HOOK %s\n", HOOKS[i])
 	if (!no_bind)
 		printf("%s\n", "//!BIND HOOKED")
 }
@@ -147,7 +148,7 @@ function robust_filter(name, scale) {
 	split("LUMA CHROMA", planes)
 	for (p in planes) {
 		# sets defaults for RF/EP, should be the same as nlmeans_template
-		RF = (planes[p] == "LUMA") ? "guided.glsl" : "SHARE_RF_LUMA"
+		RF = (planes[p] == "LUMA") ? "guided_s.glsl" : "SHARE_RF_LUMA"
 		EP = (planes[p] == "LUMA") ? 3.0 : 0
 
 		RF_parsed = EP_parsed = 0 # prevent parsing opts multiple times
