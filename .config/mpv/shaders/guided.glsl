@@ -16,7 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* Guided filter guided by the downscaled image. Quality doesn't seem any better.
+/* Guided filter guided by the downscaled image.
  * 
  * The radius can be adjusted with the "Guided Filter (MEANIP)" downscaling 
  * factors below. Higher numbers give a bigger radius.
@@ -27,49 +27,49 @@
  * (I)" downscaling factor below. Higher numbers are faster.
  *
  * The subsampling of the guide can be adjusted with the "Guided Filters 
- * (PREP)" downscaling factor. Higher numbers downscale more.
+ * (PREI)" downscaling factor. Higher numbers downscale more.
  */
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (I)
+//!DESC Guided filter (PREI)
 //!BIND HOOKED
+//!WIDTH HOOKED.w 2.0 /
+//!HEIGHT HOOKED.h 2.0 /
+//!SAVE PREI
+
+vec4 hook()
+{
+	return HOOKED_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!DESC Guided filter (I)
+//!BIND PREI
 //!WIDTH HOOKED.w 1.0 /
 //!HEIGHT HOOKED.h 1.0 /
 //!SAVE I
 
 vec4 hook()
 {
-	return HOOKED_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (PREP)
-//!BIND HOOKED
-//!WIDTH I.w 1.0 /
-//!HEIGHT I.h 1.0 /
-//!SAVE PREP
-
-vec4 hook()
-{
-	return HOOKED_texOff(0);
+	return PREI_texOff(0);
 }
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
 //!DESC Guided filter (P)
-//!BIND PREP
+//!BIND HOOKED
 //!WIDTH I.w
 //!HEIGHT I.h
 //!SAVE P
 
 vec4 hook()
 {
-	return PREP_texOff(0);
+	return HOOKED_texOff(0);
 }
 
 //!HOOK LUMA
