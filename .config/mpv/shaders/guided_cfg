@@ -1,5 +1,10 @@
 #!/usr/bin/awk -f
 
+function hooks() {
+	for (i in HOOKS)
+		print("//!HOOK " HOOKS[i])
+}
+
 BEGIN {
 	split(ENVIRON["GUIDED_OPTS"], opts, ":")
 	split("LUMA,CHROMA,RGB", HOOKS, ",")
@@ -19,11 +24,6 @@ BEGIN {
 			next
 		}
 	}
-}
-
-function hooks() {
-	for (i in HOOKS)
-		print("//!HOOK " HOOKS[i])
 }
 
 {

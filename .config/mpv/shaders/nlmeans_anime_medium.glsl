@@ -89,8 +89,8 @@
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!BIND HOOKED
 //!DESC Non-local means (downscale)
+//!BIND HOOKED
 //!SAVE PRERF_LUMA
 //!WIDTH HOOKED.w 2.0 /
 //!HEIGHT HOOKED.h 2.0 /
@@ -117,7 +117,6 @@ vec4 hook()
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!BIND HOOKED
 //!DESC Non-local means (share)
 //!BIND RF_LUMA
 //!SAVE RF

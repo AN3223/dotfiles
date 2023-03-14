@@ -2,41 +2,13 @@
 # This script modifies/generates preprocessor/GLSL code for nlmeans. Usage 
 # examples can be found in Makefile.nlm
 
-BEGIN {
-	HOOKS_ = "LUMA,CHROMA,RGB"
-
-	split(ENVIRON["CFG"], opts, ":")
-	for (i in opts) {
-		split(opts[i], var_val, "=")
-		if (var_val[1] == "HOOKS")
-			HOOKS_ = var_val[2]
-		else if (var_val[1] == "T_FRAME_LIMIT")
-			T_FRAME_LIMIT = var_val[2]
-		else if (var_val[1] == "T_RES_W")
-			T_RES_W = var_val[2]
-		else if (var_val[1] == "T_RES_H")
-			T_RES_H = var_val[2]
-		else if (var_val[1] == "WIDTH")
-			WIDTH = var_val[2]
-		else if (var_val[1] == "HEIGHT")
-			HEIGHT = var_val[2]
-	}
-
-	split(HOOKS_, HOOKS, ",")
-}
-
-/\/\/cfg_desc/ { printf("// Profile description: %s\n", ENVIRON["DESC"]); next; }
-
-# Print hook for each hooked plane and bind HOOKED unless otherwise specified
 function hooks(no_bind) {
 	for (i in HOOKS)
-		printf("//!HOOK %s\n", HOOKS[i])
-	if (!no_bind)
-		printf("%s\n", "//!BIND HOOKED")
+		print("//!HOOK", HOOKS[i])
 }
 
 function extremes_preserve(scale) {
-	hooks(1)
+	hooks()
 	printf("%s\n%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
 		"//!DESC Non-local means (downscale)",
 		"//!WIDTH LUMA.w " scale " /",
@@ -47,7 +19,7 @@ function extremes_preserve(scale) {
 		"{",
 		"	return LUMA_texOff(0);",
 		"}")
-	TEXTURES = TEXTURES ? (TEXTURES ":" "EP") : "EP"
+	ALL_TEX[length(ALL_TEX)+1] = "EP"
 }
 
 function robust_filter(name, scale) {
@@ -71,13 +43,14 @@ function robust_filter(name, scale) {
 		else
 			cmd = cmd " < " shader
 
-		print("// The following is shader code injected from " shader)
+		print("// The following is shader code injected from", shader)
 		system(cmd)
-		print("// End of source code injected from " shader)
+		print("// End of source code injected from", shader)
 	} else {
 		hooks()
-		printf("%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
+		printf("%s\n%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
 			"//!DESC Non-local means (downscale)",
+			"//!BIND HOOKED",
 			"//!SAVE " prefixed_name,
 			"//!WIDTH HOOKED.w " scale " /",
 			"//!HEIGHT HOOKED.h " scale " /",
@@ -85,7 +58,7 @@ function robust_filter(name, scale) {
 			"{",
 			"	return HOOKED_texOff(0);",
 			"}")
-		hooks(1)
+		hooks()
 		printf("%s\n%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
 			"//!DESC Non-local means (unscale)",
 			"//!BIND " prefixed_name,
@@ -98,8 +71,33 @@ function robust_filter(name, scale) {
 			"}")
 	}
 	
-	TEXTURES = TEXTURES ? (TEXTURES ":" name) : name
+	ALL_TEX[length(ALL_TEX)+1] = name
 }
+
+BEGIN {
+	HOOKS_ = "LUMA,CHROMA,RGB"
+
+	split(ENVIRON["NLM_OPTS"], opts, ":")
+	for (i in opts) {
+		split(opts[i], var_val, "=")
+		if (var_val[1] == "HOOKS")
+			HOOKS_ = var_val[2]
+		else if (var_val[1] == "T_FRAME_LIMIT")
+			T_FRAME_LIMIT = var_val[2]
+		else if (var_val[1] == "T_RES_W")
+			T_RES_W = var_val[2]
+		else if (var_val[1] == "T_RES_H")
+			T_RES_H = var_val[2]
+		else if (var_val[1] == "WIDTH")
+			WIDTH = var_val[2]
+		else if (var_val[1] == "HEIGHT")
+			HEIGHT = var_val[2]
+	}
+
+	split(HOOKS_, HOOKS, ",")
+}
+
+/\/\/cfg_desc/ { print("// Profile description:", ENVIRON["NLM_DESC"]); next; }
 
 # Shader stages preceding NLM
 /\/\/cfg_pre/ {
@@ -111,7 +109,7 @@ function robust_filter(name, scale) {
 		EP = (planes[p] == "LUMA") ? 3.0 : 0
 
 		RF_parsed = EP_parsed = 0 # prevent parsing opts multiple times
-		split(ENVIRON[planes[p]], opts, ":")
+		split(ENVIRON["NLM_" planes[p]], opts, ":")
 		for (i in opts) {
 			split(opts[i], var_val, "=")
 			if (!RF_parsed && var_val[1] == "RF") {
@@ -138,35 +136,34 @@ function robust_filter(name, scale) {
 /\/\/cfg_hook/ {
 	hooks()
 
-	split(TEXTURES, tex_arr, ":")
-	for (i in tex_arr)
-		printf("//!BIND %s\n", tex_arr[i])
+	print("//!BIND HOOKED")
+	for (i in ALL_TEX)
+		print("//!BIND", ALL_TEX[i])
 
 	for (i = 1; i <= T_FRAME_LIMIT; i++)
-		printf("//!BIND PREV%d\n", i)
+		print("//!BIND PREV" i)
 
-	printf("//!DESC Non-local means (%s)\n", ENVIRON["FILENAME"])
+	printf("//!DESC Non-local means (%s)\n", ENVIRON["NLM_FILE"])
 
 	if (WIDTH)
-		print("//!WIDTH " WIDTH)
+		print("//!WIDTH", WIDTH)
 	if (HEIGHT)
-		print("//!HEIGHT " HEIGHT)
+		print("//!HEIGHT", HEIGHT)
 
 	next
 }
 
-/^#ifdef LUMA_raw$/       { plane = "LUMA" }
-/^#el/ && plane == "LUMA" { plane = "CHROMA" }
-
+/^#ifdef LUMA_raw$/           { opt_plane = "LUMA" }
+/^#el/ && opt_plane == "LUMA" { opt_plane = "CHROMA" }
 /^#define/ {
-	split(ENVIRON[plane], opts, ":")
+	split(ENVIRON["NLM_" opt_plane], opts, ":")
 	for (i in opts) {
 		split(opts[i], var_val, "=")
 		if ($2 == var_val[1]) {
 			if ($2 ~ /^(RF|EP)$/)
-				printf("#define %s %s\n", var_val[1], (var_val[2] > 0))
+				print("#define", var_val[1], (var_val[2] > 0))
 			else
-				printf("#define %s %s\n", var_val[1], var_val[2])
+				print("#define", var_val[1], var_val[2])
 			next
 		}
 	}
@@ -184,7 +181,7 @@ function robust_filter(name, scale) {
 	next
 }
 
-{ print $0 }
+{ print($0) }
 
 END {
 	for (i = 1; i <= T_FRAME_LIMIT; i++)

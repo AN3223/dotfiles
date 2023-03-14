@@ -244,7 +244,6 @@ vec4 hook()
 }
 
 //!HOOK LUMA
-//!BIND HOOKED
 //!DESC Non-local means (share)
 //!BIND RF_LUMA
 //!SAVE RF

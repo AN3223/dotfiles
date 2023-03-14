@@ -266,7 +266,6 @@ vec4 hook()
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!BIND HOOKED
 //!DESC Non-local means (share)
 //!BIND RF_LUMA
 //!SAVE RF

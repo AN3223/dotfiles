@@ -99,7 +99,6 @@ vec4 hook()
 }
 
 //!HOOK CHROMA
-//!BIND HOOKED
 //!DESC Non-local means (share)
 //!BIND LUMA
 //!SAVE RF
