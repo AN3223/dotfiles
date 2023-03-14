@@ -1,0 +1,64 @@
+#!/usr/bin/awk -f
+
+function hooks() {
+	for (i in HOOKS)
+		print("//!HOOK " HOOKS[i])
+}
+
+BEGIN {
+	# arr of internal texture names
+	split("", intern_texs)
+
+	if (!OUT_TEX)
+		OUT_TEX = "RF"
+
+	if (HOOKS)
+		split(HOOKS, HOOKS, ",")
+	else
+		split("LUMA,CHROMA,RGB", HOOKS, ",")
+}
+
+# XXX handle TEXTURE blocks
+{
+	line = $0
+	split(line, words, "[[:space:]]")
+	if (words[1] == "//!HOOK") { 
+		if (!shader_hook) {
+			shader_hook = 1 # mark start of HOOK block
+			hooks() # inject our hooks
+		}
+		next
+	} else if (words[1] == "//!WHEN") {
+		next
+	} else if (words[1] == "//!SAVE") {
+		shader_save = 1
+		intern_texs[length(intern_texs)+1] = words[2]
+		print(words[1], "INJCT_" words[2])
+		next
+	} else if (line !~ /^\/\/!/) { 
+		if (shader_hook && !shader_save) # end of final HOOK block
+			print("//!SAVE " OUT_TEX)
+		shader_hook = shader_save = 0
+	}
+
+	# prefix all occurrences of internal texture names
+	for (i in intern_texs) {
+		done = ""
+		needle = shader_hook ? intern_texs[i] : intern_texs[i] "_" # lax query within HOOK blocks
+		while (idx = index(line, needle)) {
+			# XXX should probably add a bunch of other chars to this pattern
+			if (idx == 1 || substr(line, idx-1, 1) ~ /[[:space:](]/) {
+				done = done substr(line, 1, idx-1) "INJCT_" needle
+				line = substr(line, idx + length(needle))
+			} else {
+				done = done substr(line, 1, idx-1) needle
+				line = substr(line, idx + length(needle))
+			}
+		}
+		line = done line
+	}
+
+	print(line)
+}
+
+

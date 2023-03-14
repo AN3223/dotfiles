@@ -4,6 +4,6 @@
 all: guided_s_fast.glsl
 
 guided_s_fast.glsl: guided_s.glsl
-	env OPTS=IP=2 ./guided_cfg < $? > $@
+	env GUIDED_OPTS=IP=2 ./guided_cfg < $? > $@
 
 

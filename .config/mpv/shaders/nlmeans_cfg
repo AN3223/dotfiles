@@ -3,13 +3,13 @@
 # examples can be found in Makefile.nlm
 
 BEGIN {
-	split("LUMA,CHROMA,RGB", HOOKS, ",")
+	HOOKS_ = "LUMA,CHROMA,RGB"
 
 	split(ENVIRON["CFG"], opts, ":")
 	for (i in opts) {
 		split(opts[i], var_val, "=")
 		if (var_val[1] == "HOOKS")
-			split(var_val[2], HOOKS, ",")
+			HOOKS_ = var_val[2]
 		else if (var_val[1] == "T_FRAME_LIMIT")
 			T_FRAME_LIMIT = var_val[2]
 		else if (var_val[1] == "T_RES_W")
@@ -22,6 +22,7 @@ BEGIN {
 			HEIGHT = var_val[2]
 	}
 
+	split(HOOKS_, HOOKS, ",")
 }
 
 /\/\/cfg_desc/ { printf("// Profile description: %s\n", ENVIRON["DESC"]); next; }
@@ -32,55 +33,6 @@ function hooks(no_bind) {
 		printf("//!HOOK %s\n", HOOKS[i])
 	if (!no_bind)
 		printf("%s\n", "//!BIND HOOKED")
-}
-
-# XXX handle TEXTURE blocks
-# XXX split off into a separate script
-function inject_shader(shader, tex_name) {
-	print("// The following is shader code injected from " shader)
-	shader_hook = shader_save = 0
-	split("", intern_texs) # arr of internal texture names
-	while (getline line < shader == 1) {
-		split(line, words, "[[:space:]]")
-		if (words[1] == "//!HOOK") { 
-			if (!shader_hook) {
-				shader_hook = 1 # mark start of HOOK block
-				hooks(1) # inject our hooks into the shader
-			}
-			continue
-		} else if (words[1] == "//!WHEN") {
-			continue
-		} else if (words[1] == "//!SAVE") {
-			shader_save = 1
-			intern_texs[length(intern_texs)+1] = words[2]
-			print(words[1], "INJCT_" words[2])
-			continue
-		} else if (line !~ /^\/\/!/) { 
-			if (shader_hook && !shader_save) # end of final HOOK block
-				print("//!SAVE " tex_name)
-			shader_hook = shader_save = 0
-		}
-
-		# prefix all occurrences of internal texture names
-		for (i in intern_texs) {
-			done = ""
-			needle = shader_hook ? intern_texs[i] : intern_texs[i] "_" # lax query within HOOK blocks
-			while (idx = index(line, needle)) {
-				if (idx == 1 || substr(line, idx-1, 1) ~ /[[:space:](]/) {
-					done = done substr(line, 1, idx-1) "INJCT_" needle
-					line = substr(line, idx + length(needle))
-				} else {
-					done = done substr(line, 1, idx-1) needle
-					line = substr(line, idx + length(needle))
-				}
-			}
-			line = done line
-		}
-
-		print(line)
-	}
-
-	print("// End of source code injected from " shader)
 }
 
 function extremes_preserve(scale) {
@@ -98,7 +50,6 @@ function extremes_preserve(scale) {
 	TEXTURES = TEXTURES ? (TEXTURES ":" "EP") : "EP"
 }
 
-# XXX integrate with guided_cfg
 function robust_filter(name, scale) {
 	prefixed_name = "PRE" name
 	if (scale ~ /^SHARE_/) {
@@ -113,7 +64,16 @@ function robust_filter(name, scale) {
 			"	return " scale "_texOff(0);",
 			"}")
 	} else if (scale !~ /^[0-9][.]?[0-9]*$/) {
-		inject_shader(scale, name)
+		shader = scale
+		cmd = "./inject_shader -v OUT_TEX=" name " -v HOOKS=" HOOKS_
+		if (ENVIRON["GUIDED_OPTS"] && shader ~ /^guided/)
+			cmd = "./guided_cfg < " shader " | " cmd
+		else
+			cmd = cmd " < " shader
+
+		print("// The following is shader code injected from " shader)
+		system(cmd)
+		print("// End of source code injected from " shader)
 	} else {
 		hooks()
 		printf("%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",

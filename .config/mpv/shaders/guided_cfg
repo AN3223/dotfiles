@@ -1,7 +1,7 @@
 #!/usr/bin/awk -f
 
 BEGIN {
-	split(ENVIRON["OPTS"], opts, ":")
+	split(ENVIRON["GUIDED_OPTS"], opts, ":")
 	split("LUMA,CHROMA,RGB", HOOKS, ",")
 
 	for (i in opts) {
