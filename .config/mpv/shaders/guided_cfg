@@ -2,7 +2,7 @@
 
 function hooks() {
 	for (i in HOOKS)
-		print("//!HOOK " HOOKS[i])
+		print("//!HOOK", HOOKS[i])
 }
 
 BEGIN {
@@ -13,7 +13,12 @@ BEGIN {
 		split(opts[i], var_val, "=")
 		if (var_val[1] == "HOOKS")
 			split(var_val[2], HOOKS, ",")
+		else if (var_val[1] == "I" && var_val[2] !~ /^[0-9][.]?[0-9]*$/)
+			I = var_val[2]
 	}
+
+	if (I ~ /^SHARE_/)
+		I_TEX = substr(I, length("SHARE_")+1)
 }
 
 /^#define/ {
@@ -27,7 +32,7 @@ BEGIN {
 }
 
 {
-	if ($1 == "//!HOOK") {
+	if ($1 == "//!HOOK" && !skipping_prei) {
 		if (!hook_mark) {
 			hook_mark = 1
 			hooks()
@@ -38,19 +43,40 @@ BEGIN {
 	}
 }
 
-# set stage to the contents of the parenthesis in DESC
-/^\/\/!DESC/ { stage = substr($4, 2, length($4)-2) }
+/^\/\/!DESC/ {
+	stage = substr($4, 2, length($4)-2) # contents DESC's parenthesis
+
+	if (I && stage == "PREI")
+		skipping_prei = 1
+	else if (skipping_prei)
+		skipping_prei = 0
+}
+
+/^\/\/!BIND/ && stage == "I" && I_TEX {
+	print($1, I_TEX)
+	next
+}
+
+/PREI/ && stage == "I" && I_TEX { gsub("PREI", I_TEX) }
 
 /^\/\/!(WIDTH|HEIGHT)/ {
-	for (i in opts) {
-		split(opts[i], var_val, "=")
-		if (stage == var_val[1]) {
-			print($1, $2, var_val[2], $4)
-			next
+	if (stage == "I" && I_TEX) {
+		print($1, I_TEX "." tolower(substr($1, 4, 1)))
+		next
+	} else if (stage == "I" && I_TEX) {
+		print($0)
+		next
+	} else {
+		for (i in opts) {
+			split(opts[i], var_val, "=")
+			if (stage == var_val[1]) {
+				print($1, $2, var_val[2], $4)
+				next
+			}
 		}
 	}
 }
 
-{ print($0) }
-
+skipping_prei { next }
+{	print($0) }
 
