@@ -3,13 +3,13 @@
 # examples can be found in Makefile.nlm
 
 BEGIN {
-	HOOKS = "LUMA,CHROMA,RGB"
+	split("LUMA,CHROMA,RGB", HOOKS, ",")
 
 	split(ENVIRON["CFG"], opts, ":")
 	for (i in opts) {
 		split(opts[i], var_val, "=")
 		if (var_val[1] == "HOOKS")
-			HOOKS = var_val[2]
+			split(var_val[2], HOOKS, ",")
 		else if (var_val[1] == "T_FRAME_LIMIT")
 			T_FRAME_LIMIT = var_val[2]
 		else if (var_val[1] == "T_RES_W")
@@ -22,12 +22,11 @@ BEGIN {
 			HEIGHT = var_val[2]
 	}
 
-	split(HOOKS, HOOKS, ",")
 }
 
 /\/\/cfg_desc/ { printf("// Profile description: %s\n", ENVIRON["DESC"]); next; }
 
-# Prints //!HOOK for each HOOKED plane and //!BIND HOOKED
+# Print hook for each hooked plane and bind HOOKED unless otherwise specified
 function hooks(no_bind) {
 	for (i in HOOKS)
 		printf("//!HOOK %s\n", HOOKS[i])
@@ -36,6 +35,7 @@ function hooks(no_bind) {
 }
 
 # XXX handle TEXTURE blocks
+# XXX split off into a separate script
 function inject_shader(shader, tex_name) {
 	print("// The following is shader code injected from " shader)
 	shader_hook = shader_save = 0
@@ -98,9 +98,9 @@ function extremes_preserve(scale) {
 	TEXTURES = TEXTURES ? (TEXTURES ":" "EP") : "EP"
 }
 
-# XXX EP split into another function; could probably simplify this a lot
+# XXX integrate with guided_cfg
 function robust_filter(name, scale) {
-	prefixed_name = (name ~ /^RF/) ? ("PRE" name) : (name)
+	prefixed_name = "PRE" name
 	if (scale ~ /^SHARE_/) {
 		sub("SHARE_", "", scale)
 		hooks()
@@ -125,19 +125,17 @@ function robust_filter(name, scale) {
 			"{",
 			"	return HOOKED_texOff(0);",
 			"}")
-		if (name ~ /^RF/) {
-			hooks()
-			printf("%s\n%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
-				"//!DESC Non-local means (unscale)",
-				"//!BIND " prefixed_name,
-				"//!SAVE " name,
-				"//!WIDTH " (WIDTH ? WIDTH : "HOOKED.w"),
-				"//!HEIGHT " (HEIGHT ? HEIGHT : "HOOKED.h"),
-				"vec4 hook()",
-				"{",
-				"	return " prefixed_name "_texOff(0);",
-				"}")
-		}
+		hooks(1)
+		printf("%s\n%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
+			"//!DESC Non-local means (unscale)",
+			"//!BIND " prefixed_name,
+			"//!SAVE " name,
+			"//!WIDTH " (WIDTH ? WIDTH : "HOOKED.w"),
+			"//!HEIGHT " (HEIGHT ? HEIGHT : "HOOKED.h"),
+			"vec4 hook()",
+			"{",
+			"	return " prefixed_name "_texOff(0);",
+			"}")
 	}
 	
 	TEXTURES = TEXTURES ? (TEXTURES ":" name) : name
@@ -148,6 +146,7 @@ function robust_filter(name, scale) {
 	split("LUMA CHROMA", planes)
 	for (p in planes) {
 		# sets defaults for RF/EP, should be the same as nlmeans_template
+		# XXX read defaults from elsewhere?
 		RF = (planes[p] == "LUMA") ? "guided_s.glsl" : "SHARE_RF_LUMA"
 		EP = (planes[p] == "LUMA") ? 3.0 : 0
 
@@ -171,6 +170,7 @@ function robust_filter(name, scale) {
 		if (EP)
 			extremes_preserve(EP)
 	}
+
 	next
 }
 

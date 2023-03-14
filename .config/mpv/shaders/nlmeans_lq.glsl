@@ -103,7 +103,6 @@ vec4 hook()
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!BIND HOOKED
 //!DESC Non-local means (unscale)
 //!BIND PRERF_LUMA
 //!SAVE RF_LUMA
