@@ -87,147 +87,147 @@
  */
 
 // The following is shader code injected from guided_s.glsl
-/* vi: ft=c
- *
- * Copyright (c) 2022 an3223 <ethanr2048@gmail.com>
- *
- * This program is free software: you can redistribute it and/or modify it 
- * under the terms of the GNU Lesser General Public License as published by 
- * the Free Software Foundation, either version 2.1 of the License, or (at 
- * your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License 
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License 
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
- */
+/*  vi:  ft=c
+  *
+  *  Copyright  ( c)  2022  an3223  <ethanr2048@gmail.com>
+  *
+  *  This  program  is  free  software:  you  can  redistribute  it  and/or  modify  it  
+  *  under  the  terms  of  the  GNU  Lesser  General  Public  License  as  published  by  
+  *  the  Free  Software  Foundation,  either  version  2.1  of  the  License,  or  ( at  
+  *  your  option)  any  later  version.
+  *
+  *  This  program  is  distributed  in  the  hope  that  it  will  be  useful,  but  WITHOUT  
+  *  ANY  WARRANTY;   without  even  the  implied  warranty  of  MERCHANTABILITY  or  
+  *  FITNESS  FOR  A  PARTICULAR  PURPOSE.  See  the  GNU  Lesser  General  Public  License  
+  *  for  more  details.
+  *
+  *  You  should  have  received  a  copy  of  the  GNU  Lesser  General  Public  License  
+  *  along  with  this  program.  If  not,  see  <https://www.gnu.org/licenses/>.
+  */
 
-/* "Self-guided" guided filter implementation using bilinear instead of box.
- * 
- * The radius can be adjusted with the "Guided Filter (MEANIP)" downscaling 
- * factors below. Higher numbers give a bigger radius.
- *
- * The E variable can be found in the "Guided filter (A)" stage.
- *
- * The subsampling (fast guided filter) can be adjusted with the "Guided Filter
- * (IP)" downscaling factor below. Higher numbers are faster.
- */
+//desc:  "Self-guided"  guided  filter
+
+/*  The  radius  can  be  adjusted  with  the  MEANIP  stage's  downscaling  factor.  
+  *  Higher  numbers  give  a  bigger  radius.
+  *
+  *  The  E  variable  can  be  found  in  the  A  stage.
+  *
+  *  The  subsampling  ( fast  guided  filter)  can  be  adjusted  with  the  IP  stage's  
+  *  downscaling  factor.  Higher  numbers  are  faster.
+  */
 
 //!HOOK LUMA
-//!DESC Guided filter (IP)
-//!BIND HOOKED
-//!WIDTH HOOKED.w 1.0 /
-//!HEIGHT HOOKED.h 1.0 /
-//!SAVE INJCT_IP
+//!DESC  Guided  filter  ( IP)
+//!BIND  HOOKED
+//!WIDTH  HOOKED.w  1.0  /
+//!HEIGHT  HOOKED.h  1.0  /
+//!SAVE _INJ_IP
 
-vec4 hook()
+vec4  hook( )
 {
-	return HOOKED_texOff(0);
+	 return  HOOKED_texOff( 0); 
 }
 
 //!HOOK LUMA
-//!DESC Guided filter (MEANIP)
-//!BIND INJCT_IP
-//!WIDTH INJCT_IP.w 2.0 /
-//!HEIGHT INJCT_IP.h 2.0 /
-//!SAVE INJCT_MEANIP
+//!DESC  Guided  filter  ( MEANIP)
+//!BIND _INJ_IP
+//!WIDTH _INJ_IP.w 2.0 /
+//!HEIGHT _INJ_IP.h 2.0 /
+//!SAVE _INJ_MEANIP
 
-vec4 hook()
+vec4  hook( )
 {
-	return INJCT_IP_texOff(0);
+return _INJ_IP_texOff( 0);
 }
 
 //!HOOK LUMA
-//!DESC Guided filter (INJCT_IP_SQ)
-//!BIND INJCT_IP
-//!WIDTH INJCT_IP.w
-//!HEIGHT INJCT_IP.h
-//!SAVE INJCT_IP_SQ
+//!DESC Guided filter ( _INJ_IP_SQ)
+//!BIND _INJ_IP
+//!WIDTH _INJ_IP.w
+//!HEIGHT _INJ_IP.h
+//!SAVE _INJ_IP_SQ
 
-vec4 hook()
+vec4  hook( )
 {
-	return INJCT_IP_texOff(0) * INJCT_IP_texOff(0);
+return _INJ_IP_texOff( 0) * _INJ_IP_texOff( 0);
 }
 
 //!HOOK LUMA
-//!DESC Guided filter (CORRIP)
-//!BIND INJCT_IP_SQ
-//!WIDTH INJCT_MEANIP.w
-//!HEIGHT INJCT_MEANIP.h
-//!SAVE INJCT_CORRIP
+//!DESC  Guided  filter  ( CORRIP)
+//!BIND _INJ_IP_SQ
+//!WIDTH _INJ_MEANIP.w
+//!HEIGHT _INJ_MEANIP.h
+//!SAVE _INJ_CORRIP
 
-vec4 hook()
+vec4  hook( )
 {
-	return INJCT_IP_SQ_texOff(0);
+return _INJ_IP_SQ_texOff( 0);
 }
 
 //!HOOK LUMA
-//!DESC Guided filter (A)
-//!BIND INJCT_MEANIP
-//!BIND INJCT_CORRIP
-//!WIDTH INJCT_IP.w
-//!HEIGHT INJCT_IP.h
-//!SAVE INJCT_A
+//!DESC  Guided  filter  ( A)
+//!BIND _INJ_MEANIP
+//!BIND _INJ_CORRIP
+//!WIDTH _INJ_IP.w
+//!HEIGHT _INJ_IP.h
+//!SAVE _INJ_A
 
-#define E 0.001
+#define  E  0.001
 
-vec4 hook()
+vec4  hook( )
 {
-	vec4 var = INJCT_CORRIP_texOff(0) - INJCT_MEANIP_texOff(0) * INJCT_MEANIP_texOff(0);
-	vec4 cov = var;
-	return cov / (var + E);
+vec4 var = _INJ_CORRIP_texOff( 0) - _INJ_MEANIP_texOff( 0) * _INJ_MEANIP_texOff( 0);
+	 vec4  cov  =  var; 
+	 return  cov  /  ( var  +  E); 
 }
 
 //!HOOK LUMA
-//!DESC Guided filter (B)
-//!BIND INJCT_A
-//!BIND INJCT_MEANIP
-//!WIDTH INJCT_IP.w
-//!HEIGHT INJCT_IP.h
-//!SAVE INJCT_B
+//!DESC  Guided  filter  ( B)
+//!BIND _INJ_A
+//!BIND _INJ_MEANIP
+//!WIDTH _INJ_IP.w
+//!HEIGHT _INJ_IP.h
+//!SAVE _INJ_B
 
-vec4 hook()
+vec4  hook( )
 {
-	return INJCT_MEANIP_texOff(0) - INJCT_A_texOff(0) * INJCT_MEANIP_texOff(0);
+return _INJ_MEANIP_texOff( 0) - _INJ_A_texOff( 0) * _INJ_MEANIP_texOff( 0);
 }
 
 //!HOOK LUMA
-//!DESC Guided filter (MEANA)
-//!BIND INJCT_A
-//!WIDTH INJCT_MEANIP.w
-//!HEIGHT INJCT_MEANIP.h
-//!SAVE INJCT_MEANA
+//!DESC  Guided  filter  ( MEANA)
+//!BIND _INJ_A
+//!WIDTH _INJ_MEANIP.w
+//!HEIGHT _INJ_MEANIP.h
+//!SAVE _INJ_MEANA
 
-vec4 hook()
+vec4  hook( )
 {
-	return INJCT_A_texOff(0);
+return _INJ_A_texOff( 0);
 }
 
 //!HOOK LUMA
-//!DESC Guided filter (MEANB)
-//!BIND INJCT_B
-//!WIDTH INJCT_MEANIP.w
-//!HEIGHT INJCT_MEANIP.h
-//!SAVE INJCT_MEANB
+//!DESC  Guided  filter  ( MEANB)
+//!BIND _INJ_B
+//!WIDTH _INJ_MEANIP.w
+//!HEIGHT _INJ_MEANIP.h
+//!SAVE _INJ_MEANB
 
-vec4 hook()
+vec4  hook( )
 {
-	return INJCT_B_texOff(0);
+return _INJ_B_texOff( 0);
 }
 
 //!HOOK LUMA
-//!DESC Guided filter
-//!BIND HOOKED
-//!BIND INJCT_MEANA
-//!BIND INJCT_MEANB
+//!DESC  Guided  filter
+//!BIND  HOOKED
+//!BIND _INJ_MEANA
+//!BIND _INJ_MEANB
 //!SAVE RF_LUMA
 
-vec4 hook()
+vec4  hook( )
 {
-	return INJCT_MEANA_texOff(0) * HOOKED_texOff(0) + INJCT_MEANB_texOff(0);
+return _INJ_MEANA_texOff( 0) * HOOKED_texOff( 0) + _INJ_MEANB_texOff( 0);
 }
 
 // End of source code injected from guided_s.glsl

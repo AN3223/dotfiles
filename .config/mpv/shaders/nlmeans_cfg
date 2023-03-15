@@ -37,7 +37,7 @@ function robust_filter(name, scale) {
 			"}")
 	} else if (scale !~ /^[0-9][.]?[0-9]*$/) {
 		shader = scale
-		cmd = "./inject_shader -v OUT_TEX=" name " -v HOOKS=" HOOKS_
+		cmd = "./inject_shader.sh -v OUT_TEX=" name " -v HOOKS=" HOOKS_
 		if (ENVIRON["GUIDED_OPTS"] && shader ~ /^guided/)
 			cmd = "./guided_cfg < " shader " | " cmd
 		else
