@@ -2,7 +2,8 @@ The nlmeans shaders are denoisers and/or adaptive sharpeners. They have
 documentation embedded in them, with each nlmeans profile having a profile 
 description near the top. 
 
-The guided shaders are experimental denoisers. guided_rf is currently broken.
+The guided shaders are also denoisers. They are faster but lower quality than 
+NLM. The self-guided (_s) variants are slightly faster but even lower quality.
 
 I unwisely placed these shaders in my dotfiles repository, not anticipating 
 ever having more than just one shader here. They are here to stay though, since 
