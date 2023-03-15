@@ -35,8 +35,8 @@
 //!HOOK RGB
 //!DESC Guided filter (PREI)
 //!BIND HOOKED
-//!WIDTH HOOKED.w 2.0 /
-//!HEIGHT HOOKED.h 2.0 /
+//!WIDTH HOOKED.w 1.25 /
+//!HEIGHT HOOKED.h 1.25 /
 //!SAVE PREI
 
 vec4 hook()
