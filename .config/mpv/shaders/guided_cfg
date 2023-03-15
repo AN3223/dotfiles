@@ -21,6 +21,8 @@ BEGIN {
 		I_TEX = substr(I, length("SHARE_")+1)
 }
 
+/^\/\/desc:/ && ENVIRON["GUIDED_DESC"] { print($1, ENVIRON["GUIDED_DESC"]); next; }
+
 /^#define/ {
 	for (i in opts) {
 		split(opts[i], var_val, "=")

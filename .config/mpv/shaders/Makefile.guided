@@ -4,7 +4,7 @@
 all: guided_s_fast.glsl guided_lgc.glsl
 
 guided_s_fast.glsl: guided_s.glsl
-	env GUIDED_OPTS=IP=2 ./guided_cfg < $? > $@
+	env GUIDED_DESC='Fast "self-guided" guided filter' GUIDED_OPTS=IP=2 ./guided_cfg < $? > $@
 guided_lgc.glsl: guided.glsl
-	env GUIDED_OPTS=I=SHARE_LUMA:HOOKS=CHROMA:MEANI=1.125:E=0.005 ./guided_cfg < $? > $@
+	env GUIDED_DESC='Luma-guided-chroma guided filter' GUIDED_OPTS=I=SHARE_LUMA:HOOKS=CHROMA:MEANI=1.125:E=0.005 ./guided_cfg < $? > $@
 

@@ -16,18 +16,18 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* Guided filter guided by the downscaled image.
- * 
- * The radius can be adjusted with the "Guided Filter (MEANIP)" downscaling 
- * factors below. Higher numbers give a bigger radius.
+//desc: Guided filter guided by the downscaled image
+
+/* The radius can be adjusted with the MEANI stage's downscaling factor. 
+ * Higher numbers give a bigger radius.
  *
- * The E variable can be found in the "Guided filter (A)" stage.
+ * The E variable can be found in the A stage.
  *
- * The subsampling (fast guided filter) can be adjusted with the "Guided Filter
- * (I)" downscaling factor below. Higher numbers are faster.
+ * The subsampling (fast guided filter) can be adjusted with the I stage's 
+ * downscaling factor. Higher numbers are faster.
  *
- * The subsampling of the guide can be adjusted with the "Guided Filters 
- * (PREI)" downscaling factor. Higher numbers downscale more.
+ * The guide's subsampling can be adjusted with the PREI stage's downscaling 
+ * factor. Higher numbers downscale more.
  */
 
 //!HOOK LUMA

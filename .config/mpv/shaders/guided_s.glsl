@@ -16,15 +16,15 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/* "Self-guided" guided filter implementation using bilinear instead of box.
- * 
- * The radius can be adjusted with the "Guided Filter (MEANIP)" downscaling 
- * factors below. Higher numbers give a bigger radius.
+//desc: "Self-guided" guided filter
+
+/* The radius can be adjusted with the MEANIP stage's downscaling factor. 
+ * Higher numbers give a bigger radius.
  *
- * The E variable can be found in the "Guided filter (A)" stage.
+ * The E variable can be found in the A stage.
  *
- * The subsampling (fast guided filter) can be adjusted with the "Guided Filter
- * (IP)" downscaling factor below. Higher numbers are faster.
+ * The subsampling (fast guided filter) can be adjusted with the IP stage's 
+ * downscaling factor. Higher numbers are faster.
  */
 
 //!HOOK LUMA
