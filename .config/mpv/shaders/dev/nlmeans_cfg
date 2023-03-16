@@ -7,6 +7,11 @@ function hooks(no_bind) {
 		print("//!HOOK", HOOKS[i])
 }
 
+function basename(s) {
+	gsub(".*/", "", s)
+	return s
+}
+
 function extremes_preserve(scale) {
 	hooks()
 	printf("%s\n%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
@@ -43,9 +48,9 @@ function robust_filter(name, scale) {
 		else
 			cmd = cmd " < " shader
 
-		print("// The following is shader code injected from", shader)
+		print("// The following is shader code injected from", basename(shader))
 		system(cmd)
-		print("// End of source code injected from", shader)
+		print("// End of source code injected from", basename(shader))
 	} else {
 		hooks()
 		printf("%s\n%s\n%s\n%s\n%s\n\n%s\n%s\n%s\n%s\n\n",
@@ -105,7 +110,7 @@ BEGIN {
 	for (p in planes) {
 		# sets defaults for RF/EP, should be the same as nlmeans_template
 		# XXX read defaults from elsewhere?
-		RF = (planes[p] == "LUMA") ? "guided_s.glsl" : "SHARE_RF_LUMA"
+		RF = (planes[p] == "LUMA") ? "../guided_s.glsl" : "SHARE_RF_LUMA"
 		EP = (planes[p] == "LUMA") ? 3.0 : 0
 
 		RF_parsed = EP_parsed = 0 # prevent parsing opts multiple times
@@ -143,7 +148,7 @@ BEGIN {
 	for (i = 1; i <= T_FRAME_LIMIT; i++)
 		print("//!BIND PREV" i)
 
-	printf("//!DESC Non-local means (%s)\n", ENVIRON["NLM_FILE"])
+	printf("//!DESC Non-local means (%s)\n", basename(ENVIRON["NLM_FILE"]))
 
 	if (WIDTH)
 		print("//!WIDTH", WIDTH)

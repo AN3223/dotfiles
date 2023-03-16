@@ -52,46 +52,46 @@ LGC_OPTS=HOOKS=CHROMA:WIDTH=LUMA.w:HEIGHT=LUMA.h
 
 LUMA_DESC=Luma only, saves some time by not processing the chroma plane.
 
-all: nlmeans.glsl nlmeans_lgc.glsl nlmeans_2x.glsl nlmeans_heavy.glsl nlmeans_medium.glsl nlmeans_anime.glsl nlmeans_anime_medium.glsl nlmeans_temporal.glsl nlmeans_luma.glsl nlmeans_hq.glsl nlmeans_hq_heavy.glsl nlmeans_hq_medium.glsl nlmeans_hqx.glsl nlmeans_anime_hq.glsl nlmeans_anime_hq_medium.glsl nlmeans_lq.glsl nlmeans_sharpen_denoise.glsl nlmeans_temporal_sharpen_denoise.glsl nlmeans_hq_sharpen_denoise.glsl nlmeans_sharpen_only.glsl
+all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_2x.glsl ../nlmeans_heavy.glsl ../nlmeans_medium.glsl ../nlmeans_anime.glsl ../nlmeans_anime_medium.glsl ../nlmeans_temporal.glsl ../nlmeans_luma.glsl ../nlmeans_hq.glsl ../nlmeans_hq_heavy.glsl ../nlmeans_hq_medium.glsl ../nlmeans_hqx.glsl ../nlmeans_anime_hq.glsl ../nlmeans_anime_hq_medium.glsl ../nlmeans_lq.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../nlmeans_hq_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl
 
-nlmeans.glsl: nlmeans_template
+../nlmeans.glsl: nlmeans_template
 	env NLM_DESC="$(DEFAULT_DESC)" NLM_FILE=$@ ./nlmeans_cfg < $? > $@
-nlmeans_lgc.glsl: nlmeans_template
+../nlmeans_lgc.glsl: nlmeans_template
 	env NLM_DESC="$(LGC_DESC)" NLM_OPTS=$(LGC_OPTS) NLM_LUMA=$(LGC_LUMA) NLM_CHROMA=$(LGC) NLM_FILE=$@ ./nlmeans_cfg < $? > $@
-nlmeans_2x.glsl: nlmeans_template
+../nlmeans_2x.glsl: nlmeans_template
 	env NLM_DESC="$(2X_DESC)" NLM_FILE=$@ NLM_OPTS=$(2X_OPTS) NLM_LUMA=$(2X_LUMA) ./nlmeans_cfg < $? > $@
-nlmeans_heavy.glsl: nlmeans_template
+../nlmeans_heavy.glsl: nlmeans_template
 	env NLM_DESC="$(HEAVY_DESC)" NLM_FILE=$@ NLM_LUMA=$(HEAVY) NLM_CHROMA=$(HEAVY) ./nlmeans_cfg < $? > $@
-nlmeans_medium.glsl: nlmeans_template
+../nlmeans_medium.glsl: nlmeans_template
 	env NLM_DESC="$(MEDIUM_DESC)" NLM_FILE=$@ NLM_LUMA=$(MEDIUM) NLM_CHROMA=$(MEDIUM) ./nlmeans_cfg < $? > $@
-nlmeans_anime.glsl: nlmeans_template
+../nlmeans_anime.glsl: nlmeans_template
 	env NLM_DESC="$(ANIME_DESC)" NLM_FILE=$@ NLM_LUMA=$(ANIME_LUMA) NLM_CHROMA=$(ANIME) ./nlmeans_cfg < $? > $@
-nlmeans_anime_medium.glsl: nlmeans_template
+../nlmeans_anime_medium.glsl: nlmeans_template
 	env NLM_DESC="$(ANIME_MEDIUM_DESC)" NLM_FILE=$@ NLM_LUMA=$(ANIME_MEDIUM_LUMA) NLM_CHROMA=$(ANIME_MEDIUM) ./nlmeans_cfg < $? > $@
-nlmeans_temporal.glsl: nlmeans_template
+../nlmeans_temporal.glsl: nlmeans_template
 	env NLM_DESC="$(TEMPORAL_DESC)" NLM_FILE=$@ NLM_LUMA=$(TEMPORAL_LUMA) NLM_OPTS=$(TEMPORAL_OPTS) ./nlmeans_cfg < $? > $@
-nlmeans_luma.glsl: nlmeans_template
+../nlmeans_luma.glsl: nlmeans_template
 	env NLM_DESC="$(LUMA_DESC)" NLM_FILE=$@ NLM_OPTS=HOOKS=LUMA ./nlmeans_cfg < $? > $@
-nlmeans_hq.glsl: nlmeans_template
+../nlmeans_hq.glsl: nlmeans_template
 	env NLM_DESC="$(HQ_DESC)" NLM_FILE=$@ NLM_LUMA=$(HQ_LUMA) NLM_CHROMA=$(HQ) ./nlmeans_cfg < $? > $@
-nlmeans_hq_heavy.glsl: nlmeans_template
+../nlmeans_hq_heavy.glsl: nlmeans_template
 	env NLM_DESC="$(HQ_DESC) $(HEAVY_DESC)" NLM_FILE=$@ NLM_LUMA=$(HEAVY):$(HQ_LUMA) NLM_CHROMA=$(HEAVY):$(HQ) ./nlmeans_cfg < $? > $@
-nlmeans_hq_medium.glsl: nlmeans_template
+../nlmeans_hq_medium.glsl: nlmeans_template
 	env NLM_DESC="$(HQ_DESC) $(MEDIUM_DESC)" NLM_FILE=$@ NLM_LUMA=$(MEDIUM):$(HQ_LUMA) NLM_CHROMA=$(MEDIUM):$(HQ) ./nlmeans_cfg < $? > $@
-nlmeans_hqx.glsl: nlmeans_template
+../nlmeans_hqx.glsl: nlmeans_template
 	env NLM_DESC="$(HQX_DESC)" NLM_FILE=$@ NLM_LUMA=$(HQX_LUMA) NLM_CHROMA=$(HQX) ./nlmeans_cfg < $? > $@
-nlmeans_anime_hq.glsl: nlmeans_template
+../nlmeans_anime_hq.glsl: nlmeans_template
 	env NLM_DESC="$(ANIME_DESC) $(HQ_DESC)" NLM_FILE=$@ NLM_LUMA=$(HQ_LUMA):$(ANIME_LUMA) NLM_CHROMA=$(HQ):$(ANIME) ./nlmeans_cfg < $? > $@
-nlmeans_anime_hq_medium.glsl: nlmeans_template
+../nlmeans_anime_hq_medium.glsl: nlmeans_template
 	env NLM_DESC="$(ANIME_MEDIUM_DESC) $(HQ_DESC)" NLM_FILE=$@ NLM_LUMA=$(HQ_LUMA):$(ANIME_MEDIUM_LUMA) NLM_CHROMA=$(HQ):$(ANIME_MEDIUM) ./nlmeans_cfg < $? > $@
-nlmeans_lq.glsl: nlmeans_template
+../nlmeans_lq.glsl: nlmeans_template
 	env NLM_DESC="$(LQ_DESC)" NLM_FILE=$@ NLM_LUMA=$(LQ_LUMA) NLM_CHROMA=$(LQ) ./nlmeans_cfg < $? > $@
-nlmeans_sharpen_denoise.glsl: nlmeans_template
+../nlmeans_sharpen_denoise.glsl: nlmeans_template
 	env NLM_DESC="$(SHARPEN_DENOISE_DESC)" NLM_FILE=$@ NLM_LUMA=$(SHARPEN_DENOISE) NLM_CHROMA=$(SHARPEN_DENOISE) ./nlmeans_cfg < $? > $@
-nlmeans_temporal_sharpen_denoise.glsl: nlmeans_template
+../nlmeans_temporal_sharpen_denoise.glsl: nlmeans_template
 	env NLM_DESC="$(TEMPORAL_DESC) $(SHARPEN_DENOISE_DESC)" NLM_FILE=$@ NLM_LUMA=$(SHARPEN_DENOISE):$(TEMPORAL_LUMA) NLM_CHROMA=$(SHARPEN_DENOISE) NLM_OPTS=$(TEMPORAL_OPTS) ./nlmeans_cfg < $? > $@
-nlmeans_hq_sharpen_denoise.glsl: nlmeans_template
+../nlmeans_hq_sharpen_denoise.glsl: nlmeans_template
 	env NLM_DESC="$(HQ_DESC) $(SHARPEN_DENOISE_DESC)" NLM_FILE=$@ NLM_LUMA=$(SHARPEN_DENOISE):$(HQ_LUMA) NLM_CHROMA=$(SHARPEN_DENOISE):$(HQ) ./nlmeans_cfg < $? > $@
-nlmeans_sharpen_only.glsl: nlmeans_template
+../nlmeans_sharpen_only.glsl: nlmeans_template
 	env NLM_DESC="$(SHARPEN_ONLY_DESC)" NLM_FILE=$@ NLM_LUMA=$(SHARPEN_ONLY) NLM_CHROMA=$(SHARPEN_ONLY) ./nlmeans_cfg < $? > $@
 
