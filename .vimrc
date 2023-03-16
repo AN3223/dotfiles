@@ -64,6 +64,7 @@ autocmd FileType sh,python,markdown,crontab,scheme setl fo-=t
 autocmd FileType sh setl textwidth=72
 autocmd FileType python setl textwidth=79
 autocmd FileType json setl expandtab
+autocmd FileType raku NoMatchParen " soooooooooo slow w/o this
 
 "- MISC -"
 
