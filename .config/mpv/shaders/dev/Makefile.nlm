@@ -42,7 +42,7 @@ SHARPEN_DENOISE_DESC=Sharpen and denoise.
 SHARPEN_DENOISE=AS=1:S=10:ASF=1.5
 
 2X_DESC=Experimental upscaler
-2X_LUMA=S=1.5:RF=FSRCNNX_x2_8-0-4-1.glsl:SF=2:$(MEDIUM):EP=0
+2X_LUMA=S=1.5:RF=../FSRCNNX_x2_8-0-4-1.glsl:SF=2:$(MEDIUM):EP=0
 2X_OPTS=HOOKS=LUMA:WIDTH="HOOKED.w 2 *":HEIGHT="HOOKED.h 2 *"
 
 LGC_DESC=Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
