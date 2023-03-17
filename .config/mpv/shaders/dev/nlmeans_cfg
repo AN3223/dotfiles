@@ -24,7 +24,7 @@ function extremes_preserve(scale) {
 		"{",
 		"	return LUMA_texOff(0);",
 		"}")
-	ALL_TEX[length(ALL_TEX)+1] = "EP"
+	ALL_TEX = ALL_TEX ? (ALL_TEX ":" "EP") : "EP"
 }
 
 function robust_filter(name, scale) {
@@ -76,7 +76,7 @@ function robust_filter(name, scale) {
 			"}")
 	}
 	
-	ALL_TEX[length(ALL_TEX)+1] = name
+	ALL_TEX = ALL_TEX ? (ALL_TEX ":" name) : name
 }
 
 BEGIN {
@@ -142,8 +142,9 @@ BEGIN {
 	hooks()
 
 	print("//!BIND HOOKED")
-	for (i in ALL_TEX)
-		print("//!BIND", ALL_TEX[i])
+	split(ALL_TEX, ALL_TEX_ARR, ":")
+	for (i in ALL_TEX_ARR)
+		print("//!BIND", ALL_TEX_ARR[i])
 
 	for (i = 1; i <= T_FRAME_LIMIT; i++)
 		print("//!BIND PREV" i)

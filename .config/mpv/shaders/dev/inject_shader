@@ -1,21 +1,18 @@
 #!/usr/bin/awk -f
 
 function hooks() {
-	for (i in HOOKS)
-		print("//!HOOK " HOOKS[i])
+	for (i in HOOKS_ARR)
+		print("//!HOOK " HOOKS_ARR[i])
 }
 
 BEGIN {
-	# arr of internal texture names
-	split("", intern_texs)
-
 	if (!OUT_TEX)
 		OUT_TEX = "RF"
 
 	if (HOOKS)
-		split(HOOKS, HOOKS, ",")
+		split(HOOKS, HOOKS_ARR, ",")
 	else
-		split("LUMA,CHROMA,RGB", HOOKS, ",")
+		split("LUMA,CHROMA,RGB", HOOKS_ARR, ",")
 
 	inject_prefix = "_INJ_"
 }
@@ -36,7 +33,7 @@ $1 == "//!WHEN" { next }
 
 $1 == "//!SAVE" {
 	shader_save = 1
-	intern_texs[length(intern_texs)+1] = $2
+	intern_texs = intern_texs ? (intern_texs ":" $2) : $2
 	print($1, inject_prefix $2)
 	next
 }
@@ -49,10 +46,11 @@ $0 !~ /^\/\/!/ {
 
 # prefix all occurrences of internal texture names
 {
+	split(intern_texs, intern_texs_arr, ":")
 	tex_suffix = shader_hook ? "" : "_" # relaxed search inside HOOK blocks
 	for (i = 1; i <= NF; i++) {
-		for (t in intern_texs) {
-			if (index($i, intern_texs[t] tex_suffix) == 1) {
+		for (t in intern_texs_arr) {
+			if (index($i, intern_texs_arr[t] tex_suffix) == 1) {
 				$i = inject_prefix $i
 				break
 			}
@@ -60,7 +58,7 @@ $0 !~ /^\/\/!/ {
 	}
 }
 
-{ gsub("  ", " "); gsub("( ", "("); }
+{ gsub(/  /, " "); gsub(/\( /, "("); }
 
 { print($0) }
 
