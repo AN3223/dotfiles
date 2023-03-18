@@ -16,7 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//desc: Fast "self-guided" guided filter
+//desc: Self-guided. Fast.
 
 /* The radius can be adjusted with the MEANIP stage's downscaling factor. 
  * Higher numbers give a bigger radius.
