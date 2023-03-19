@@ -25,6 +25,7 @@ function extremes_preserve(scale) {
 		"	return LUMA_texOff(0);",
 		"}")
 	ALL_TEX = ALL_TEX ? (ALL_TEX ":" "EP") : "EP"
+	EP_BOUND = 1
 }
 
 function robust_filter(name, scale) {
@@ -130,7 +131,7 @@ BEGIN {
 		if (RF)
 			robust_filter("RF" tex_suffix, RF)
 
-		if (EP)
+		if (EP && !EP_BOUND)
 			extremes_preserve(EP)
 	}
 
