@@ -1,0 +1,87 @@
+#!/usr/bin/env raku
+
+# XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
+# XXX hide all ffmpeg output unless there is an error
+
+use MONKEY-SEE-NO-EVAL;
+
+my $cmd-pre;
+my $vulkan;
+
+my %tmpfiles;
+END %tmpfiles.values.map(&unlink);
+
+my $ffmpeg = "ffmpeg -nostdin -y";
+my $codec = "-c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p";
+
+# XXX is it possible to support pixel formats other than yuv420p?
+sub shader_ssim(Str $in1, Str $in2, Str $shader, Str $tmpfile) {
+	my $proc = run <<
+		$cmd-pre $ffmpeg -i "$in1" -i "$in2" -init_hw_device "$vulkan" -lavfi
+			hwupload,libplacebo=custom_shader_path="$shader",hwdownload,format=yuv420p[placebo]\;
+			[placebo]ssim=f=-
+			-f null -
+	>>, :out;
+	# XXX
+}
+
+sub MAIN(
+	Str $test-media,
+	Str :$cfgopts = "",
+	Str :$plane = "LUMA",
+	Int :$realizations = 10,
+	Str :$corruption = "NOISE=10",
+	Str :$statsfile = "shader_test.stats",
+	Str :$tmpfile = "shader_test.tmp",
+	Str :$vk-device = "vulkan",
+	Bool :$dry-run = False
+) {
+	run <<renice -n 19 "$*PID">>;
+	run <<ionice -c 3 -p "$*PID">>;
+
+	$cmd-pre = $dry-run ?? "echo" !! "";
+	$vulkan = $vk-device;
+
+	# XXX implement minimization
+	# parse k=v:k=v:k=v:...
+	my @cfgopts = split(':', $cfgopts, :skip-empty).map({split('=', $_)}).flat;
+	# for keeping the order consistent after hashing
+	# XXX complain if the user gives duplicate keys
+	my %cfgopts_keyorder = @cfgopts[grep({$_%%2}, ^@cfgopts.elems)].antipairs;
+	# EVAL every v in k=v:k=v:k=v:...
+	my %cfgopts = @cfgopts.hash.kv.map({$^k => EVAL $^v});
+	# convert to list of permutations
+	my @cfgopts_permuted = %cfgopts.values.reduce(&infix:<X>).map({%cfgopts.keys Z, $_.flat});
+	# convert to list of strings in k=v:k=v:k=v:... format
+	@cfgopts_permuted = @cfgopts_permuted.map({
+		$_.sort({%cfgopts_keyorder{$_}}).map({$_.join('=')}).join(':')
+	});
+
+	printf("Trying %d permutations\n", @cfgopts_permuted.elems);
+
+	# encode test media w/ $codec
+	run <<$cmd-pre $ffmpeg -i "$test-media" $codec "$tmpfile.mkv">>;
+	%tmpfiles{'test-media'} = "$tmpfile.mkv";
+
+	given $corruption {
+		# XXX optionally allow for multiple realizations in 1 file
+		when /^NOISE\=/ {
+			my $noise = split('=', $corruption)[1];
+			%tmpfiles{'corrupt'} = (^$realizations).map({"$tmpfile.corrupt$_.mkv"});
+			for ^$realizations {
+				run <<$cmd-pre $ffmpeg -i "%tmpfiles{'test-media'}" $codec -vf "noise=alls=$noise\:all_seed=$_" "%tmpfiles{'corrupt'}[$_]">>;
+				my $proc = run <<$cmd-pre $ffmpeg -i "%tmpfiles{'test-media'}" -i "%tmpfiles{'corrupt'}[$_]" -lavfi ssim=- -f null ->>, :out;
+				# XXX process output, save as baseline
+			}
+		}
+
+		when /^JPEG\=/ {
+			my $quality = split('=', $corruption)[1];
+			%tmpfiles{'corrupt'} = ("$tmpfile.corrupt.mkv");
+			run <<$cmd-pre $ffmpeg -i "%tmpfiles{'test-media'}" -q\:v "$quality" -c\:v mjpeg "%tmpfiles{'corrupt'}[0]">>;
+			run <<$cmd-pre $ffmpeg -i "%tmpfiles{'test-media'}" -i "%tmpfiles{'corrupt'}" -lavfi ssim=- -f -null ->>, :out;
+			# XXX process output, save as baseline
+		}
+	}
+}
+
