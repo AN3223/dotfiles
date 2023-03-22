@@ -3,6 +3,7 @@
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX implement minimization
 # XXX implement downscaling
+# XXX require a --force if stats file exists
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
@@ -26,19 +27,11 @@ my $x265 = "-c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p";
 		$proc.err.slurp(:close) if !%opts<err>;
 		$proc;
 	} else {
-		note($proc.out.slurp(:close));
-		note($proc.err.slurp(:close));
-		die 'command failed';
+		note($proc.out.slurp(:close)) if $proc.out;
+		note($proc.err.slurp(:close)) if $proc.err;
+		die 'command failed: ' ~ @args;
 	}
 });
-
-# XXX is it possible to support pixel formats other than yuv420p?
-sub shader_ssim(Str $in1, Str $in2, Str $shader, Str $tmpfile) {
-	my $vf = "hwupload,libplacebo=custom_shader_path=$shader,hwdownload,format=yuv420p[placebo];";
-	my $null = '-f null -';
-	my $proc = run <<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "$*vk-device" -lavfi "$vf [placebo]ssim=-" $null>>, :out;
-	# XXX
-}
 
 sub parse_ssim(Str $out) returns List {
 	$out.split("\n", :skip-empty).map({
@@ -56,31 +49,51 @@ sub avg_ssim(@ssims) returns Hash {
 	}).map({.key => .value / @ssims.elems}).hash
 }
 
+sub run_cfg(Str $cfgopts) {
+	my $in-shader = open :r, $*shader;
+	my $out-shader = open :w, %tmp<shader>;
+	given $*shader {
+		when /nlmeans/ {
+			run <./nlmeans_cfg>, :in($in-shader), :out($out-shader),
+				:env("NLM_$*plane" => $cfgopts, "NLM_OPTS" => "HOOKS=$*plane");
+		}
+		when /guided/ {
+			run <./guided_cfg>, :in($in-shader), :out($out-shader),
+				:env("GUIDED_OPTS" => "$cfgopts\:HOOKS=$*plane");
+		}
+	}
+	$out-shader.close;
+	$in-shader.close;
+}
+
+sub shader_ssim(Str $in1, Str $in2) {
+	my $vf = "hwupload,libplacebo=custom_shader_path=%tmp<shader>,hwdownload,format=yuv420p[placebo];";
+	my $null = '-f null -';
+	my $proc = run <<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "$*vk-device" -lavfi "$vf [placebo]ssim=-" $null>>, :out;
+	parse_ssim($proc.out.slurp(:close));
+}
+
+sub stats(%ssim, $cfgopts, *%opts) {
+	my $s = "$cfgopts Y=%ssim<Y>:U=%ssim<U>:V=%ssim<V>:All=%ssim<All>\n";
+	printf("$s");
+	spurt $*statsfile, $s, |%opts;
+}
+
 sub MAIN(
 	Str $test-media,
 	Str :$cfgopts = "",
+	Str :$*shader = "nlmeans_template",
 	Str :$*plane = "LUMA",
 	Int :$realizations = 10,
 	Str :$corruption = "NOISE=10",
-	Str :$statsfile = "shader_test.stats",
+	Str :$*statsfile = "shader_test.stats",
 	Str :$*tmpfile = "shader_test.tmp",
 	Str :$*vk-device = "vulkan",
 	Bool :$*dry-run = False
 ) {
-	$*dry-run || { run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>; }
-
-	# parse k=v:k=v:k=v:...
-	my @cfgopts = $cfgopts.split(':', :skip-empty).map({.split('=')}).flat;
-	# for restoring order after hashing; dies on duplicate keys
-	my %keyorder = @cfgopts[0,2...*].unique(:with({$^x === $^y && die 'duplicate opt'})).antipairs;
-	# EVAL every v in k=v:k=v:k=v:...
-	my %cfgopts = @cfgopts.hash.kv.map({$^k => EVAL $^v});
-	# convert to list of permutations
-	@cfgopts = %cfgopts.values.reduce(&infix:<X>).map({%cfgopts.keys Z .flat});
-	# convert to list of strings back to k=v:k=v:k=v:... format
-	@cfgopts = @cfgopts.map({
-		.sort({%keyorder{$_}}).map({.join('=')}).join(':')
-	});
+	if !$*dry-run {
+		run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
+	}
 
 	note('Encoding test media...');
 	%tmp<media> = "$*tmpfile.mkv";
@@ -105,15 +118,40 @@ sub MAIN(
 		}
 	}
 
-	my @baseline;
-	$*dry-run || {
+	my %baseline;
+	if !$*dry-run {
 		my $vf-ssim = "-lavfi ssim=- -f null -";
-		@baseline = %tmp<corrupt>
+		my @baseline = %tmp<corrupt>
 			.map({run <<$ffmpeg -i "%tmp<media>" -i "$_" $vf-ssim>>, :out})
 			.map({parse_ssim(.out.slurp(:close))});
-		@baseline = avg_ssim(@baseline.flat);
+		%baseline = avg_ssim(@baseline.flat);
+		stats(%baseline, "BASELINE=$corruption");
 	}
 
+	# parse k=v:k=v:k=v:...
+	my @cfgopts = $cfgopts.split(':', :skip-empty).map({.split('=')}).flat;
+	# for restoring order after hashing; dies on duplicate keys
+	my %keyorder = @cfgopts[0,2...*].unique(:with({$^x === $^y && die 'duplicate opt'})).antipairs;
+	# EVAL every v in k=v:k=v:k=v:...
+	my %cfgopts = @cfgopts.hash.kv.map({$^k => EVAL $^v});
+	# convert to list of permutations
+	@cfgopts = %cfgopts.values.reduce(&infix:<X>).map({%cfgopts.keys Z .flat});
+	# convert to list of strings back to k=v:k=v:k=v:... format
+	@cfgopts = @cfgopts.map({
+		.sort({%keyorder{$_}}).map({.join('=')}).join(':')
+	});
+	# ensure non-empty
+	@cfgopts = ("") if !@cfgopts;
+
 	note("Trying " ~ (@cfgopts.elems || 1) ~ " permutations...");
+
+	# XXX
+	%tmp<shader> = "$*tmpfile.glsl";
+	for @cfgopts -> $cfgopts {
+		run_cfg($cfgopts);
+		for %tmp<corrupt> -> $corrupt {
+			shader_ssim(%tmp<media>, $corrupt);
+		}
+	}
 }
 
