@@ -1,15 +1,11 @@
 #!/usr/bin/env raku
 
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
-# XXX hide all ffmpeg output unless there is an error
 # XXX implement minimization
-# XXX print all commands during --dry-run
+# XXX implement downscaling
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
-
-my $cmd-pre;
-my $vulkan;
 
 my %tmp;
 END %tmp.values.flat.map(&unlink);
@@ -22,7 +18,10 @@ my $x265 = "-c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p";
 	my %opts_ = %opts;
 	%opts_<out err> = %opts<out> || True, %opts<err> || True;
 
-	if my $proc = callwith(|@args, |%opts_) {
+	if $*dry-run {
+		@args.say;
+		callwith <true>, :out, :err;
+	} elsif my $proc = callwith(|@args, |%opts_) {
 		$proc.out.slurp(:close) if !%opts<out>;
 		$proc.err.slurp(:close) if !%opts<err>;
 		$proc;
@@ -37,7 +36,7 @@ my $x265 = "-c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p";
 sub shader_ssim(Str $in1, Str $in2, Str $shader, Str $tmpfile) {
 	my $vf = "hwupload,libplacebo=custom_shader_path=$shader,hwdownload,format=yuv420p[placebo];";
 	my $null = '-f null -';
-	my $proc = run <<$cmd-pre $ffmpeg -i "$in1" -i "$in2" $vulkan -lavfi "$vf [placebo]ssim=-" $null>>, :out;
+	my $proc = run <<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "$*vk-device" -lavfi "$vf [placebo]ssim=-" $null>>, :out;
 	# XXX
 }
 
@@ -60,18 +59,15 @@ sub avg_ssim(@ssims) returns Hash {
 sub MAIN(
 	Str $test-media,
 	Str :$cfgopts = "",
-	Str :$plane = "LUMA",
+	Str :$*plane = "LUMA",
 	Int :$realizations = 10,
 	Str :$corruption = "NOISE=10",
 	Str :$statsfile = "shader_test.stats",
-	Str :$tmpfile = "shader_test.tmp",
-	Str :$vk-device = "vulkan",
-	Bool :$dry-run = False
+	Str :$*tmpfile = "shader_test.tmp",
+	Str :$*vk-device = "vulkan",
+	Bool :$*dry-run = False
 ) {
-	run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
-
-	$cmd-pre = $dry-run ?? "echo" !! "";
-	$vulkan = "-init_hw_device $vk-device";
+	$*dry-run || { run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>; }
 
 	# parse k=v:k=v:k=v:...
 	my @cfgopts = $cfgopts.split(':', :skip-empty).map({.split('=')}).flat;
@@ -87,33 +83,36 @@ sub MAIN(
 	});
 
 	note('Encoding test media...');
-	%tmp<media> = "$tmpfile.mkv";
-	run <<$cmd-pre $ffmpeg -i "$test-media" $x265 "%tmp<media>">>;
+	%tmp<media> = "$*tmpfile.mkv";
+	run <<$ffmpeg -i "$test-media" $x265 "%tmp<media>">>;
 
 	note('Corrupting test media...');
 	given $corruption {
 		# XXX optionally allow for multiple realizations in 1 file
 		when /^NOISE\=/ {
 			my $noise = $corruption.split('=')[1];
-			%tmp<corrupt> := (^$realizations).map({"$tmpfile.corrupt$_.mkv"});
+			%tmp<corrupt> := (^$realizations).map({"$*tmpfile.corrupt$_.mkv"});
 			for ^$realizations {
 				my $vf = "noise=alls=$noise\:all_seed=$_";
-				run <<$cmd-pre $ffmpeg -i "%tmp<media>" $x265 -vf "$vf" "%tmp<corrupt>[$_]">>;
+				run <<$ffmpeg -i "%tmp<media>" $x265 -vf "$vf" "%tmp<corrupt>[$_]">>;
 			}
 		}
 		when /^JPEG\=/ {
 			my $quality = $corruption.split('=')[1];
 			my $codec = "-q\:v $quality -c\:v mjpeg";
-			%tmp<corrupt> = ("$tmpfile.corrupt.mkv");
-			run <<$cmd-pre $ffmpeg -i "%tmp<media>" $codec "%tmp<corrupt>[0]">>;
+			%tmp<corrupt> = ("$*tmpfile.corrupt.mkv");
+			run <<$ffmpeg -i "%tmp<media>" $codec "%tmp<corrupt>[0]">>;
 		}
 	}
 
-	my $vf-ssim = "-lavfi ssim=- -f null -";
-	my @baseline = %tmp<corrupt>
-		.map({run <<$cmd-pre $ffmpeg -i "%tmp<media>" -i "$_" $vf-ssim>>, :out})
-		.map({parse_ssim(.out.slurp(:close))});
-	@baseline = avg_ssim(@baseline.flat);
+	my @baseline;
+	$*dry-run || {
+		my $vf-ssim = "-lavfi ssim=- -f null -";
+		@baseline = %tmp<corrupt>
+			.map({run <<$ffmpeg -i "%tmp<media>" -i "$_" $vf-ssim>>, :out})
+			.map({parse_ssim(.out.slurp(:close))});
+		@baseline = avg_ssim(@baseline.flat);
+	}
 
 	note("Trying " ~ (@cfgopts.elems || 1) ~ " permutations...");
 }
