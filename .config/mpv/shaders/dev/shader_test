@@ -20,14 +20,14 @@ my $x265 = "-c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p";
 	my %opts_ = %opts;
 	%opts_<out err> = %opts<out> || True, %opts<err> || True;
 
-	@args.say if $*verbose;
+	@args.note if $*verbose;
 
 	if $*dry-run {
-		@args.say;
+		@args.note if not $*verbose;
 		callwith <true>, :out, :err;
 	} elsif my $proc = callwith(|@args, |%opts_) {
-		$proc.out.slurp(:close) if !%opts<out>;
-		$proc.err.slurp(:close) if !%opts<err>;
+		$proc.out.slurp(:close) if not %opts<out>;
+		$proc.err.slurp(:close) if not %opts<err>;
 		$proc;
 	} else {
 		note($proc.out.slurp(:close)) if $proc.out;
@@ -76,6 +76,7 @@ sub shader_ssim(Str $in1, Str $in2) {
 	parse_ssim($proc.out.slurp(:close));
 }
 
+# XXX flip arguments around
 sub stats(%ssim, $cfgopts, *%opts) {
 	my $s = "$cfgopts Y %ssim<Y> U %ssim<U> V %ssim<V> All %ssim<All>\n";
 	printf("$s");
@@ -96,7 +97,7 @@ sub MAIN(
 	Str :$*shader = "nlmeans_template",
 	Str :$*plane = "LUMA",
 	Int :$realizations = 10,
-	Str :$corruption = "NOISE=10",
+	Str :$corruption = "NOISE=3",
 	Str :$*tmpfile = "shader_test.tmp",
 	Str :$*vk-device = "vulkan",
 	Bool :$*dry-run = False,
@@ -105,11 +106,11 @@ sub MAIN(
 	Bool :$force = False
 ) {
 	my $*statsfile = "stats/$*shader:$test-media:$*plane:$corruption\:RZ=$realizations:$cfgopts.stats";
-	if $*statsfile.IO.e && !$force {
+	if $*statsfile.IO.e and not $force {
 		die "$*statsfile exists; either move/remove the file or use --force to overwrite";
 	}
 
-	if !$*dry-run {
+	if not $*dry-run {
 		run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
 	}
 
@@ -117,6 +118,7 @@ sub MAIN(
 	%tmp<media> = "$*tmpfile.mkv";
 	run <<$ffmpeg -i "$test-media" $x265 "%tmp<media>">>;
 
+	# XXX add a downscale corruption for testing upscalers
 	note('Corrupting test media...');
 	given $corruption {
 		when /^NOISE\=/ {
@@ -126,7 +128,7 @@ sub MAIN(
 				my $vf = "noise=alls=$noise\:all_seed=$_\:allf=t";
 				run <<$ffmpeg -i "%tmp<media>" $x265 -vf "$vf" "%tmp<corrupt>[$_]">>;
 			}
-			concat_realizations() if !$no-concat;
+			concat_realizations() if not $no-concat;
 		}
 		when /^JPEG\=/ {
 			my $quality = $corruption.split('=')[1];
@@ -137,7 +139,7 @@ sub MAIN(
 	}
 
 	my %baseline;
-	if !$*dry-run {
+	if not $*dry-run {
 		my $vf-ssim = "-lavfi ssim=- -f null -";
 		my @baseline = %tmp<corrupt>
 			.map({run <<$ffmpeg -i "%tmp<media>" -i "$_" $vf-ssim>>, :out})
@@ -160,9 +162,10 @@ sub MAIN(
 		.sort({%keyorder{$_}}).map({.join('=')}).join(':')
 	});
 	# ensure non-empty
-	@cfgopts = ("") if !@cfgopts;
+	@cfgopts = ("") if not @cfgopts;
 
 	sprintf("Trying %d permutations...", (@cfgopts.elems || 1)).note;
+	@cfgopts.note if $*verbose;
 
 	%tmp<shader> = "$*tmpfile.glsl";
 	for @cfgopts -> $cfgopts {
