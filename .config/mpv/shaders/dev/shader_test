@@ -3,6 +3,8 @@
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX implement minimization
 # XXX implement downscaling
+# XXX implement async
+# XXX add a way to configure the opts of injected shaders (e.g., configure GUIDED_OPTS while testing NLM)
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
@@ -17,6 +19,8 @@ my $x265 = "-c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p";
 &run.wrap(sub (*@args, *%opts) {
 	my %opts_ = %opts;
 	%opts_<out err> = %opts<out> || True, %opts<err> || True;
+
+	@args.say if $*verbose;
 
 	if $*dry-run {
 		@args.say;
@@ -42,8 +46,8 @@ sub parse_ssim(Str $out) returns List {
 sub avg_ssim(@ssims) returns Hash {
 	@ssims.map({.reduce(-> $frame_acc, $frame {
 		$frame_acc.map({.key => .value + $frame{.key}})
-			.map({.key => .value / @ssims[0].elems})
-	})}).reduce(-> $realization_acc, $realization {
+	}).map({.key => .value / @ssims[0].elems})})
+	.reduce(-> $realization_acc, $realization {
 		$realization_acc.map({.key => .value + $realization{.key}})
 	}).map({.key => .value / @ssims.elems}).hash
 }
@@ -78,6 +82,14 @@ sub stats(%ssim, $cfgopts, *%opts) {
 	spurt $*statsfile, $s, |%opts;
 }
 
+sub concat_realizations() {
+	my $new-corrupt = "$*tmpfile.corrupt.mkv";
+	my $vf = "concat={%tmp<corrupt>.elems},setpts=N/(FRAME_RATE*TB)";
+	run <<$ffmpeg -i {%tmp<corrupt>.join(' -i ')} -lavfi "$vf" $x265 "$new-corrupt">>;
+	%tmp<corrupt>.map(&unlink);
+	%tmp<corrupt> := ($new-corrupt);
+}
+
 sub MAIN(
 	Str $test-media,
 	Str :$cfgopts = "",
@@ -85,12 +97,14 @@ sub MAIN(
 	Str :$*plane = "LUMA",
 	Int :$realizations = 10,
 	Str :$corruption = "NOISE=10",
-	Str :$*statsfile = "shader_test.stats",
 	Str :$*tmpfile = "shader_test.tmp",
 	Str :$*vk-device = "vulkan",
 	Bool :$*dry-run = False,
+	Bool :$*verbose = False,
+	Bool :$no-concat = False,
 	Bool :$force = False
 ) {
+	my $*statsfile = "stats/$*shader:$test-media:$*plane:$corruption\:RZ=$realizations:$cfgopts.stats";
 	if $*statsfile.IO.e && !$force {
 		die "$*statsfile exists; either move/remove the file or use --force to overwrite";
 	}
@@ -105,14 +119,14 @@ sub MAIN(
 
 	note('Corrupting test media...');
 	given $corruption {
-		# XXX optionally allow for multiple realizations in 1 file
 		when /^NOISE\=/ {
 			my $noise = $corruption.split('=')[1];
 			%tmp<corrupt> := (^$realizations).map({"$*tmpfile.corrupt$_.mkv"});
 			for ^$realizations {
-				my $vf = "noise=alls=$noise\:all_seed=$_";
+				my $vf = "noise=alls=$noise\:all_seed=$_\:allf=t";
 				run <<$ffmpeg -i "%tmp<media>" $x265 -vf "$vf" "%tmp<corrupt>[$_]">>;
 			}
+			concat_realizations() if !$no-concat;
 		}
 		when /^JPEG\=/ {
 			my $quality = $corruption.split('=')[1];
@@ -148,7 +162,7 @@ sub MAIN(
 	# ensure non-empty
 	@cfgopts = ("") if !@cfgopts;
 
-	sprintf("Trying %s permutations...", (@cfgopts.elems || 1)).note;
+	sprintf("Trying %d permutations...", (@cfgopts.elems || 1)).note;
 
 	%tmp<shader> = "$*tmpfile.glsl";
 	for @cfgopts -> $cfgopts {
