@@ -2,27 +2,59 @@
 
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX hide all ffmpeg output unless there is an error
+# XXX implement minimization
+# XXX print all commands during --dry-run
 
 use MONKEY-SEE-NO-EVAL;
+use soft;
 
 my $cmd-pre;
 my $vulkan;
 
-my %tmpfiles;
-END %tmpfiles.values.map(&unlink);
+my %tmp;
+END %tmp.values.flat.map(&unlink);
 
 my $ffmpeg = "ffmpeg -nostdin -y";
-my $codec = "-c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p";
+my $x265 = "-c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p";
+
+# prints stdout & stderr on error, drops stdout & stderr if they aren't requested
+&run.wrap(sub (*@args, *%opts) {
+	my %opts_ = %opts;
+	%opts_<out err> = %opts<out> || True, %opts<err> || True;
+
+	if my $proc = callwith(|@args, |%opts_) {
+		$proc.out.slurp(:close) if !%opts<out>;
+		$proc.err.slurp(:close) if !%opts<err>;
+		$proc;
+	} else {
+		note($proc.out.slurp(:close));
+		note($proc.err.slurp(:close));
+		die 'command failed';
+	}
+});
 
 # XXX is it possible to support pixel formats other than yuv420p?
 sub shader_ssim(Str $in1, Str $in2, Str $shader, Str $tmpfile) {
-	my $proc = run <<
-		$cmd-pre $ffmpeg -i "$in1" -i "$in2" -init_hw_device "$vulkan" -lavfi
-			hwupload,libplacebo=custom_shader_path="$shader",hwdownload,format=yuv420p[placebo]\;
-			[placebo]ssim=f=-
-			-f null -
-	>>, :out;
+	my $vf = "hwupload,libplacebo=custom_shader_path=$shader,hwdownload,format=yuv420p[placebo];";
+	my $null = '-f null -';
+	my $proc = run <<$cmd-pre $ffmpeg -i "$in1" -i "$in2" $vulkan -lavfi "$vf [placebo]ssim=-" $null>>, :out;
 	# XXX
+}
+
+sub parse_ssim(Str $out) returns List {
+	$out.split("\n", :skip-empty).map({
+		.split(' ')[1..*-2].map({.split(':')}).flat.hash
+	}).list
+}
+
+# takes a list of parse_ssim outputs and returns a single hash of averages
+sub avg_ssim(@ssims) returns Hash {
+	@ssims.map({.reduce(-> $frame_acc, $frame {
+		$frame_acc.map({.key => .value + $frame{.key}})
+			.map({.key => .value / @ssims[0].elems})
+	})}).reduce(-> $realization_acc, $realization {
+		$realization_acc.map({.key => .value + $realization{.key}})
+	}).map({.key => .value / @ssims.elems}).hash
 }
 
 sub MAIN(
@@ -36,52 +68,53 @@ sub MAIN(
 	Str :$vk-device = "vulkan",
 	Bool :$dry-run = False
 ) {
-	run <<renice -n 19 "$*PID">>;
-	run <<ionice -c 3 -p "$*PID">>;
+	run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
 
 	$cmd-pre = $dry-run ?? "echo" !! "";
-	$vulkan = $vk-device;
+	$vulkan = "-init_hw_device $vk-device";
 
-	# XXX implement minimization
 	# parse k=v:k=v:k=v:...
-	my @cfgopts = split(':', $cfgopts, :skip-empty).map({split('=', $_)}).flat;
-	# for keeping the order consistent after hashing
-	# XXX complain if the user gives duplicate keys
-	my %cfgopts_keyorder = @cfgopts[grep({$_%%2}, ^@cfgopts.elems)].antipairs;
+	my @cfgopts = $cfgopts.split(':', :skip-empty).map({.split('=')}).flat;
+	# for restoring order after hashing; dies on duplicate keys
+	my %keyorder = @cfgopts[0,2...*].unique(:with({$^x === $^y && die 'duplicate opt'})).antipairs;
 	# EVAL every v in k=v:k=v:k=v:...
 	my %cfgopts = @cfgopts.hash.kv.map({$^k => EVAL $^v});
 	# convert to list of permutations
-	my @cfgopts_permuted = %cfgopts.values.reduce(&infix:<X>).map({%cfgopts.keys Z, $_.flat});
-	# convert to list of strings in k=v:k=v:k=v:... format
-	@cfgopts_permuted = @cfgopts_permuted.map({
-		$_.sort({%cfgopts_keyorder{$_}}).map({$_.join('=')}).join(':')
+	@cfgopts = %cfgopts.values.reduce(&infix:<X>).map({%cfgopts.keys Z .flat});
+	# convert to list of strings back to k=v:k=v:k=v:... format
+	@cfgopts = @cfgopts.map({
+		.sort({%keyorder{$_}}).map({.join('=')}).join(':')
 	});
 
-	printf("Trying %d permutations\n", @cfgopts_permuted.elems);
+	note('Encoding test media...');
+	%tmp<media> = "$tmpfile.mkv";
+	run <<$cmd-pre $ffmpeg -i "$test-media" $x265 "%tmp<media>">>;
 
-	# encode test media w/ $codec
-	run <<$cmd-pre $ffmpeg -i "$test-media" $codec "$tmpfile.mkv">>;
-	%tmpfiles{'test-media'} = "$tmpfile.mkv";
-
+	note('Corrupting test media...');
 	given $corruption {
 		# XXX optionally allow for multiple realizations in 1 file
 		when /^NOISE\=/ {
-			my $noise = split('=', $corruption)[1];
-			%tmpfiles{'corrupt'} = (^$realizations).map({"$tmpfile.corrupt$_.mkv"});
+			my $noise = $corruption.split('=')[1];
+			%tmp<corrupt> := (^$realizations).map({"$tmpfile.corrupt$_.mkv"});
 			for ^$realizations {
-				run <<$cmd-pre $ffmpeg -i "%tmpfiles{'test-media'}" $codec -vf "noise=alls=$noise\:all_seed=$_" "%tmpfiles{'corrupt'}[$_]">>;
-				my $proc = run <<$cmd-pre $ffmpeg -i "%tmpfiles{'test-media'}" -i "%tmpfiles{'corrupt'}[$_]" -lavfi ssim=- -f null ->>, :out;
-				# XXX process output, save as baseline
+				my $vf = "noise=alls=$noise\:all_seed=$_";
+				run <<$cmd-pre $ffmpeg -i "%tmp<media>" $x265 -vf "$vf" "%tmp<corrupt>[$_]">>;
 			}
 		}
-
 		when /^JPEG\=/ {
-			my $quality = split('=', $corruption)[1];
-			%tmpfiles{'corrupt'} = ("$tmpfile.corrupt.mkv");
-			run <<$cmd-pre $ffmpeg -i "%tmpfiles{'test-media'}" -q\:v "$quality" -c\:v mjpeg "%tmpfiles{'corrupt'}[0]">>;
-			run <<$cmd-pre $ffmpeg -i "%tmpfiles{'test-media'}" -i "%tmpfiles{'corrupt'}" -lavfi ssim=- -f -null ->>, :out;
-			# XXX process output, save as baseline
+			my $quality = $corruption.split('=')[1];
+			my $codec = "-q\:v $quality -c\:v mjpeg";
+			%tmp<corrupt> = ("$tmpfile.corrupt.mkv");
+			run <<$cmd-pre $ffmpeg -i "%tmp<media>" $codec "%tmp<corrupt>[0]">>;
 		}
 	}
+
+	my $vf-ssim = "-lavfi ssim=- -f null -";
+	my @baseline = %tmp<corrupt>
+		.map({run <<$cmd-pre $ffmpeg -i "%tmp<media>" -i "$_" $vf-ssim>>, :out})
+		.map({parse_ssim(.out.slurp(:close))});
+	@baseline = avg_ssim(@baseline.flat);
+
+	note("Trying " ~ (@cfgopts.elems || 1) ~ " permutations...");
 }
 
