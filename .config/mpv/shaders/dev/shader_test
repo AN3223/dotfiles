@@ -3,7 +3,6 @@
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX implement minimization
 # XXX implement downscaling
-# XXX require a --force if stats file exists
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
@@ -74,7 +73,7 @@ sub shader_ssim(Str $in1, Str $in2) {
 }
 
 sub stats(%ssim, $cfgopts, *%opts) {
-	my $s = "$cfgopts Y=%ssim<Y>:U=%ssim<U>:V=%ssim<V>:All=%ssim<All>\n";
+	my $s = "$cfgopts Y %ssim<Y> U %ssim<U> V %ssim<V> All %ssim<All>\n";
 	printf("$s");
 	spurt $*statsfile, $s, |%opts;
 }
@@ -89,8 +88,13 @@ sub MAIN(
 	Str :$*statsfile = "shader_test.stats",
 	Str :$*tmpfile = "shader_test.tmp",
 	Str :$*vk-device = "vulkan",
-	Bool :$*dry-run = False
+	Bool :$*dry-run = False,
+	Bool :$force = False
 ) {
+	if $*statsfile.IO.e && !$force {
+		die "$*statsfile exists; either move/remove the file or use --force to overwrite";
+	}
+
 	if !$*dry-run {
 		run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
 	}
@@ -128,6 +132,7 @@ sub MAIN(
 		stats(%baseline, "BASELINE=$corruption");
 	}
 
+	# XXX doesn't work when only 1 parameter is specified
 	# parse k=v:k=v:k=v:...
 	my @cfgopts = $cfgopts.split(':', :skip-empty).map({.split('=')}).flat;
 	# for restoring order after hashing; dies on duplicate keys
@@ -143,15 +148,13 @@ sub MAIN(
 	# ensure non-empty
 	@cfgopts = ("") if !@cfgopts;
 
-	note("Trying " ~ (@cfgopts.elems || 1) ~ " permutations...");
+	sprintf("Trying %s permutations...", (@cfgopts.elems || 1)).note;
 
-	# XXX
 	%tmp<shader> = "$*tmpfile.glsl";
 	for @cfgopts -> $cfgopts {
 		run_cfg($cfgopts);
-		for %tmp<corrupt> -> $corrupt {
-			shader_ssim(%tmp<media>, $corrupt);
-		}
+		stats avg_ssim(%tmp<corrupt>.map({shader_ssim($_, %tmp<media>)})),
+			$cfgopts, :append;
 	}
 }
 
