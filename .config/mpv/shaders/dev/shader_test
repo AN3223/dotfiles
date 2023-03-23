@@ -36,20 +36,20 @@ my $x265 = "-c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p";
 	}
 });
 
-sub parse_ssim(Str $out) returns List {
+sub parse_ssim(Str $out) returns List() {
 	$out.split("\n", :skip-empty).map({
 		.split(' ')[1..*-2].map({.split(':')}).flat.hash
-	}).list
+	})
 }
 
 # takes a list of parse_ssim outputs and returns a single hash of averages
-sub avg_ssim(@ssims) returns Hash {
+sub avg_ssim(@ssims) returns Hash() {
 	@ssims.map({.reduce(-> $frame_acc, $frame {
 		$frame_acc.map({.key => .value + $frame{.key}})
 	}).map({.key => .value / @ssims[0].elems})})
 	.reduce(-> $realization_acc, $realization {
 		$realization_acc.map({.key => .value + $realization{.key}})
-	}).map({.key => .value / @ssims.elems}).hash
+	}).map({.key => .value / @ssims.elems})
 }
 
 # XXX support planes other than LUMA/CHROMA for NLM
