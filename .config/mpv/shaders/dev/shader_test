@@ -9,99 +9,87 @@
 use MONKEY-SEE-NO-EVAL;
 use soft;
 
-my %glb;
-
+my %gbl;
 my %tmp;
-END %tmp.values.flat.map(&unlink);
 
 my $ffmpeg = "ffmpeg -nostdin -y";
 my $x265 = "-c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p";
 
-&run.wrap(sub (*@args, *%opts) {
+&run.wrap(sub (*@args, *%opts) returns Proc {
 	my %opts_ = %opts;
-	%opts_<out err> = %opts<out> || True, %opts<err> || True;
 
-	@args.note if %glb<verbose>;
+	# drop stderr and/or stdout if they aren't requested
+	%opts_<out err> = %opts<out> || '/dev/null', %opts<err> || '/dev/null';
 
-	if %glb<dry-run> {
-		@args.note if not %glb<verbose>;
-		callwith <true>, :out, :err;
+	@args.note if %gbl<verbose>;
+
+	if %gbl<dry-run> {
+		@args.note if not %gbl<verbose>;
+		callwith <true>, :out('/dev/null'), :err('/dev/null');
 	} elsif my $proc = callwith(|@args, |%opts_) {
-		# drop stdout & stderr if not requested by caller
-		$proc.out.slurp(:close) if not %opts<out>;
-		$proc.err.slurp(:close) if not %opts<err>;
 		$proc;
 	} else {
 		# print stdout & stderr on error
-		note($proc.out.slurp(:close)) if $proc.out;
-		note($proc.err.slurp(:close)) if $proc.err;
+		note($proc.out.slurp(:close)) when $proc.out;
+		note($proc.err.slurp(:close)) when $proc.err;
 		die 'command failed: ' ~ @args;
 	}
 });
 
-sub parse_ssim(Str $out) returns List() {
-	$out.split("\n", :skip-empty).map({
-		.split(' ')[1..*-2].map({.split(':')}).flat.hash
-	})
+# takes a list of hashes outputs an average of their keys
+sub hashavg(@hashes) returns Hash() {
+	@hashes.reduce({$^acc >>+<< $^x}).map({$_ >>/>> @hashes.elems});
 }
 
-# takes a list of parse_ssim outputs and returns a single hash of averages
-sub avg_ssim(@ssims) returns Hash() {
-	@ssims.map({.reduce(-> $frame_acc, $frame {
-		$frame_acc.map({.key => .value + $frame{.key}})
-	}).map({.key => .value / @ssims[0].elems})})
-	.reduce(-> $realization_acc, $realization {
-		$realization_acc.map({.key => .value + $realization{.key}})
-	}).map({.key => .value / @ssims.elems})
+sub avgssim(Str $out) returns Hash {
+	hashavg($out.split("\n", :skip-empty).map({
+		.split(' ')[1..*-2].map({.split(':')}).flat.hash
+	}))
 }
 
 sub run_cfg(Str $cfgopts) returns Str {
-	# generate a unique filename
-	my $out-shader-filename;
-	loop {
-		$out-shader-filename = "%glb<tmp>" ~ (^999999).rand ~ ".glsl";
-		try { open(:create, :exclusive, $out-shader-filename).close; }
+	my $in-shader = open %gbl<shader>;
+	my $out-shader;
+	loop { # ensure a unique filename
+		try { $out-shader = open(sprintf("%s.%d.glsl", %gbl<tmp>, 999.rand.Int), :rx); }
 		last if not $!;
 	}
-	%tmp{$out-shader-filename} = $out-shader-filename;
+	LEAVE { $out-shader.flush; $out-shader.close; $in-shader.close; }
 
-	my $in-shader = open :r, %glb<shader>;
-	my $out-shader = open :w, $out-shader-filename;
-	given %glb<shader> {
+	# XXX output doesn't exist sometimes?
+	given %gbl<shader> {
 		when /nlmeans/ {
 			run <./nlmeans_cfg>, :in($in-shader), :out($out-shader),
-				:env("NLM_{%glb<plane> eq 'LUMA' ?? 'LUMA' !! 'CHROMA'}" => $cfgopts,
-					"NLM_OPTS" => "HOOKS=%glb<plane>");
+				:env("NLM_{%gbl<plane> eq 'LUMA' ?? 'LUMA' !! 'CHROMA'}" => $cfgopts,
+					"NLM_OPTS" => "HOOKS=%gbl<plane>");
 		}
 		when /guided/ {
 			run <./guided_cfg>, :in($in-shader), :out($out-shader),
-				:env("GUIDED_OPTS" => "$cfgopts\:HOOKS=%glb<plane>");
+				:env("GUIDED_OPTS" => "$cfgopts\:HOOKS=%gbl<plane>");
 		}
 	}
-	$out-shader.close;
-	$in-shader.close;
 
-	$out-shader-filename;
+	%tmp{$out-shader.IO.path} = $out-shader.IO.path;
 }
 
-sub shader_ssim(Str $in1, Str $in2, Str $shader) {
+sub shader_ssim(Str $in1, Str $in2, Str $shader) returns Str {
 	my $vf = "hwupload,libplacebo=custom_shader_path=$shader,hwdownload,format=yuv420p[placebo];";
 	my $null = '-f null -';
-	my $proc = run <<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%glb<vk>" -lavfi "$vf [placebo]ssim=-" $null>>, :out;
-	parse_ssim($proc.out.slurp(:close));
+	my $proc = run <<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf [placebo]ssim=-" $null>>, :out;
+	$proc.out.slurp(:close);
 }
 
-sub stats($cfgopts, %ssim, *%opts) {
+sub stats($cfgopts, %ssim) {
 	my $s = "$cfgopts Y %ssim<Y> U %ssim<U> V %ssim<V> All %ssim<All>\n";
-	printf("$s");
-	spurt %glb<statsfile>, $s, |%opts;
+	print("$s");
+	%gbl<statsfile>.print($s);
+	%gbl<statsfile>.flush;
 }
 
 sub concat_realizations() {
-	my $new-corrupt = %glb<tmp> ~ ".corrupt.mkv";
-	my $vf = "concat={%tmp<corrupt>.elems},setpts=N/(FRAME_RATE*TB)";
-
 	note('Concatenating corrupt test media files...');
+	my $new-corrupt = %gbl<tmp> ~ ".corrupt.mkv";
+	my $vf = "concat={%tmp<corrupt>.elems},setpts=N/(FR*TB)";
 	run <<$ffmpeg -i {%tmp<corrupt>.join(' -i ')} -lavfi "$vf" $x265 "$new-corrupt">>;
 	%tmp<corrupt>.map(&unlink);
 	%tmp<corrupt> := ($new-corrupt);
@@ -117,34 +105,35 @@ sub MAIN(
 	Str :$tmpfile = "shader_test.tmp",
 	Str :$vk-device = "vulkan",
 	Str :$stats-dir = "stats",
-	Int :$realizations = 50,
+	Int :$realizations = 10,
 	Int :$jobs = 4,
 	Bool :$dry-run = False,
 	Bool :$verbose = False,
 	Bool :$no-concat = False,
 	Bool :$force = False
 ) {
-	%glb<tmp shader dry-run verbose vk plane> = $tmpfile, $shader, $dry-run, $verbose, $vk-device, $plane;
+	%gbl<tmp shader dry-run verbose vk plane> = $tmpfile, $shader, $dry-run, $verbose, $vk-device, $plane;
 
 	my @statsfile = (
 		# friendly shader name
-		%glb<shader>.IO.basename.subst(/nlmeans/, "NLM", :g).subst(/(_template$|\.glsl$)/, :g),
+		%gbl<shader>.IO.basename.subst(/nlmeans/, "NLM").subst(/(_template$|\.glsl$)/),
 		# basename of test-media w/o extension
-		$test-media.IO.basename.subst(/\..*/, :g),
-		%glb<plane>, $corruption, "RZ=$realizations", "CAT={(!$no-concat).Int}", $cfgopts
+		$test-media.IO.basename.split('.', :skip-empty)[0],
+		%gbl<plane>, $corruption, "RZ=$realizations", "CAT={(!$no-concat).Int}", $cfgopts
 	);
-	%glb<statsfile> = "$stats-dir/{@statsfile.join(':').subst(/\//, "_", :g)}.stats";
-
-	if %glb<statsfile>.IO.e and not $force {
-		die "%glb<statsfile> exists; either move/remove the file or use --force to overwrite";
+	my $statsfile = "$stats-dir/{@statsfile.join(':').trans('/' => '_')}.stats";
+	if $force {
+		%gbl<statsfile> = open $statsfile, :w;
+	} else {
+		%gbl<statsfile> = open $statsfile, :x;
 	}
 
-	if not %glb<dry-run> {
+	if not %gbl<dry-run> {
 		run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
 	}
 
 	note('Encoding test media...');
-	%tmp<media> = "%glb<tmp>.mkv";
+	%tmp<media> = "%gbl<tmp>.mkv";
 	run <<$ffmpeg -i "$test-media" $x265 "%tmp<media>">>;
 
 	# XXX add a downscale corruption for testing upscalers
@@ -152,7 +141,7 @@ sub MAIN(
 	given $corruption {
 		when /^NOISE\=/ {
 			my $noise = $corruption.split('=')[1];
-			%tmp<corrupt> := (^$realizations).map({"%glb<tmp>.corrupt$_.mkv"});
+			%tmp<corrupt> := (^$realizations).map({"%gbl<tmp>.corrupt$_.mkv"});
 			for ^$realizations {
 				my $vf = "noise=alls=$noise\:all_seed=$_\:allf=t";
 				run <<$ffmpeg -i "%tmp<media>" $x265 -vf "$vf" "%tmp<corrupt>[$_]">>;
@@ -162,19 +151,18 @@ sub MAIN(
 		when /^JPEG\=/ {
 			my $quality = $corruption.split('=')[1];
 			my $codec = "-q\:v $quality -c\:v mjpeg";
-			%tmp<corrupt> = ("%glb<tmp>.corrupt.mkv");
+			%tmp<corrupt> = ("%gbl<tmp>.corrupt.mkv");
 			run <<$ffmpeg -i "%tmp<media>" $codec "%tmp<corrupt>[0]">>;
 		}
 	}
 
 	note('Measuring baseline...');
 	my %baseline;
-	if not %glb<dry-run> {
-		my $vf-ssim = "-lavfi ssim=- -f null -";
-		my @baseline = %tmp<corrupt>
-			.map({run <<$ffmpeg -i "%tmp<media>" -i "$_" $vf-ssim>>, :out})
-			.map({parse_ssim(.out.slurp(:close))});
-		%baseline = avg_ssim(@baseline.flat);
+	if not %gbl<dry-run> {
+		my $baseline = %tmp<corrupt>
+			.map({run(<<$ffmpeg -i "%tmp<media>" -i "$_" -lavfi ssim=- -f null ->>, :out).out.slurp(:close)})
+			.join("\n");
+		%baseline = avgssim($baseline);
 		stats "BASELINE=$corruption", %baseline;
 	}
 
@@ -195,17 +183,17 @@ sub MAIN(
 	@cfgopts = ("") if not @cfgopts;
 
 	sprintf("Trying %d permutations...", (@cfgopts.elems || 1)).note;
-	@cfgopts.note if %glb<verbose>;
+	@cfgopts.note if %gbl<verbose>;
 
-	exit if %glb<dry-run>;
+	exit if %gbl<dry-run>;
 
 	@cfgopts.race(:batch(1), :degree($jobs)).map(-> $cfgopts {
 		my $shader = run_cfg($cfgopts);
-		my $out = $cfgopts => avg_ssim(%tmp<corrupt>.map({shader_ssim($_, %tmp<media>, $shader)}));
+		my $out = %tmp<corrupt>.map({shader_ssim($_, %tmp<media>, $shader)}).join("\n");
+		unlink %tmp{$shader}:delete;
+		$cfgopts => avgssim($out);
+	}).list.map({stats .key, .value});
 
-		unlink $shader;
-		%tmp{$shader}:delete;
-		$out;
-	}).list.map({stats .key, .value, :append});
+	%tmp.values.flat.map(&unlink);
 }
 
