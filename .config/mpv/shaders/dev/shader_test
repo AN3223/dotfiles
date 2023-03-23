@@ -17,7 +17,6 @@ END %tmp.values.flat.map(&unlink);
 my $ffmpeg = "ffmpeg -nostdin -y";
 my $x265 = "-c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p";
 
-# prints stdout & stderr on error, drops stdout & stderr if they aren't requested
 &run.wrap(sub (*@args, *%opts) {
 	my %opts_ = %opts;
 	%opts_<out err> = %opts<out> || True, %opts<err> || True;
@@ -28,10 +27,12 @@ my $x265 = "-c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p";
 		@args.note if not %glb<verbose>;
 		callwith <true>, :out, :err;
 	} elsif my $proc = callwith(|@args, |%opts_) {
+		# drop stdout & stderr if not requested by caller
 		$proc.out.slurp(:close) if not %opts<out>;
 		$proc.err.slurp(:close) if not %opts<err>;
 		$proc;
 	} else {
+		# print stdout & stderr on error
 		note($proc.out.slurp(:close)) if $proc.out;
 		note($proc.err.slurp(:close)) if $proc.err;
 		die 'command failed: ' ~ @args;
@@ -112,7 +113,7 @@ sub MAIN(
 	Str :$cfgopts = "",
 	Str :$shader = "nlmeans_template",
 	Str :$plane = "LUMA",
-	Str :$corruption = "NOISE=3",
+	Str :$corruption = "NOISE=5",
 	Str :$tmpfile = "shader_test.tmp",
 	Str :$vk-device = "vulkan",
 	Str :$stats-dir = "stats",
