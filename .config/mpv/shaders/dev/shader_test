@@ -52,6 +52,7 @@ sub avg_ssim(@ssims) returns Hash {
 	}).map({.key => .value / @ssims.elems}).hash
 }
 
+# XXX support planes other than LUMA/CHROMA for NLM
 sub run_cfg(Str $cfgopts) {
 	my $in-shader = open :r, $*shader;
 	my $out-shader = open :w, %tmp<shader>;
@@ -107,9 +108,14 @@ sub MAIN(
 	Bool :$no-concat = False,
 	Bool :$force = False
 ) {
-	my $*statsfile = "$stats-dir/" ~
-		"$*shader:{$test-media.IO.basename}:$*plane:$corruption\:RZ=$realizations:$cfgopts.stats"
-		.subst(/\//, :g);
+	my @statsfile = (
+		# friendly shader name
+		$*shader.subst(/nlmeans/, "NLM", :g).subst(/(_template$|\.glsl$)/, :g),
+		# basename of test-media w/o extension
+		$test-media.IO.basename.subst(/\..*/, :g),
+		$*plane, $corruption, "RZ=$realizations", "CAT={(!$no-concat).Int}", $cfgopts
+	);
+	my $*statsfile = "$stats-dir/{@statsfile.join(':').subst(/\//, "_", :g)}.stats";
 
 	if $*statsfile.IO.e and not $force {
 		die "$*statsfile exists; either move/remove the file or use --force to overwrite";
