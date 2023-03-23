@@ -4,7 +4,6 @@
 # XXX implement minimization
 # XXX implement downscaling
 # XXX implement async
-# XXX add a way to configure the opts of injected shaders (e.g., configure GUIDED_OPTS while testing NLM)
 
 use MONKEY-SEE-NO-EVAL;
 use soft;

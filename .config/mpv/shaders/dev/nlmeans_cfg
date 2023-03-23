@@ -44,8 +44,18 @@ function robust_filter(name, scale) {
 	} else if (scale !~ /^[0-9][.]?[0-9]*$/) {
 		shader = scale
 		cmd = "./inject_shader -v OUT_TEX=" name " -v HOOKS=" HOOKS_
-		if (ENVIRON["GUIDED_OPTS"] && shader ~ /^guided/)
-			cmd = "./guided_cfg < " shader " | " cmd
+
+		GUIDED_OPTS = ""
+		for (i in opts) {
+			split(opts[i], var_val, "=")
+			unprefixed_key = var_val[1]
+			sub(".*_", "", unprefixed_key)
+			if (var_val[1] ~ /^GUIDED_/)
+				GUIDED_OPTS = GUIDED_OPTS ? (GUIDED_OPTS ":" unprefixed_key "=" var_val[2]) : (unprefixed_key "=" var_val[2])
+		}
+
+		if (shader ~ /guided/ && GUIDED_OPTS)
+			cmd = "env GUIDED_OPTS=" GUIDED_OPTS " ./guided_cfg < " shader " | " cmd
 		else
 			cmd = cmd " < " shader
 
@@ -168,7 +178,7 @@ BEGIN {
 		split(opts[i], var_val, "=")
 		if ($2 == var_val[1]) {
 			if ($2 ~ /^(RF|EP)$/)
-				print("#define", var_val[1], (var_val[2] > 0))
+				print("#define", var_val[1], (var_val[2] != 0))
 			else
 				print("#define", var_val[1], var_val[2])
 			next
