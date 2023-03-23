@@ -5,6 +5,7 @@
 # XXX implement downscaling
 # XXX implement async
 # XXX support non-yuv420p?
+# XXX add option to test multiple planes at a time? (sounds like a pain)
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
@@ -52,14 +53,14 @@ sub avg_ssim(@ssims) returns Hash() {
 	}).map({.key => .value / @ssims.elems})
 }
 
-# XXX support planes other than LUMA/CHROMA for NLM
 sub run_cfg(Str $cfgopts) {
 	my $in-shader = open :r, $*shader;
 	my $out-shader = open :w, %tmp<shader>;
 	given $*shader {
 		when /nlmeans/ {
 			run <./nlmeans_cfg>, :in($in-shader), :out($out-shader),
-				:env("NLM_$*plane" => $cfgopts, "NLM_OPTS" => "HOOKS=$*plane");
+				:env("NLM_{$*plane eq 'LUMA' ?? 'LUMA' !! 'CHROMA'}" => $cfgopts,
+					"NLM_OPTS" => "HOOKS=$*plane");
 		}
 		when /guided/ {
 			run <./guided_cfg>, :in($in-shader), :out($out-shader),
