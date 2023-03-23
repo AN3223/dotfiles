@@ -97,7 +97,7 @@ sub stats($cfgopts, %ssim, *%opts) {
 }
 
 sub concat_realizations() {
-	my $new-corrupt = "%glb<tmp>.corrupt.mkv";
+	my $new-corrupt = %glb<tmp> ~ ".corrupt.mkv";
 	my $vf = "concat={%tmp<corrupt>.elems},setpts=N/(FRAME_RATE*TB)";
 
 	note('Concatenating corrupt test media files...');
@@ -127,7 +127,7 @@ sub MAIN(
 
 	my @statsfile = (
 		# friendly shader name
-		$shader.subst(/nlmeans/, "NLM", :g).subst(/(_template$|\.glsl$)/, :g),
+		%glb<shader>.subst(/nlmeans/, "NLM", :g).subst(/(_template$|\.glsl$)/, :g),
 		# basename of test-media w/o extension
 		$test-media.IO.basename.subst(/\..*/, :g),
 		%glb<plane>, $corruption, "RZ=$realizations", "CAT={(!$no-concat).Int}", $cfgopts
@@ -200,7 +200,11 @@ sub MAIN(
 
 	@cfgopts.race(:batch(1), :degree($jobs)).map(-> $cfgopts {
 		my $shader = run_cfg($cfgopts);
-		$cfgopts => avg_ssim(%tmp<corrupt>.map({shader_ssim($_, %tmp<media>, $shader)}));
+		my $out = $cfgopts => avg_ssim(%tmp<corrupt>.map({shader_ssim($_, %tmp<media>, $shader)}));
+
+		unlink $shader;
+		%tmp{$shader}:delete;
+		$out;
 	}).list.map({stats .key, .value, :append});
 }
 
