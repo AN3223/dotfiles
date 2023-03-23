@@ -4,6 +4,7 @@
 # XXX implement minimization
 # XXX implement downscaling
 # XXX implement async
+# XXX support non-yuv420p?
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
@@ -75,8 +76,7 @@ sub shader_ssim(Str $in1, Str $in2) {
 	parse_ssim($proc.out.slurp(:close));
 }
 
-# XXX flip arguments around
-sub stats(%ssim, $cfgopts, *%opts) {
+sub stats($cfgopts, %ssim, *%opts) {
 	my $s = "$cfgopts Y %ssim<Y> U %ssim<U> V %ssim<V> All %ssim<All>\n";
 	printf("$s");
 	spurt $*statsfile, $s, |%opts;
@@ -85,6 +85,8 @@ sub stats(%ssim, $cfgopts, *%opts) {
 sub concat_realizations() {
 	my $new-corrupt = "$*tmpfile.corrupt.mkv";
 	my $vf = "concat={%tmp<corrupt>.elems},setpts=N/(FRAME_RATE*TB)";
+
+	note('Concatenating corrupt test media files...');
 	run <<$ffmpeg -i {%tmp<corrupt>.join(' -i ')} -lavfi "$vf" $x265 "$new-corrupt">>;
 	%tmp<corrupt>.map(&unlink);
 	%tmp<corrupt> := ($new-corrupt);
@@ -95,16 +97,20 @@ sub MAIN(
 	Str :$cfgopts = "",
 	Str :$*shader = "nlmeans_template",
 	Str :$*plane = "LUMA",
-	Int :$realizations = 10,
+	Int :$realizations = 50,
 	Str :$corruption = "NOISE=3",
 	Str :$*tmpfile = "shader_test.tmp",
 	Str :$*vk-device = "vulkan",
+	Str :$stats-dir = "stats",
 	Bool :$*dry-run = False,
 	Bool :$*verbose = False,
 	Bool :$no-concat = False,
 	Bool :$force = False
 ) {
-	my $*statsfile = "stats/$*shader:$test-media:$*plane:$corruption\:RZ=$realizations:$cfgopts.stats";
+	my $*statsfile = "$stats-dir/" ~
+		"$*shader:{$test-media.IO.basename}:$*plane:$corruption\:RZ=$realizations:$cfgopts.stats"
+		.subst(/\//, :g);
+
 	if $*statsfile.IO.e and not $force {
 		die "$*statsfile exists; either move/remove the file or use --force to overwrite";
 	}
@@ -137,6 +143,7 @@ sub MAIN(
 		}
 	}
 
+	note('Measuring baseline...');
 	my %baseline;
 	if not $*dry-run {
 		my $vf-ssim = "-lavfi ssim=- -f null -";
@@ -144,7 +151,7 @@ sub MAIN(
 			.map({run <<$ffmpeg -i "%tmp<media>" -i "$_" $vf-ssim>>, :out})
 			.map({parse_ssim(.out.slurp(:close))});
 		%baseline = avg_ssim(@baseline.flat);
-		stats(%baseline, "BASELINE=$corruption");
+		stats "BASELINE=$corruption", %baseline;
 	}
 
 	# XXX doesn't work when only 1 parameter is specified
@@ -166,11 +173,12 @@ sub MAIN(
 	sprintf("Trying %d permutations...", (@cfgopts.elems || 1)).note;
 	@cfgopts.note if $*verbose;
 
+	exit if $*dry-run;
+
 	%tmp<shader> = "$*tmpfile.glsl";
 	for @cfgopts -> $cfgopts {
 		run_cfg($cfgopts);
-		stats avg_ssim(%tmp<corrupt>.map({shader_ssim($_, %tmp<media>)})),
-			$cfgopts, :append;
+		stats $cfgopts, avg_ssim(%tmp<corrupt>.map({shader_ssim($_, %tmp<media>)})), :append;
 	}
 }
 
