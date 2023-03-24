@@ -16,22 +16,19 @@ my $ffmpeg = "ffmpeg -nostdin -y";
 my $x265 = "-c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p";
 
 &run.wrap(sub (*@args, *%opts) returns Proc {
-	my %opts_ = %opts;
-
 	# drop stderr and/or stdout if they aren't requested
-	%opts_<out err> = %opts<out> || '/dev/null', %opts<err> || '/dev/null';
-
+	%opts<out> = False without %opts<out>;
+	%opts<err> = False without %opts<err>;
 	@args.note if %gbl<verbose>;
-
 	if %gbl<dry-run> {
 		@args.note if not %gbl<verbose>;
-		callwith <true>, :out('/dev/null'), :err('/dev/null');
-	} elsif my $proc = callwith(|@args, |%opts_) {
+		callwith <true>, :out(False), :err(False);
+	} elsif my $proc = callwith(|@args, |%opts) {
 		$proc;
 	} else {
 		# print stdout & stderr on error
-		note($proc.out.slurp(:close)) when $proc.out;
-		note($proc.err.slurp(:close)) when $proc.err;
+		note($proc.out.slurp(:close)) with $proc.out;
+		note($proc.err.slurp(:close)) with $proc.err;
 		die 'command failed: ' ~ @args;
 	}
 });
