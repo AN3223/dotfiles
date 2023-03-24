@@ -11,9 +11,10 @@ use soft;
 
 my %gbl;
 my %tmp;
+END %tmp.values.flat.map(&unlink);
 
 my $ffmpeg = "ffmpeg -nostdin -y";
-my $x265 = "-c:v libx265 -x265-params lossless=1 -pix_fmt yuv420p";
+my $ffv1 = "-c:v ffv1 -pix_fmt yuv420p";
 
 &run.wrap(sub (*@args, *%opts) returns Proc {
 	# drop stderr and/or stdout if they aren't requested
@@ -50,10 +51,12 @@ sub run_cfg(Str $cfgopts) returns Str {
 	loop { # ensure a unique filename
 		try { $out-shader = open(sprintf("%s.%d.glsl", %gbl<tmp>, 999.rand.Int), :rx); }
 		last if not $!;
+		$!.note if %gbl<verbose>;
 	}
+	# XXX occasionally errors w/ something about .IO being called on Any (maybe only when jobs > 1?)
+	my $path = $out-shader.IO.path;
 	LEAVE { $out-shader.close; $in-shader.close; }
 
-	# XXX output doesn't exist sometimes?
 	given %gbl<shader> {
 		when /nlmeans/ {
 			run <./nlmeans_cfg>, :in($in-shader), :out($out-shader),
@@ -66,13 +69,12 @@ sub run_cfg(Str $cfgopts) returns Str {
 		}
 	}
 
-	%tmp{$out-shader.IO.path} = $out-shader.IO.path;
+	%tmp{$path} = $path;
 }
 
 sub shader_ssim(Str $in1, Str $in2, Str $shader) returns Str {
-	my $vf = "hwupload,libplacebo=custom_shader_path=$shader,hwdownload,format=yuv420p[placebo];";
-	my $null = '-f null -';
-	my $proc = run <<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf [placebo]ssim=-" $null>>, :out;
+	my $vf = "hwupload,libplacebo=custom_shader_path=$shader,hwdownload,format=yuv420p[placebo]; [placebo]ssim=-";
+	my $proc = run <<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out;
 	$proc.out.slurp(:close);
 }
 
@@ -87,18 +89,18 @@ sub concat_realizations() {
 	note('Concatenating corrupt test media files...');
 	my $new-corrupt = %gbl<tmp> ~ ".corrupt.mkv";
 	my $vf = "concat={%tmp<corrupt>.elems},setpts=N/(FR*TB)";
-	run <<$ffmpeg -i {%tmp<corrupt>.join(' -i ')} -lavfi "$vf" $x265 "$new-corrupt">>;
+	# XXX should properly "quote" filenames
+	run <<$ffmpeg -i {%tmp<corrupt>.join(' -i ')} -lavfi "$vf" $ffv1 "$new-corrupt">>;
 	%tmp<corrupt>.map(&unlink);
 	%tmp<corrupt> := ($new-corrupt);
 }
 
-# XXX add short flags?
 sub MAIN(
 	Str $test-media,
 	Str :$cfgopts = "",
 	Str :$shader = "nlmeans_template",
 	Str :$plane = "LUMA",
-	Str :$corruption = "NOISE=5",
+	Str :$corruption = "NOISE=10",
 	Str :$tmpfile = "shader_test.tmp",
 	Str :$vk-device = "vulkan",
 	Str :$stats-dir = "stats",
@@ -131,7 +133,7 @@ sub MAIN(
 
 	note('Encoding test media...');
 	%tmp<media> = "%gbl<tmp>.mkv";
-	run <<$ffmpeg -i "$test-media" $x265 "%tmp<media>">>;
+	run <<$ffmpeg -i "$test-media" $ffv1 "%tmp<media>">>;
 
 	# XXX add a downscale corruption for testing upscalers
 	note('Corrupting test media...');
@@ -141,7 +143,7 @@ sub MAIN(
 			%tmp<corrupt> := (^$realizations).map({"%gbl<tmp>.corrupt$_.mkv"});
 			for ^$realizations {
 				my $vf = "noise=alls=$noise\:all_seed=$_\:allf=t";
-				run <<$ffmpeg -i "%tmp<media>" $x265 -vf "$vf" "%tmp<corrupt>[$_]">>;
+				run <<$ffmpeg -i "%tmp<media>" $ffv1 -vf "$vf" "%tmp<corrupt>[$_]">>;
 			}
 			concat_realizations() if not $no-concat;
 		}
@@ -190,7 +192,5 @@ sub MAIN(
 		unlink %tmp{$shader}:delete;
 		$cfgopts => avgssim($out);
 	}).list.map({stats .key, .value});
-
-	%tmp.values.flat.map(&unlink);
 }
 
