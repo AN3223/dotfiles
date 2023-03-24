@@ -54,7 +54,7 @@ sub run_cfg(Str $cfgopts) returns Str {
 		try { $out-shader = open(sprintf("%s.%d.glsl", %gbl<tmp>, 999.rand.Int), :rx); }
 		last if not $!;
 	}
-	LEAVE { $out-shader.flush; $out-shader.close; $in-shader.close; }
+	LEAVE { $out-shader.close; $in-shader.close; }
 
 	# XXX output doesn't exist sometimes?
 	given %gbl<shader> {
