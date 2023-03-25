@@ -5,6 +5,7 @@
 # XXX implement downscaling
 # XXX support testing on non-yuv420p?
 # XXX add option to test multiple planes at a time? (sounds like a pain)
+# XXX make a script for plotting stats files
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
@@ -72,6 +73,7 @@ sub run_cfg(Str $cfgopts) returns Str {
 	%tmp{$path} = $path;
 }
 
+# XXX Type check failed in binding to parameter '$in2'; expected Str but got Any (Any)
 sub shader_ssim(Str $in1, Str $in2, Str $shader) returns Str {
 	my $vf = "hwupload,libplacebo=custom_shader_path=$shader,hwdownload,format=yuv420p[placebo]; [placebo]ssim=-";
 	my $proc = run <<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out;
@@ -105,7 +107,6 @@ sub MAIN(
 	Str :$vk-device = "vulkan",
 	Str :$stats-dir = "stats",
 	Int :$realizations = 10,
-	Int :$jobs = 4,
 	Bool :$dry-run = False,
 	Bool :$verbose = False,
 	Bool :$no-concat = False,
@@ -121,6 +122,7 @@ sub MAIN(
 		%gbl<plane>, $corruption, "RZ=$realizations", "CAT={(!$no-concat).Int}", $cfgopts
 	);
 	my $statsfile = "$stats-dir/{@statsfile.join(':').trans('/' => '_')}.stats";
+	# XXX don't make a file if --dry-run
 	if $force {
 		%gbl<statsfile> = open $statsfile, :w;
 	} else {
@@ -186,7 +188,7 @@ sub MAIN(
 
 	exit if %gbl<dry-run>;
 
-	@cfgopts.race(:batch(1), :degree($jobs)).map(-> $cfgopts {
+	@cfgopts.map(-> $cfgopts {
 		my $shader = run_cfg($cfgopts);
 		my $out = %tmp<corrupt>.map({shader_ssim($_, %tmp<media>, $shader)}).join("\n");
 		unlink %tmp{$shader}:delete;
