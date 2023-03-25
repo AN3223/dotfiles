@@ -6,6 +6,8 @@
 # XXX support testing on non-yuv420p?
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
+# XXX document this script better
+# XXX add a way to specify multiple test media files (dir?) & concat them all for performance
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
@@ -54,7 +56,6 @@ sub run_cfg(Str $cfgopts) returns Str {
 		last if not $!;
 		$!.note if %gbl<verbose>;
 	}
-	# XXX occasionally errors w/ something about .IO being called on Any (maybe only when jobs > 1?)
 	my $path = $out-shader.IO.path;
 	LEAVE { $out-shader.close; $in-shader.close; }
 
@@ -73,7 +74,6 @@ sub run_cfg(Str $cfgopts) returns Str {
 	%tmp{$path} = $path;
 }
 
-# XXX Type check failed in binding to parameter '$in2'; expected Str but got Any (Any)
 sub shader_ssim(Str $in1, Str $in2, Str $shader) returns Str {
 	my $vf = "hwupload,libplacebo=custom_shader_path=$shader,hwdownload,format=yuv420p[placebo]; [placebo]ssim=-";
 	my $proc = run <<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out;
@@ -124,15 +124,14 @@ sub MAIN(
 	my $statsfile = "$stats-dir/{@statsfile.join(':').trans('/' => '_')}.stats";
 
 	if not %gbl<dry-run> {
+		run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
 		if $force {
 			%gbl<statsfile> = open $statsfile, :w;
 		} else {
-			%gbl<statsfile> = open $statsfile, :x;
+			die 'file exists' if "$statsfile.bz2".IO.e;
+			try { %gbl<statsfile> = open $statsfile, :x; }
+			die 'file exists' if $!;
 		}
-	}
-
-	if not %gbl<dry-run> {
-		run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
 	}
 
 	note('Encoding test media...');
@@ -140,6 +139,7 @@ sub MAIN(
 	run <<$ffmpeg -i "$test-media" $ffv1 "%tmp<media>">>;
 
 	# XXX add a downscale corruption for testing upscalers
+	# XXX add a "bring your own" corruption where you can specify your own corrupt test media
 	note('Corrupting test media...');
 	given $corruption {
 		when /^NOISE\=/ {
@@ -196,5 +196,8 @@ sub MAIN(
 		unlink %tmp{$shader}:delete;
 		$cfgopts => avgssim($out);
 	}).list.map({stats .key, .value});
+
+	%gbl<statsfile>.close();
+	run <bzip2 -9>, ('-f' if $force), %gbl<statsfile>.IO.path;
 }
 
