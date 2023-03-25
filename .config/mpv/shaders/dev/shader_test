@@ -122,11 +122,13 @@ sub MAIN(
 		%gbl<plane>, $corruption, "RZ=$realizations", "CAT={(!$no-concat).Int}", $cfgopts
 	);
 	my $statsfile = "$stats-dir/{@statsfile.join(':').trans('/' => '_')}.stats";
-	# XXX don't make a file if --dry-run
-	if $force {
-		%gbl<statsfile> = open $statsfile, :w;
-	} else {
-		%gbl<statsfile> = open $statsfile, :x;
+
+	if not %gbl<dry-run> {
+		if $force {
+			%gbl<statsfile> = open $statsfile, :w;
+		} else {
+			%gbl<statsfile> = open $statsfile, :x;
+		}
 	}
 
 	if not %gbl<dry-run> {
