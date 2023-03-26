@@ -91,8 +91,7 @@ sub concat_realizations() {
 	note('Concatenating corrupt test media files...');
 	my $new-corrupt = %gbl<tmp> ~ ".corrupt.mkv";
 	my $vf = "concat={%tmp<corrupt>.elems},setpts=N/(FR*TB)";
-	# XXX should properly "quote" filenames
-	run <<$ffmpeg -i {%tmp<corrupt>.join(' -i ')} -lavfi "$vf" $ffv1 "$new-corrupt">>;
+	run <<$ffmpeg>>, %tmp<corrupt>.map({('-i', $_)}).flat, <<-lavfi "$vf" $ffv1 "$new-corrupt">>;
 	%tmp<corrupt>.map(&unlink);
 	%tmp<corrupt> := ($new-corrupt);
 }
