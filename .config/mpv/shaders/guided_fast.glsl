@@ -16,7 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//desc: Tuned for anime.
+//desc: Self-guided. Fast.
 
 /* The radius can be adjusted with the MEANI stage's downscaling factor. 
  * Higher numbers give a bigger radius.
@@ -35,8 +35,8 @@
 //!HOOK RGB
 //!DESC Guided filter (PREI)
 //!BIND HOOKED
-//!WIDTH HOOKED.w 2.0 /
-//!HEIGHT HOOKED.h 2.0 /
+//!WIDTH HOOKED.w 1.125 /
+//!HEIGHT HOOKED.h 1.125 /
 //!SAVE PREI
 
 vec4 hook()
@@ -49,8 +49,8 @@ vec4 hook()
 //!HOOK RGB
 //!DESC Guided filter (I)
 //!BIND PREI
-//!WIDTH HOOKED.w 1.0 /
-//!HEIGHT HOOKED.h 1.0 /
+//!WIDTH HOOKED.w 2 /
+//!HEIGHT HOOKED.h 2 /
 //!SAVE I
 
 vec4 hook()
@@ -77,8 +77,8 @@ vec4 hook()
 //!HOOK RGB
 //!DESC Guided filter (MEANI)
 //!BIND I
-//!WIDTH I.w 2.0 /
-//!HEIGHT I.h 2.0 /
+//!WIDTH I.w 1.125 /
+//!HEIGHT I.h 1.125 /
 //!SAVE MEANI
 
 vec4 hook()
@@ -169,7 +169,7 @@ vec4 hook()
 //!HEIGHT I.h
 //!SAVE A
 
-#define E 0.001
+#define E 0.0013
 
 vec4 hook()
 {

@@ -121,7 +121,7 @@ BEGIN {
 	for (p in planes) {
 		# sets defaults for RF/EP, should be the same as nlmeans_template
 		# XXX read defaults from elsewhere?
-		RF = (planes[p] == "LUMA") ? "../guided_s.glsl" : "SHARE_RF_LUMA"
+		RF = (planes[p] == "LUMA") ? "../guided.glsl" : "SHARE_RF_LUMA"
 		EP = (planes[p] == "LUMA") ? 3.0 : 0
 
 		RF_parsed = EP_parsed = 0 # prevent parsing opts multiple times

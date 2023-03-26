@@ -86,7 +86,7 @@
  * 	- PD
  */
 
-// The following is shader code injected from guided_s.glsl
+// The following is shader code injected from guided.glsl
 /* vi: ft=c
  *
  * Copyright (c) 2022 an3223 <ethanr2048@gmail.com>
@@ -105,25 +105,28 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//desc: "Self-guided" guided filter
+//desc: Guided filter guided by the downscaled image
 
-/* The radius can be adjusted with the MEANIP stage's downscaling factor. 
+/* The radius can be adjusted with the MEANI stage's downscaling factor. 
  * Higher numbers give a bigger radius.
  *
  * The E variable can be found in the A stage.
  *
- * The subsampling (fast guided filter) can be adjusted with the IP stage's 
+ * The subsampling (fast guided filter) can be adjusted with the I stage's 
  * downscaling factor. Higher numbers are faster.
+ *
+ * The guide's subsampling can be adjusted with the PREI stage's downscaling 
+ * factor. Higher numbers downscale more.
  */
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (IP)
+//!DESC Guided filter (PREI)
 //!BIND HOOKED
-//!WIDTH HOOKED.w 1.0 /
-//!HEIGHT HOOKED.h 1.0 /
-//!SAVE _INJ_IP
+//!WIDTH HOOKED.w 1.25 /
+//!HEIGHT HOOKED.h 1.25 /
+//!SAVE _INJ_PREI
 
 vec4 hook()
 {
@@ -133,61 +136,134 @@ vec4 hook()
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (MEANIP)
-//!BIND _INJ_IP
-//!WIDTH _INJ_IP.w 2.0 /
-//!HEIGHT _INJ_IP.h 2.0 /
-//!SAVE _INJ_MEANIP
+//!DESC Guided filter (I)
+//!BIND _INJ_PREI
+//!WIDTH HOOKED.w 1.0 /
+//!HEIGHT HOOKED.h 1.0 /
+//!SAVE _INJ_I
 
 vec4 hook()
 {
-return _INJ_IP_texOff(0);
+return _INJ_PREI_texOff(0);
 }
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (_INJ_IP_SQ)
-//!BIND _INJ_IP
-//!WIDTH _INJ_IP.w
-//!HEIGHT _INJ_IP.h
-//!SAVE _INJ_IP_SQ
+//!DESC Guided filter (P)
+//!BIND HOOKED
+//!WIDTH _INJ_I.w
+//!HEIGHT _INJ_I.h
+//!SAVE _INJ_P
 
 vec4 hook()
 {
-return _INJ_IP_texOff(0) * _INJ_IP_texOff(0);
+	 return HOOKED_texOff(0); 
 }
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (CORRIP)
-//!BIND _INJ_IP_SQ
-//!WIDTH _INJ_MEANIP.w
-//!HEIGHT _INJ_MEANIP.h
-//!SAVE _INJ_CORRIP
+//!DESC Guided filter (MEANI)
+//!BIND _INJ_I
+//!WIDTH _INJ_I.w 1.5 /
+//!HEIGHT _INJ_I.h 1.5 /
+//!SAVE _INJ_MEANI
 
 vec4 hook()
 {
-return _INJ_IP_SQ_texOff(0);
+return _INJ_I_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!DESC Guided filter (MEANP)
+//!BIND _INJ_P
+//!WIDTH _INJ_MEANI.w
+//!HEIGHT _INJ_MEANI.h
+//!SAVE _INJ_MEANP
+
+vec4 hook()
+{
+return _INJ_P_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!DESC Guided filter (_INJ_I_SQ)
+//!BIND _INJ_I
+//!WIDTH _INJ_I.w
+//!HEIGHT _INJ_I.h
+//!SAVE _INJ_I_SQ
+
+vec4 hook()
+{
+return _INJ_I_texOff(0) * _INJ_I_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!DESC Guided filter (_INJ_IXP)
+//!BIND _INJ_I
+//!BIND _INJ_P
+//!WIDTH _INJ_I.w
+//!HEIGHT _INJ_I.h
+//!SAVE _INJ_IXP
+
+vec4 hook()
+{
+return _INJ_I_texOff(0) * _INJ_P_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!DESC Guided filter (CORRI)
+//!BIND _INJ_I_SQ
+//!WIDTH _INJ_MEANI.w
+//!HEIGHT _INJ_MEANI.h
+//!SAVE _INJ_CORRI
+
+vec4 hook()
+{
+return _INJ_I_SQ_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!DESC Guided filter (CORRP)
+//!BIND _INJ_IXP
+//!WIDTH _INJ_MEANI.w
+//!HEIGHT _INJ_MEANI.h
+//!SAVE _INJ_CORRP
+
+vec4 hook()
+{
+return _INJ_IXP_texOff(0);
 }
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
 //!DESC Guided filter (A)
-//!BIND _INJ_MEANIP
-//!BIND _INJ_CORRIP
-//!WIDTH _INJ_IP.w
-//!HEIGHT _INJ_IP.h
+//!BIND _INJ_MEANI
+//!BIND _INJ_MEANP
+//!BIND _INJ_CORRI
+//!BIND _INJ_CORRP
+//!WIDTH _INJ_I.w
+//!HEIGHT _INJ_I.h
 //!SAVE _INJ_A
 
-#define E 0.001
+#define E 0.0013
 
 vec4 hook()
 {
-vec4 var = _INJ_CORRIP_texOff(0) - _INJ_MEANIP_texOff(0) * _INJ_MEANIP_texOff(0);
-	 vec4 cov = var; 
+vec4 var = _INJ_CORRI_texOff(0) - _INJ_MEANI_texOff(0) * _INJ_MEANI_texOff(0);
+vec4 cov = _INJ_CORRP_texOff(0) - _INJ_MEANI_texOff(0) * _INJ_MEANP_texOff(0);
 	 return cov / (var + E); 
 }
 
@@ -196,14 +272,15 @@ vec4 var = _INJ_CORRIP_texOff(0) - _INJ_MEANIP_texOff(0) * _INJ_MEANIP_texOff(0)
 //!HOOK RGB
 //!DESC Guided filter (B)
 //!BIND _INJ_A
-//!BIND _INJ_MEANIP
-//!WIDTH _INJ_IP.w
-//!HEIGHT _INJ_IP.h
+//!BIND _INJ_MEANI
+//!BIND _INJ_MEANP
+//!WIDTH _INJ_I.w
+//!HEIGHT _INJ_I.h
 //!SAVE _INJ_B
 
 vec4 hook()
 {
-return _INJ_MEANIP_texOff(0) - _INJ_A_texOff(0) * _INJ_MEANIP_texOff(0);
+return _INJ_MEANP_texOff(0) - _INJ_A_texOff(0) * _INJ_MEANI_texOff(0);
 }
 
 //!HOOK LUMA
@@ -211,8 +288,8 @@ return _INJ_MEANIP_texOff(0) - _INJ_A_texOff(0) * _INJ_MEANIP_texOff(0);
 //!HOOK RGB
 //!DESC Guided filter (MEANA)
 //!BIND _INJ_A
-//!WIDTH _INJ_MEANIP.w
-//!HEIGHT _INJ_MEANIP.h
+//!WIDTH _INJ_MEANI.w
+//!HEIGHT _INJ_MEANI.h
 //!SAVE _INJ_MEANA
 
 vec4 hook()
@@ -225,8 +302,8 @@ return _INJ_A_texOff(0);
 //!HOOK RGB
 //!DESC Guided filter (MEANB)
 //!BIND _INJ_B
-//!WIDTH _INJ_MEANIP.w
-//!HEIGHT _INJ_MEANIP.h
+//!WIDTH _INJ_MEANI.w
+//!HEIGHT _INJ_MEANI.h
 //!SAVE _INJ_MEANB
 
 vec4 hook()
@@ -248,7 +325,7 @@ vec4 hook()
 return _INJ_MEANA_texOff(0) * HOOKED_texOff(0) + _INJ_MEANB_texOff(0);
 }
 
-// End of source code injected from guided_s.glsl
+// End of source code injected from guided.glsl
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
@@ -308,7 +385,7 @@ vec4 hook()
  * patch/research sizes.
  */
 #ifdef LUMA_raw
-#define S 2.25
+#define S 20.0
 #define P 3
 #define R 5
 #else
@@ -331,12 +408,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 2
-#define ASF 4
-#define ASP 1
+#define ASF 1.0
+#define ASP 4.0
 #else
 #define AS 2
-#define ASF 4
-#define ASP 1
+#define ASF 1.0
+#define ASP 4.0
 #endif
 
 /* Starting weight
@@ -468,13 +545,13 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SS 0.25
-#define SD vec3(1,1,1)
+#define SD vec3(1,1,1.5)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
 #else
 #define SS 0.25
-#define SD vec3(1,1,1)
+#define SD vec3(1,1,1.5)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)

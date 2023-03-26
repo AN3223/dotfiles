@@ -1,7 +1,7 @@
 #!/usr/bin/env raku
 
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
-# XXX implement minimization
+# XXX implement maximization
 # XXX implement downscaling
 # XXX support testing on non-yuv420p?
 # XXX add option to test multiple planes at a time? (sounds like a pain)
@@ -198,6 +198,11 @@ sub MAIN(
 	}).list.map({stats .key, .value});
 
 	%gbl<statsfile>.close();
+
+	note("\nSorted worst to best:\n");
+	my $proc = run <sort -k 9 -n>, :in(open %gbl<statsfile>.IO.path), :out;
+	note($proc.out.slurp(:close).split("\n")[*-15..*].join("\n"));
+
 	run <bzip2 -9>, ('-f' if $force), %gbl<statsfile>.IO.path;
 }
 

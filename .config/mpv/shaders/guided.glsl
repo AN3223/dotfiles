@@ -77,8 +77,8 @@ vec4 hook()
 //!HOOK RGB
 //!DESC Guided filter (MEANI)
 //!BIND I
-//!WIDTH I.w 2.0 /
-//!HEIGHT I.h 2.0 /
+//!WIDTH I.w 1.5 /
+//!HEIGHT I.h 1.5 /
 //!SAVE MEANI
 
 vec4 hook()
@@ -169,7 +169,7 @@ vec4 hook()
 //!HEIGHT I.h
 //!SAVE A
 
-#define E 0.001
+#define E 0.0013
 
 vec4 hook()
 {

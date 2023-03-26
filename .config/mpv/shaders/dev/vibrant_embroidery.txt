@@ -1,0 +1,12 @@
+close-up photo of embroidery, vibrant, colorful, beautiful, intricate 4k, hq, hd
+Negative prompt: noise, white noise, grainy, film grain, gaussian noise
+Steps: 10, Sampler: UniPC, CFG scale: 4, Seed: 499922504, Size: 768x768, Model hash: 7aeb8e7d8c, Model: v2-1_768-ema-pruned-f16, UniPC variant: bh2
+
+Latent upscaled with:
+
+close-up photo of embroidery on a wooden table, vibrant, colorful, beautiful, intricate, 4k, hq, hd
+Negative prompt: noise, white noise, grainy, film grain, gaussian noise
+Steps: 10, Sampler: DPM++ SDE Karras, CFG scale: 4, Seed: 3557530394, Size: 1080x1080, Model hash: 7aeb8e7d8c, Model: v2-1_768-ema-pruned-f16, Denoising strength: 0.7
+
+...followed by a series of img2img and hand editing in GIMP
+

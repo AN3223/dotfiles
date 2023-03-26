@@ -1,0 +1,6 @@
+This is a collection of outputs from shader_test (SSIM measurements taken on 
+different shaders with different settings).
+
+Please note that any of these stats may not be useful and may be out of date. 
+See the observations file in the parent directory for more of a summary.
+

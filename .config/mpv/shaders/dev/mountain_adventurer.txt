@@ -1,0 +1,10 @@
+redhead girl protagonist in the style of a comic book, epic mountain landscape, vibrant
+Negative prompt: nsfw, sexy
+Steps: 10, Sampler: UniPC, CFG scale: 4, Seed: 2943136387, Size: 512x512, Model hash: 4d651c7638, Model: expmixLine_v20, UniPC variant: bh2
+
+Output was latent upscaled with:
+
+redhead girl protagonist in the style of a comic book, epic mountain landscape, vibrant
+Negative prompt: nsfw, sexy
+Steps: 10, Sampler: DPM++ SDE Karras, CFG scale: 4, Seed: 2943136387, Size: 1080x1080, Model hash: 4d651c7638, Model: expmixLine_v20, Variation seed: 431682199, Variation seed strength: 0.5, Seed resize from: 512x512, Denoising strength: 0.7
+

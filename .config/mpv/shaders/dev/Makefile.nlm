@@ -23,23 +23,16 @@ HQX_DESC=Very slow, should offer the best quality.
 HQX_LUMA=P=5:$(HQ_LUMA)
 HQX=P=5:RI=3:$(HQ)
 
-ANIME_DESC=Tuned for anime/cartoons, may be useful for other content.
-ANIME_LUMA=S=3:PS=3:SS=0.0:EP=0
-ANIME=S=3:SS=0.0
-
-ANIME_MEDIUM_DESC=Slow, tuned for anime/cartoons with ringing and/or medium noise, may be useful for other content.
-ANIME_MEDIUM_LUMA=$(ANIME_LUMA):$(MEDIUM)
-ANIME_MEDIUM=$(ANIME):$(MEDIUM)
-
 TEMPORAL_DESC=Very experimental and buggy, limited to vo=gpu-next.
 TEMPORAL_LUMA=T=2:WD=1:$(NO_ROTATE)
 TEMPORAL_OPTS=T_FRAME_LIMIT=3:T_RES_W=1920:T_RES_H=1080
 
 SHARPEN_ONLY_DESC=Sharpen without denoising.
-SHARPEN_ONLY=AS=2:ASF=4:ASP=1
+SHARPEN_ONLY=AS=2
 
+# XXX not adequate
 SHARPEN_DENOISE_DESC=Sharpen and denoise.
-SHARPEN_DENOISE=AS=1:S=10:ASF=1.5
+SHARPEN_DENOISE=AS=1
 
 2X_DESC=Experimental upscaler
 2X_LUMA=S=1.5:RF=../FSRCNNX_x2_8-0-4-1.glsl:SF=2:$(MEDIUM):EP=0
@@ -52,7 +45,7 @@ LGC_OPTS=HOOKS=CHROMA:WIDTH=LUMA.w:HEIGHT=LUMA.h
 
 LUMA_DESC=Luma only, saves some time by not processing the chroma plane.
 
-all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_2x.glsl ../nlmeans_heavy.glsl ../nlmeans_medium.glsl ../nlmeans_anime.glsl ../nlmeans_anime_medium.glsl ../nlmeans_temporal.glsl ../nlmeans_luma.glsl ../nlmeans_hq.glsl ../nlmeans_hq_heavy.glsl ../nlmeans_hq_medium.glsl ../nlmeans_hqx.glsl ../nlmeans_anime_hq.glsl ../nlmeans_anime_hq_medium.glsl ../nlmeans_lq.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../nlmeans_hq_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl
+all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_2x.glsl ../nlmeans_heavy.glsl ../nlmeans_medium.glsl ../nlmeans_temporal.glsl ../nlmeans_luma.glsl ../nlmeans_hq.glsl ../nlmeans_hq_heavy.glsl ../nlmeans_hq_medium.glsl ../nlmeans_hqx.glsl ../nlmeans_lq.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../nlmeans_hq_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl
 
 ../nlmeans.glsl: nlmeans_template
 	env NLM_DESC="$(DEFAULT_DESC)" NLM_FILE=$@ ./nlmeans_cfg < $? > $@
@@ -64,10 +57,6 @@ all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_2x.glsl ../nlmeans_heavy.gls
 	env NLM_DESC="$(HEAVY_DESC)" NLM_FILE="$@" NLM_LUMA="$(HEAVY)" NLM_CHROMA="$(HEAVY)" ./nlmeans_cfg < $? > $@
 ../nlmeans_medium.glsl: nlmeans_template
 	env NLM_DESC="$(MEDIUM_DESC)" NLM_FILE="$@" NLM_LUMA="$(MEDIUM)" NLM_CHROMA="$(MEDIUM)" ./nlmeans_cfg < $? > $@
-../nlmeans_anime.glsl: nlmeans_template
-	env NLM_DESC="$(ANIME_DESC)" NLM_FILE="$@" NLM_LUMA="$(ANIME_LUMA)" NLM_CHROMA="$(ANIME)" ./nlmeans_cfg < $? > $@
-../nlmeans_anime_medium.glsl: nlmeans_template
-	env NLM_DESC="$(ANIME_MEDIUM_DESC)" NLM_FILE="$@" NLM_LUMA="$(ANIME_MEDIUM_LUMA)" NLM_CHROMA="$(ANIME_MEDIUM)" ./nlmeans_cfg < $? > $@
 ../nlmeans_temporal.glsl: nlmeans_template
 	env NLM_DESC="$(TEMPORAL_DESC)" NLM_FILE="$@" NLM_LUMA="$(TEMPORAL_LUMA)" NLM_OPTS="$(TEMPORAL_OPTS)" ./nlmeans_cfg < $? > $@
 ../nlmeans_luma.glsl: nlmeans_template
@@ -80,10 +69,6 @@ all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_2x.glsl ../nlmeans_heavy.gls
 	env NLM_DESC="$(HQ_DESC) $(MEDIUM_DESC)" NLM_FILE="$@" NLM_LUMA="$(MEDIUM):$(HQ_LUMA)" NLM_CHROMA="$(MEDIUM):$(HQ)" ./nlmeans_cfg < $? > $@
 ../nlmeans_hqx.glsl: nlmeans_template
 	env NLM_DESC="$(HQX_DESC)" NLM_FILE="$@" NLM_LUMA="$(HQX_LUMA)" NLM_CHROMA="$(HQX)" ./nlmeans_cfg < $? > $@
-../nlmeans_anime_hq.glsl: nlmeans_template
-	env NLM_DESC="$(ANIME_DESC) $(HQ_DESC)" NLM_FILE="$@" NLM_LUMA="$(HQ_LUMA):$(ANIME_LUMA)" NLM_CHROMA="$(HQ):$(ANIME)" ./nlmeans_cfg < $? > $@
-../nlmeans_anime_hq_medium.glsl: nlmeans_template
-	env NLM_DESC="$(ANIME_MEDIUM_DESC) $(HQ_DESC)" NLM_FILE="$@" NLM_LUMA="$(HQ_LUMA):$(ANIME_MEDIUM_LUMA)" NLM_CHROMA="$(HQ):$(ANIME_MEDIUM)" ./nlmeans_cfg < $? > $@
 ../nlmeans_lq.glsl: nlmeans_template
 	env NLM_DESC="$(LQ_DESC)" NLM_FILE="$@" NLM_LUMA="$(LQ_LUMA)" NLM_CHROMA="$(LQ)" ./nlmeans_cfg < $? > $@
 ../nlmeans_sharpen_denoise.glsl: nlmeans_template

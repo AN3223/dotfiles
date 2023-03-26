@@ -2,22 +2,21 @@
 # Usually used like: ./Makefile.guided -B
 
 SELF_DESC=Self-guided.
+# XXX non-self desc
 
 LGC_DESC=Luma-guided-chroma denoising.
 LGC=I=SHARE_LUMA:HOOKS=CHROMA:MEANI=1.125:E=0.005
 
 FAST_DESC=Fast.
-FAST=IP=2
+FAST=I=2:MEANI=1.125:PREI=1.125
+FAST_S=IP=2:MEANIP=1.125:E=0.001
 
-ANIME_DESC=Tuned for anime.
-ANIME=PREI=2.0
-
-all: ../guided_s_fast.glsl ../guided_lgc.glsl ../guided_anime.glsl
+all: ../guided_fast.glsl ../guided_s_fast.glsl ../guided_lgc.glsl
 
 ../guided_s_fast.glsl: ../guided_s.glsl
+	env GUIDED_DESC="$(FAST_DESC)" GUIDED_OPTS="$(FAST_S)" ./guided_cfg < $? > $@
+../guided_fast.glsl: ../guided.glsl
 	env GUIDED_DESC="$(SELF_DESC) $(FAST_DESC)" GUIDED_OPTS="$(FAST)" ./guided_cfg < $? > $@
 ../guided_lgc.glsl: ../guided.glsl
 	env GUIDED_DESC="$(LGC_DESC)" GUIDED_OPTS="$(LGC)" ./guided_cfg < $? > $@
-../guided_anime.glsl: ../guided.glsl
-	env GUIDED_DESC="$(ANIME_DESC)" GUIDED_OPTS="$(ANIME)" ./guided_cfg < $? > $@
 

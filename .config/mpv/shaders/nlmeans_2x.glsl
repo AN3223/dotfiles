@@ -567,11 +567,11 @@ vec4 hook()
 #ifdef LUMA_raw
 #define AS 0
 #define ASF 1.0
-#define ASP 2.0
+#define ASP 4.0
 #else
 #define AS 0
 #define ASF 1.0
-#define ASP 2.0
+#define ASP 4.0
 #endif
 
 /* Starting weight
@@ -703,13 +703,13 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SS 0.25
-#define SD vec3(1,1,1)
+#define SD vec3(1,1,1.5)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
 #else
 #define SS 0.25
-#define SD vec3(1,1,1)
+#define SD vec3(1,1,1.5)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
