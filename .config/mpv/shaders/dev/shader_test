@@ -22,12 +22,12 @@ my $ffv1 = "-c:v ffv1 -pix_fmt yuv420p";
 # drop stderr and/or stdout if they aren't requested
 # die and print stdout & stderr if command fails
 &run.wrap(sub (*@args, *%opts) returns Proc {
-	%opts<out> = False without %opts<out>;
-	%opts<err> = False without %opts<err>;
+	%opts<out> = True without %opts<out>;
+	%opts<err> = True without %opts<err>;
 	note(@args) if %gbl<verbose>;
 	if %gbl<dry-run> {
 		note(@args) if not %gbl<verbose>;
-		callwith <true>, :out(False), :err(False);
+		Proc; # satisfy type check
 	} elsif my $proc = callwith(|@args, |%opts) {
 		$proc;
 	} else {
@@ -37,15 +37,11 @@ my $ffv1 = "-c:v ffv1 -pix_fmt yuv420p";
 	}
 });
 
-# takes a list of hashes outputs an average of their keys
-sub hashavg(@hashes) returns Hash {
-	@hashes.reduce({$^acc >>+<< $^x}) >>/>> @hashes.elems;
-}
-
+# parses output from ffmpeg's SSIM filter and outputs an average
 sub avgssim(Str $out) returns Hash {
-	hashavg($out.split("\n", :skip-empty).map({
-		.split(' ')[1..*-2]>>.split(':').flat.hash
-	}))
+	$out ==> split("\n", :skip-empty)
+	     ==> map({ .split(' ')[1..*-2]>>.split(':').flat.hash })
+	     ==> { [>>+<<] $_ >>/>> $_.elems }() # hash average
 }
 
 # dispatches the appropriate cfg script (if any) w/ $cfgopts
@@ -56,7 +52,7 @@ sub run_cfg(Str $cfgopts) returns Str {
 	my $in-shader = open %gbl<shader>;
 	my $out-shader;
 	loop { # ensure a unique filename
-		try { $out-shader = open(sprintf("%s.%d.glsl", %gbl<tmp>, 999.rand.Int), :rx); }
+		try { $out-shader = open("{%gbl<tmp>}.{999.rand.Int}.glsl", :rx); }
 		last if not $!;
 		note($!) if %gbl<verbose>;
 	}
@@ -82,8 +78,7 @@ sub run_cfg(Str $cfgopts) returns Str {
 
 sub shader_ssim(Str $in1, Str $in2, Str $shader) returns Str {
 	my $vf = "hwupload,libplacebo=custom_shader_path=$shader,hwdownload,format=yuv420p[placebo]; [placebo]ssim=-";
-	my $proc = run <<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out;
-	$proc.out.slurp(:close);
+	run(<<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out).out.slurp(:close);
 }
 
 sub stats($cfgopts, %ssim) {
@@ -98,7 +93,7 @@ sub concat_realizations() {
 	my $vf = "concat={%tmp<corrupt>.elems},setpts=N/(FR*TB)";
 
 	note('Concatenating corrupt test media files...');
-	run <<$ffmpeg>>, %tmp<corrupt>.map({('-i', $_)}).flat, <<-lavfi "$vf" $ffv1 "$new-corrupt">>;
+	run <<$ffmpeg>>, %tmp<corrupt>.map({ ('-i', $_) }).flat, <<-lavfi "$vf" $ffv1 "$new-corrupt">>;
 
 	%tmp<corrupt>.map(&unlink);
 	%tmp<corrupt> := ($new-corrupt);
@@ -135,9 +130,9 @@ sub MAIN(
 		if $force {
 			%gbl<statsfile> = open $statsfile, :w;
 		} else {
-			die 'file exists' if "$statsfile.bz2".IO.e;
+			die 'stats file exists' if "$statsfile.bz2".IO.e;
 			try { %gbl<statsfile> = open $statsfile, :x; }
-			die 'file exists' if $!;
+			die 'stats file exists' if $!;
 		}
 	}
 
@@ -151,7 +146,7 @@ sub MAIN(
 	given $corruption {
 		when /^NOISE\=/ {
 			my $noise = $corruption.split('=')[1];
-			%tmp<corrupt> := (^$realizations).map({"%gbl<tmp>.corrupt$_.mkv"});
+			%tmp<corrupt> := (^$realizations).map({ "%gbl<tmp>.corrupt$_.mkv" });
 			for ^$realizations {
 				my $vf = "noise=alls=$noise\:all_seed=$_\:allf=t";
 				run <<$ffmpeg -i "%tmp<media>" $ffv1 -vf "$vf" "%tmp<corrupt>[$_]">>;
@@ -169,47 +164,47 @@ sub MAIN(
 	note('Measuring baseline...');
 	my %baseline;
 	if not %gbl<dry-run> {
-		my $baseline = %tmp<corrupt>
-			.map({run(<<$ffmpeg -i "%tmp<media>" -i "$_" -lavfi ssim=- -f null ->>, :out).out.slurp(:close)})
-			.join("\n");
-		%baseline = avgssim($baseline);
+		%tmp<corrupt>
+			.map({run(<<$ffmpeg -i "%tmp<media>" -i "$_" -lavfi ssim=- -f null ->>, :out)
+			      .out.slurp(:close)})
+			.join("\n")
+			==> avgssim()
+			==> %baseline;
 		stats "BASELINE=$corruption", %baseline;
 	}
 
-	# XXX doesn't work when only 1 parameter is specified
-	my @cfgopts;
-	if $cfgopts {
-		@cfgopts = $cfgopts.split(/<[=:]>/); # parse k=v:k=v:k=v:...
-		# for restoring order after hashing; dies on duplicate keys
-		my %keyorder = @cfgopts[0,2...*].unique(:with({$^x === $^y && die 'duplicate opt'})).antipairs;
-		my %cfgopts = @cfgopts.hash.kv.map({$^k => EVAL $^v});
-		# convert to list of permutations
-		@cfgopts = %cfgopts.values.reduce(&infix:<X>).map({%cfgopts.keys Z .flat});
-		# convert to list of strings in k=v:k=v:k=v:... format
-		@cfgopts = @cfgopts.map({
-			.sort({%keyorder{$_}}).map({.join('=')}).join(':')
-		});
-	} else {
-		@cfgopts = (""); # ensure non-empty
+	my @flatopts = $cfgopts.split(/<[=:]>/, :skip-empty); # parse k=v:k=v:k=v:...
+	die 'invalid cfgopts' if @flatopts.elems && not @flatopts.elems %% 2;
+	my @opts = @flatopts[0,2...*].unique(:with({ $^x === $^y && die 'duplicate opt' }));
+	my @values = @flatopts[1,3...*].map(&EVAL);
+	my @cfgopts = do given @opts.elems {
+		when 0 { ("") }
+		when 1 { @values[0].map({ "@opts[0]=$_" }) }
+		default {
+			[X] @values ==> map({ @opts Z $_ }) # generate permutations
+			            ==> map({ $_>>.join('=').join(':') }) # stringify
+		}
 	}
 
-	note(sprintf("Trying %d permutations...", (@cfgopts.elems || 1)));
-	note(@cfgopts) if %gbl<verbose>;
+	note("Trying {@cfgopts.elems || 1} permutations...");
+	note(@cfgopts.raku) if %gbl<verbose>;
 
 	exit if %gbl<dry-run>;
 
 	@cfgopts.map(-> $cfgopts {
 		my $shader = run_cfg($cfgopts);
-		my $out = %tmp<corrupt>.map({shader_ssim($_, %tmp<media>, $shader)}).join("\n");
+		my @out = %tmp<corrupt>.map({ shader_ssim($_, %tmp<media>, $shader) });
 		unlink %tmp{$shader}:delete;
-		$cfgopts => avgssim($out);
-	}).map({stats .key, .value});
+		$cfgopts => avgssim(@out.join("\n"));
+	}).map({ stats .key, .value });
 
 	%gbl<statsfile>.close();
 
 	note("\nSorted worst to best:\n");
-	my $proc = run <sort -k 9 -n>, :in(open %gbl<statsfile>.IO.path), :out;
-	note($proc.out.slurp(:close).split("\n")[*-15..*].join("\n"));
+	run(<sort -k 9 -n>, :in(open %gbl<statsfile>.IO.path), :out)
+		.out.slurp(:close).split("\n")
+		==> { .elems < 15 ?? $_ !! $_[*-15..*] }()
+		==> join("\n") ==> note();
 
 	run <bzip2 -9>, ('-f' if $force), %gbl<statsfile>.IO.path;
 }
