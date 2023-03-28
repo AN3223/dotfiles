@@ -420,7 +420,7 @@ vec4 hook()
 #define ASK 1
 #else
 #define AS 0
-#define ASF 1.0
+#define ASF 2.0
 #define ASP 32.0
 #define ASW 0
 #define ASK 1
@@ -1138,7 +1138,7 @@ vec4 hook()
 #elif ASK == 1
 	vec4 sharpening_power = pow(sigmoid(AS_weight), vec4(ASP));
 #elif ASK == 2
-	vec4 sharpening_power = ASP;
+	vec4 sharpening_power = vec4(ASP);
 #endif
 
 #if AS == 1 // sharpen+denoise
