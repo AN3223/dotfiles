@@ -8,6 +8,7 @@
 # XXX make a script for plotting stats files
 # XXX document this script better
 # XXX add a way to specify multiple test media files (dir?) & concat them all for performance
+# XXX proper range parsing? esp. to ensure the output type is the same as input
 
 use MONKEY-SEE-NO-EVAL;
 use soft;

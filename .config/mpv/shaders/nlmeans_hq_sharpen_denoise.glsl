@@ -381,24 +381,34 @@ vec4 hook()
 
 /* Adaptive sharpening
  *
- * Uses the blur incurred by denoising plus the weight map to perform an 
- * unsharp mask that gets applied most strongly to edges.
+ * Uses the blur incurred by denoising to perform an unsharp mask, and uses the 
+ * weight map to restrict the sharpening to edges.
  *
- * Sharpening will amplify noise, so the denoising factor (S) should usually be 
- * increased to compensate.
+ * Use M=4 to get a good look at which areas are/aren't sharpened.
  *
  * AS: 2 for sharpening, 1 for sharpening+denoising, 0 to disable
  * ASF: Sharpening factor, higher numbers make a sharper underlying image
  * ASP: Weight power, higher numbers use more of the sharp image
+ * ASW: 0 to use pre-WD weights, 1 to use post-WD weights
+ * 	- 0 to use pre-WD weights
+ * 	- 1 to use post-WD weights (ASP should be ~2x to compensate)
+ * ASK: Weight kernel:
+ * 	- 0 for power. This is the old method.
+ * 	- 1 for sigmoid. This is generally recommended.
+ * 	- 2 for constant (non-adaptive, w/ ASP=1 this sharpens the entire image)
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 1.0
-#define ASP 4.0
+#define ASF 2.0
+#define ASP 32.0
+#define ASW 0
+#define ASK 1
 #else
 #define AS 1
 #define ASF 1.0
-#define ASP 4.0
+#define ASP 32.0
+#define ASW 0
+#define ASK 1
 #endif
 
 /* Starting weight
@@ -616,6 +626,7 @@ vec4 hook()
  * 1: Euclidean medians (extremely slow, may be good for heavy noise)
  * 2: weight map (not a denoiser, maybe useful for generating image masks)
  * 3: weighted median intensity (slow, may be good for heavy noise)
+ * 4: AS weight map (edge map, visualizes AS, incl. ASW, ASK)
  */
 #ifdef LUMA_raw
 #define M 0
@@ -640,6 +651,7 @@ vec4 hook()
 /* Shader code */
 
 #define EPSILON 0.00000000001
+#define M_PI 3.14159265358979323846
 
 #if PS == 6
 const int hp = P/2;
@@ -837,6 +849,11 @@ vec2 ref(vec2 p, int d)
 #else
 #define ref(p, d) (p)
 #endif
+
+vec4 sigmoid(vec4 x)
+{
+	return tanh(x * 2*M_PI - M_PI)*0.5+0.5;
+}
 
 vec4 patch_comparison(vec3 r, vec3 r2)
 {
@@ -1095,12 +1112,24 @@ vec4 hook()
 	result = sum / total_weight;
 #endif
 
+#if ASW == 0 // pre-WD weights
+#define AS_weight old_avg_weight
+#elif ASW == 1 // post-WD weights
+#define AS_weight avg_weight
+#endif
+
+#if ASK == 0
+	vec4 sharpening_power = pow(AS_weight, vec4(ASP));
+#elif ASK == 1
+	vec4 sharpening_power = pow(sigmoid(AS_weight), vec4(ASP));
+#elif ASK == 2
+	vec4 sharpening_power = ASP;
+#endif
+
 #if AS == 1 // sharpen+denoise
 	vec4 sharpened = result + (poi - result) * ASF;
-	vec4 sharpening_power = pow(avg_weight, vec4(ASP));
 #elif AS == 2 // sharpen only
 	vec4 sharpened = poi + (poi - result) * ASF;
-	vec4 sharpening_power = pow(avg_weight, vec4(ASP));
 #endif
 
 #if EP // extremes preserve
@@ -1114,6 +1143,12 @@ vec4 hook()
 	result = mix(sharpened, result, sharpening_power);
 #elif AS == 2 // sharpen only
 	result = mix(sharpened, poi, sharpening_power);
+#endif
+
+#if M == 4 && defined(LUMA_raw) // ASP powered weight map
+	result = sharpening_power;
+#elif M == 4 && defined(CHROMA_raw)
+	result = vec4(0.5); // drop chroma
 #endif
 
 	return mix(poi, result, BF);
