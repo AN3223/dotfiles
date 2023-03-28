@@ -41,7 +41,7 @@ my $ffv1 = "-c:v ffv1 -pix_fmt yuv420p";
 sub avgssim(Str $out) returns Hash {
 	$out ==> split("\n", :skip-empty)
 	     ==> map({ .split(' ')[1..*-2]>>.split(':').flat.hash })
-	     ==> { [>>+<<] $_ >>/>> $_.elems }() # hash average
+	     ==> { [>>+<<] $_ >>/>> .elems }() # hash average
 }
 
 # dispatches the appropriate cfg script (if any) w/ $cfgopts
@@ -146,7 +146,7 @@ sub MAIN(
 	given $corruption {
 		when /^NOISE\=/ {
 			my $noise = $corruption.split('=')[1];
-			%tmp<corrupt> := (^$realizations).map({ "%gbl<tmp>.corrupt$_.mkv" });
+			%tmp<corrupt> := (^$realizations).map({ "{%gbl<tmp>}.corrupt$_.mkv" }).list;
 			for ^$realizations {
 				my $vf = "noise=alls=$noise\:all_seed=$_\:allf=t";
 				run <<$ffmpeg -i "%tmp<media>" $ffv1 -vf "$vf" "%tmp<corrupt>[$_]">>;
@@ -203,7 +203,7 @@ sub MAIN(
 	note("\nSorted worst to best:\n");
 	run(<sort -k 9 -n>, :in(open %gbl<statsfile>.IO.path), :out)
 		.out.slurp(:close).split("\n")
-		==> { .elems < 15 ?? $_ !! $_[*-15..*] }()
+		==> { .elems < 15 ?? $_ !! $_[*-15..*] }() # last 15 or less
 		==> join("\n") ==> note();
 
 	run <bzip2 -9>, ('-f' if $force), %gbl<statsfile>.IO.path;
