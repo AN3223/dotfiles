@@ -915,10 +915,12 @@ vec4 hook()
 	result = mix(sharpened, poi, sharpening_power);
 #endif
 
-#if M == 4 && defined(LUMA_raw) // ASP powered weight map
+#if M == 4 // ASP powered weight map
 	result = sharpening_power;
-#elif M == 4 && defined(CHROMA_raw)
-	result = vec4(0.5); // drop chroma
+#endif
+
+#if (M == 2 || M == 4) && defined(CHROMA_raw) // drop chroma for weight maps
+	result = vec4(0.5);
 #endif
 
 	return mix(poi, result, BF);
