@@ -410,7 +410,7 @@ vec4 hook()
  * ASK: Weight kernel:
  * 	- 0 for power. This is the old method.
  * 	- 1 for sigmoid. This is generally recommended.
- * 	- 2 for constant (non-adaptive, w/ ASP=1 this sharpens the entire image)
+ * 	- 2 for constant (non-adaptive, w/ ASP=0 this sharpens the entire image)
  */
 #ifdef LUMA_raw
 #define AS 2
