@@ -10,6 +10,8 @@
 ### XXX testing is new and incomplete, take everything with a grain of salt
 
 ### XXX retest w/o EP (maybe make this default)
+### XXX test SW
+### XXX test on different noise levels
 ### XXX test on a wide variety of test images
 ### XXX test HQ (including PSS)
 ### XXX test LQ

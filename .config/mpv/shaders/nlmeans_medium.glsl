@@ -82,7 +82,6 @@
  *   - Reflections may have a significant speed impact
  *
  * Options which always disable textureGather:
- * 	- RF
  * 	- PD
  */
 
@@ -366,8 +365,7 @@ vec4 hook()
  *
  * Even-numbered patch/research sizes will sample between pixels unless PS=6. 
  * It's not known whether this is ever useful behavior or not. This is 
- * incompatible with textureGather optimizations, so enable RF when using even 
- * patch/research sizes.
+ * incompatible with textureGather optimizations, so NG=1 to disable them.
  */
 #ifdef LUMA_raw
 #define S 20.0
@@ -389,7 +387,7 @@ vec4 hook()
  * AS: 2 for sharpening, 1 for sharpening+denoising, 0 to disable
  * ASF: Sharpening factor, higher numbers make a sharper underlying image
  * ASP: Weight power, higher numbers use more of the sharp image
- * ASW: 0 to use pre-WD weights, 1 to use post-WD weights
+ * ASW:
  * 	- 0 to use pre-WD weights
  * 	- 1 to use post-WD weights (ASP should be ~2x to compensate)
  * ASK: Weight kernel:
@@ -417,8 +415,8 @@ vec4 hook()
  * handle higher noise levels, ringing, and may be useful for other things too?
  *
  * EPSILON should be used instead of zero to avoid divide-by-zero errors. The 
- * avg_weight variable may be used to make SW adapt to the local noise level, 
- * e.g., SW=max(avg_weight, EPSILON)
+ * avg_weight/old_avg_weight variables may be used to make SW adapt to the 
+ * local noise level, e.g., SW=max(avg_weight, EPSILON)
  */
 #ifdef LUMA_raw
 #define SW 0.5
@@ -438,7 +436,7 @@ vec4 hook()
  * 	- 0: Disable
  *
  * WDT: Threshold coefficient, higher numbers discard more
- * WDP (WD=1): Higher numbers reduce the threshold more for small sample sizes
+ * WDP (only for WD=1): Increasing reduces the threshold for small sample sizes
  */
 #ifdef LUMA_raw
 #define WD 2
@@ -450,6 +448,46 @@ vec4 hook()
 #define WDP 6.0
 #endif
 
+/* Extremes preserve
+ *
+ * Reduces denoising around very bright/dark areas. The downscaling factor of 
+ * EP (located near the top of this shader) controls the area sampled for 
+ * luminance (higher numbers consider more area).
+ *
+ * EP: 1 to enable, 0 to disable
+ * DP: EP strength on dark patches, 0 to fully denoise
+ * BP: EP strength on bright patches, 0 to fully denoise
+ */
+#ifdef LUMA_raw
+#define EP 0
+#define BP 0.75
+#define DP 0.25
+#else
+#define EP 0
+#define BP 0.0
+#define DP 0.0
+#endif
+
+/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
+/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
+/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
+/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
+/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
+
+/* Robust filtering
+ *
+ * This setting is dependent on code generation from nlmeans_cfg, so this 
+ * setting can only be enabled via nlmeans_cfg.
+ *
+ * Compares the pixel-of-interest against a guide, which could be a downscaled 
+ * image or the output of another shader such as guided.glsl
+ */
+#ifdef LUMA_raw
+#define RF 1
+#else
+#define RF 1
+#endif
+
 /* Search shape
  *
  * Determines the shape of patches and research zones. Different shapes have 
@@ -457,6 +495,8 @@ vec4 hook()
  * smaller than square.
  *
  * PS applies applies to patches, RS applies to research zones.
+ *
+ * Be wary of gather optimizations (see the Regarding Speed comment at the top)
  *
  * 0: square (symmetrical)
  * 1: horizontal line (asymmetric)
@@ -504,8 +544,9 @@ vec4 hook()
  * 	- Buggy
  *
  * Gather samples across multiple frames. May cause motion blur and may 
- * struggle more with noise that persists across multiple frames (compression 
- * noise, repeating frames), but can work very well on high quality video.
+ * struggle more with noise that persists across multiple frames (e.g., from 
+ * compression or duplicate frames), but can work very well on high quality 
+ * video.
  *
  * Motion estimation (ME) should improve quality without impacting speed.
  *
@@ -552,67 +593,6 @@ vec4 hook()
 #define PSD vec2(1,1)
 #endif
 
-/* Extremes preserve
- *
- * Reduces denoising around very bright/dark areas. The downscaling factor of 
- * EP (located near the top of this shader) controls the area sampled for 
- * luminance (higher numbers consider more area).
- *
- * EP: 1 to enable, 0 to disable
- * DP: EP strength on dark patches, 0 to fully denoise
- * BP: EP strength on bright patches, 0 to fully denoise
- */
-#ifdef LUMA_raw
-#define EP 0
-#define BP 0.75
-#define DP 0.25
-#else
-#define EP 0
-#define BP 0.0
-#define DP 0.0
-#endif
-
-/* Robust filtering
- *
- * This setting is dependent on code generation from nlmeans_cfg, so this 
- * setting can only be enabled via nlmeans_cfg.
- *
- * Compares the pixel-of-interest against downscaled pixels.
- *
- * This will virtually always improve quality, but will always disable 
- * textureGather optimizations.
- *
- * The downscale factor can be modified in the WIDTH/HEIGHT directives for the 
- * RF texture (for CHROMA, RGB) and RF_LUMA (LUMA only) textures near the top 
- * of this shader, higher numbers increase blur.
- *
- * Any notation of RF as a positive number should be assumed to be referring to 
- * the downscaling factor, e.g., RF=3 means RF is set to 1 and the downscaling 
- * factor is set to 3.
- */
-#ifdef LUMA_raw
-#define RF 1
-#else
-#define RF 1
-#endif
-
-/* Blur factor
- *
- * 0 to 1, only useful for alternative estimators. You're probably looking for 
- * "S" (denoising factor), go back to the top of the shader!
- */
-#ifdef LUMA_raw
-#define BF 1.0
-#else
-#define BF 1.0
-#endif
-
-/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
-/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
-/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
-/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
-/* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
-
 // Scaling factor (should match WIDTH/HEIGHT)
 #ifdef LUMA_raw
 #define SF 1
@@ -626,12 +606,44 @@ vec4 hook()
  * 1: Euclidean medians (extremely slow, may be good for heavy noise)
  * 2: weight map (not a denoiser, maybe useful for generating image masks)
  * 3: weighted median intensity (slow, may be good for heavy noise)
- * 4: AS weight map (edge map, visualizes AS, incl. ASW, ASK)
+ * 4: edge map (based on the relevant AS settings)
  */
 #ifdef LUMA_raw
 #define M 0
 #else
 #define M 0
+#endif
+
+/* Difference visualization
+ *
+ * Visualizes the difference between input/output image
+ *
+ * 0: off
+ * 1: absolute difference scaled by S
+ * 2: difference centered on 0.5
+ */
+#ifdef LUMA_raw
+#define DV 0
+#else
+#define DV 0
+#endif
+
+/* Blur factor
+ *
+ * 0 to 1, only useful for alternative estimators. You're probably looking for 
+ * "S" (denoising factor), go back to the top of the shader!
+ */
+#ifdef LUMA_raw
+#define BF 1.0
+#else
+#define BF 1.0
+#endif
+
+// Force disable textureGather
+#ifdef LUMA_raw
+#define NG 0
+#else
+#define NG 0
 #endif
 
 // Patch donut (probably useless)
@@ -641,7 +653,7 @@ vec4 hook()
 #define PD 0
 #endif
 
-// Duplicate 1st weight
+// Duplicate 1st weight (for LGC)
 #ifdef LUMA_raw
 #define D1W 0
 #else
@@ -701,6 +713,7 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 #define R_AREA(a) (a * T1 + RF-1)
 
 // research shapes
+// XXX would be nice to have the option of temporally-varying research sizes
 #if R == 0 || R == 1
 #define FOR_RESEARCH(r) S_1X1(r)
 const int r_area = R_AREA(1);
@@ -877,11 +890,12 @@ vec4 patch_comparison(vec3 r, vec3 r2)
 	return min_rot * p_scale;
 }
 
-#define NO_GATHER (PD == 0) // never textureGather if any of these conditions are false
+#define NO_GATHER (PD == 0 && NG == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3)
 
 #if (defined(LUMA_gather) || D1W) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && M != 1 && REGULAR_ROTATIONS && NO_GATHER
 // 3x3 diamond/plus patch_comparison_gather
+// XXX extend to support arbitrary sizes (probably requires code generation)
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
 const ivec2 offsets_sf[4] = { ivec2(0,-1) * SF, ivec2(-1,0) * SF, ivec2(0,1) * SF, ivec2(1,0) * SF };
 vec4 poi_patch = gather_offs(0, offsets);
@@ -911,6 +925,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 }
 #elif (defined(LUMA_gather) || D1W) && PS == 6 && REGULAR_ROTATIONS && NO_GATHER
 // tiled even square patch_comparison_gather
+// XXX extend to support odd square?
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
 	vec2 tile;
@@ -991,6 +1006,7 @@ vec4 hook()
 #endif
 
 	FOR_FRAME(r) {
+	// XXX ME is always a frame behind, should have to option to re-research after applying ME (could do it an arbitrary number of times per frame if desired)
 #if T && ME == 1 // temporal & motion estimation max weight
 	if (r.z > 0) {
 		me += me_tmp;
@@ -1119,13 +1135,15 @@ vec4 hook()
 #endif
 
 #if ASK == 0
-	vec4 sharpening_power = pow(AS_weight, vec4(ASP));
+	vec4 sharpening_strength = pow(AS_weight, vec4(ASP));
 #elif ASK == 1
-	vec4 sharpening_power = pow(sigmoid(AS_weight), vec4(ASP));
+	// XXX add a parameter to control the sharpness of the S curve? (probably not very perceptible)
+	vec4 sharpening_strength = pow(sigmoid(AS_weight), vec4(ASP));
 #elif ASK == 2
-	vec4 sharpening_power = vec4(ASP);
+	vec4 sharpening_strength = vec4(ASP);
 #endif
 
+	// XXX maybe allow for alternative blurs? e.g., replace result w/ load2?
 #if AS == 1 // sharpen+denoise
 	vec4 sharpened = result + (poi - result) * ASF;
 #elif AS == 2 // sharpen only
@@ -1140,17 +1158,23 @@ vec4 hook()
 #endif
 
 #if AS == 1 // sharpen+denoise
-	result = mix(sharpened, result, sharpening_power);
+	result = mix(sharpened, result, sharpening_strength);
 #elif AS == 2 // sharpen only
-	result = mix(sharpened, poi, sharpening_power);
+	result = mix(sharpened, poi, sharpening_strength);
 #endif
 
-#if M == 4 // ASP powered weight map
-	result = sharpening_power;
+#if M == 4 // edge map
+	result = sharpening_strength;
 #endif
 
 #if (M == 2 || M == 4) && defined(CHROMA_raw) // drop chroma for weight maps
 	result = vec4(0.5);
+#endif
+
+#if DV == 1
+	result = clamp(abs(poi - result) * S, 0.0, 1.0);
+#elif DV == 2
+	result = (poi - result) * 0.5 + 0.5;
 #endif
 
 	return mix(poi, result, BF);
