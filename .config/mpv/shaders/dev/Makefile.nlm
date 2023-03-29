@@ -27,6 +27,10 @@ TEMPORAL_DESC=Very experimental and buggy, limited to vo=gpu-next.
 TEMPORAL_LUMA=T=2:WD=1:$(NO_ROTATE)
 TEMPORAL_OPTS=T_FRAME_LIMIT=3:T_RES_W=1920:T_RES_H=1080
 
+TEMPORAL_SHARPEN_DENOISE_DESC=$(TEMPORAL_DESC) $(SHARPEN_DENOISE_DESC)
+TEMPORAL_SHARPEN_DENOISE_LUMA=ASP=4:$(SHARPEN_DENOISE):$(TEMPORAL_LUMA)
+TEMPORAL_SHARPEN_DENOISE=$(SHARPEN_DENOISE)
+
 SHARPEN_ONLY_DESC=Sharpen without denoising.
 SHARPEN_ONLY=AS=2:ASF=1.0
 
@@ -73,7 +77,7 @@ all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_2x.glsl ../nlmeans_heavy.gls
 ../nlmeans_sharpen_denoise.glsl: nlmeans_template
 	env NLM_DESC="$(SHARPEN_DENOISE_DESC)" NLM_FILE="$@" NLM_LUMA="$(SHARPEN_DENOISE)" NLM_CHROMA="$(SHARPEN_DENOISE)" ./nlmeans_cfg < $? > $@
 ../nlmeans_temporal_sharpen_denoise.glsl: nlmeans_template
-	env NLM_DESC="$(TEMPORAL_DESC) $(SHARPEN_DENOISE_DESC)" NLM_FILE="$@" NLM_LUMA="$(SHARPEN_DENOISE):$(TEMPORAL_LUMA)" NLM_CHROMA="$(SHARPEN_DENOISE)" NLM_OPTS="$(TEMPORAL_OPTS)" ./nlmeans_cfg < $? > $@
+	env NLM_DESC="$(TEMPORAL_SHARPEN_DENOISE_DESC)" NLM_FILE="$@" NLM_LUMA="$(TEMPORAL_SHARPEN_DENOISE_LUMA)" NLM_CHROMA="$(TEMPORAL_SHARPEN_DENOISE)" NLM_OPTS="$(TEMPORAL_OPTS)" ./nlmeans_cfg < $? > $@
 ../nlmeans_hq_sharpen_denoise.glsl: nlmeans_template
 	env NLM_DESC="$(HQ_DESC) $(SHARPEN_DENOISE_DESC)" NLM_FILE="$@" NLM_LUMA="$(SHARPEN_DENOISE):$(HQ_LUMA)" NLM_CHROMA="$(SHARPEN_DENOISE):$(HQ)" ./nlmeans_cfg < $? > $@
 ../nlmeans_sharpen_only.glsl: nlmeans_template

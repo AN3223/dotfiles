@@ -416,7 +416,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define AS 1
 #define ASF 2.0
-#define ASP 32.0
+#define ASP 4
 #define ASW 0
 #define ASK 1
 #else
