@@ -409,6 +409,7 @@ vec4 hook()
  * 	- 0 for power. This is the old method.
  * 	- 1 for sigmoid. This is generally recommended.
  * 	- 2 for constant (non-adaptive, w/ ASP=0 this sharpens the entire image)
+ * ASC (only for ASK=1, range 0-1): Reduces the contrast of the edge map
  */
 #ifdef LUMA_raw
 #define AS 1
@@ -416,12 +417,14 @@ vec4 hook()
 #define ASP 32.0
 #define ASW 0
 #define ASK 1
+#define ASC 0.0
 #else
 #define AS 1
 #define ASF 2.0
 #define ASP 32.0
 #define ASW 0
 #define ASK 1
+#define ASC 0.0
 #endif
 
 /* Starting weight
@@ -878,11 +881,6 @@ vec2 ref(vec2 p, int d)
 #define ref(p, d) (p)
 #endif
 
-vec4 sigmoid(vec4 x)
-{
-	return tanh(x * 2*M_PI - M_PI)*0.5+0.5;
-}
-
 vec4 patch_comparison(vec3 r, vec3 r2)
 {
 	vec3 p;
@@ -1092,6 +1090,7 @@ vec4 hook()
 	} // FOR_RESEARCH
 	} // FOR_FRAME
 
+	// XXX optionally put the denoised pixel into the frame buffer?
 #if T // temporal
 #endif
 
@@ -1152,8 +1151,11 @@ vec4 hook()
 #if ASK == 0
 	vec4 sharpening_strength = pow(AS_weight, vec4(ASP));
 #elif ASK == 1
-	// XXX add a parameter to control the sharpness of the S curve? (probably not very perceptible)
-	vec4 sharpening_strength = pow(sigmoid(AS_weight), vec4(ASP));
+#define sigmoid(x) (tanh(x * 2*M_PI - M_PI)*0.5+0.5)
+	vec4 sharpening_strength = mix(pow(sigmoid(AS_weight), vec4(ASP)),
+	                               AS_weight, ASC);
+	// just in case ASC < 0 (will sharpen but it's janky XXX)
+	sharpening_strength = clamp(sharpening_strength, 0.0, 1.0);
 #elif ASK == 2
 	vec4 sharpening_strength = vec4(ASP);
 #endif
