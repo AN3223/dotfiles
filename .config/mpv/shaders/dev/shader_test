@@ -6,7 +6,6 @@
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
 # XXX document this script better
-# XXX add a way to specify multiple test media files (dir?) & concat them all for performance
 # XXX proper range parsing? esp. to ensure the output type is the same as input
 
 use MONKEY-SEE-NO-EVAL;
@@ -85,7 +84,7 @@ sub shader_ssim(Str $in1, Str $in2, Str $shader --> Str) {
 sub stats($cfgopts, %ssim) {
 	my $s = "$cfgopts Y %ssim<Y> U %ssim<U> V %ssim<V> All %ssim<All>\n";
 	print("$s");
-	%gbl<statsfile>.print($s);
+	%gbl<statsfile>.print($s) if %gbl<statsfile>;
 }
 
 # Concatenates or loops files and removes the originals if requested
@@ -102,10 +101,8 @@ sub vfconcat(@media, Str :$ext = "concat", Bool :$rm = False, Int :$loop = 0) {
 	$out-file;
 }
 
-# Recursively list a file or directory
-sub find(IO::Path() $f) {
-	$f.d ?? dir($f).flatmap(&find) !! ($f)
-}
+# recursive ls
+sub find(IO::Path() $f --> Array()) { $f.d ?? dir($f).flatmap(&find) !! ($f) }
 
 sub MAIN(
 	*@test-media,
@@ -117,6 +114,7 @@ sub MAIN(
 	Str :$vk-device = "vulkan",
 	Str :$stats-dir where *.IO.d = "stats",
 	Int :$realizations where *>0 = 10,
+	Bool :$skip-stats = False,
 	Bool :$dry-run = False,
 	Bool :$verbose = False, Bool :$v = False,
 	Bool :$no-concat = False,
@@ -140,12 +138,14 @@ sub MAIN(
 
 	if not %gbl<dry-run> {
 		run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
-		if $force {
-			%gbl<statsfile> = open $statsfile, :w;
-		} else {
-			die 'stats file exists' if "$statsfile.bz2".IO.e;
-			try { %gbl<statsfile> = open $statsfile, :x; }
-			die 'stats file exists' if $!;
+		if not $skip-stats {
+			if $force {
+				%gbl<statsfile> = open $statsfile, :w;
+			} else {
+				die 'stats file exists' if "$statsfile.bz2".IO.e;
+				try { %gbl<statsfile> = open $statsfile, :x; }
+				die 'stats file exists' if $!;
+			}
 		}
 	}
 
@@ -214,15 +214,15 @@ sub MAIN(
 		$cfgopts => avgssim(@out.join("\n"));
 	}).map({ stats .key, .value });
 
-	%gbl<statsfile>.close();
+	if %gbl<statsfile> {
+		%gbl<statsfile>.close();
+		note("\nSorted worst to best:\n");
+		run(<sort -k 9 -n>, :in(open %gbl<statsfile>.IO.path), :out)
+			.out.slurp(:close).split("\n")
+			==> { .elems < 15 ?? $_ !! $_[*-15..*] }() # last 15 or less
+			==> join("\n") ==> note();
 
-	note("\nSorted worst to best:\n");
-	run(<sort -k 9 -n>, :in(open %gbl<statsfile>.IO.path), :out)
-		.out.slurp(:close).split("\n")
-		==> { .elems < 15 ?? $_ !! $_[*-15..*] }() # last 15 or less
-		==> join("\n") ==> note();
-
-	# XXX make optional
-	run <bzip2 -9>, ('-f' if $force), %gbl<statsfile>.IO.path;
+		run <bzip2 -9>, ('-f' if $force), %gbl<statsfile>.IO.path;
+	}
 }
 
