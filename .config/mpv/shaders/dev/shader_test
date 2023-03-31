@@ -2,7 +2,6 @@
 
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX implement maximization
-# XXX implement downscaling
 # XXX support testing on non-yuv420p?
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
@@ -22,7 +21,7 @@ my $ffv1 = "-c:v ffv1 -pix_fmt yuv420p";
 
 # drop stderr and/or stdout if they aren't requested
 # die and print stdout & stderr if command fails
-&run.wrap(sub (*@args, *%opts) returns Proc {
+&run.wrap(sub (*@args, *%opts --> Proc) {
 	%opts<out> = True without %opts<out>;
 	%opts<err> = True without %opts<err>;
 	note(@args) if %gbl<verbose>;
@@ -39,7 +38,8 @@ my $ffv1 = "-c:v ffv1 -pix_fmt yuv420p";
 });
 
 # parses output from ffmpeg's SSIM filter and outputs an average
-sub avgssim(Str $out) returns Hash {
+sub avgssim(Str $out --> Hash) {
+	$out.note if %gbl<verbose>;
 	$out ==> split("\n", :skip-empty)
 	     ==> map({ .split(' ')[1..*-2]>>.split(':').flat.hash })
 	     ==> { [>>+<<] $_ >>/>> .elems }() # hash average
@@ -47,7 +47,7 @@ sub avgssim(Str $out) returns Hash {
 
 # dispatches the appropriate cfg script (if any) w/ $cfgopts
 # returns the path to the new shader
-sub run_cfg(Str $cfgopts) returns Str {
+sub run_cfg(Str $cfgopts --> Str) {
 	return %gbl<shader> if !$cfgopts && %gbl<shader>.IO.basename !~~ /_template$/;
 
 	my $in-shader = open %gbl<shader>;
@@ -77,7 +77,7 @@ sub run_cfg(Str $cfgopts) returns Str {
 	%tmp{$path} = $path;
 }
 
-sub shader_ssim(Str $in1, Str $in2, Str $shader) returns Str {
+sub shader_ssim(Str $in1, Str $in2, Str $shader --> Str) {
 	my $vf = "hwupload,libplacebo=custom_shader_path=$shader,hwdownload,format=yuv420p[placebo]; [placebo]ssim=-";
 	run(<<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out).out.slurp(:close);
 }
@@ -86,30 +86,37 @@ sub stats($cfgopts, %ssim) {
 	my $s = "$cfgopts Y %ssim<Y> U %ssim<U> V %ssim<V> All %ssim<All>\n";
 	print("$s");
 	%gbl<statsfile>.print($s);
-	%gbl<statsfile>.flush;
 }
 
-sub concat_realizations() {
-	my $new-corrupt = %gbl<tmp> ~ ".corrupt.mkv";
-	my $vf = "concat={%tmp<corrupt>.elems},setpts=N/(FR*TB)";
+# Concatenates or loops files and removes the originals if requested
+sub vfconcat(@media, Str :$ext = "concat", Bool :$rm = False, Int :$loop = 0) {
+	my $out-file = "{%gbl<tmp>}.$ext.mkv";
 
-	note('Concatenating corrupt test media files...');
-	run <<$ffmpeg>>, %tmp<corrupt>.map({ ('-i', $_) }).flat, <<-lavfi "$vf" $ffv1 "$new-corrupt">>;
+	run <<$ffmpeg>>,
+		(<<-stream_loop $loop>> if $loop),
+		@media.map({ ('-i', $_) }).flat,
+		(<<-lavfi "concat={@media.elems},setpts=N/(FR*TB)">> if @media.elems > 1),
+		<<$ffv1 "$out-file">>;
 
-	%tmp<corrupt>.map(&unlink);
-	%tmp<corrupt> := ($new-corrupt);
+	@media.map(&unlink) if $rm;
+	$out-file;
+}
+
+# Recursively list a file or directory
+sub find(IO::Path() $f) {
+	$f.d ?? dir($f).flatmap(&find) !! ($f)
 }
 
 sub MAIN(
-	Str $test-media,
+	*@test-media,
 	Str :$cfgopts = "",
-	Str :$shader = "nlmeans_template",
+	Str :$shader where *.IO.r = "nlmeans_template",
 	Str :$plane = "LUMA",
 	Str :$corruption = "NOISE=10",
 	Str :$tmpfile = "shader_test.tmp",
 	Str :$vk-device = "vulkan",
-	Str :$stats-dir = "stats",
-	Int :$realizations = 10,
+	Str :$stats-dir where *.IO.d = "stats",
+	Int :$realizations where *>0 = 10,
 	Bool :$dry-run = False,
 	Bool :$verbose = False, Bool :$v = False,
 	Bool :$no-concat = False,
@@ -117,14 +124,19 @@ sub MAIN(
 ) {
 	%gbl<tmp shader dry-run verbose vk plane> = $tmpfile, $shader, $dry-run, ($verbose || $v), $vk-device, $plane;
 
+	die 'no test media specified' if not @test-media;
+	
 	my @statsfile = (
 		# friendly shader name
 		%gbl<shader>.IO.basename.subst(/nlmeans/, "NLM").subst(/(_template$|\.glsl$)/),
-		# basename of test-media w/o extension
-		$test-media.IO.basename.split('.', :skip-empty)[0],
+		# comma delimited basenames of test-media w/o extensions
+		@test-media.map({ .IO.basename.split('.', :skip-empty)[0] }).join(','),
 		%gbl<plane>, $corruption, "RZ=$realizations", "CAT={(!$no-concat).Int}", $cfgopts
 	);
 	my $statsfile = "$stats-dir/{@statsfile.join(':').trans('/' => '_')}.stats";
+
+	@test-media = @test-media.flatmap(&find).grep({ $_.path !~~ /\.txt$/ });
+	@test-media.map({ .f || die "$_ doesn't exist or is unreadable" });
 
 	if not %gbl<dry-run> {
 		run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
@@ -137,9 +149,9 @@ sub MAIN(
 		}
 	}
 
+	# XXX add option to downscale
 	note('Encoding test media...');
-	%tmp<media> = "%gbl<tmp>.mkv";
-	run <<$ffmpeg -i "$test-media" $ffv1 "%tmp<media>">>;
+	%tmp<media> = vfconcat(@test-media);
 
 	# XXX add a downscale corruption for testing upscalers
 	# XXX add a "bring your own" corruption where you can specify your own corrupt test media
@@ -147,17 +159,22 @@ sub MAIN(
 	given $corruption {
 		when /^NOISE\=/ {
 			my $noise = $corruption.split('=')[1];
-			%tmp<corrupt> := (^$realizations).map({ "{%gbl<tmp>}.corrupt$_.mkv" }).list;
-			for ^$realizations {
+			^$realizations ==> map({
+				my $file = "{%gbl<tmp>}.corrupt$_.mkv";
 				my $vf = "noise=alls=$noise\:all_seed=$_\:allf=t";
-				run <<$ffmpeg -i "%tmp<media>" $ffv1 -vf "$vf" "%tmp<corrupt>[$_]">>;
+				run <<$ffmpeg -i "%tmp<media>" $ffv1 -vf "$vf" "$file">>;
+				$file;
+			}) ==> list() ==> %tmp<corrupt>;
+
+			if not $no-concat { # concat corrupt media, pad test media to same length
+				%tmp<corrupt> = (vfconcat(%tmp<corrupt>, :rm, :ext('corrupt')));
+				%tmp<media> = vfconcat(List(%tmp<media>), :rm, :loop($realizations), :ext('looped'));
 			}
-			concat_realizations() if not $no-concat;
 		}
 		when /^JPEG\=/ {
 			my $quality = $corruption.split('=')[1];
 			my $codec = "-q\:v $quality -c\:v mjpeg";
-			%tmp<corrupt> = ("%gbl<tmp>.corrupt.mkv");
+			%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
 			run <<$ffmpeg -i "%tmp<media>" $codec "%tmp<corrupt>[0]">>;
 		}
 	}
@@ -165,12 +182,10 @@ sub MAIN(
 	note('Measuring baseline...');
 	my %baseline;
 	if not %gbl<dry-run> {
-		%tmp<corrupt>
-			.map({run(<<$ffmpeg -i "%tmp<media>" -i "$_" -lavfi ssim=- -f null ->>, :out)
-			      .out.slurp(:close)})
-			.join("\n")
-			==> avgssim()
-			==> %baseline;
+		%tmp<corrupt>.map({
+			run(<<$ffmpeg -i "%tmp<media>" -i "$_" -lavfi ssim=- -f null ->>, :out).out.slurp(:close)
+		}).join("\n") ==> avgssim() ==> %baseline;
+
 		stats "BASELINE=$corruption", %baseline;
 	}
 
@@ -207,6 +222,7 @@ sub MAIN(
 		==> { .elems < 15 ?? $_ !! $_[*-15..*] }() # last 15 or less
 		==> join("\n") ==> note();
 
+	# XXX make optional
 	run <bzip2 -9>, ('-f' if $force), %gbl<statsfile>.IO.path;
 }
 
