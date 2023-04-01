@@ -1,7 +1,6 @@
 #!/usr/bin/env raku
 
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
-# XXX implement maximization
 # XXX support testing on non-yuv420p?
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
@@ -81,10 +80,73 @@ sub shader_ssim(Str $in1, Str $in2, Str $shader --> Str) {
 	run(<<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out).out.slurp(:close);
 }
 
-sub stats($cfgopts, %ssim) {
-	my $s = "$cfgopts Y %ssim<Y> U %ssim<U> V %ssim<V> All %ssim<All>\n";
-	print("$s");
-	%gbl<statsfile>.print($s) if %gbl<statsfile>;
+sub stats($cfgopts, %ssim, :$erronly = False) {
+	my $s = "$cfgopts Y %ssim<Y> U %ssim<U> V %ssim<V> All %ssim<All>";
+	if $erronly {
+		note($s);
+	} else {
+		print("$s\n");
+		%gbl<statsfile>.print("$s\n") if %gbl<statsfile>;
+	}
+}
+
+# runs ffmpeg for testing, optionally maximizes a parameter
+sub test(Str $cfgopts, :$prev = (""=>{All=>0}), *%state_ --> Pair) {
+	my %state = %state_; # for mutating
+
+	# set default values
+	my ($m_opt, $m_start, $m_step, $m_epsilon, $m_iter) = |%gbl<max>;
+	%state<value> = %state<value> || $m_start;
+	%state<iter> = $m_opt ?? (%state<iter> || $m_iter) !! 1;
+	%state<depth> = %state<depth> || 0;
+
+	my $cfgopts_ = $m_opt ?? "$m_opt={%state<value>}:$cfgopts" !! $cfgopts;
+	my $shader = run_cfg($cfgopts_);
+	my @out = %tmp<corrupt>.map({ shader_ssim($_, %tmp<media>, $shader) });
+	unlink %tmp{$shader}:delete;
+	my %ssim = avgssim(@out.join("\n"));
+
+	if $m_opt {
+		stats($cfgopts_, %ssim, :erronly);
+	} else {
+		stats($cfgopts_, %ssim);
+	}
+
+	return ($cfgopts_ => %ssim) if ++%state<depth> >= %state<iter>;
+
+	given $prev.value<All> {
+		when abs(%ssim<All> - $_) < $m_epsilon { # early exit
+			return ($cfgopts_ => %ssim);
+		}
+		when %ssim<All> > $_ { # keep multiplying, tail recurse
+			return test($cfgopts, |%state, :prev($cfgopts_ => %ssim), :value(%state<value> * $m_step));
+		}
+		when %ssim<All> < $_ { # start maximizing
+			my %max := {value => %state<value> / $m_step, result => $prev};
+			my $step_sz = %state<value> - %max<value>;
+			loop (my $i = 1 ;; $i++) {
+				my $substep = $step_sz/($i*2);
+				%max.note;
+				my @tests = [];
+				@tests.push(%max);
+
+				my $done = False;
+				for [%max<value> + $substep, %max<value> - $substep] -> $incr {
+					@tests.push({value=>$incr, result=>test($cfgopts, |%state, :value($incr), :iter(1))});
+					@tests.=sort: *<result>.value<All>;
+					%max := @tests[*-1];
+
+					$done = True if ++%state<depth> >= %state<iter>;
+					$done = True if abs(%max<result>.value<All> - @tests[*-2]<result>.value<All>) < $m_epsilon;
+					last if $done;
+				}
+				last if $done;
+			}
+			stats %max<result>.key, %max<result>.value;
+			note("Maximized in %state<depth> iterations\n");
+			return %max<result>;
+		}
+	}
 }
 
 # Concatenates or loops files and removes the originals if requested
@@ -113,6 +175,7 @@ sub MAIN(
 	Str :$tmpfile = "shader_test.tmp",
 	Str :$vk-device = "vulkan",
 	Str :$stats-dir where *.IO.d = "stats",
+	Str :$max = "",
 	Int :$realizations where *>0 = 10,
 	Bool :$skip-stats = False,
 	Bool :$dry-run = False,
@@ -121,6 +184,7 @@ sub MAIN(
 	Bool :$force = False
 ) {
 	%gbl<tmp shader dry-run verbose vk plane> = $tmpfile, $shader, $dry-run, ($verbose || $v), $vk-device, $plane;
+	%gbl<max> = roundrobin(split(':', $max), split(':', ":10:1.25:1e-5:Inf")).map({ $_[0] || $_[1] }).list;
 
 	die 'no test media specified' if not @test-media;
 	
@@ -129,7 +193,8 @@ sub MAIN(
 		%gbl<shader>.IO.basename.subst(/nlmeans/, "NLM").subst(/(_template$|\.glsl$)/),
 		# comma delimited basenames of test-media w/o extensions
 		@test-media.map({ .IO.basename.split('.', :skip-empty)[0] }).join(','),
-		%gbl<plane>, $corruption, "RZ=$realizations", "CAT={(!$no-concat).Int}", $cfgopts
+		%gbl<plane>, $corruption, "RZ=$realizations", "CAT={(!$no-concat).Int}",
+		"MAX={%gbl<max>.join(':')}", $cfgopts
 	);
 	my $statsfile = "$stats-dir/{@statsfile.join(':').trans('/' => '_')}.stats";
 
@@ -207,12 +272,7 @@ sub MAIN(
 
 	exit if %gbl<dry-run>;
 
-	@cfgopts.map(-> $cfgopts {
-		my $shader = run_cfg($cfgopts);
-		my @out = %tmp<corrupt>.map({ shader_ssim($_, %tmp<media>, $shader) });
-		unlink %tmp{$shader}:delete;
-		$cfgopts => avgssim(@out.join("\n"));
-	}).map({ stats .key, .value });
+	@cfgopts.map(&test);
 
 	if %gbl<statsfile> {
 		%gbl<statsfile>.close();
