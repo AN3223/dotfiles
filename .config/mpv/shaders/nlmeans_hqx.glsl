@@ -120,7 +120,6 @@
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter (PREI)
 //!BIND HOOKED
 //!WIDTH HOOKED.w 1.25 /
@@ -134,7 +133,6 @@ vec4 hook()
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter (I)
 //!BIND _INJ_PREI
 //!WIDTH HOOKED.w 1.0 /
@@ -148,7 +146,6 @@ return _INJ_PREI_texOff(0);
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter (P)
 //!BIND HOOKED
 //!WIDTH _INJ_I.w
@@ -162,7 +159,6 @@ vec4 hook()
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter (MEANI)
 //!BIND _INJ_I
 //!WIDTH _INJ_I.w 1.5 /
@@ -176,7 +172,6 @@ return _INJ_I_texOff(0);
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter (MEANP)
 //!BIND _INJ_P
 //!WIDTH _INJ_MEANI.w
@@ -190,7 +185,6 @@ return _INJ_P_texOff(0);
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter (_INJ_I_SQ)
 //!BIND _INJ_I
 //!WIDTH _INJ_I.w
@@ -204,7 +198,6 @@ return _INJ_I_texOff(0) * _INJ_I_texOff(0);
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter (_INJ_IXP)
 //!BIND _INJ_I
 //!BIND _INJ_P
@@ -219,7 +212,6 @@ return _INJ_I_texOff(0) * _INJ_P_texOff(0);
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter (CORRI)
 //!BIND _INJ_I_SQ
 //!WIDTH _INJ_MEANI.w
@@ -233,7 +225,6 @@ return _INJ_I_SQ_texOff(0);
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter (CORRP)
 //!BIND _INJ_IXP
 //!WIDTH _INJ_MEANI.w
@@ -247,7 +238,6 @@ return _INJ_IXP_texOff(0);
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter (A)
 //!BIND _INJ_MEANI
 //!BIND _INJ_MEANP
@@ -268,7 +258,6 @@ vec4 cov = _INJ_CORRP_texOff(0) - _INJ_MEANI_texOff(0) * _INJ_MEANP_texOff(0);
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter (B)
 //!BIND _INJ_A
 //!BIND _INJ_MEANI
@@ -284,7 +273,6 @@ return _INJ_MEANP_texOff(0) - _INJ_A_texOff(0) * _INJ_MEANI_texOff(0);
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter (MEANA)
 //!BIND _INJ_A
 //!WIDTH _INJ_MEANI.w
@@ -298,7 +286,6 @@ return _INJ_A_texOff(0);
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter (MEANB)
 //!BIND _INJ_B
 //!WIDTH _INJ_MEANI.w
@@ -312,7 +299,6 @@ return _INJ_B_texOff(0);
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Guided filter
 //!BIND HOOKED
 //!BIND _INJ_MEANA
@@ -327,7 +313,6 @@ return _INJ_MEANA_texOff(0) * HOOKED_texOff(0) + _INJ_MEANB_texOff(0);
 // End of source code injected from guided.glsl
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Non-local means (share)
 //!BIND RF_LUMA
 //!SAVE RF
@@ -339,7 +324,6 @@ vec4 hook()
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!BIND HOOKED
 //!BIND RF_LUMA
 //!BIND RF
@@ -456,6 +440,9 @@ vec4 hook()
  * Reduces denoising around very bright/dark areas. The downscaling factor of 
  * EP (located near the top of this shader) controls the area sampled for 
  * luminance (higher numbers consider more area).
+ *
+ * This is incompatible with RGB. If you have RGB hooks enabled then you will 
+ * have to delete the EP shader stage or specify EP=0 through nlmeans_cfg.
  *
  * EP: 1 to enable, 0 to disable
  * DP: EP strength on dark patches, 0 to fully denoise
@@ -894,6 +881,7 @@ vec4 patch_comparison(vec3 r, vec3 r2)
 #if (defined(LUMA_gather) || D1W) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && M != 1 && REGULAR_ROTATIONS && NO_GATHER
 // 3x3 diamond/plus patch_comparison_gather
 // XXX extend to support arbitrary sizes (probably requires code generation)
+// XXX extend to support 3x3 square
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
 const ivec2 offsets_sf[4] = { ivec2(0,-1) * SF, ivec2(-1,0) * SF, ivec2(0,1) * SF, ivec2(1,0) * SF };
 vec4 poi_patch = gather_offs(0, offsets);

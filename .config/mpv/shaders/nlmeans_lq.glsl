@@ -87,7 +87,6 @@
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Non-local means (downscale)
 //!BIND HOOKED
 //!SAVE PRERF_LUMA
@@ -101,7 +100,6 @@ vec4 hook()
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Non-local means (unscale)
 //!BIND PRERF_LUMA
 //!SAVE RF_LUMA
@@ -115,7 +113,6 @@ vec4 hook()
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Non-local means (downscale)
 //!WIDTH LUMA.w 3 /
 //!HEIGHT LUMA.h 3 /
@@ -129,7 +126,6 @@ vec4 hook()
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!DESC Non-local means (share)
 //!BIND RF_LUMA
 //!SAVE RF
@@ -141,7 +137,6 @@ vec4 hook()
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!HOOK RGB
 //!BIND HOOKED
 //!BIND RF_LUMA
 //!BIND EP
@@ -259,6 +254,9 @@ vec4 hook()
  * Reduces denoising around very bright/dark areas. The downscaling factor of 
  * EP (located near the top of this shader) controls the area sampled for 
  * luminance (higher numbers consider more area).
+ *
+ * This is incompatible with RGB. If you have RGB hooks enabled then you will 
+ * have to delete the EP shader stage or specify EP=0 through nlmeans_cfg.
  *
  * EP: 1 to enable, 0 to disable
  * DP: EP strength on dark patches, 0 to fully denoise
@@ -697,6 +695,7 @@ vec4 patch_comparison(vec3 r, vec3 r2)
 #if (defined(LUMA_gather) || D1W) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && M != 1 && REGULAR_ROTATIONS && NO_GATHER
 // 3x3 diamond/plus patch_comparison_gather
 // XXX extend to support arbitrary sizes (probably requires code generation)
+// XXX extend to support 3x3 square
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
 const ivec2 offsets_sf[4] = { ivec2(0,-1) * SF, ivec2(-1,0) * SF, ivec2(0,1) * SF, ivec2(1,0) * SF };
 vec4 poi_patch = gather_offs(0, offsets);

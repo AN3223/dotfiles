@@ -91,7 +91,7 @@ function robust_filter(name, scale) {
 }
 
 BEGIN {
-	HOOKS_ = "LUMA,CHROMA,RGB"
+	HOOKS_ = "LUMA,CHROMA"
 
 	split(ENVIRON["NLM_OPTS"], opts, ":")
 	for (i in opts) {
