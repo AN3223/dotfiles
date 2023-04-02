@@ -91,14 +91,17 @@ sub stats($cfgopts, %ssim, :$erronly = False) {
 }
 
 # runs ffmpeg for testing, optionally maximizes a parameter
+# XXX maybe break the maximization logic off into a separate function
 sub test(Str $cfgopts, :$prev = (""=>{All=>0}), *%state_ --> Pair) {
 	my %state = %state_; # for mutating
 
 	# set default values
 	my ($m_opt, $m_start, $m_step, $m_epsilon, $m_iter) = |%gbl<max>;
 	%state<value> = %state<value> || $m_start;
+	%state<step> = %state<step> || $m_step;
 	%state<iter> = $m_opt ?? (%state<iter> || $m_iter) !! 1;
 	%state<depth> = %state<depth> || 0;
+	%state<sandtrap> = %state<sandtrap> || 0;
 
 	my $cfgopts_ = $m_opt ?? "$m_opt={%state<value>}:$cfgopts" !! $cfgopts;
 	my $shader = run_cfg($cfgopts_);
@@ -115,18 +118,29 @@ sub test(Str $cfgopts, :$prev = (""=>{All=>0}), *%state_ --> Pair) {
 	return ($cfgopts_ => %ssim) if ++%state<depth> >= %state<iter>;
 
 	given $prev.value<All> {
-		when abs(%ssim<All> - $_) < $m_epsilon { # early exit
-			return ($cfgopts_ => %ssim);
+		when abs(%ssim<All> - $_) < $m_epsilon {
+			note("maximizer: sandtrap");
+			%state<sandtrap>++;
+			%state<step> = %state<step>**%state<step>;
+			%state<step> = 1/%state<step> if %ssim<All> < $_; # estimate best travel direction
+			return test($cfgopts, |%state, :prev($cfgopts_ => %ssim), :value(%state<value> * %state<step> * %state<step>));
 		}
-		when %ssim<All> > $_ { # keep multiplying, tail recurse
-			return test($cfgopts, |%state, :prev($cfgopts_ => %ssim), :value(%state<value> * $m_step));
+		when %ssim<All> > $_ { # just keep going
+			return test($cfgopts, |%state, :prev($cfgopts_ => %ssim), :value(%state<value> * %state<step>));
 		}
-		when %ssim<All> < $_ { # start maximizing
-			my %max := {value => %state<value> / $m_step, result => $prev};
+		when %ssim<All> < $_ {
+			if %state<depth> <= 2 { # handle overestimates
+				note("maximizer: changing course");
+				%state<step> = 1/%state<step>;
+				return test($cfgopts, |%state, :prev($prev), :value(%state<value> * %state<step> * %state<step>));
+			}
+
+			note("maximizer: starting binary search");
+
+			my %max := {value => %state<value> / %state<step>, result => $prev};
 			my $step_sz = %state<value> - %max<value>;
 			loop (my $i = 1 ;; $i++) {
 				my $substep = $step_sz/($i*2);
-				%max.note;
 				my @tests = [];
 				@tests.push(%max);
 
@@ -143,7 +157,7 @@ sub test(Str $cfgopts, :$prev = (""=>{All=>0}), *%state_ --> Pair) {
 				last if $done;
 			}
 			stats %max<result>.key, %max<result>.value;
-			note("Maximized in %state<depth> iterations\n");
+			note("maximizer: finished in %state<depth> iterations\n");
 			return %max<result>;
 		}
 	}
@@ -184,7 +198,7 @@ sub MAIN(
 	Bool :$force = False
 ) {
 	%gbl<tmp shader dry-run verbose vk plane> = $tmpfile, $shader, $dry-run, ($verbose || $v), $vk-device, $plane;
-	%gbl<max> = roundrobin(split(':', $max), split(':', ":10:1.25:1e-5:Inf")).map({ $_[0] || $_[1] }).list;
+	%gbl<max> = roundrobin(split(':', $max), split(':', ":10:1.25:3e-5:Inf")).map({ $_[0] || $_[1] }).list;
 
 	die 'no test media specified' if not @test-media;
 	
