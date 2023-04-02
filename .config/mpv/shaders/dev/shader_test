@@ -1,7 +1,6 @@
 #!/usr/bin/env raku
 
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
-# XXX support testing on non-yuv420p?
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
 # XXX document this script better
@@ -15,8 +14,6 @@ my %tmp;
 END %tmp.values.flat.map(&unlink);
 
 my $ffmpeg = "ffmpeg -nostdin -y";
-my $ffv1 = "-c:v ffv1 -pix_fmt yuv420p";
-
 # drop stderr and/or stdout if they aren't requested
 # die and print stdout & stderr if command fails
 &run.wrap(sub (*@args, *%opts --> Proc) {
@@ -76,7 +73,7 @@ sub run_cfg(Str $cfgopts --> Str) {
 }
 
 sub shader_ssim(Str $in1, Str $in2, Str $shader --> Str) {
-	my $vf = "hwupload,libplacebo=custom_shader_path=$shader,hwdownload,format=yuv420p[placebo]; [placebo]ssim=-";
+	my $vf = "hwupload,libplacebo=custom_shader_path=$shader\:format={%gbl<pix-fmt>},hwdownload[placebo]; [placebo]ssim=-";
 	run(<<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out).out.slurp(:close);
 }
 
@@ -118,12 +115,13 @@ sub test(Str $cfgopts, :$prev = (""=>{All=>0}), *%state_ --> Pair) {
 	return ($cfgopts_ => %ssim) if ++%state<depth> >= %state<iter>;
 
 	given $prev.value<All> {
+		# XXX maybe don't sandtrap after changing course?
 		when abs(%ssim<All> - $_) < $m_epsilon {
 			note("maximizer: sandtrap");
 			%state<sandtrap>++;
 			%state<step> = %state<step>**%state<step>;
 			%state<step> = 1/%state<step> if %ssim<All> < $_; # estimate best travel direction
-			return test($cfgopts, |%state, :prev($cfgopts_ => %ssim), :value(%state<value> * %state<step> * %state<step>));
+			return test($cfgopts, |%state, :prev($cfgopts_ => %ssim), :value(%state<value> * %state<step>**2));
 		}
 		when %ssim<All> > $_ { # just keep going
 			return test($cfgopts, |%state, :prev($cfgopts_ => %ssim), :value(%state<value> * %state<step>));
@@ -132,7 +130,7 @@ sub test(Str $cfgopts, :$prev = (""=>{All=>0}), *%state_ --> Pair) {
 			if %state<depth> <= 2 { # handle overestimates
 				note("maximizer: changing course");
 				%state<step> = 1/%state<step>;
-				return test($cfgopts, |%state, :prev($prev), :value(%state<value> * %state<step> * %state<step>));
+				return test($cfgopts, |%state, :prev($prev), :value(%state<value> * %state<step>**2));
 			}
 
 			note("maximizer: starting binary search");
@@ -171,7 +169,7 @@ sub vfconcat(@media, Str :$ext = "concat", Bool :$rm = False, Int :$loop = 0) {
 		(<<-stream_loop $loop>> if $loop),
 		@media.map({ ('-i', $_) }).flat,
 		(<<-lavfi "concat={@media.elems},setpts=N/(FR*TB)">> if @media.elems > 1),
-		<<$ffv1 "$out-file">>;
+		<<%gbl<ffv1> "$out-file">>;
 
 	@media.map(&unlink) if $rm;
 	$out-file;
@@ -190,6 +188,7 @@ sub MAIN(
 	Str :$vk-device = "vulkan",
 	Str :$stats-dir where *.IO.d = "stats",
 	Str :$max = "",
+	Str :$pix-fmt = "yuv444p",
 	Int :$realizations where *>0 = 10,
 	Bool :$skip-stats = False,
 	Bool :$dry-run = False,
@@ -198,7 +197,8 @@ sub MAIN(
 	Bool :$force = False
 ) {
 	%gbl<tmp shader dry-run verbose vk plane> = $tmpfile, $shader, $dry-run, ($verbose || $v), $vk-device, $plane;
-	%gbl<max> = roundrobin(split(':', $max), split(':', ":10:1.25:3e-5:Inf")).map({ $_[0] || $_[1] }).list;
+	%gbl<ffv1 pix-fmt> = "-c:v ffv1 -pix_fmt $pix-fmt", $pix-fmt;
+	%gbl<max> = roundrobin($max.split(':'), ":10:1.25:1e-5:Inf".split(':')).map({ $_[0] || $_[1] }).list;
 
 	die 'no test media specified' if not @test-media;
 	
@@ -241,7 +241,7 @@ sub MAIN(
 			^$realizations ==> map({
 				my $file = "{%gbl<tmp>}.corrupt$_.mkv";
 				my $vf = "noise=alls=$noise\:all_seed=$_\:allf=t";
-				run <<$ffmpeg -i "%tmp<media>" $ffv1 -vf "$vf" "$file">>;
+				run <<$ffmpeg -i "%tmp<media>" %gbl<ffv1> -vf "$vf" "$file">>;
 				$file;
 			}) ==> list() ==> %tmp<corrupt>;
 
