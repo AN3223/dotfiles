@@ -3,7 +3,6 @@
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
-# XXX document this script better
 # XXX proper range parsing? esp. to ensure the output type is the same as input
 # XXX it may be possible to aggressively merge calls to ffmpeg
 
@@ -79,6 +78,7 @@ sub shader_ssim(Str $in1, Str $in2, Str $shader --> Str) {
 	run(<<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out).out.slurp(:close);
 }
 
+# XXX base output on %gbl<plane>
 sub stats($cfgopts, %ssim, :$erronly = False) {
 	my $s = "$cfgopts Y %ssim<Y> U %ssim<U> V %ssim<V> All %ssim<All>";
 	if $erronly {
@@ -91,6 +91,7 @@ sub stats($cfgopts, %ssim, :$erronly = False) {
 
 # runs ffmpeg for testing, optionally maximizes a parameter
 # XXX maybe break the maximization logic off into a separate function
+# XXX utilize %gbl<plane> to only check the relevant SSIMs
 sub test(Str $cfgopts, :$prev = (""=>{All=>0}), *%state_ --> Pair) {
 	my %state = %state_; # for mutating
 
@@ -165,8 +166,7 @@ sub test(Str $cfgopts, :$prev = (""=>{All=>0}), *%state_ --> Pair) {
 }
 
 # Concatenates or loops files and removes the originals if requested
-# XXX scale here?
-sub vfconcat(@media, Str :$ext = "concat", Bool :$rm = False, Int :$loop = 0) {
+sub vfconcat(@media, Str :$ext = "concat", Bool :$rm = False, Int() :$loop = 0) {
 	my $out-file = "{%gbl<tmp>}.$ext.mkv";
 
 	run <<$ffmpeg>>,
@@ -188,8 +188,7 @@ sub MAIN(
 	Str :$cfgopts = "", #= Arguments passed to the dispatched _cfg script, if dispatched
 	Str :$shader where *.IO.r = "nlmeans_template", #= Shader used for testing
 	Str :$plane = "LUMA", #= Plane to test on
-	# XXX would it be simpler to make this the raku equivalent of an enum?
-	Str :$corruption = "NOISE=10", #= Corruption type, can be NOISE, JPEG, or DOWNSCALE
+	Str :$corruption = "NOISE=10:10", #= Corruption type, can be NOISE, JPEG, or SCALE
 	Str :$tmpfile = "shader_test.tmp", #= Template for temporary filenames
 	Str :$vk-device = "vulkan", #= Device name passed to ffmpeg's -init_hw_device option
 	Str :$stats-dir where *.IO.d = "stats", #= Directory where stats will be stored
@@ -197,8 +196,6 @@ sub MAIN(
 	Str :$pix-fmt = "yuv444p", #= Pixel format used for everything
 	Str :$colorspace = "bt709", #= Colorspace used for everything
 	Str :$resolution where /^\d+ ':' \d+$/ = "1080:1080", #= Resolution used for everything
-	# XXX just parse this out of NOISE?
-	Int :$realizations where *>0 = 10, #= Number of realizations for NOISE corruption
 	Bool :$skip-stats = False, #= Skip writing to a stats file (still requires a real --stats-dir)
 	Bool :$dry-run = False, #= Simulate a test run, print useful info
 	Bool :$verbose = False, Bool :$v = False, #= Verbose output for debugging
@@ -211,15 +208,13 @@ sub MAIN(
 
 	die 'no test media specified' if not @test-media;
 	
-	# XXX include pixel format and colorspace here
-	# XXX try to make the filename shorter?
 	my @statsfile = (
 		# friendly shader name
 		%gbl<shader>.IO.basename.subst(/nlmeans/, "NLM").subst(/(_template$|\.glsl$)/),
 		# comma delimited basenames of test-media w/o extensions
 		@test-media.map({ .IO.basename.split('.', :skip-empty)[0] }).join(','),
-		%gbl<plane>, $corruption, "RZ=$realizations", "CAT={(!$no-concat).Int}",
-		"MAX={%gbl<max>.join(':')}", $cfgopts
+		%gbl<plane>, $corruption, %gbl<resolution>.subst(':', 'x'), %gbl<pix-fmt>,
+		"CAT={(!$no-concat).Int}", "MAX={%gbl<max>.join(':')}", $cfgopts
 	);
 	my $statsfile = "$stats-dir/{@statsfile.join(':').trans('/' => '_')}.stats";
 
@@ -245,8 +240,8 @@ sub MAIN(
 	# XXX add a "bring your own" corruption where you can specify your own corrupt test media
 	note('Corrupting test media...');
 	given $corruption.split('=') {
-		when $_[0] eq "NOISE" {
-			my $noise = $_[1];
+		when $_[0] eq "NOISE" { # NOISE=NOISE_LEVEL:REALIZATIONS
+			my ($noise, $realizations) = $_[1].split(':');
 			^$realizations ==> map({
 				my $file = "{%gbl<tmp>}.corrupt$_.mkv";
 				my $vf = "noise=alls=$noise\:all_seed=$_\:allf=t";
@@ -259,14 +254,18 @@ sub MAIN(
 				%tmp<media> = vfconcat(List(%tmp<media>), :rm, :loop($realizations), :ext('looped'));
 			}
 		}
-		when $_[0] eq "JPEG" {
+		when $_[0] eq "JPEG" { # JPEG=QUALITY
 			my $codec = "-q\:v {$_[1]} -c\:v mjpeg";
 			%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
 			run <<$ffmpeg -i "%tmp<media>" $codec "%tmp<corrupt>[0]">>;
 		}
-		when $_[0] eq "DOWNSCALE" {
+		when $_[0] eq "SCALE" { # SCALE=WIDTH:HEIGHT:SCALE_OPTS
 			%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
 			run <<$ffmpeg -i "%tmp<media>" -vf "scale={$_[1..*].join('=')}" {%gbl<ffv1>} "%tmp<corrupt>[0]">>;
+		}
+		when $_[0] eq "FORMAT" { # FORMAT=FORMAT
+			%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
+			run <<$ffmpeg -i "%tmp<media>" {%gbl<ffv1>} -vf "format=$_[1]" "%tmp<corrupt>[0]">>;
 		}
 	}
 
