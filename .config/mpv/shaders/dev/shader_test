@@ -92,6 +92,7 @@ sub stats($cfgopts, $ssim, :$erronly = False) {
 	} else {
 		print("$cfgopts $ssim\n");
 		%gbl<statsfile>.print("$cfgopts $ssim\n") if %gbl<statsfile>;
+		%gbl<statsfile>.flush if %gbl<statsfile>;
 	}
 }
 
@@ -307,7 +308,7 @@ sub MAIN(
 	if %gbl<statsfile> {
 		%gbl<statsfile>.close();
 		note("\nSorted worst to best:\n");
-		run(<sort -k 9 -n>, :in(open %gbl<statsfile>.IO.path), :out)
+		run(<sort -k 2 -n>, :in(open %gbl<statsfile>.IO.path), :out)
 			.out.slurp(:close).split("\n")
 			==> { .elems < 15 ?? $_ !! $_[*-15..*] }() # last 15 or less
 			==> join("\n") ==> note();
