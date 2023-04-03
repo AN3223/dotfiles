@@ -117,14 +117,14 @@ sub test(Str $cfgopts, :$prev = (""=>{All=>0}), *%state_ --> Pair) {
 	return ($cfgopts_ => %ssim) if ++%state<depth> >= %state<iter>;
 
 	given $prev.value<All> {
-		# XXX maybe don't sandtrap after changing course?
-		when abs(%ssim<All> - $_) < $m_epsilon {
+		when abs(%ssim<All> - $_) < $m_epsilon && !%state<course-change> {
 			note("maximizer: sandtrap");
 			%state<sandtrap>++;
 			%state<step> = %state<step>**%state<step>;
 			%state<step> = 1/%state<step> if %ssim<All> < $_; # estimate best travel direction
 			return test($cfgopts, |%state, :prev($cfgopts_ => %ssim), :value(%state<value> * %state<step>**2));
 		}
+		# XXX the step size should probably scale with the change in SSIM somehow
 		when %ssim<All> > $_ { # just keep going
 			return test($cfgopts, |%state, :prev($cfgopts_ => %ssim), :value(%state<value> * %state<step>));
 		}
@@ -132,6 +132,7 @@ sub test(Str $cfgopts, :$prev = (""=>{All=>0}), *%state_ --> Pair) {
 			if %state<depth> <= 2 { # handle overestimates
 				note("maximizer: changing course");
 				%state<step> = 1/%state<step>;
+				%state<course-change> = True;
 				return test($cfgopts, |%state, :prev($prev), :value(%state<value> * %state<step>**2));
 			}
 
