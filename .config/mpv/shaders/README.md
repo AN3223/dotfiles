@@ -2,7 +2,9 @@ The nlmeans shaders are denoisers and/or adaptive sharpeners. They have document
 
 The guided shaders are also denoisers. They are faster but lower quality than NLM. The self-guided (_s) variants are slightly faster but even lower quality.
 
-Nvidia users have reported issues regarding NLM. If you are an Nvidia user experiencing problems, try setting `gpu-api=opengl` in mpv. If you still experience problems, try setting RI and RFI to zero. If it's too blurry, try turning down the denoising factor (`S`).
+Nvidia users have reported issues regarding NLM. If you are an Nvidia user experiencing problems, try setting `gpu-api=opengl` (or `gpu-context=win` on Windows) in mpv. If you still experience problems, try setting RI and RFI to zero. If it's way too blurry, try turning down the denoising factor (`S`).
+
+Macbook Pro 2019 has been reported to be non-functional with NLM as well.
 
 I unwisely placed these shaders in my dotfiles repository, not anticipating ever having more than just one shader here. They are here to stay though, since I do not want to break links/clones. I recommend cloning with `--depth 1` to save space/bandwidth/time.
 
