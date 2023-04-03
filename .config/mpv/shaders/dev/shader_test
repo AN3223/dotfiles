@@ -73,7 +73,7 @@ sub run_cfg(Str $cfgopts --> Str) {
 }
 
 sub shader_ssim(Str $in1, Str $in2, Str $shader --> Str) {
-	my $vf = "hwupload,libplacebo=custom_shader_path=$shader\:format={%gbl<pix-fmt>},hwdownload[placebo]; [placebo]ssim=-";
+	my $vf = "hwupload,libplacebo={%gbl<scale>.split(':')[0..1].join(':')}\:{%gbl<pix-fmt>}:custom_shader_path=$shader,hwdownload[placebo]; [placebo]ssim=-";
 	run(<<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out).out.slurp(:close);
 }
 
@@ -189,6 +189,8 @@ sub MAIN(
 	Str :$stats-dir where *.IO.d = "stats",
 	Str :$max = "",
 	Str :$pix-fmt = "yuv444p",
+	Str :$colorspace = "bt709",
+	Str :$scale = "1080:1080",
 	Int :$realizations where *>0 = 10,
 	Bool :$skip-stats = False,
 	Bool :$dry-run = False,
@@ -196,8 +198,8 @@ sub MAIN(
 	Bool :$no-concat = False,
 	Bool :$force = False
 ) {
-	%gbl<tmp shader dry-run verbose vk plane> = $tmpfile, $shader, $dry-run, ($verbose || $v), $vk-device, $plane;
-	%gbl<ffv1 pix-fmt> = "-c:v ffv1 -pix_fmt $pix-fmt", $pix-fmt;
+	%gbl<tmp shader dry-run verbose vk plane scale> = $tmpfile, $shader, $dry-run, ($verbose || $v), $vk-device, $plane, $scale;
+	%gbl<ffv1 pix-fmt> = "-c:v ffv1 -colorspace $colorspace -pix_fmt $pix-fmt", $pix-fmt, $colorspace;
 	%gbl<max> = roundrobin($max.split(':'), ":10:1.25:1e-5:Inf".split(':')).map({ $_[0] || $_[1] }).list;
 
 	die 'no test media specified' if not @test-media;
@@ -228,16 +230,14 @@ sub MAIN(
 		}
 	}
 
-	# XXX add option to downscale
 	note('Encoding test media...');
 	%tmp<media> = vfconcat(@test-media);
 
-	# XXX add a downscale corruption for testing upscalers
 	# XXX add a "bring your own" corruption where you can specify your own corrupt test media
 	note('Corrupting test media...');
-	given $corruption {
-		when /^NOISE\=/ {
-			my $noise = $corruption.split('=')[1];
+	given $corruption.split('=') {
+		when $_[0] eq "NOISE" {
+			my $noise = $_[1];
 			^$realizations ==> map({
 				my $file = "{%gbl<tmp>}.corrupt$_.mkv";
 				my $vf = "noise=alls=$noise\:all_seed=$_\:allf=t";
@@ -250,11 +250,14 @@ sub MAIN(
 				%tmp<media> = vfconcat(List(%tmp<media>), :rm, :loop($realizations), :ext('looped'));
 			}
 		}
-		when /^JPEG\=/ {
-			my $quality = $corruption.split('=')[1];
-			my $codec = "-q\:v $quality -c\:v mjpeg";
+		when $_[0] eq "JPEG" {
+			my $codec = "-q\:v {$_[1]} -c\:v mjpeg";
 			%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
 			run <<$ffmpeg -i "%tmp<media>" $codec "%tmp<corrupt>[0]">>;
+		}
+		when $_[0] eq "DOWNSCALE" {
+			%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
+			run <<$ffmpeg -i "%tmp<media>" -vf "scale={$_[1..*].join('=')}" {%gbl<ffv1>} "%tmp<corrupt>[0]">>;
 		}
 	}
 
@@ -262,7 +265,7 @@ sub MAIN(
 	my %baseline;
 	if not %gbl<dry-run> {
 		%tmp<corrupt>.map({
-			run(<<$ffmpeg -i "%tmp<media>" -i "$_" -lavfi ssim=- -f null ->>, :out).out.slurp(:close)
+			run(<<$ffmpeg -i "$_" -i "%tmp<media>" -lavfi "scale={%gbl<scale>},ssim=-" {%gbl<ffv1>} -f null ->>, :out).out.slurp(:close)
 		}).join("\n") ==> avgssim() ==> %baseline;
 
 		stats "BASELINE=$corruption", %baseline;
