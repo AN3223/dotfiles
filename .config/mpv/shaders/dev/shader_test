@@ -5,6 +5,7 @@
 # XXX make a script for plotting stats files
 # XXX document this script better
 # XXX proper range parsing? esp. to ensure the output type is the same as input
+# XXX it may be possible to aggressively merge calls to ffmpeg
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
@@ -42,6 +43,7 @@ sub avgssim(Str $out --> Hash) {
 
 # dispatches the appropriate cfg script (if any) w/ $cfgopts
 # returns the path to the new shader
+# XXX allow custom cfg scripts to be dispatched
 sub run_cfg(Str $cfgopts --> Str) {
 	return %gbl<shader> if !$cfgopts && %gbl<shader>.IO.basename !~~ /_template$/;
 
@@ -53,7 +55,7 @@ sub run_cfg(Str $cfgopts --> Str) {
 		note($!) if %gbl<verbose>;
 	}
 	my $path = $out-shader.IO.path;
-	LEAVE { $out-shader.close; $in-shader.close; }
+	LEAVE { $out-shader.close with $out-shader; $in-shader.close with $in-shader; }
 
 	given %gbl<shader> {
 		when /nlmeans/ {
@@ -73,7 +75,7 @@ sub run_cfg(Str $cfgopts --> Str) {
 }
 
 sub shader_ssim(Str $in1, Str $in2, Str $shader --> Str) {
-	my $vf = "hwupload,libplacebo={%gbl<scale>.split(':')[0..1].join(':')}\:{%gbl<pix-fmt>}:custom_shader_path=$shader,hwdownload[placebo]; [placebo]ssim=-";
+	my $vf = "hwupload,libplacebo={%gbl<resolution>.split(':')[0..1].join(':')}\:{%gbl<pix-fmt>}:custom_shader_path=$shader,hwdownload[placebo]; [placebo]ssim=-";
 	run(<<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out).out.slurp(:close);
 }
 
@@ -103,7 +105,7 @@ sub test(Str $cfgopts, :$prev = (""=>{All=>0}), *%state_ --> Pair) {
 	my $cfgopts_ = $m_opt ?? "$m_opt={%state<value>}:$cfgopts" !! $cfgopts;
 	my $shader = run_cfg($cfgopts_);
 	my @out = %tmp<corrupt>.map({ shader_ssim($_, %tmp<media>, $shader) });
-	unlink %tmp{$shader}:delete;
+	unlink %tmp{$shader}:delete with %tmp{$shader};
 	my %ssim = avgssim(@out.join("\n"));
 
 	if $m_opt {
@@ -162,6 +164,7 @@ sub test(Str $cfgopts, :$prev = (""=>{All=>0}), *%state_ --> Pair) {
 }
 
 # Concatenates or loops files and removes the originals if requested
+# XXX scale here?
 sub vfconcat(@media, Str :$ext = "concat", Bool :$rm = False, Int :$loop = 0) {
 	my $out-file = "{%gbl<tmp>}.$ext.mkv";
 
@@ -179,31 +182,36 @@ sub vfconcat(@media, Str :$ext = "concat", Bool :$rm = False, Int :$loop = 0) {
 sub find(IO::Path() $f --> Array()) { $f.d ?? dir($f).flatmap(&find) !! ($f) }
 
 sub MAIN(
-	*@test-media,
-	Str :$cfgopts = "",
-	Str :$shader where *.IO.r = "nlmeans_template",
-	Str :$plane = "LUMA",
-	Str :$corruption = "NOISE=10",
-	Str :$tmpfile = "shader_test.tmp",
-	Str :$vk-device = "vulkan",
-	Str :$stats-dir where *.IO.d = "stats",
-	Str :$max = "",
-	Str :$pix-fmt = "yuv444p",
-	Str :$colorspace = "bt709",
-	Str :$scale = "1080:1080",
-	Int :$realizations where *>0 = 10,
-	Bool :$skip-stats = False,
-	Bool :$dry-run = False,
-	Bool :$verbose = False, Bool :$v = False,
-	Bool :$no-concat = False,
-	Bool :$force = False
+	#= script for testing the SSIM between corrupt->filtered image and the original image
+	*@test-media, #= Files/directories to test on
+	Str :$cfgopts = "", #= Arguments passed to the dispatched _cfg script, if dispatched
+	Str :$shader where *.IO.r = "nlmeans_template", #= Shader used for testing
+	Str :$plane = "LUMA", #= Plane to test on
+	# XXX would it be simpler to make this the raku equivalent of an enum?
+	Str :$corruption = "NOISE=10", #= Corruption type, can be NOISE, JPEG, or DOWNSCALE
+	Str :$tmpfile = "shader_test.tmp", #= Template for temporary filenames
+	Str :$vk-device = "vulkan", #= Device name passed to ffmpeg's -init_hw_device option
+	Str :$stats-dir where *.IO.d = "stats", #= Directory where stats will be stored
+	Str :$max = "", #= Maximize a parameter, syntax goes PARAM:ESTIMATE:STEP_FACTOR:EPSILON:ITERATION_LIMIT
+	Str :$pix-fmt = "yuv444p", #= Pixel format used for everything
+	Str :$colorspace = "bt709", #= Colorspace used for everything
+	Str :$resolution where /^\d+ ':' \d+$/ = "1080:1080", #= Resolution used for everything
+	# XXX just parse this out of NOISE?
+	Int :$realizations where *>0 = 10, #= Number of realizations for NOISE corruption
+	Bool :$skip-stats = False, #= Skip writing to a stats file (still requires a real --stats-dir)
+	Bool :$dry-run = False, #= Simulate a test run, print useful info
+	Bool :$verbose = False, Bool :$v = False, #= Verbose output for debugging
+	Bool :$no-concat = False, #= Skip concatenation step, very slow but may be necessary for temporal testing
+	Bool :$force = False #= Force overwrite the stats file
 ) {
-	%gbl<tmp shader dry-run verbose vk plane scale> = $tmpfile, $shader, $dry-run, ($verbose || $v), $vk-device, $plane, $scale;
+	%gbl<tmp shader dry-run verbose vk plane resolution> = $tmpfile, $shader, $dry-run, ($verbose || $v), $vk-device, $plane, $resolution;
 	%gbl<ffv1 pix-fmt> = "-c:v ffv1 -colorspace $colorspace -pix_fmt $pix-fmt", $pix-fmt, $colorspace;
 	%gbl<max> = roundrobin($max.split(':'), ":10:1.25:1e-5:Inf".split(':')).map({ $_[0] || $_[1] }).list;
 
 	die 'no test media specified' if not @test-media;
 	
+	# XXX include pixel format and colorspace here
+	# XXX try to make the filename shorter?
 	my @statsfile = (
 		# friendly shader name
 		%gbl<shader>.IO.basename.subst(/nlmeans/, "NLM").subst(/(_template$|\.glsl$)/),
@@ -265,7 +273,7 @@ sub MAIN(
 	my %baseline;
 	if not %gbl<dry-run> {
 		%tmp<corrupt>.map({
-			run(<<$ffmpeg -i "$_" -i "%tmp<media>" -lavfi "scale={%gbl<scale>},ssim=-" {%gbl<ffv1>} -f null ->>, :out).out.slurp(:close)
+			run(<<$ffmpeg -i "$_" -i "%tmp<media>" -lavfi "scale={%gbl<resolution>},ssim=-" {%gbl<ffv1>} -f null ->>, :out).out.slurp(:close)
 		}).join("\n") ==> avgssim() ==> %baseline;
 
 		stats "BASELINE=$corruption", %baseline;
