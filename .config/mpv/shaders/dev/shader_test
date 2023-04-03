@@ -33,11 +33,19 @@ my $ffmpeg = "ffmpeg -nostdin -y";
 });
 
 # parses output from ffmpeg's SSIM filter and outputs an average
-sub avgssim(Str $out --> Hash) {
+sub avgssim(Str $out --> Rat) {
 	$out.note if %gbl<verbose>;
+	my %avg;
 	$out ==> split("\n", :skip-empty)
 	     ==> map({ .split(' ')[1..*-2]>>.split(':').flat.hash })
 	     ==> { [>>+<<] $_ >>/>> .elems }() # hash average
+	     ==> %avg;
+	
+	given %gbl<plane> {
+	when 'LUMA' { return %avg<Y>; }
+	when 'CHROMA' { return (%avg<U> + %avg<V>)/2; }
+	default { return ([+] %avg.values) / %avg.values.elems; }
+	}
 }
 
 # dispatches the appropriate cfg script (if any) w/ $cfgopts
@@ -57,17 +65,17 @@ sub run_cfg(Str $cfgopts --> Str) {
 	LEAVE { $out-shader.close with $out-shader; $in-shader.close with $in-shader; }
 
 	given %gbl<shader> {
-		when /nlmeans/ {
-			run <./nlmeans_cfg>, :in($in-shader), :out($out-shader),
-				:env(
-					"NLM_{%gbl<plane> eq 'LUMA' ?? 'LUMA' !! 'CHROMA'}" => $cfgopts,
-					"NLM_OPTS" => "HOOKS=%gbl<plane>"
-				);
-		}
-		when /guided/ {
-			run <./guided_cfg>, :in($in-shader), :out($out-shader),
-				:env("GUIDED_OPTS" => "$cfgopts\:HOOKS=%gbl<plane>");
-		}
+	when /nlmeans/ {
+		run <./nlmeans_cfg>, :in($in-shader), :out($out-shader),
+			:env(
+				"NLM_{%gbl<plane> eq 'LUMA' ?? 'LUMA' !! 'CHROMA'}" => $cfgopts,
+				"NLM_OPTS" => "HOOKS=%gbl<plane>"
+			);
+	}
+	when /guided/ {
+		run <./guided_cfg>, :in($in-shader), :out($out-shader),
+			:env("GUIDED_OPTS" => "$cfgopts\:HOOKS=%gbl<plane>");
+	}
 	}
 
 	%tmp{$path} = $path;
@@ -78,21 +86,18 @@ sub shader_ssim(Str $in1, Str $in2, Str $shader --> Str) {
 	run(<<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out).out.slurp(:close);
 }
 
-# XXX base output on %gbl<plane>
-sub stats($cfgopts, %ssim, :$erronly = False) {
-	my $s = "$cfgopts Y %ssim<Y> U %ssim<U> V %ssim<V> All %ssim<All>";
+sub stats($cfgopts, $ssim, :$erronly = False) {
 	if $erronly {
-		note($s);
+		note("$cfgopts $ssim");
 	} else {
-		print("$s\n");
-		%gbl<statsfile>.print("$s\n") if %gbl<statsfile>;
+		print("$cfgopts $ssim\n");
+		%gbl<statsfile>.print("$cfgopts $ssim\n") if %gbl<statsfile>;
 	}
 }
 
 # runs ffmpeg for testing, optionally maximizes a parameter
 # XXX maybe break the maximization logic off into a separate function
-# XXX utilize %gbl<plane> to only check the relevant SSIMs
-sub test(Str $cfgopts, :$prev = (""=>{All=>0}), *%state_ --> Pair) {
+sub test(Str $cfgopts, :$prev = (""=>0.0), *%state_ --> Pair) {
 	my %state = %state_; # for mutating
 
 	# set default values
@@ -107,61 +112,61 @@ sub test(Str $cfgopts, :$prev = (""=>{All=>0}), *%state_ --> Pair) {
 	my $shader = run_cfg($cfgopts_);
 	my @out = %tmp<corrupt>.map({ shader_ssim($_, %tmp<media>, $shader) });
 	unlink %tmp{$shader}:delete with %tmp{$shader};
-	my %ssim = avgssim(@out.join("\n"));
+	my $ssim = avgssim(@out.join("\n"));
 
 	if $m_opt {
-		stats($cfgopts_, %ssim, :erronly);
+		stats($cfgopts_, $ssim, :erronly);
 	} else {
-		stats($cfgopts_, %ssim);
+		stats($cfgopts_, $ssim);
 	}
 
-	return ($cfgopts_ => %ssim) if ++%state<depth> >= %state<iter>;
+	return ($cfgopts_ => $ssim) if ++%state<depth> >= %state<iter>;
 
-	given $prev.value<All> {
-		when abs(%ssim<All> - $_) < $m_epsilon && !%state<course-change> {
-			note("maximizer: sandtrap");
-			%state<sandtrap>++;
-			%state<step> = %state<step>**%state<step>;
-			%state<step> = 1/%state<step> if %ssim<All> < $_; # estimate best travel direction
-			return test($cfgopts, |%state, :prev($cfgopts_ => %ssim), :value(%state<value> * %state<step>**2));
+	given $prev.value {
+	when abs($ssim - $_) < $m_epsilon && !%state<course-change> {
+		note("maximizer: sandtrap");
+		%state<sandtrap>++;
+		%state<step> = %state<step>**%state<step>;
+		%state<step> = 1/%state<step> if $ssim < $_; # estimate best travel direction
+		return test($cfgopts, |%state, :prev($cfgopts_ => $ssim), :value(%state<value> * %state<step>**2));
+	}
+	# XXX the step size should probably scale with the change in SSIM somehow
+	when $ssim > $_ { # just keep going
+		return test($cfgopts, |%state, :prev($cfgopts_ => $ssim), :value(%state<value> * %state<step>));
+	}
+	when $ssim < $_ {
+		if %state<depth> <= 2 { # handle overestimates
+			note("maximizer: changing course");
+			%state<step> = 1/%state<step>;
+			%state<course-change> = True;
+			return test($cfgopts, |%state, :prev($prev), :value(%state<value> * %state<step>**2));
 		}
-		# XXX the step size should probably scale with the change in SSIM somehow
-		when %ssim<All> > $_ { # just keep going
-			return test($cfgopts, |%state, :prev($cfgopts_ => %ssim), :value(%state<value> * %state<step>));
-		}
-		when %ssim<All> < $_ {
-			if %state<depth> <= 2 { # handle overestimates
-				note("maximizer: changing course");
-				%state<step> = 1/%state<step>;
-				%state<course-change> = True;
-				return test($cfgopts, |%state, :prev($prev), :value(%state<value> * %state<step>**2));
-			}
 
-			note("maximizer: starting binary search");
+		note("maximizer: starting binary search");
 
-			my %max := {value => %state<value> / %state<step>, result => $prev};
-			my $step_sz = %state<value> - %max<value>;
-			loop (my $i = 1 ;; $i++) {
-				my $substep = $step_sz/($i*2);
-				my @tests = [];
-				@tests.push(%max);
+		my %max := {value => %state<value> / %state<step>, result => $prev};
+		my $step_sz = %state<value> - %max<value>;
+		loop (my $i = 1 ;; $i++) {
+			my $substep = $step_sz/($i*2);
+			my @tests = [];
+			@tests.push(%max);
 
-				my $done = False;
-				for [%max<value> + $substep, %max<value> - $substep] -> $incr {
-					@tests.push({value=>$incr, result=>test($cfgopts, |%state, :value($incr), :iter(1))});
-					@tests.=sort: *<result>.value<All>;
-					%max := @tests[*-1];
+			my $done = False;
+			for [%max<value> + $substep, %max<value> - $substep] -> $incr {
+				@tests.push({value=>$incr, result=>test($cfgopts, |%state, :value($incr), :iter(1))});
+				@tests.=sort: *<result>.value;
+				%max := @tests[*-1];
 
-					$done = True if ++%state<depth> >= %state<iter>;
-					$done = True if abs(%max<result>.value<All> - @tests[*-2]<result>.value<All>) < $m_epsilon;
-					last if $done;
-				}
+				$done = True if ++%state<depth> >= %state<iter>;
+				$done = True if abs(%max<result>.value - @tests[*-2]<result>.value) < $m_epsilon;
 				last if $done;
 			}
-			stats %max<result>.key, %max<result>.value;
-			note("maximizer: finished in %state<depth> iterations\n");
-			return %max<result>;
+			last if $done;
 		}
+		stats %max<result>.key, %max<result>.value;
+		note("maximizer: finished in %state<depth> iterations\n");
+		return %max<result>;
+	}
 	}
 }
 
@@ -204,7 +209,7 @@ sub MAIN(
 ) {
 	%gbl<tmp shader dry-run verbose vk plane resolution> = $tmpfile, $shader, $dry-run, ($verbose || $v), $vk-device, $plane, $resolution;
 	%gbl<ffv1 pix-fmt> = "-c:v ffv1 -colorspace $colorspace -pix_fmt $pix-fmt", $pix-fmt, $colorspace;
-	%gbl<max> = roundrobin($max.split(':'), ":10:1.25:1e-5:Inf".split(':')).map({ $_[0] || $_[1] }).list;
+	%gbl<max> = roundrobin($max.split(':'), ":10:1.25:1e-6:Inf".split(':')).map({ $_[0] || $_[1] }).list;
 
 	die 'no test media specified' if not @test-media;
 	
@@ -240,43 +245,43 @@ sub MAIN(
 	# XXX add a "bring your own" corruption where you can specify your own corrupt test media
 	note('Corrupting test media...');
 	given $corruption.split('=') {
-		when $_[0] eq "NOISE" { # NOISE=NOISE_LEVEL:REALIZATIONS
-			my ($noise, $realizations) = $_[1].split(':');
-			^$realizations ==> map({
-				my $file = "{%gbl<tmp>}.corrupt$_.mkv";
-				my $vf = "noise=alls=$noise\:all_seed=$_\:allf=t";
-				run <<$ffmpeg -i "%tmp<media>" %gbl<ffv1> -vf "$vf" "$file">>;
-				$file;
-			}) ==> list() ==> %tmp<corrupt>;
+	when $_[0] eq "NOISE" { # NOISE=NOISE_LEVEL:REALIZATIONS
+		my ($noise, $realizations) = $_[1].split(':');
+		^$realizations ==> map({
+			my $file = "{%gbl<tmp>}.corrupt$_.mkv";
+			my $vf = "noise=alls=$noise\:all_seed=$_\:allf=t";
+			run <<$ffmpeg -i "%tmp<media>" %gbl<ffv1> -vf "$vf" "$file">>;
+			$file;
+		}) ==> list() ==> %tmp<corrupt>;
 
-			if not $no-concat { # concat corrupt media, pad test media to same length
-				%tmp<corrupt> = (vfconcat(%tmp<corrupt>, :rm, :ext('corrupt')));
-				%tmp<media> = vfconcat(List(%tmp<media>), :rm, :loop($realizations), :ext('looped'));
-			}
+		if not $no-concat { # concat corrupt media, pad test media to same length
+			%tmp<corrupt> = (vfconcat(%tmp<corrupt>, :rm, :ext('corrupt')));
+			%tmp<media> = vfconcat(List(%tmp<media>), :rm, :loop($realizations), :ext('looped'));
 		}
-		when $_[0] eq "JPEG" { # JPEG=QUALITY
-			my $codec = "-q\:v {$_[1]} -c\:v mjpeg";
-			%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
-			run <<$ffmpeg -i "%tmp<media>" $codec "%tmp<corrupt>[0]">>;
-		}
-		when $_[0] eq "SCALE" { # SCALE=WIDTH:HEIGHT:SCALE_OPTS
-			%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
-			run <<$ffmpeg -i "%tmp<media>" -vf "scale={$_[1..*].join('=')}" {%gbl<ffv1>} "%tmp<corrupt>[0]">>;
-		}
-		when $_[0] eq "FORMAT" { # FORMAT=FORMAT
-			%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
-			run <<$ffmpeg -i "%tmp<media>" {%gbl<ffv1>} -vf "format=$_[1]" "%tmp<corrupt>[0]">>;
-		}
+	}
+	when $_[0] eq "JPEG" { # JPEG=QUALITY
+		my $codec = "-q\:v {$_[1]} -c\:v mjpeg";
+		%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
+		run <<$ffmpeg -i "%tmp<media>" $codec "%tmp<corrupt>[0]">>;
+	}
+	when $_[0] eq "SCALE" { # SCALE=WIDTH:HEIGHT:SCALE_OPTS
+		%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
+		run <<$ffmpeg -i "%tmp<media>" -vf "scale={$_[1..*].join('=')}" {%gbl<ffv1>} "%tmp<corrupt>[0]">>;
+	}
+	when $_[0] eq "FORMAT" { # FORMAT=FORMAT
+		%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
+		run <<$ffmpeg -i "%tmp<media>" {%gbl<ffv1>} -vf "format=$_[1]" "%tmp<corrupt>[0]">>;
+	}
 	}
 
 	note('Measuring baseline...');
-	my %baseline;
+	my $baseline;
 	if not %gbl<dry-run> {
 		%tmp<corrupt>.map({
 			run(<<$ffmpeg -i "$_" -i "%tmp<media>" -lavfi "scale={%gbl<resolution>},ssim=-" {%gbl<ffv1>} -f null ->>, :out).out.slurp(:close)
-		}).join("\n") ==> avgssim() ==> %baseline;
+		}).join("\n") ==> avgssim() ==> $baseline;
 
-		stats "BASELINE=$corruption", %baseline;
+		stats "BASELINE=$corruption", $baseline;
 	}
 
 	my @flatopts = $cfgopts.split(/<[=:]>/, :skip-empty); # parse k=v:k=v:k=v:...
