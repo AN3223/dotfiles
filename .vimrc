@@ -73,6 +73,7 @@ set lazyredraw nottyfast
 
 " Show diff between the buffer and the file on disk
 nnoremap <leader>d :w !diff % -<cr>
+nnoremap <leader>s :if exists("g:syntax_on") \| syntax off \| else \| syntax enable \| endif<cr>
 
 set modeline
 syntax enable
