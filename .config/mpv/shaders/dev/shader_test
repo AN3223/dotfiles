@@ -16,18 +16,29 @@ END { %tmp.values.flat.map(&unlink); rmdir %gbl<tmpdir> with %gbl<tmpdir>; };
 my $ffmpeg = "ffmpeg -nostdin -y";
 # drop stderr and/or stdout if they aren't requested
 # die and print stdout & stderr if command fails
-# XXX add a retry timeout to handle ffmpeg hanging
+# uses timeout(1) w/ retries to ensure process doesn't hang
 &run.wrap(sub (*@args, *%opts --> Proc) {
 	%opts<out> = True without %opts<out>;
 	%opts<err> = True without %opts<err>;
 	note(@args) if %gbl<verbose>;
-	if my $proc = callwith(|@args, |%opts) {
-		$proc;
-	} else {
+	@args = (|<timeout -k 5 90>, |@args);
+
+	my $proc;
+	loop (my $i = 0; $i < 5; $i++) {
+		given $proc = callwith(|@args, |%opts) {
+		# timeout can return different exit codes & it shouldn't hurt to be wrong here
+		# for some reason run might return Any when timed out
+		when $proc === Any || $_.exitcode > 120 { note("ugh: looks like a command hung, trying again..."); }
+		when $_.exitcode == 0 { return $_; }
+		default { last; }
+		}
+	}
+
+	with $proc {
 		note($proc.out.slurp(:close)) with $proc.out;
 		note($proc.err.slurp(:close)) with $proc.err;
-		die 'command failed: ' ~ @args;
 	}
+	die 'command failed: ' ~ @args;
 });
 
 # parses output from ffmpeg's SSIM filter and outputs an average
