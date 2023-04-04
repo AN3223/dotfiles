@@ -104,6 +104,45 @@
 # MEANI=1.5:E=0.0025:PREI=1:I=1 0.89437764
 #
 
+### Upscaling
+#
+### shader_test works for testing upscalers
+#
+#fn='FSRCNNX_x2_8-0-4-1:images:LUMA:SCALE=540:540:1080x1080:yuv444p:CAT=1:MAX=:10:1.25:1e-6:Inf:.stats.bz2'
+#bzcat "stats/$fn" | sort -k 2 -n
+#
+# OUTPUT:
+# BASELINE=SCALE=540:540 0.927599
+# NO_CFGOPTS 0.9498638
+#
+### Bicubic is scale's default
+#
+#fn='FSRCNNX_x2_8-0-4-1:images:LUMA:SCALE=540:540:flags=bicubic:1080x1080:yuv444p:CAT=1:MAX=:10:1.25:1e-6:Inf:.stats.bz2'
+#bzcat "stats/$fn" | sort -k 2 -n
+#
+# OUTPUT:
+# BASELINE=SCALE=540:540:flags=bicubic 0.927599
+# NO_CFGOPTS 0.9498638
+#
+### Lanczos is better
+#
+#fn='FSRCNNX_x2_8-0-4-1:images:LUMA:SCALE=540:540:flags=lanczos:1080x1080:yuv444p:CAT=1:MAX=:10:1.25:1e-6:Inf:.stats.bz2'
+#bzcat "stats/$fn" | sort -k 2 -n
+#
+# OUTPUT:
+# BASELINE=SCALE=540:540:flags=lanczos 0.9326444
+# NO_CFGOPTS 0.9505084
+#
+### nlmeans_2x is worse than baseline lol
+#
+#fn='NLM_2x:images:LUMA:SCALE=540:540:1080x1080:yuv444p:CAT=1:MAX=:10:1.25:1e-6:Inf:.stats.bz2'
+#bzcat "stats/$fn" | sort -k 2 -n
+#
+# OUTPUT:
+# NO_CFGOPTS 0.9022264
+# BASELINE=SCALE=540:540 0.927599
+#
+
 ### Optimal guided filter for injecting into NLM:
 #
 ### The optimal standalone guided filter is not necessarily the best 
