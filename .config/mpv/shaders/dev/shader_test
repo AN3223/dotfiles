@@ -11,19 +11,17 @@ use soft;
 
 my %gbl;
 my %tmp;
-END { %tmp.values.flat.map(&unlink); rmdir %gbl<tmpdir> };
+END { %tmp.values.flat.map(&unlink); rmdir %gbl<tmpdir> with %gbl<tmpdir>; };
 
 my $ffmpeg = "ffmpeg -nostdin -y";
 # drop stderr and/or stdout if they aren't requested
 # die and print stdout & stderr if command fails
+# XXX add a retry timeout to handle ffmpeg hanging
 &run.wrap(sub (*@args, *%opts --> Proc) {
 	%opts<out> = True without %opts<out>;
 	%opts<err> = True without %opts<err>;
 	note(@args) if %gbl<verbose>;
-	if %gbl<dry-run> {
-		note(@args) if not %gbl<verbose>;
-		Proc; # satisfy type check
-	} elsif my $proc = callwith(|@args, |%opts) {
+	if my $proc = callwith(|@args, |%opts) {
 		$proc;
 	} else {
 		note($proc.out.slurp(:close)) with $proc.out;
@@ -203,13 +201,12 @@ sub MAIN(
 	Str :$colorspace = "bt709", #= Colorspace used for everything
 	Str :$resolution where /^\d+ ':' \d+$/ = "1080:1080", #= Resolution used for everything
 	Str :$tmpdir where *.IO.d = '/dev/shm', #= Directory for temporary files
-	Bool :$skip-stats = False, #= Skip writing to a stats file (still requires a real --stats-dir)
-	Bool :$dry-run = False, #= Simulate a test run, print useful info
+	Bool :$no-stats = False, #= Skip writing to a stats file (still requires a real --stats-dir)
 	Bool :$verbose = False, Bool :$v = False, #= Verbose output for debugging
 	Bool :$no-concat = False, #= Skip concatenation step, very slow but may be necessary for temporal testing
 	Bool :$force = False #= Force overwrite the stats file
 ) {
-	%gbl<shader dry-run verbose vk plane resolution> = $shader, $dry-run, ($verbose || $v), $vk-device, $plane, $resolution;
+	%gbl<shader verbose vk plane resolution> = $shader, ($verbose || $v), $vk-device, $plane, $resolution;
 	%gbl<ffv1 pix-fmt> = "-c:v ffv1 -colorspace $colorspace -pix_fmt $pix-fmt", $pix-fmt, $colorspace;
 	%gbl<max> = roundrobin($max.split(':'), ":10:1.25:1e-6:Inf".split(':')).map({ $_[0] || $_[1] }).list;
 
@@ -231,19 +228,16 @@ sub MAIN(
 	@test-media = @test-media.flatmap(&find).grep({ $_.path !~~ /\.txt$/ });
 	@test-media.map({ .f || die "$_ doesn't exist or is unreadable" });
 
-	if not %gbl<dry-run> {
-		run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
-		if not $skip-stats {
-			if $force {
-				%gbl<statsfile> = open $statsfile, :w;
-			} else {
-				die 'stats file exists' if "$statsfile.bz2".IO.e;
-				try { %gbl<statsfile> = open $statsfile, :x; }
-				die 'stats file exists' if $!;
-			}
+	run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
+	if not $no-stats {
+		if $force {
+			%gbl<statsfile> = open $statsfile, :w;
+		} else {
+			die 'stats file exists' if "$statsfile.bz2".IO.e;
+			try { %gbl<statsfile> = open $statsfile, :x; }
+			die 'stats file exists' if $!;
 		}
 	}
-
 	note('Encoding test media...');
 	%tmp<media> = vfconcat(@test-media);
 
@@ -280,14 +274,10 @@ sub MAIN(
 	}
 
 	note('Measuring baseline...');
-	my $baseline;
-	if not %gbl<dry-run> {
-		%tmp<corrupt>.map({
-			run(<<$ffmpeg -i "$_" -i "%tmp<media>" -lavfi "scale={%gbl<resolution>},ssim=-" {%gbl<ffv1>} -f null ->>, :out).out.slurp(:close)
-		}).join("\n") ==> avgssim() ==> $baseline;
-
-		stats "BASELINE=$corruption", $baseline;
-	}
+	my $baseline = avgssim(%tmp<corrupt>.map({
+		run(<<$ffmpeg -i "$_" -i "%tmp<media>" -lavfi "scale={%gbl<resolution>},ssim=-" {%gbl<ffv1>} -f null ->>, :out).out.slurp(:close)
+	}).join("\n"));
+	stats "BASELINE=$corruption", $baseline;
 
 	my @flatopts = $cfgopts.split(/<[=:]>/, :skip-empty); # parse k=v:k=v:k=v:...
 	die 'invalid cfgopts' if @flatopts.elems && not @flatopts.elems %% 2;
@@ -304,8 +294,6 @@ sub MAIN(
 
 	note("Trying {@cfgopts.elems || 1} permutations...");
 	note(@cfgopts.raku) if %gbl<verbose>;
-
-	exit if %gbl<dry-run>;
 
 	@cfgopts.map(&test);
 
