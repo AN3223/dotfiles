@@ -11,7 +11,7 @@ use soft;
 
 my %gbl;
 my %tmp;
-END %tmp.values.flat.map(&unlink);
+END { %tmp.values.flat.map(&unlink); rmdir %gbl<tmpdir> };
 
 my $ffmpeg = "ffmpeg -nostdin -y";
 # drop stderr and/or stdout if they aren't requested
@@ -87,11 +87,12 @@ sub shader_ssim(Str $in1, Str $in2, Str $shader --> Str) {
 }
 
 sub stats($cfgopts, $ssim, :$erronly = False) {
+	my $s = "{$cfgopts || 'NO_CFGOPTS'} $ssim";
 	if $erronly {
-		note("$cfgopts $ssim");
+		note($s);
 	} else {
-		print("$cfgopts $ssim\n");
-		%gbl<statsfile>.print("$cfgopts $ssim\n") if %gbl<statsfile>;
+		print("$s\n");
+		%gbl<statsfile>.print("$s\n") if %gbl<statsfile>;
 		%gbl<statsfile>.flush if %gbl<statsfile>;
 	}
 }
@@ -195,24 +196,27 @@ sub MAIN(
 	Str :$shader where *.IO.r = "nlmeans_template", #= Shader used for testing
 	Str :$plane = "LUMA", #= Plane to test on
 	Str :$corruption = "NOISE=10:10", #= Corruption type, can be NOISE, JPEG, or SCALE
-	Str :$tmpfile = "shader_test.tmp", #= Template for temporary filenames
 	Str :$vk-device = "vulkan", #= Device name passed to ffmpeg's -init_hw_device option
 	Str :$stats-dir where *.IO.d = "stats", #= Directory where stats will be stored
 	Str :$max = "", #= Maximize a parameter, syntax goes PARAM:ESTIMATE:STEP_FACTOR:EPSILON:ITERATION_LIMIT
 	Str :$pix-fmt = "yuv444p", #= Pixel format used for everything
 	Str :$colorspace = "bt709", #= Colorspace used for everything
 	Str :$resolution where /^\d+ ':' \d+$/ = "1080:1080", #= Resolution used for everything
+	Str :$tmpdir where *.IO.d = '/dev/shm', #= Directory for temporary files
 	Bool :$skip-stats = False, #= Skip writing to a stats file (still requires a real --stats-dir)
 	Bool :$dry-run = False, #= Simulate a test run, print useful info
 	Bool :$verbose = False, Bool :$v = False, #= Verbose output for debugging
 	Bool :$no-concat = False, #= Skip concatenation step, very slow but may be necessary for temporal testing
 	Bool :$force = False #= Force overwrite the stats file
 ) {
-	%gbl<tmp shader dry-run verbose vk plane resolution> = $tmpfile, $shader, $dry-run, ($verbose || $v), $vk-device, $plane, $resolution;
+	%gbl<shader dry-run verbose vk plane resolution> = $shader, $dry-run, ($verbose || $v), $vk-device, $plane, $resolution;
 	%gbl<ffv1 pix-fmt> = "-c:v ffv1 -colorspace $colorspace -pix_fmt $pix-fmt", $pix-fmt, $colorspace;
 	%gbl<max> = roundrobin($max.split(':'), ":10:1.25:1e-6:Inf".split(':')).map({ $_[0] || $_[1] }).list;
 
 	die 'no test media specified' if not @test-media;
+
+	%gbl<tmpdir> = run(<<mktemp -d "$tmpdir/shader_test.XXXXXX">>, :out).out.slurp(:close).subst("\n");
+	%gbl<tmp> = %gbl<tmpdir> ~ '/shader_test.tmp';
 	
 	my @statsfile = (
 		# friendly shader name
