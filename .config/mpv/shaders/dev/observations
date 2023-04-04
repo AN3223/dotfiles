@@ -143,6 +143,34 @@
 # BASELINE=SCALE=540:540 0.927599
 #
 
+### Reverse chroma subsampling
+#
+### Nothing seems to perform very well
+#
+#fn='KrigBilateral:images:CHROMA:FORMAT=yuv420p:1080x1080:yuv444p:CAT=1:MAX=:10:1.25:1e-6:Inf:.stats.bz2'
+#bzcat "stats/$fn" | sort -k 2 -n
+#
+# OUTPUT:
+# NO_CFGOPTS 0.9862585
+# BASELINE=FORMAT=yuv420p 0.9867304
+#
+#fn='NLM_lgc:images:CHROMA:FORMAT=yuv420p:1080x1080:yuv444p:CAT=1:MAX=:10:1.25:1e-6:Inf:.stats.bz2'
+#bzcat "stats/$fn" | sort -k 2 -n
+#
+# OUTPUT:
+# NO_CFGOPTS 0.9861952
+# BASELINE=FORMAT=yuv420p 0.9867304
+#
+### Guided LGC scored much lower
+#
+#fn='guided_lgc:images:CHROMA:FORMAT=yuv420p:1080x1080:yuv444p:CAT=1:MAX=:10:1.25:1e-6:Inf:.stats.bz2'
+#bzcat "stats/$fn" | sort -k 2 -n
+#
+# OUTPUT:
+# NO_CFGOPTS 0.9731073
+# BASELINE=FORMAT=yuv420p 0.9867304
+#
+
 ### Optimal guided filter for injecting into NLM:
 #
 ### The optimal standalone guided filter is not necessarily the best 
