@@ -1,0 +1,10 @@
+woman standing by the fireplace wearing a red and green christmas sweater and a santa hat in a cozy festive log cabin, hot cocoa, christmas lights, christmas tree <lora:animeScreenshotLikeStyleMixLora_v10:1>
+Negative prompt: nsfw
+Steps: 10, Sampler: UniPC, CFG scale: 4, Seed: 3454034013, Size: 512x512, Model hash: 2cc15e692f, Model: anyv3-f16, UniPC variant: bh2
+
+Latent upscaled with:
+
+woman standing by the fireplace wearing a red and green christmas sweater and a santa hat in a cozy festive log cabin, hot cocoa, christmas lights, christmas tree <lora:animeScreenshotLikeStyleMixLora_v10:1>
+Negative prompt: nsfw
+Steps: 10, Sampler: DPM++ SDE Karras, CFG scale: 4, Seed: 3454034013, Size: 1080x1080, Model hash: 7f96a1a9ca, Model: anyv5, Variation seed: 2932505551, Variation seed strength: 0.8, Seed resize from: 512x512, Denoising strength: 0.7
+
