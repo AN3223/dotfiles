@@ -219,7 +219,7 @@ sub MAIN(
 ) {
 	%gbl<shader verbose vk plane resolution> = $shader, ($verbose || $v), $vk-device, $plane, $resolution;
 	%gbl<ffv1 pix-fmt> = "-c:v ffv1 -colorspace $colorspace -pix_fmt $pix-fmt", $pix-fmt, $colorspace;
-	%gbl<max> = roundrobin($max.split(':'), ":10:1.25:1e-6:Inf".split(':')).map({ $_[0] || $_[1] }).list;
+	%gbl<max> = roundrobin($max.split(':'), ":10:1.25:1e-6:10".split(':')).map({ $_[0] || $_[1] }).list;
 
 	die 'no test media specified' if not @test-media;
 
