@@ -3,8 +3,7 @@
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
-# XXX proper range parsing? esp. to ensure the output type is the same as input
-# XXX it may be possible to aggressively merge calls to ffmpeg
+# XXX it may be possible to aggressively merge some calls to ffmpeg
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
@@ -40,6 +39,11 @@ my $ffmpeg = "ffmpeg -nostdin -y";
 	}
 	die 'command failed: ' ~ @args;
 });
+
+# GLSL macro-safe number representation
+multi sub msafe(Int $x --> Str()) { $x }
+multi sub msafe(Numeric $x --> Str) { sprintf('%f', $x) }
+multi sub msafe($x --> Str()) { $x }
 
 # parses output from ffmpeg's SSIM filter and outputs an average
 sub avgssim(Str $out --> Rat) {
@@ -119,7 +123,7 @@ sub test(Str $cfgopts, :$prev = (""=>0.0), *%state_ --> Pair) {
 	%state<depth> = %state<depth> || 0;
 	%state<sandtrap> = %state<sandtrap> || 0;
 
-	my $cfgopts_ = $m_opt ?? "$m_opt={%state<value>}:$cfgopts" !! $cfgopts;
+	my $cfgopts_ = $m_opt ?? "$m_opt={msafe(%state<value>)}:$cfgopts" !! $cfgopts;
 	my $shader = run_cfg($cfgopts_);
 	my @out = %tmp<corrupt>.map({ shader_ssim($_, %tmp<media>, $shader) });
 	unlink %tmp{$shader}:delete with %tmp{$shader};
@@ -135,6 +139,7 @@ sub test(Str $cfgopts, :$prev = (""=>0.0), *%state_ --> Pair) {
 
 	given $prev.value {
 	when abs($ssim - $_) < $m_epsilon && !%state<course-change> {
+		# XXX if the optimal value is very very large then this behaves horribly (E on guided LGC)
 		note("maximizer: sandtrap");
 		%state<sandtrap>++;
 		%state<step> = %state<step>**%state<step>;
@@ -299,7 +304,7 @@ sub MAIN(
 		when 1 { @values[0].map({ "@opts[0]=$_" }) }
 		default {
 			[X] @values ==> map({ @opts Z $_ }) # generate permutations
-			            ==> map({ $_>>.join('=').join(':') }) # stringify
+			            ==> map({ $_>>.map(&msafe)>>.join('=').join(':') }) # stringify
 		}
 	}
 
