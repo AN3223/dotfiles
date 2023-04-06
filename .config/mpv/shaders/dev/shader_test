@@ -46,11 +46,12 @@ multi sub msafe(Numeric $x --> Str) { sprintf('%f', $x) }
 multi sub msafe($x --> Str()) { $x }
 
 # parses output from ffmpeg's SSIM filter and outputs an average
-sub avgssim(Str $out --> Rat) {
+sub avgssim(Str $out --> FatRat) {
 	$out.note if %gbl<verbose>;
 	my %avg;
 	$out ==> split("\n", :skip-empty)
 	     ==> map({ .split(' ')[1..*-2]>>.split(':').flat.hash })
+	     ==> { $_>>.FatRat }() # better precision
 	     ==> { [>>+<<] $_ >>/>> .elems }() # hash average
 	     ==> %avg;
 	
