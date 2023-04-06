@@ -100,7 +100,7 @@ sub shader_ssim(Str $in1, Str $in2, Str $shader --> Str) {
 	run(<<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out).out.slurp(:close);
 }
 
-sub stats($cfgopts, $ssim, :$erronly = False) {
+sub stats($cfgopts, $ssim, :$erronly = False --> Pair) {
 	my $s = "{$cfgopts || 'NO_CFGOPTS'} $ssim";
 	if $erronly {
 		note($s);
@@ -109,6 +109,7 @@ sub stats($cfgopts, $ssim, :$erronly = False) {
 		%gbl<statsfile>.print("$s\n") if %gbl<statsfile>;
 		%gbl<statsfile>.flush if %gbl<statsfile>;
 	}
+	return $cfgopts => $ssim;
 }
 
 # runs ffmpeg for testing, optionally maximizes a parameter
@@ -130,13 +131,16 @@ sub test(Str $cfgopts, :$prev = (""=>0.0), *%state_ --> Pair) {
 	unlink %tmp{$shader}:delete with %tmp{$shader};
 	my $ssim = avgssim(@out.join("\n"));
 
-	if $m_opt {
-		stats($cfgopts_, $ssim, :erronly);
-	} else {
-		stats($cfgopts_, $ssim);
-	}
+	return stats($cfgopts_, $ssim) if not $m_opt;
+	stats($cfgopts_, $ssim, :erronly) if $m_opt;
+	return $cfgopts_ => $ssim if %state<oneshot>;
 
-	return ($cfgopts_ => $ssim) if ++%state<depth> >= %state<iter>;
+	if ++%state<depth> >= %state<iter> {
+		($cfgopts_, $ssim) = $prev if $prev.value > $ssim;
+		stats($cfgopts_, $ssim);
+		note("maximizer: finished in %state<depth> iterations\n");
+		return $cfgopts_ => $ssim;
+	}
 
 	given $prev.value {
 	when abs($ssim - $_) < $m_epsilon && !%state<course-change> {
@@ -170,7 +174,7 @@ sub test(Str $cfgopts, :$prev = (""=>0.0), *%state_ --> Pair) {
 
 			my $done = False;
 			for [%max<value> + $substep, %max<value> - $substep] -> $incr {
-				@tests.push({value=>$incr, result=>test($cfgopts, |%state, :value($incr), :iter(1))});
+				@tests.push({value=>$incr, result=>test($cfgopts, |%state, :value($incr), :oneshot)});
 				@tests.=sort: *<result>.value;
 				%max := @tests[*-1];
 
