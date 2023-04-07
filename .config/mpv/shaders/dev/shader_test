@@ -101,6 +101,23 @@ sub shader_ssim(Str $in1, Str $in2, Str $shader --> Str) {
 }
 
 sub stats($cfgopts, $ssim, :$erronly = False --> Pair) {
+# XXX what?
+# S=5:WDT=1.125000:SW=1.000000:EP=0 0.8301903091
+# S=6.250000:WDT=1.125000:SW=1.000000:EP=0 0.8269018
+# maximizer: changing course
+# S=4.000000:WDT=1.125000:SW=1.000000:EP=0 0.8343822
+# S=3.200000:WDT=1.125000:SW=1.000000:EP=0 0.8397176182
+# S=2.560000:WDT=1.125000:SW=1.000000:EP=0 0.8462903455
+# S=2.048000:WDT=1.125000:SW=1.000000:EP=0 0.8537578545
+# S=1.638400:WDT=1.125000:SW=1.000000:EP=0 0.8611217091
+# S=1.310720:WDT=1.125000:SW=1.000000:EP=0 0.8669498909
+# S=1.048576:WDT=1.125000:SW=1.000000:EP=0 0.8700674
+# S=0.838861:WDT=1.125000:SW=1.000000:EP=0 0.8699686545
+# Use of uninitialized value element of type Any in string context.
+# Methods .^name, .raku, .gist, or .say can be used to stringify it to something meaningful.
+#   in sub stats at ./shader_test line 104
+# S=1.048576:WDT=1.125000:SW=1.000000:EP=0	0.8700674
+# maximizer: finished in 10 iterations
 	my $s = "{$cfgopts || 'NO_CFGOPTS'} $ssim";
 	if $erronly {
 		note($s);

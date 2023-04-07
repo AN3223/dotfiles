@@ -46,8 +46,8 @@ vec4 hook()
 //!HOOK RGB
 //!DESC Guided filter (MEANIP)
 //!BIND IP
-//!WIDTH IP.w 1.125 /
-//!HEIGHT IP.h 1.125 /
+//!WIDTH IP.w 1.5 /
+//!HEIGHT IP.h 1.5 /
 //!SAVE MEANIP
 
 vec4 hook()

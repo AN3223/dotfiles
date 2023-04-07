@@ -545,7 +545,7 @@ vec4 hook()
 #define P 3
 #define R 5
 #else
-#define S 1.50
+#define S 5.0
 #define P 3
 #define R 5
 #endif
@@ -572,14 +572,14 @@ vec4 hook()
 #ifdef LUMA_raw
 #define AS 0
 #define ASF 2.0
-#define ASP 32.0
+#define ASP 4.0
 #define ASW 0
 #define ASK 1
 #define ASC 0.0
 #else
 #define AS 0
 #define ASF 2.0
-#define ASP 32.0
+#define ASP 4.0
 #define ASW 0
 #define ASK 1
 #define ASC 0.0
@@ -597,7 +597,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define SW 0.5
 #else
-#define SW 1.0
+#define SW 0.5
 #endif
 
 /* Weight discard
@@ -616,11 +616,11 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 2
-#define WDT 1.0
+#define WDT 0.5
 #define WDP 6.0
 #else
 #define WD 2
-#define WDT 1.0
+#define WDT 0.75
 #define WDP 6.0
 #endif
 
