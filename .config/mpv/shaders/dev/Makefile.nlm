@@ -46,8 +46,6 @@ LGC_LUMA=RF=0
 LGC=RF=SHARE_LUMA:D1W=1:S=11.66:WD=0:SW=0.75:RI=3:RFI=2
 LGC_OPTS=HOOKS=CHROMA:WIDTH=LUMA.w:HEIGHT=LUMA.h
 
-LUMA_DESC=Luma only, saves some time by not processing the chroma plane.
-
 all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_2x.glsl ../nlmeans_heavy.glsl ../nlmeans_medium.glsl ../nlmeans_temporal.glsl ../nlmeans_luma.glsl ../nlmeans_hq.glsl ../nlmeans_hq_heavy.glsl ../nlmeans_hq_medium.glsl ../nlmeans_hqx.glsl ../nlmeans_lq.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../nlmeans_hq_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl
 
 ../nlmeans.glsl: nlmeans_template
@@ -62,8 +60,6 @@ all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_2x.glsl ../nlmeans_heavy.gls
 	env NLM_DESC="$(MEDIUM_DESC)" NLM_FILE="$@" NLM_LUMA="$(MEDIUM)" NLM_CHROMA="$(MEDIUM)" ./nlmeans_cfg < $? > $@
 ../nlmeans_temporal.glsl: nlmeans_template
 	env NLM_DESC="$(TEMPORAL_DESC)" NLM_FILE="$@" NLM_LUMA="$(TEMPORAL_LUMA)" NLM_OPTS="$(TEMPORAL_OPTS)" ./nlmeans_cfg < $? > $@
-../nlmeans_luma.glsl: nlmeans_template
-	env NLM_DESC="$(LUMA_DESC)" NLM_FILE="$@" NLM_OPTS="HOOKS=LUMA" ./nlmeans_cfg < $? > $@
 ../nlmeans_hq.glsl: nlmeans_template
 	env NLM_DESC="$(HQ_DESC)" NLM_FILE="$@" NLM_LUMA="$(HQ_LUMA)" NLM_CHROMA="$(HQ)" ./nlmeans_cfg < $? > $@
 ../nlmeans_hq_heavy.glsl: nlmeans_template
