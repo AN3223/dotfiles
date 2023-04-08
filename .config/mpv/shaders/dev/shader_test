@@ -168,8 +168,8 @@ sub test(Str $cfgopts, :$prev = (""=>0.0), *%state_ --> Pair) {
 		%state<step> = 1/%state<step> if $ssim < $_; # estimate best travel direction
 		return test($cfgopts, |%state, :prev($cfgopts_ => $ssim), :value(%state<value> * %state<step>**2));
 	}
-	# XXX the step size should probably scale with the change in SSIM somehow
 	when $ssim > $_ { # just keep going
+		%state<step> *= %state<step>; # XXX should probably scale with SSIM somehow
 		return test($cfgopts, |%state, :prev($cfgopts_ => $ssim), :value(%state<value> * %state<step>));
 	}
 	when $ssim < $_ {
