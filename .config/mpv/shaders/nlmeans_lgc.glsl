@@ -702,6 +702,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 #elif (defined(LUMA_gather) || D1W) && PS == 6 && REGULAR_ROTATIONS && NO_GATHER
 // tiled even square patch_comparison_gather
 // XXX extend to support odd square?
+// XXX rotations/reflections appear to be subtly broken
 vec4 patch_comparison_gather(vec3 r, vec3 r2)
 {
 	vec2 tile;

@@ -10,8 +10,8 @@ LQ_LUMA=S=1.25:R=3:WD=1:RF=1.25:$(NO_ROTATE)
 LQ=WD=1
 
 HQ_DESC=Slow, but higher quality.
-HQ_LUMA=S=3:P=4:PS=6:RI=3:RFI=0:EP=0
-HQ=S=3:PS=3
+HQ_LUMA=S=2.25:P=4:PS=6:$(NO_ROTATE):ASP=1:RF=../nlmeans.glsl
+HQ=
 
 HEAVY_DESC=Tuned for heavy noise.
 HEAVY=SW=EPSILON:EP=0
@@ -21,7 +21,7 @@ MEDIUM=SW=0.5:$(HEAVY)
 
 HQX_DESC=Very slow, should offer the best quality.
 HQX_LUMA=P=5:$(HQ_LUMA)
-HQX=P=5:RI=3:$(HQ)
+HQX=P=5:$(HQ)
 
 TEMPORAL_DESC=Very experimental and buggy, limited to vo=gpu-next.
 TEMPORAL_LUMA=T=2:WD=1:$(NO_ROTATE)
