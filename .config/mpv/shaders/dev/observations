@@ -55,8 +55,16 @@
 # S=2.375000:P=4:PS=6:RI=0:RFI=0:WDT=0.875000:SW=1.000000:SS=0.125000:EP=0 0.9038870727
 # S=2.250000:P=4:PS=6:RI=0:RFI=0:WDT=0.750000:SW=0.875000:SS=0.250000:EP=0 0.9038942727
 #
+### Using NLM as a guide for NLM is slightly better
+#
+#fn="NLM:images:LUMA:NOISE=10:10:1080x1080:yuv444p:CAT=1:MAX=S:2:1.25:1e-6:10:P=4:PS=6:RI=0:RFI=0:WDT=0.75:SW=0.875:RF='.._nlmeans.glsl':EP=0.stats.bz2"
+#bzcat "stats/$fn" | sort -k 2 -n | tail -n 1
+#
+# OUTPUT:
+# S=2.760417:P=4:PS=6:RI=0:RFI=0:WDT=0.750000:SW=0.875000:RF=../nlmeans.glsl:EP=0 0.904014364
+#
 
-# PS=6:NG=0 rotations/reflections appear to be broken/bad
+### PS=6:NG=0 rotations/reflections appear to be broken/bad
 #
 #fn="NLM:images:LUMA:NOISE=10:10:1080x1080:yuv444p:CAT=1:MAX=S:2:1.25:1e-6:10:P=4:PS=6:RI=0,3:RFI=0,2:WDT=0.75:SW=0.875:SS=0.25:NG=0,1:EP=0.stats.bz2"
 #bzcat "stats/$fn" | sort -k 2 -n | tail
@@ -91,6 +99,18 @@
 # S=3.750000:GUIDED_MEANI=1.500000:GUIDED_I=1.000000:GUIDED_PREI=1.250000:WDT=0.500000:SW=0.500000:RF=../guided.glsl 0.93816037273
 # S=3.854167:GUIDED_MEANI=1.500000:GUIDED_I=1.000000:GUIDED_PREI=1.250000:WDT=0.625000:SW=0.500000:RF=../guided.glsl 0.93819815455
 # S=5:GUIDED_MEANI=1.500000:GUIDED_I=1.000000:GUIDED_PREI=1.250000:WDT=0.750000:SW=0.500000:RF=../guided.glsl 0.938249636
+#
+### Rotation doesn't seem to help
+#
+#fn="NLM:images:CHROMA:NOISE=10:10:1080x1080:yuv444p:CAT=1:MAX=S:5:1.25:1e-6:10:RI=0,3:RFI=0,2.stats.bz2"
+#bzcat "stats/$fn" | sort -k 2 -n | tail
+#
+# OUTPUT:
+# BASELINE=NOISE=10:10 0.71131393636
+# S=5:RI=3:RFI=0 0.9381547091
+# S=5:RI=3:RFI=2 0.9381651364
+# S=5:RI=0:RFI=2 0.9381892909
+# S=4.750000:RI=0:RFI=0 0.93825457273
 #
 
 ### Optimal guided filter (luma)
