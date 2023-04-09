@@ -575,20 +575,20 @@ const int p_area = P_AREA(P*P);
 const float r_scale = 1.0/r_area;
 const float p_scale = 1.0/p_area;
 
-#define load_(off)  HOOKED_tex(HOOKED_pos + HOOKED_pt * vec2(off))
+#define load_(off) texelFetch(HOOKED_raw, ivec2(HOOKED_size * HOOKED_pos) + ivec2(off), 0)
 
 #if RF && defined(LUMA_raw)
-#define load2_(off) RF_LUMA_tex(RF_LUMA_pos + RF_LUMA_pt * vec2(off))
+#define load2_(off) texelFetch(RF_LUMA_raw, ivec2(RF_LUMA_size * RF_LUMA_pos) + ivec2(off), 0)
 #define gather_offs(off, off_arr) (RF_LUMA_mul * vec4(textureGatherOffsets(RF_LUMA_raw, RF_LUMA_pos + vec2(off) * RF_LUMA_pt, off_arr)))
 #define gather(off) RF_LUMA_gather(RF_LUMA_pos + (off) * RF_LUMA_pt, 0)
 #elif RF && D1W
-#define load2_(off) RF_tex(RF_pos + RF_pt * vec2(off))
+#define load2_(off) texelFetch(RF_raw, ivec2(RF_size * RF_pos) + ivec2(off), 0)
 #define gather_offs(off, off_arr) (RF_mul * vec4(textureGatherOffsets(RF_raw, RF_pos + vec2(off) * RF_pt, off_arr)))
 #define gather(off) RF_gather(RF_pos + (off) * RF_pt, 0)
 #elif RF
-#define load2_(off) RF_tex(RF_pos + RF_pt * vec2(off))
+#define load2_(off) texelFetch(RF_raw, ivec2(RF_size * RF_pos) + ivec2(off), 0)
 #else
-#define load2_(off) HOOKED_tex(HOOKED_pos + HOOKED_pt * vec2(off))
+#define load2_(off) texelFetch(HOOKED_raw, ivec2(HOOKED_size * HOOKED_pos) + ivec2(off), 0)
 #define gather_offs(off, off_arr) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, off_arr)))
 #define gather(off) HOOKED_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
 #endif

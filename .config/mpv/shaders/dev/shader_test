@@ -160,6 +160,7 @@ sub test(Str $cfgopts, :$prev = (""=>0.0), *%state_ --> Pair) {
 	}
 
 	given $prev.value {
+	# XXX it's an error if the two SSIMs are the same after a course change
 	when abs($ssim - $_) < $m_epsilon && !%state<course-change> {
 		# XXX if the optimal value is very very large then this behaves horribly (E on guided LGC)
 		note("maximizer: sandtrap");
