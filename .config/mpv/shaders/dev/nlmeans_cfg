@@ -121,6 +121,7 @@ BEGIN {
 	for (p in planes) {
 		# sets defaults for RF/EP, should be the same as nlmeans_template
 		# XXX read defaults from elsewhere?
+		# XXX SHARE_RF_LUMA is broken when luma has RF=0
 		RF = (planes[p] == "LUMA") ? "../guided.glsl" : "SHARE_RF_LUMA"
 		EP = (planes[p] == "LUMA") ? 3.0 : 0
 

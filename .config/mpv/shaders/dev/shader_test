@@ -83,6 +83,7 @@ sub run_cfg(Str $cfgopts --> Str) {
 		run <./nlmeans_cfg>, :in($in-shader), :out($out-shader),
 			:env(
 				"NLM_{%gbl<plane> eq 'LUMA' ?? 'LUMA' !! 'CHROMA'}" => $cfgopts,
+				# XXX allow for scaling
 				"NLM_OPTS" => "HOOKS=%gbl<plane>"
 			);
 	}
@@ -281,6 +282,7 @@ sub MAIN(
 	%tmp<media> = vfconcat(@test-media);
 
 	# XXX add a "bring your own" corruption where you can specify your own corrupt test media
+	# XXX allow for multiple corruptions at once
 	note('Corrupting test media...');
 	given $corruption.split('=') {
 	when $_[0] eq "NOISE" { # NOISE=NOISE_LEVEL:REALIZATIONS
@@ -313,6 +315,7 @@ sub MAIN(
 	}
 
 	note('Measuring baseline...');
+	# XXX baseline should be generated from libplacebo upscaling
 	my $baseline = avgssim(%tmp<corrupt>.map({
 		run(<<$ffmpeg -i "$_" -i "%tmp<media>" -lavfi "scale={%gbl<resolution>},ssim=-" {%gbl<ffv1>} -f null ->>, :out).out.slurp(:close)
 	}).join("\n"));
