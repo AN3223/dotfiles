@@ -32,7 +32,7 @@ function ensure_cfg_opts() {
 function ensure_cfg_plane_opts() {
 	ensure_cfg_opts()
 	if (!cfg_plane_opts)
-		split(cfg_var(opt_plane) ":" cfg_opts, cfg_plane_opts, ":")
+		split(cfg_var(opt_plane) ":" cfg_var("OPTS"), cfg_plane_opts, ":")
 }
 
 function get_opt(k) {
@@ -66,9 +66,9 @@ function register_tex(tex) {
 
 function cfg_var(var) {
 	for (i in ARGV) {
-		if (ARGV[i] ~ /[_[:alpha:]][_[:alnum:]]*=/ && ARGV[i] ~ ("^CFG_" var "=")) {
+		if (ARGV[i] ~ /^[_[:alpha:]][_[:alnum:]]*=/ && ARGV[i] ~ ("^CFG_" var "=")) {
 			kv = ARGV[i]
-			sub(/.*=/, "", kv)
+			sub(/^[_[:alpha:]][_[:alnum:]]*=/, "", kv)
 			return kv
 		}
 	}
@@ -138,19 +138,14 @@ function cfg_tex(SAVE, DESC, SIZE) {
 		inject_opts_len = split("", inject_opts)
 		inject_opts_str = ""
 		ensure_cfg_opts()
-		# XXX injecting opts is broken
-		for (i in cfg_opts)
-			if (cfg_opts[i] ~ /^INJ_/)
-				inject_opts[++inject_opts_len] = cfg_opts[i]
-		if (inject_opts_len) {
-			for (i in inject_opts) {
-				sub(/^INJ_/, "", inject_opts[i])
-				if (!inject_opts_str)
-					inject_opts_str = inject_opts[i]
-				else
-					inject_opts_str = inject_opts_str ":" inject_opts[i]
+		for (i in cfg_opts) {
+			if (cfg_opts[i] ~ /^INJ_/) {
+				opt = cfg_opts[i]
+				sub(/^INJ_/, "", opt)
+				inject_opts_str = sprintf("%s:%s", inject_opts_str, opt)
 			}
 		}
+		sub(/^:/, "", inject_opts_str)
 
 		shader = SIZE
 		cmd = sprintf("./inject_shader -v OUT_TEX=%s -v HOOKS=%s", SAVE, HOOKS)
@@ -215,7 +210,9 @@ function cfg_tex(SAVE, DESC, SIZE) {
 	next
 }
 
+# XXX unset this between stages
 tolower($0) ~ /^\/[\/\*].*shader code/ { shader_code = 1 }
+
 /^#(el)?ifdef [_[:alpha:]][_[:alnum:]]*_raw$/ {
 	opt_plane = $2
 	sub(/_raw$/, "", opt_plane)
