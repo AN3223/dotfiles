@@ -12,12 +12,14 @@ function basename(s) {
 	return s
 }
 
+function trim(s) { sub(/^[[:space:]]*/, "", s); return s; }
+
 # XXX assumes locale's radix is .
 # XXX doesn't handle hexadecimal representations of zero
 function is_num(x) {
-	sub(/^[[:space:]]*/, "", x)
 	if (is_obviously_num = x+0 == x)
 		return is_obviously_num
+	x = trim(x)
 	is_str_zero = x ~ /^[+-]?(0+\.?0*|\.0+)([eE][+-]?[0-9]+)?/
 	return (x+0 == int(x)) && (int(x) != 0 || is_str_zero)
 }
@@ -136,12 +138,13 @@ function cfg_tex(SAVE, DESC, SIZE) {
 		inject_opts_len = split("", inject_opts)
 		inject_opts_str = ""
 		ensure_cfg_opts()
+		# XXX injecting opts is broken
 		for (i in cfg_opts)
 			if (cfg_opts[i] ~ /^INJ_/)
 				inject_opts[++inject_opts_len] = cfg_opts[i]
 		if (inject_opts_len) {
 			for (i in inject_opts) {
-				sub(/^INJ/, "", inject_opts[i])
+				sub(/^INJ_/, "", inject_opts[i])
 				if (!inject_opts_str)
 					inject_opts_str = inject_opts[i]
 				else
@@ -262,11 +265,23 @@ function int_or_opt(x) { return is_num(x) ? x+0 : get_opt(x) }
 # "template_str" is a string optionally containing ${variable}
 #
 function range(s) {
-	# XXX this can have problems with semicolons from code
 	assignments_len = split(s, assignments, ";")
-	template_str = assignments[assignments_len]
-	sub(/^[[:space:]]/, "", template_str)
-	delete assignments[assignments_len--]
+
+	# split template from assigments while preserving the template's semicolons
+	# (technically allows for odd syntax, but shouldn't occur in regular use)
+	template_str = ""
+	for (i in assignments) {
+		assignments[i] = trim(assignments[i])
+		if (assignments[i] !~ /^[_[:alpha:]][_[:alnum:]]*=[_.[:alnum:]]+$/) {
+			if (assignments[i])
+				template_str = sprintf("%s\n%s", template_str, assignments[i])
+			else
+				template_str = template_str ";"
+			delete assignments[i]
+			assignments_len--;
+		}
+	}
+	sub("^\n", "", template_str)
 
 	if (!assignments_len) # nothing to do
 		return template_str
@@ -278,7 +293,6 @@ function range(s) {
 		done = 1 # done unless stated otherwise
 		line = template_str
 		for (i in assignments) {
-			sub(/^[[:space:]]*/, "", assignments[i]) # XXX make a function for this
 			split(assignments[i], kv, "=")
 			if (kv[2] !~ /\.\.\./) {
 				if (!result)
