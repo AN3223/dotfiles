@@ -26,14 +26,14 @@ function is_num(x) {
 
 function ensure_cfg_opts() {
 	if (!CFGOPTS)
-		split(cfg_var("OPTS"), CFGOPTS, ":")
+		split(argv("OPTS"), CFGOPTS, ":")
 }
 
 # XXX handle absence of OPTS_PLANE
 function ensure_cfg_plane_opts() {
 	ensure_cfg_opts()
 	if (!CFGOPTS_PLANE)
-		split(cfg_var(OPTS_PLANE) ":" cfg_var("OPTS"), CFGOPTS_PLANE, ":")
+		split(argv(OPTS_PLANE) ":" argv("OPTS"), CFGOPTS_PLANE, ":")
 }
 
 function get_opt(k) {
@@ -65,9 +65,9 @@ function register_tex(tex) {
 	TEXTURES[++TEXTURES_LEN] = tex
 }
 
-function cfg_var(var) {
+function argv(var) {
 	for (i in ARGV) {
-		if (ARGV[i] ~ /^[_[:alpha:]][_[:alnum:]]*=/ && ARGV[i] ~ ("^CFG_" var "=")) {
+		if (ARGV[i] ~ /^[_[:alpha:]][_[:alnum:]]*=/ && ARGV[i] ~ ("^" var)) {
 			kv = ARGV[i]
 			sub(/^[_[:alpha:]][_[:alnum:]]*=/, "", kv)
 			return kv
@@ -80,14 +80,18 @@ BEGIN {
 	TEXTURES_LEN = split("HOOKED", TEXTURES)
 }
 
-/\/\/cfg_desc/ { print("// Profile description:", cfg_var("DESC")); next; }
+/\/\/cfg_desc/ { print("// ", argv("DESC")); next; }
 /\/\/cfg_name/ { $1 = ""; NAME = substr($0, 2); next; }
 
 /\/\/cfg_hook/ {
 	hooks()
 	for (i in TEXTURES)
 		print("//!BIND", TEXTURES[i])
-	print("//!DESC", NAME, "(" FILENAME ")")
+
+	desc = argv("DESC")
+	split(desc, desc_words)
+	sub(/:$/, "", desc_words[1])
+	print("//!DESC", NAME, "(" desc_words[1] ")")
 
 	if (!SIZE)
 		SIZE = get_opt("CFG_SIZE")
@@ -104,6 +108,8 @@ BEGIN {
 			print("//!HEIGHT", size ".h")
 		}
 	}
+	
+	next
 }
 
 function cfg_tex(save, desc, size) {
