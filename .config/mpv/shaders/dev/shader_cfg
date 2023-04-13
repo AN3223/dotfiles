@@ -24,18 +24,22 @@ function is_num(x) {
 	return (x+0 == int(x)) && (int(x) != 0 || is_str_zero)
 }
 
-# XXX make this an associative array?
 function ensure_cfg_opts() {
-	if (!CFGOPTS)
-		split(argv("OPTS"), CFGOPTS, ":")
+	if (CFGOPTS_SET)
+		return
+	split(argv("OPTS"), CFGOPTS, ":")
+	CFGOPTS_SET = 1
 }
 
-# XXX make this an associative array?
 # XXX handle absence of OPTS_PLANE
 function ensure_cfg_plane_opts() {
-	ensure_cfg_opts()
-	if (!CFGOPTS_PLANE)
-		split(argv(OPTS_PLANE) ":" argv("OPTS"), CFGOPTS_PLANE, ":")
+	if (CFGOPTS_PLANE_SET)
+		return
+
+	concat = argv(OPTS_PLANE) ":" argv("OPTS")
+	sub("^:", "", concat)
+	split(concat, CFGOPTS_PLANE, ":")
+	CFGOPTS_PLANE_SET = 1
 }
 
 function get_opt(k) {
@@ -226,11 +230,11 @@ tolower($0) ~ /^\/[\/\*].*shader code/ { SHADER_CODE = 1 }
 /^#(el)?ifdef [_[:alpha:]][_[:alnum:]]*_raw$/ {
 	OPTS_PLANE = $2
 	sub(/_raw$/, "", OPTS_PLANE)
-	split("", CFGOPTS_PLANE)
+	CFGOPTS_PLANE_SET = 0
 }
 /^#else/ {
 	OPTS_PLANE = "OTHER"
-	split("", CFGOPTS_PLANE)
+	CFGOPTS_PLANE_SET = 0
 }
 /^#define/ && !SHADER_CODE {
 	ensure_cfg_plane_opts()
