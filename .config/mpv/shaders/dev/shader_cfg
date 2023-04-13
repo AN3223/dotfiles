@@ -24,11 +24,13 @@ function is_num(x) {
 	return (x+0 == int(x)) && (int(x) != 0 || is_str_zero)
 }
 
+# XXX make this an associative array?
 function ensure_cfg_opts() {
 	if (!CFGOPTS)
 		split(argv("OPTS"), CFGOPTS, ":")
 }
 
+# XXX make this an associative array?
 # XXX handle absence of OPTS_PLANE
 function ensure_cfg_plane_opts() {
 	ensure_cfg_opts()
@@ -270,69 +272,73 @@ function int_or_opt(x) { return is_num(x) ? x+0 : get_opt(x) }
 # "template_str" is a string optionally containing ${variable}
 #
 function range(s) {
-	assignments_len = split(s, assignments, ";")
+	param_len = split(s, param, ";")
 
 	# split template from assigments while preserving the template's semicolons
 	# (technically allows for odd syntax, but shouldn't occur in regular use)
 	template_str = ""
-	for (i in assignments) {
-		assignments[i] = trim(assignments[i])
-		if (assignments[i] !~ /^[_[:alpha:]][_[:alnum:]]*=[_.[:alnum:]]+$/) {
-			if (assignments[i])
-				template_str = sprintf("%s\n%s", template_str, assignments[i])
+	for (i in param) {
+		param[i] = trim(param[i])
+		if (param[i] !~ /^[_[:alpha:]][_[:alnum:]]*=[_.[:alnum:]]+$/) {
+			if (param[i])
+				template_str = sprintf("%s\n%s", template_str, param[i])
 			else
 				template_str = template_str ";"
-			delete assignments[i]
-			assignments_len--;
+			delete param[i]
+			param_len--
 		}
 	}
 	sub("^\n", "", template_str)
 
-	if (!assignments_len) # nothing to do
+	if (!param_len) # nothing to do
 		return template_str
+	
+	split("", vars)
+	split("", var_states)
+	for (i in param) { # parse ranges
+		split(param[i], kv, "=")
+		vars[kv[1]] = kv[2]
+
+		if (kv[2] !~ /\.\.\./) {
+			var_states[kv[1]] = int_or_opt(kv[2])
+		} else {
+			split(kv[2], startnext_stop, /\.\.\./)
+			if (startnext_stop[1] ~ /,/) { # start,next...stop
+				split(startnext_stop[1], start_next, ",")
+				var_states[kv[1] "start"] = int_or_opt(start_next[1])
+				var_states[kv[1] "stop"] = int_or_opt(startnext_stop[2])
+				var_states[kv[1] "step"] = int_or_opt(start_next[2]) - var_states[kv[1] "start"]
+			} else {                       # start...stop
+				var_states[kv[1] "start"] = int_or_opt(startnext_stop[1])
+				var_states[kv[1] "stop"] = int_or_opt(startnext_stop[2])
+				var_states[kv[1] "step"] = (var_states[kv[1] "start"] < var_states[kv[1] "stop"]) ? 1 : -1
+			}
+			var_states[kv[1]] = var_states[kv[1] "start"]
+		}
+	}
 
 	result = ""
 	done = 0
-	split("", var_states)
 	while (!done) {
 		done = 1 # done unless stated otherwise
 		line = template_str
-		for (i in assignments) {
-			split(assignments[i], kv, "=")
-			if (kv[2] !~ /\.\.\./) {
-				if (!result)
-					var_states[i] = int_or_opt(kv[2])
-			} else {
-				split(kv[2], startnext_stop, /\.\.\./)
-				if (startnext_stop[1] ~ /,/) { # start,next...stop
-					split(startnext_stop[1], start_next, ",")
-					start = int_or_opt(start_next[1])
-					stop = int_or_opt(startnext_stop[2])
-					step = int_or_opt(start_next[2]) - start
-				} else {                       # start...stop
-					start = int_or_opt(startnext_stop[1])
-					stop = int_or_opt(startnext_stop[2])
-					step = (start < stop) ? 1 : -1
-				}
-
-				if (!result) { # first iteration of while loop
-					var_states[i] = start
+		for (var in vars) {
+			if (!result) { # first iteration of while loop
+				done = 0
+			} else if (var_states[var "step"] > 0 && var_states[var] < var_states[var "stop"]) {
+				var_states[var] += var_states[var "step"]
+				if (var_states[var] >= var_states[var "stop"])
+					var_states[var] = var_states[var "stop"]
+				else
 					done = 0
-				} else if (step > 0 && var_states[i] < stop) {
-					var_states[i] += step
-					if (var_states[i] >= stop)
-						var_states[i] = stop
-					else
-						done = 0
-				} else if (step < 0 && var_states[i] > stop) {
-					var_states[i] += step
-					if (var_states[i] <= stop)
-						var_states[i] = stop
-					else
-						done = 0
-				}
+			} else if (var_states[var "step"] < 0 && var_states[var] > var_states[var "stop"]) {
+				var_states[var] += var_states[var "step"]
+				if (var_states[var] <= var_states[var "stop"])
+					var_states[var] = var_states[var "stop"]
+				else
+					done = 0
 			}
-			gsub(sprintf("\\$\\{%s\\}", kv[1]), var_states[i], line)
+			gsub(sprintf("\\$\\{%s\\}", var), var_states[var], line)
 		}
 		result = sprintf("%s\n%s", result, line)
 	}
