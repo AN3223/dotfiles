@@ -1,5 +1,7 @@
 #!/usr/bin/awk -f
 
+# XXX refactor?
+
 function hooks() {
 	for (i in HOOKS_ARR)
 		print("//!HOOK " HOOKS_ARR[i])

@@ -255,6 +255,7 @@ sub MAIN(
 	%gbl<tmpdir> = run(<<mktemp -d "$tmpdir/shader_test.XXXXXX">>, :out).out.slurp(:close).subst("\n");
 	%gbl<tmp> = %gbl<tmpdir> ~ '/shader_test.tmp';
 	
+	# XXX maybe just derive the filename from ARGV instead?
 	my @statsfile = (
 		# friendly shader name
 		%gbl<shader>.IO.basename.subst(/nlmeans/, "NLM").subst(/(_template$|\.glsl$)/),

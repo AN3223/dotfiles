@@ -2,9 +2,9 @@
 
 # XXX better support multi-stage shader templates?
 # XXX implement guided_cfg's featureset
-# XXX capitalize global variables, lower case other variables
 # XXX implement a directive for setting option defaults
 # XXX be cautious about for (i in array) syntax, order is unspecified
+# XXX maybe don't take options from environment variables
 
 function basename(s) {
 	sub("/$", "", s)
@@ -25,20 +25,21 @@ function is_num(x) {
 }
 
 function ensure_cfg_opts() {
-	if (!cfg_opts)
-		split(cfg_var("OPTS"), cfg_opts, ":")
+	if (!CFGOPTS)
+		split(cfg_var("OPTS"), CFGOPTS, ":")
 }
 
+# XXX handle absence of OPTS_PLANE
 function ensure_cfg_plane_opts() {
 	ensure_cfg_opts()
-	if (!cfg_plane_opts)
-		split(cfg_var(opt_plane) ":" cfg_var("OPTS"), cfg_plane_opts, ":")
+	if (!CFGOPTS_PLANE)
+		split(cfg_var(OPTS_PLANE) ":" cfg_var("OPTS"), CFGOPTS_PLANE, ":")
 }
 
 function get_opt(k) {
 	ensure_cfg_opts()
-	for (i in cfg_opts) {
-		split(cfg_opts[i], kv, "=")
+	for (i in CFGOPTS) {
+		split(CFGOPTS[i], kv, "=")
 		if (kv[1] == k)
 			return kv[2]
 	}
@@ -48,13 +49,13 @@ function hooks() {
 	if (!HOOKS) {
 		# XXX read this default from the template
 		HOOKS = "LUMA,CHROMA"
-		HOOKS_ = get_opt("CFG_HOOKS")
-		if (HOOKS_)
-			HOOKS = HOOKS_
+		hooks = get_opt("CFG_HOOKS")
+		if (hooks)
+			HOOKS = hooks
 	}
-	split(HOOKS, HOOKS_ARR, ",")
-	for (i in HOOKS_ARR)
-		print("//!HOOK", HOOKS_ARR[i])
+	split(HOOKS, hooks_arr, ",")
+	for (i in hooks_arr)
+		print("//!HOOK", hooks_arr[i])
 }
 
 function register_tex(tex) {
@@ -88,67 +89,67 @@ BEGIN {
 		print("//!BIND", TEXTURES[i])
 	print("//!DESC", NAME, "(" FILENAME ")")
 
-	if (!FINAL_SIZE)
-		FINAL_SIZE = get_opt("CFG_SIZE")
+	if (!SIZE)
+		SIZE = get_opt("CFG_SIZE")
 
-	if (FINAL_SIZE_ = FINAL_SIZE) {
-		sub(/^[\*\/]/, "", FINAL_SIZE_)
-		op = (FINAL_SIZE ~ /^\//) ? "/" : "*"
+	if (size = SIZE) {
+		op = (size ~ /\//) ? "/" : "*"
+		sub(/^[\*\/]/, "", size)
 
-		if (is_num(FINAL_SIZE_)) {
-			print("//!WIDTH", "HOOKED.w", FINAL_SIZE_, op)
-			print("//!HEIGHT", "HOOKED.h", FINAL_SIZE_, op)
+		if (is_num(size)) {
+			print("//!WIDTH", "HOOKED.w", size, op)
+			print("//!HEIGHT", "HOOKED.h", size, op)
 		} else {
-			print("//!WIDTH", FINAL_SIZE_ ".w")
-			print("//!HEIGHT", FINAL_SIZE_ ".h")
+			print("//!WIDTH", size ".w")
+			print("//!HEIGHT", size ".h")
 		}
 	}
 }
 
-function cfg_tex(SAVE, DESC, SIZE) {
-	if (SIZE ~ /^PRE/) {
-		sub(/^PRE/, "", SIZE)
-		cfg_tex("PRE" SAVE, "PRE" DESC, SIZE)
-		BIND = "PRE" SAVE
-		SIZE = "HOOKED"
+function cfg_tex(save, desc, size) {
+	if (size ~ /^PRE/) {
+		sub(/^PRE/, "", size)
+		cfg_tex("PRE" save, "PRE" desc, size)
+		bind = "PRE" save
+		size = "HOOKED"
 	} else {
-		SAVE_ = get_opt(SAVE)
-		sub(/^PRE/, "", SAVE_)
-		if (SAVE_)
-			SAVE = SAVE_
-		BIND = "HOOKED"
+		save_ = get_opt(save)
+		sub(/^PRE/, "", save_)
+		if (save_)
+			save = save_
+		bind = "HOOKED"
 	}
 
-	op = (SIZE ~ /\//) ? "/" : "*"
-	scale = SIZE
+	op = (size ~ /\//) ? "/" : "*"
+	scale = size
 	sub(/[\*\/]/, "", scale)
 
 	if (is_num(scale)) {
 		hooks()
-		print("//!BIND", BIND)
+		print("//!BIND", bind)
 		print("//!WIDTH", "HOOKED.w", scale, op)
 		print("//!HEIGHT", "HOOKED.h", scale, op)
-	} else if (SIZE ~ /^SHARE_/) {
+	} else if (size ~ /^SHARE_/) {
 		# XXX should this (have the option to) scale?
 		hooks()
-		sub(/^SHARE_/, "", SIZE)
-		print("//!BIND", BIND = SIZE)
-		DESC = DESC ", share"
-	} else if (SIZE ~ /\//) {
+		sub(/^SHARE_/, "", size)
+		print("//!BIND", bind = size)
+		desc = desc ", share"
+	} else if (size ~ /\//) {
 		inject_opts_len = split("", inject_opts)
 		inject_opts_str = ""
 		ensure_cfg_opts()
-		for (i in cfg_opts) {
-			if (cfg_opts[i] ~ /^INJ_/) {
-				opt = cfg_opts[i]
+		for (i in CFGOPTS) {
+			if (CFGOPTS[i] ~ /^INJ_/) {
+				opt = CFGOPTS[i]
 				sub(/^INJ_/, "", opt)
 				inject_opts_str = sprintf("%s:%s", inject_opts_str, opt)
 			}
 		}
 		sub(/^:/, "", inject_opts_str)
 
-		shader = SIZE
-		cmd = sprintf("./inject_shader -v OUT_TEX=%s -v HOOKS=%s", SAVE, HOOKS)
+		shader = size
+		cmd = sprintf("./inject_shader -v OUT_TEX=%s -v HOOKS=%s", save, HOOKS)
 		if (inject_opts_str)
 			cmd = sprintf("./shader_cfg %s CFG_OPTS=%s | %s", shader, inject_opts_str, cmd)
 		else
@@ -158,21 +159,21 @@ function cfg_tex(SAVE, DESC, SIZE) {
 		system(cmd)
 		print("// End of source code injected from", basename(shader))
 
-		register_tex(SAVE)
+		register_tex(save)
 		return
 	} else { # plain old texture name
 		hooks()
-		print("//!BIND", BIND)
-		print("//!WIDTH", SIZE ".w")
-		print("//!HEIGHT", SIZE ".h")
+		print("//!BIND", bind)
+		print("//!WIDTH", size ".w")
+		print("//!HEIGHT", size ".h")
 	}
 
-	print("//!DESC", NAME, "(" DESC ")")
-	print("//!SAVE", SAVE)
-	printf("\nvec4 hook()\n{\n\treturn %s_texOff(0);\n}\n\n", BIND)
+	print("//!DESC", NAME, "(" desc ")")
+	print("//!SAVE", save)
+	printf("\nvec4 hook()\n{\n\treturn %s_texOff(0);\n}\n\n", bind)
 
-	if (SAVE !~ /^PRE/)
-		register_tex(SAVE)
+	if (save !~ /^PRE/)
+		register_tex(save)
 }
 
 # usage: //cfg_tex SAVE=tex_name DESC=tex_desc SIZE=size
@@ -200,32 +201,33 @@ function cfg_tex(SAVE, DESC, SIZE) {
 	for (i in params) {
 		split(params[i], kv, "=")
 		if (kv[1] == "SAVE")
-			SAVE = kv[2]
+			save = kv[2]
 		else if (kv[1] == "DESC")
-			DESC = kv[2]
+			desc = kv[2]
 		else if (kv[1] == "SIZE")
-			SIZE = kv[2]
+			size = kv[2]
 	}
-	cfg_tex(SAVE, DESC, SIZE)
+	cfg_tex(save, desc, size)
 	next
 }
 
 # XXX unset this between stages
-tolower($0) ~ /^\/[\/\*].*shader code/ { shader_code = 1 }
+# XXX make it possible for the user to force disable this
+tolower($0) ~ /^\/[\/\*].*shader code/ { SHADER_CODE = 1 }
 
 /^#(el)?ifdef [_[:alpha:]][_[:alnum:]]*_raw$/ {
-	opt_plane = $2
-	sub(/_raw$/, "", opt_plane)
-	split("", cfg_plane_opts)
+	OPTS_PLANE = $2
+	sub(/_raw$/, "", OPTS_PLANE)
+	split("", CFGOPTS_PLANE)
 }
 /^#else/ {
-	opt_plane = "OTHER"
-	split("", cfg_plane_opts)
+	OPTS_PLANE = "OTHER"
+	split("", CFGOPTS_PLANE)
 }
-/^#define/ && !shader_code {
+/^#define/ && !SHADER_CODE {
 	ensure_cfg_plane_opts()
-	for (i in cfg_plane_opts) {
-		split(cfg_plane_opts[i], kv, "=")
+	for (i in CFGOPTS_PLANE) {
+		split(CFGOPTS_PLANE[i], kv, "=")
 		if ($2 == kv[1]) {
 			print($1, kv[1], kv[2])
 			next
