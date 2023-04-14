@@ -16,7 +16,7 @@ function trim(s) { sub(/^[[:space:]]*/, "", s); return s; }
 
 # XXX assumes locale's radix is .
 # XXX doesn't handle hexadecimal representations of zero
-function is_num(x) {
+function is_num(x,    is_obviously_num, is_str_zero) {
 	if (is_obviously_num = x+0 == x)
 		return is_obviously_num
 	x = trim(x)
@@ -32,17 +32,16 @@ function ensure_cfg_opts() {
 }
 
 # XXX handle absence of OPTS_PLANE
-function ensure_cfg_plane_opts() {
+function ensure_cfg_plane_opts(    concat) {
 	if (CFGOPTS_PLANE_SET)
 		return
-
 	concat = argv(OPTS_PLANE) ":" argv("OPTS")
 	sub("^:", "", concat)
 	split(concat, CFGOPTS_PLANE, ":")
 	CFGOPTS_PLANE_SET = 1
 }
 
-function get_opt(k) {
+function get_opt(k,    i, kv) {
 	ensure_cfg_opts()
 	for (i in CFGOPTS) {
 		split(CFGOPTS[i], kv, "=")
@@ -51,27 +50,26 @@ function get_opt(k) {
 	}
 }
 
-function hooks() {
+function hooks(    i, hooks) {
 	if (!HOOKS) {
 		# XXX read this default from the template
 		HOOKS = "LUMA,CHROMA"
-		hooks = get_opt("CFG_HOOKS")
-		if (hooks)
+		if (hooks = get_opt("CFG_HOOKS"))
 			HOOKS = hooks
 	}
-	split(HOOKS, hooks_arr, ",")
-	for (i in hooks_arr)
-		print("//!HOOK", hooks_arr[i])
+	split(HOOKS, hooks, ",")
+	for (i in hooks)
+		print("//!HOOK", hooks[i])
 }
 
-function register_tex(tex) {
+function register_tex(tex,    i) {
 	for (i in TEXTURES)
 		if (TEXTURES[i] == tex) # avoid double binds
 			return
 	TEXTURES[++TEXTURES_LEN] = tex
 }
 
-function argv(var) {
+function argv(var,    i, kv) {
 	for (i in ARGV) {
 		if (ARGV[i] ~ /^[_[:alpha:]][_[:alnum:]]*=/ && ARGV[i] ~ ("^" var)) {
 			kv = ARGV[i]
@@ -118,7 +116,7 @@ BEGIN {
 	next
 }
 
-function cfg_tex(save, desc, size) {
+function cfg_tex(save, desc, size,    bind, op, scale, opt, inject_opts, shader, cmd) {
 	if (size ~ /^PRE/) {
 		sub(/^PRE/, "", size)
 		cfg_tex("PRE" save, "PRE" desc, size)
@@ -148,22 +146,21 @@ function cfg_tex(save, desc, size) {
 		print("//!BIND", bind = size)
 		desc = desc ", share"
 	} else if (size ~ /\//) {
-		inject_opts_len = split("", inject_opts)
-		inject_opts_str = ""
+		inject_opts = ""
 		ensure_cfg_opts()
 		for (i in CFGOPTS) {
 			if (CFGOPTS[i] ~ /^INJ_/) {
 				opt = CFGOPTS[i]
 				sub(/^INJ_/, "", opt)
-				inject_opts_str = sprintf("%s:%s", inject_opts_str, opt)
+				inject_opts = sprintf("%s:%s", inject_opts, opt)
 			}
 		}
-		sub(/^:/, "", inject_opts_str)
+		sub(/^:/, "", inject_opts)
 
 		shader = size
 		cmd = sprintf("./inject_shader -v OUT_TEX=%s -v HOOKS=%s", save, HOOKS)
-		if (inject_opts_str)
-			cmd = sprintf("./shader_cfg %s CFG_OPTS=%s | %s", shader, inject_opts_str, cmd)
+		if (inject_opts)
+			cmd = sprintf("./shader_cfg %s CFG_OPTS=%s | %s", shader, inject_opts, cmd)
 		else
 			cmd = sprintf("%s < %s", cmd, shader)
 
@@ -275,7 +272,7 @@ function int_or_opt(x) { return is_num(x) ? x+0 : get_opt(x) }
 #
 # "template_str" is a string optionally containing ${variable}
 #
-function range(s) {
+function range(s,    param, param_len, template_str, i, vars, var_states, var, kv, result, done, line) {
 	param_len = split(s, param, ";")
 
 	# split template from assigments while preserving the template's semicolons
