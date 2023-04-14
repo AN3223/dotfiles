@@ -28,7 +28,6 @@ function ensure_cfg_opts(    cfgopts) {
 	CFGOPTS_LEN = split(cfgopts, CFGOPTS, ":")
 }
 
-# XXX handle absence of OPTS_PLANE
 function ensure_cfg_plane_opts(    concat) {
 	if (CFGOPTS_PLANE_LEN)
 		return
@@ -147,7 +146,7 @@ function cfg_tex(save, desc, size,    bind, op, scale, opt, inject_opts, shader,
 	} else if (size ~ /\//) {
 		inject_opts = ""
 		ensure_cfg_opts()
-		for (i in CFGOPTS) {
+		for (i = 1; i < CFGOPTS_LEN; i++) {
 			if (CFGOPTS[i] ~ /^INJ_/) {
 				opt = CFGOPTS[i]
 				sub(/^INJ_/, "", opt)
@@ -234,7 +233,7 @@ tolower($0) ~ /^\/[\/\*].*shader code/ { SHADER_CODE = 1 }
 }
 /^#define/ && !SHADER_CODE {
 	ensure_cfg_plane_opts()
-	for (i in CFGOPTS_PLANE) {
+	for (i = 1; i <= CFGOPTS_PLANE_LEN; i++) {
 		split(CFGOPTS_PLANE[i], kv, "=")
 		if ($2 == kv[1]) {
 			print($1, kv[1], kv[2])
