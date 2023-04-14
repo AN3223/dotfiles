@@ -1,10 +1,6 @@
 #!/usr/bin/awk -f
 
-# XXX better support multi-stage shader templates?
 # XXX implement guided_cfg's featureset
-# XXX implement a directive for setting option defaults
-# XXX be cautious about for (i in array) syntax, order is unspecified
-# XXX maybe don't take options from environment variables
 
 function basename(s) {
 	sub("/$", "", s)
@@ -24,26 +20,28 @@ function is_num(x,    is_obviously_num, is_str_zero) {
 	return (x+0 == int(x)) && (int(x) != 0 || is_str_zero)
 }
 
-function ensure_cfg_opts() {
-	if (CFGOPTS_SET)
+function ensure_cfg_opts(    cfgopts) {
+	if (CFGOPTS_LEN)
 		return
-	split(argv("OPTS"), CFGOPTS, ":")
-	CFGOPTS_SET = 1
+	cfgopts = argv("OPTS") ":" DEFAULTS
+	sub(/^:/, "", cfgopts)
+	CFGOPTS_LEN = split(cfgopts, CFGOPTS, ":")
 }
 
 # XXX handle absence of OPTS_PLANE
 function ensure_cfg_plane_opts(    concat) {
-	if (CFGOPTS_PLANE_SET)
+	if (CFGOPTS_PLANE_LEN)
 		return
+	else if (!OPTS_PLANE)
+		return ensure_cfg_opts()
 	concat = argv(OPTS_PLANE) ":" argv("OPTS")
 	sub("^:", "", concat)
-	split(concat, CFGOPTS_PLANE, ":")
-	CFGOPTS_PLANE_SET = 1
+	CFGOPTS_PLANE_LEN = split(concat, CFGOPTS_PLANE, ":")
 }
 
 function get_opt(k,    i, kv) {
 	ensure_cfg_opts()
-	for (i in CFGOPTS) {
+	for (i = 1; i <= CFGOPTS_LEN; i++) {
 		split(CFGOPTS[i], kv, "=")
 		if (kv[1] == k)
 			return kv[2]
@@ -52,8 +50,6 @@ function get_opt(k,    i, kv) {
 
 function hooks(    i, hooks) {
 	if (!HOOKS) {
-		# XXX read this default from the template
-		HOOKS = "LUMA,CHROMA"
 		if (hooks = get_opt("CFG_HOOKS"))
 			HOOKS = hooks
 	}
@@ -77,7 +73,6 @@ function argv(var,    i, kv) {
 			return kv
 		}
 	}
-	return ENVIRON["CFG_" var]
 }
 
 BEGIN {
@@ -85,8 +80,12 @@ BEGIN {
 }
 
 /\/\/cfg_desc/ { print("// ", argv("DESC")); next; }
-/\/\/cfg_name/ { $1 = ""; NAME = substr($0, 2); next; }
+/\/\/cfg_name/ { $1 = ""; NAME = trim($0); next; }
 
+# XXX need a way to do this per plane
+/\/\/cfg_defaults/ { $1 = ""; DEFAULTS = trim($0); next; }
+
+# XXX better support multi-stage shader templates?
 /\/\/cfg_hook/ {
 	hooks()
 	for (i in TEXTURES)
@@ -205,7 +204,7 @@ function cfg_tex(save, desc, size,    bind, op, scale, opt, inject_opts, shader,
 #
 /^\/\/cfg_tex/ {
 	# XXX support range()
-	$1 = ""; params = substr($0, 2);
+	$1 = ""; params = trim($0);
 	split(params, params)
 	for (i in params) {
 		split(params[i], kv, "=")
@@ -227,11 +226,11 @@ tolower($0) ~ /^\/[\/\*].*shader code/ { SHADER_CODE = 1 }
 /^#(el)?ifdef [_[:alpha:]][_[:alnum:]]*_raw$/ {
 	OPTS_PLANE = $2
 	sub(/_raw$/, "", OPTS_PLANE)
-	CFGOPTS_PLANE_SET = 0
+	CFGOPTS_PLANE_LEN = 0
 }
 /^#else/ {
 	OPTS_PLANE = "OTHER"
-	CFGOPTS_PLANE_SET = 0
+	CFGOPTS_PLANE_LEN = 0
 }
 /^#define/ && !SHADER_CODE {
 	ensure_cfg_plane_opts()
@@ -244,7 +243,7 @@ tolower($0) ~ /^\/[\/\*].*shader code/ { SHADER_CODE = 1 }
 	}
 }
 
-function int_or_opt(x) { return is_num(x) ? x+0 : get_opt(x) }
+function int_or_opt(x) { return is_num(x) ? x+0 : get_opt(x)+0 }
 
 # usage: range("assignments template_str")
 #
@@ -272,7 +271,7 @@ function int_or_opt(x) { return is_num(x) ? x+0 : get_opt(x) }
 #
 # "template_str" is a string optionally containing ${variable}
 #
-function range(s,    param, param_len, template_str, i, vars, var_states, var, kv, result, done, line) {
+function range(s,    param, param_len, template_str, i, vars, var_states, var, kv, result, done, line, startnext_stop, start_next) {
 	param_len = split(s, param, ";")
 
 	# split template from assigments while preserving the template's semicolons
@@ -347,7 +346,8 @@ function range(s,    param, param_len, template_str, i, vars, var_states, var, k
 	return result
 }
 
-/\/\/cfg_range/ { $1 = ""; print(range(substr($0, 2))); next; }
+# XXX preserve the comment's indentation
+/\/\/cfg_range/ { $1 = ""; print(range(trim($0))); next; }
 
 # usage: //cfg_storage TEXTURE=name SIZE=width:height FORMAT=format
 #
@@ -356,7 +356,7 @@ function range(s,    param, param_len, template_str, i, vars, var_states, var, k
 # Supports range() syntax
 #
 /\/\/cfg_storage/ {
-	$1 = ""; params = range(substr($0, 2));
+	$1 = ""; params = range(trim($0));
 	lines_len = split(params, lines, "\n")
 	for (line = 1; line <= lines_len; line++) {
 		split(lines[line], assignments)
