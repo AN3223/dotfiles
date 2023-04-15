@@ -78,14 +78,14 @@ BEGIN {
 	TEXTURES_LEN = split("HOOKED", TEXTURES)
 }
 
-/\/\/cfg_desc/ { print("// ", argv("DESC")); next; }
-/\/\/cfg_name/ { $1 = ""; NAME = trim($0); next; }
+/^\/\/cfg_desc/ { print("// ", argv("DESC")); next; }
+/^\/\/cfg_name/ { $1 = ""; NAME = trim($0); next; }
 
 # XXX need a way to do this per plane
-/\/\/cfg_defaults/ { $1 = ""; DEFAULTS = trim($0); next; }
+/^\/\/cfg_defaults/ { $1 = ""; DEFAULTS = trim($0); next; }
 
 # XXX better support multi-stage shader templates?
-/\/\/cfg_hook/ {
+/^\/\/cfg_hook/ {
 	hooks()
 	for (i in TEXTURES)
 		print("//!BIND", TEXTURES[i])
@@ -354,7 +354,7 @@ function range(s,    param, param_len, template_str, i, vars, var_states, var, k
 #
 # Supports range() syntax
 #
-/\/\/cfg_storage/ {
+/^\/\/cfg_storage/ {
 	$1 = ""; params = range(trim($0));
 	lines_len = split(params, lines, "\n")
 	for (line = 1; line <= lines_len; line++) {
