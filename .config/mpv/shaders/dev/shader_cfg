@@ -1,6 +1,7 @@
 #!/usr/bin/awk -f
 
 # XXX implement guided_cfg's featureset
+# XXX merge with inject_shader? lots of duplicate functionality
 
 function basename(s) {
 	sub("/$", "", s)
@@ -74,17 +75,60 @@ function argv(var,    i, kv) {
 	}
 }
 
+function parse_size(size, parsed_size) {
+	parsed_size["OPERATOR"] = (size ~ "/") ? "/" : "*"
+	sub("[*/]", "", size)
+	parsed_size["SCALE"] = size
+}
+
 BEGIN {
 	TEXTURES_LEN = split("HOOKED", TEXTURES)
 }
 
-/^\/\/cfg_desc/ { print("// ", argv("DESC")); next; }
+# record is part of a HOOK block
+$0 ~ "^//!" {
+	HOOK_LINES[++HOOK_LEN] = $0
+	sub("^//!", "")
+	directive = $1; $1 = "";
+	HOOK_DIRECTIVES[directive] = trim($0)
+	next
+}
+
+# end of HOOK block
+$0 !~ "^//!" && HOOK_LEN {
+	hooks()
+
+	# take an optional user parameter
+	size = HOOK_DIRECTIVES["SAVE"] ? get_opt(HOOK_DIRECTIVES["SAVE"]) : ""
+
+	# print HOOK_LINES besides //!HOOK, and besides //!(WIDTH|HEIGHT) if size
+	for (i = 1; i <= HOOK_LEN; i++)
+		if (HOOK_LINES[i] !~ "^//!HOOK")
+			if (!size || HOOK_LINES[i] !~ "^//!(WIDTH|HEIGHT)")
+				print(HOOK_LINES[i])
+
+	split("", parsed_size)
+	parse_size(size, parsed_size)
+	if (is_num(parsed_size["SCALE"])) {
+		print("//!WIDTH", "HOOKED.w", parsed_size["SCALE"], parsed_size["OPERATOR"])
+		print("//!HEIGHT", "HOOKED.h", parsed_size["SCALE"], parsed_size["OPERATOR"])
+	} else if (size) {
+		print("//!WIDTH", size ".w")
+		print("//!HEIGHT", size ".h")
+	}
+}
+
+# not a hook block, reset any hook block related stuff
+$0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); }
+
+/^\/\/cfg_desc/ { if (argv("DESC")) { print("// ", argv("DESC")); next; } }
 /^\/\/cfg_name/ { $1 = ""; NAME = trim($0); next; }
 
 # XXX need a way to do this per plane
 /^\/\/cfg_defaults/ { $1 = ""; DEFAULTS = trim($0); next; }
 
 # XXX better support multi-stage shader templates?
+# XXX generalize this, maybe via cfg_tex()?
 /^\/\/cfg_hook/ {
 	hooks()
 	for (i in TEXTURES)
@@ -98,26 +142,27 @@ BEGIN {
 	if (!SIZE)
 		SIZE = get_opt("CFG_SIZE")
 
-	if (size = SIZE) {
-		op = (size ~ /\//) ? "/" : "*"
-		sub(/^[\*\/]/, "", size)
+	if (SIZE) {
+		split("", parsed_size)
+		parse_size(SIZE, parsed_size)
 
-		if (is_num(size)) {
-			print("//!WIDTH", "HOOKED.w", size, op)
-			print("//!HEIGHT", "HOOKED.h", size, op)
+		if (is_num(parsed_size["SCALE"])) {
+			print("//!WIDTH", "HOOKED.w", parsed_size["SCALE"], parsed_size["OPERATOR"])
+			print("//!HEIGHT", "HOOKED.h", parsed_size["SCALE"], parsed_size["OPERATOR"])
 		} else {
-			print("//!WIDTH", size ".w")
-			print("//!HEIGHT", size ".h")
+			print("//!WIDTH", SIZE ".w")
+			print("//!HEIGHT", SIZE ".h")
 		}
 	}
 	
 	next
 }
 
-function cfg_tex(save, desc, size,    bind, op, scale, opt, inject_opts, shader, cmd) {
+# XXX take a parameter for scaling after PRE in order to facilitate guided's I tex?
+function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, shader, cmd, parsed_size) {
 	if (size ~ /^PRE/) {
 		sub(/^PRE/, "", size)
-		cfg_tex("PRE" save, "PRE" desc, size)
+		cfg_tex("PRE" save, "PRE" desc, size, 1)
 		bind = "PRE" save
 		size = "HOOKED"
 	} else {
@@ -128,15 +173,14 @@ function cfg_tex(save, desc, size,    bind, op, scale, opt, inject_opts, shader,
 		bind = "HOOKED"
 	}
 
-	op = (size ~ /\//) ? "/" : "*"
-	scale = size
-	sub(/[\*\/]/, "", scale)
+	split("", parsed_size)
+	parse_size(size, parsed_size)
 
-	if (is_num(scale)) {
+	if (is_num(parsed_size["SCALE"])) {
 		hooks()
 		print("//!BIND", bind)
-		print("//!WIDTH", "HOOKED.w", scale, op)
-		print("//!HEIGHT", "HOOKED.h", scale, op)
+		print("//!WIDTH", "HOOKED.w", parsed_size["SCALE"], parsed_size["OPERATOR"])
+		print("//!HEIGHT", "HOOKED.h", parsed_size["SCALE"], parsed_size["OPERATOR"])
 	} else if (size ~ /^SHARE_/) {
 		# XXX should this (have the option to) scale?
 		hooks()
@@ -168,22 +212,25 @@ function cfg_tex(save, desc, size,    bind, op, scale, opt, inject_opts, shader,
 
 		register_tex(save)
 		return
-	} else { # plain old texture name
+	} else { # size is either a texture name or null
 		hooks()
 		print("//!BIND", bind)
-		print("//!WIDTH", size ".w")
-		print("//!HEIGHT", size ".h")
+		if (size) {
+			print("//!WIDTH", size ".w")
+			print("//!HEIGHT", size ".h")
+		}
 	}
 
 	print("//!DESC", NAME, "(" desc ")")
 	print("//!SAVE", save)
-	printf("\nvec4 hook()\n{\n\treturn %s_texOff(0);\n}\n\n", bind)
+	if (copy)
+		printf("\nvec4 hook()\n{\n\treturn %s_texOff(0);\n}\n\n", bind)
 
 	if (save !~ /^PRE/)
 		register_tex(save)
 }
 
-# usage: //cfg_tex SAVE=tex_name DESC=tex_desc SIZE=size
+# usage: //cfg_tex SAVE=tex_name DESC=tex_desc SIZE=size COPY=copy
 #
 # Order of parameters doesn't matter
 #
@@ -199,7 +246,9 @@ function cfg_tex(save, desc, size,    bind, op, scale, opt, inject_opts, shader,
 # 	- A texture name prefixed by SHARE_
 # 		- Saves a copy of the specified texture
 # 	- A texture name
-# 		- Scales HOOKED to the size of the specified texture
+# 		- Scales to the size of the specified texture
+#
+# If COPY is 1 then a minimal hook() will be generated
 #
 /^\/\/cfg_tex/ {
 	# XXX support range()
@@ -213,8 +262,10 @@ function cfg_tex(save, desc, size,    bind, op, scale, opt, inject_opts, shader,
 			desc = kv[2]
 		else if (kv[1] == "SIZE")
 			size = kv[2]
+		else if (kv[1] == "COPY")
+			copy = kv[2]
 	}
-	cfg_tex(save, desc, size)
+	cfg_tex(save, desc, size, copy)
 	next
 }
 
