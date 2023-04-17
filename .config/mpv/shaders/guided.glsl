@@ -16,7 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//desc: Guided filter guided by the downscaled image
+// Description: guided: Guided by the downscaled image
 
 /* The radius can be adjusted with the MEANI stage's downscaling factor. 
  * Higher numbers give a bigger radius.

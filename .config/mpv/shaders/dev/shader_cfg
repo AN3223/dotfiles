@@ -109,9 +109,16 @@ $0 !~ "^//!" && HOOK_LEN {
 
 	split("", parsed_size)
 	parse_size(size, parsed_size)
-	if (is_num(parsed_size["SCALE"])) {
-		print("//!WIDTH", "HOOKED.w", parsed_size["SCALE"], parsed_size["OPERATOR"])
-		print("//!HEIGHT", "HOOKED.h", parsed_size["SCALE"], parsed_size["OPERATOR"])
+	if (size && is_num(parsed_size["SCALE"])) {
+		# determine the relevant texture from existing WIDTH/HEIGHT directives
+		# XXX ideally cfg_tex should have this functionality too
+		try_get_tex = HOOK_DIRECTIVES["HEIGHT"] ? HOOK_DIRECTIVES["HEIGHT"] : HOOK_DIRECTIVES["WIDTH"]
+		split(try_get_tex, try_get_tex_words)
+		sub(/\../, "", try_get_tex_words[1])
+		tex = try_get_tex_words[1] ? try_get_tex_words[1] : "HOOKED"
+
+		print("//!WIDTH", tex ".w", parsed_size["SCALE"], parsed_size["OPERATOR"])
+		print("//!HEIGHT", tex ".h", parsed_size["SCALE"], parsed_size["OPERATOR"])
 	} else if (size) {
 		print("//!WIDTH", size ".w")
 		print("//!HEIGHT", size ".h")
@@ -121,7 +128,13 @@ $0 !~ "^//!" && HOOK_LEN {
 # not a hook block, reset any hook block related stuff
 $0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); }
 
-/^\/\/cfg_desc/ { if (argv("DESC")) { print("// ", argv("DESC")); next; } }
+/^\/\/cfg_desc/ {
+	if (argv("DESC")) {
+		print("// Description:", argv("DESC"))
+		next
+	}
+	gsub("^//cfg_desc", "// Description:")
+}
 /^\/\/cfg_name/ { $1 = ""; NAME = trim($0); next; }
 
 # XXX need a way to do this per plane

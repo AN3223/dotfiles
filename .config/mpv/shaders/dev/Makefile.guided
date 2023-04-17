@@ -8,15 +8,17 @@ LGC_DESC=Luma-guided-chroma denoising.
 LGC=HOOKS=CHROMA:I=SHARE_LUMA:MEANI=2.0:E=100.0
 
 FAST_DESC=Fast.
-FAST=I=2:MEANI=1.5:PREI=1.125
+FAST=I=2/:MEANI=1.5/:PREI=1.125/
 FAST_S=IP=2:MEANIP=1.5:E=0.001
 
-all: ../guided_fast.glsl ../guided_s_fast.glsl ../guided_lgc.glsl
+all: ../guided.glsl ../guided_fast.glsl ../guided_s_fast.glsl ../guided_lgc.glsl
 
+../guided.glsl: guided_template
+	./shader_cfg $? > $@
 ../guided_s_fast.glsl: ../guided_s.glsl
 	env GUIDED_DESC="$(FAST_DESC)" GUIDED_OPTS="$(FAST_S)" ./guided_cfg < $? > $@
-../guided_fast.glsl: ../guided.glsl
-	env GUIDED_DESC="$(SELF_DESC) $(FAST_DESC)" GUIDED_OPTS="$(FAST)" ./guided_cfg < $? > $@
-../guided_lgc.glsl: ../guided.glsl
+../guided_fast.glsl: guided_template
+	./shader_cfg DESC="$(SELF_DESC) $(FAST_DESC)" OPTS="$(FAST)" $? > $@
+../guided_lgc.glsl: guided_template
 	env GUIDED_DESC="$(LGC_DESC)" GUIDED_OPTS="$(LGC)" ./guided_cfg < $? > $@
 

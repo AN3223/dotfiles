@@ -16,7 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//desc: Self-guided. Fast.
+// Description: Self-guided. Fast.
 
 /* The radius can be adjusted with the MEANI stage's downscaling factor. 
  * Higher numbers give a bigger radius.
@@ -35,9 +35,9 @@
 //!HOOK RGB
 //!DESC Guided filter (PREI)
 //!BIND HOOKED
+//!SAVE PREI
 //!WIDTH HOOKED.w 1.125 /
 //!HEIGHT HOOKED.h 1.125 /
-//!SAVE PREI
 
 vec4 hook()
 {
@@ -49,9 +49,9 @@ vec4 hook()
 //!HOOK RGB
 //!DESC Guided filter (I)
 //!BIND PREI
+//!SAVE I
 //!WIDTH HOOKED.w 2 /
 //!HEIGHT HOOKED.h 2 /
-//!SAVE I
 
 vec4 hook()
 {
@@ -77,9 +77,9 @@ vec4 hook()
 //!HOOK RGB
 //!DESC Guided filter (MEANI)
 //!BIND I
+//!SAVE MEANI
 //!WIDTH I.w 1.5 /
 //!HEIGHT I.h 1.5 /
-//!SAVE MEANI
 
 vec4 hook()
 {
