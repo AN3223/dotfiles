@@ -25,6 +25,7 @@ function is_num(x,    is_obviously_num, is_str_zero) {
 function ensure_cfg_opts(    cfgopts) {
 	if (CFGOPTS_LEN)
 		return
+	# XXX awk's spec says ARGV may be modified
 	cfgopts = argv("OPTS") ":" DEFAULTS
 	sub(/^:/, "", cfgopts)
 	CFGOPTS_LEN = split(cfgopts, CFGOPTS, ":")
@@ -68,6 +69,7 @@ function get_opt(k, v,    i, kv) {
 			return kv[2]
 		}
 	}
+	return -1 # XXX use a different placeholder to prevent collisions
 }
 
 function ensure_hooks() {
@@ -75,11 +77,11 @@ function ensure_hooks() {
 		HOOKS = get_opt("CFG_HOOKS")
 }
 
-function hooks(    i, hooks) {
+function hooks(    i, hooks_) {
 	ensure_hooks()
-	split(HOOKS, hooks, ",")
-	for (i in hooks)
-		print("//!HOOK", hooks[i])
+	split(HOOKS, hooks_, ",")
+	for (i in hooks_)
+		print("//!HOOK", hooks_[i])
 }
 
 function register_tex(tex,    i) {
@@ -90,7 +92,7 @@ function register_tex(tex,    i) {
 }
 
 function argv(var,    i, kv) {
-	for (i in ARGV) {
+	for (i = 1; i < ARGC; i++) {
 		if (ARGV[i] ~ /^[_[:alpha:]][_[:alnum:]]*=/ && ARGV[i] ~ ("^" var)) {
 			kv = ARGV[i]
 			sub(/^[_[:alpha:]][_[:alnum:]]*=/, "", kv)
@@ -124,7 +126,13 @@ $0 !~ "^//!" && HOOK_LEN {
 	register_tex(HOOK_DIRECTIVES["SAVE"])
 
 	# take an optional user parameter
-	size = HOOK_DIRECTIVES["SAVE"] ? get_opt(HOOK_DIRECTIVES["SAVE"]) : ""
+	save = HOOK_DIRECTIVES["SAVE"]
+	if (save)
+		size_ = get_opt(save)
+	if (size_ != -1)
+		size = size_
+	else
+		size = ""
 
 	# print HOOK_LINES besides //!HOOK, and besides //!(WIDTH|HEIGHT) if size
 	for (i = 1; i <= HOOK_LEN; i++)
@@ -184,7 +192,7 @@ $0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); 
 	if (!SIZE)
 		SIZE = get_opt("CFG_SIZE")
 
-	if (SIZE) {
+	if (SIZE != -1) {
 		split("", parsed_size)
 		parse_size(SIZE, parsed_size)
 
@@ -203,13 +211,14 @@ $0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); 
 # XXX need to handle PRE + non PRE scaling to support guided_lgc
 function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, shader, cmd, parsed_size) {
 	size_ = get_opt(save)
-	if (size_ != 0)
+	if (size_ != -1)
+		size = size_
+
+	if (size && size != "0")
 		get_opt(save, 1) # e.g., RF=SHARE_LUMA sets the RF macro to 1
 	else
 		return get_opt(save, 0) # e.g., RF=0 sets the RF macro to 0
 
-	if (size_ != "")
-		size = size_
 	bind = copy ? copy : "HOOKED"
 
 	if (size ~ /^PRE/) {
@@ -302,9 +311,9 @@ function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, s
 /^\/\/cfg_tex/ {
 	# XXX support range()
 	$1 = ""; params = trim($0);
-	split(params, params)
-	for (i in params) {
-		split(params[i], kv, "=")
+	split(params, params_arr)
+	for (i in params_arr) {
+		split(params_arr[i], kv, "=")
 		if (kv[1] == "SAVE")
 			save = kv[2]
 		else if (kv[1] == "DESC")
@@ -342,7 +351,14 @@ tolower($0) ~ /^\/[\/\*].*shader code/ { SHADER_CODE = 1 }
 	}
 }
 
-function int_or_opt(x) { return is_num(x) ? x+0 : get_opt(x)+0 }
+function int_or_opt(x,    opt) {
+	if (is_num(x)) {
+		return x+0
+	} else {
+		opt = get_opt(x)+0
+		return (opt && opt != -1) ? opt : 0
+	}
+}
 
 # usage: range("directives template_str")
 #
@@ -373,7 +389,7 @@ function int_or_opt(x) { return is_num(x) ? x+0 : get_opt(x)+0 }
 #
 # "template_str" is a string optionally containing ${variable}
 #
-function range(s,    param, param_len, param_words, template_str, i, vars, var_states, var, kv, result, done, line, startnext_stop, start_next) {
+function range(s,    param, param_len, param_words, param_opt, template_str, i, vars, var_states, var, kv, result, done, line, startnext_stop, start_next) {
 	param_len = split(s, param, ";")
 
 	# split template from assigments while preserving the template's semicolons
@@ -385,7 +401,8 @@ function range(s,    param, param_len, param_words, template_str, i, vars, var_s
 			continue
 		} else if (param[i] ~ /^if [_[:alpha:]][_[:alnum:]]*$/) {
 			split(param[i], param_words)
-			if (!get_opt(param_words[2]))
+			param_opt = get_opt(param_words[2])+0
+			if (!param_opt || param_opt == -1)
 				return ""
 			else
 				continue
@@ -478,7 +495,7 @@ function range(s,    param, param_len, param_words, template_str, i, vars, var_s
 				TEXTURE_BLOCKS = sprintf("%s\n//!TEXTURE %s", TEXTURE_BLOCKS, kv[2])
 			} else if (kv[1] == "SIZE") {
 				opt = get_opt(kv[2])
-				if (!opt)
+				if (!opt || opt == -1)
 					opt = kv[3]
 				sub("x", " ", opt)
 				TEXTURE_BLOCKS = sprintf("%s\n//!SIZE %s", TEXTURE_BLOCKS, opt)
