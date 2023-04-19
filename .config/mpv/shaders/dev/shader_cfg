@@ -200,7 +200,6 @@ $0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); 
 }
 
 # XXX need to handle PRE + non PRE scaling to support guided_lgc
-# XXX EP needs to be LUMA-sized
 function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, shader, cmd, parsed_size) {
 	size_ = get_opt(save)
 	if (size_ != 0)
@@ -225,8 +224,8 @@ function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, s
 	if (is_num(parsed_size["SCALE"])) {
 		hooks()
 		print("//!BIND", bind)
-		print("//!WIDTH", "HOOKED.w", parsed_size["SCALE"], parsed_size["OPERATOR"])
-		print("//!HEIGHT", "HOOKED.h", parsed_size["SCALE"], parsed_size["OPERATOR"])
+		print("//!WIDTH", bind ".w", parsed_size["SCALE"], parsed_size["OPERATOR"])
+		print("//!HEIGHT", bind ".h", parsed_size["SCALE"], parsed_size["OPERATOR"])
 	} else if (size ~ /^SHARE_/) {
 		# XXX should scaling here be configurable?
 		hooks()

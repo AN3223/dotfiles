@@ -127,8 +127,8 @@ vec4 hook()
 //!HOOK LUMA
 //!HOOK CHROMA
 //!BIND LUMA
-//!WIDTH HOOKED.w 3 /
-//!HEIGHT HOOKED.h 3 /
+//!WIDTH LUMA.w 3 /
+//!HEIGHT LUMA.h 3 /
 //!DESC Non-local means (EP)
 //!SAVE EP
 
