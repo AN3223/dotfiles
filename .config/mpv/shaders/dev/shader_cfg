@@ -121,6 +121,7 @@ $0 ~ "^//!" {
 # end of HOOK block
 $0 !~ "^//!" && HOOK_LEN {
 	hooks()
+	register_tex(HOOK_DIRECTIVES["SAVE"])
 
 	# take an optional user parameter
 	size = HOOK_DIRECTIVES["SAVE"] ? get_opt(HOOK_DIRECTIVES["SAVE"]) : ""
