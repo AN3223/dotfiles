@@ -2,6 +2,7 @@
 
 # XXX implement guided_cfg's featureset
 # XXX merge with inject_shader? lots of duplicate functionality
+# XXX could really use a refactor
 
 function basename(s) {
 	sub("/$", "", s)
@@ -29,30 +30,53 @@ function ensure_cfg_opts(    cfgopts) {
 	CFGOPTS_LEN = split(cfgopts, CFGOPTS, ":")
 }
 
-function ensure_cfg_plane_opts(    concat) {
+function ensure_cfg_plane_opts(    concat, i) {
 	if (CFGOPTS_PLANE_LEN)
 		return
-	else if (!OPTS_PLANE)
-		return ensure_cfg_opts()
-	concat = argv(OPTS_PLANE) ":" argv("OPTS")
-	sub("^:", "", concat)
+
+	concat = ""
+	ensure_cfg_opts()
+
+	# stringify CFGOPTS, since it may have been modified
+	if (CFGOPTS_LEN) {
+		for (i = 1; i <= CFGOPTS_LEN; i++)
+			concat = concat ":" CFGOPTS[i]
+		sub("^:", "", concat)
+	}
+
+	if (OPTS_PLANE) {
+		concat = argv("OPTS_" OPTS_PLANE) ":" concat
+		sub(":$", "", concat)
+	}
+
 	CFGOPTS_PLANE_LEN = split(concat, CFGOPTS_PLANE, ":")
 }
 
-function get_opt(k,    i, kv) {
+# get_opt(opt) will simply return the opt's value
+# get_opt(opt, val) will also set the opt's value to "val"
+function get_opt(k, v,    i, kv) {
 	ensure_cfg_opts()
 	for (i = 1; i <= CFGOPTS_LEN; i++) {
 		split(CFGOPTS[i], kv, "=")
-		if (kv[1] == k)
+		if (kv[1] == k) {
+			if (v) {
+				# set value and recompute CFGOPTS_PLANE
+				CFGOPTS[i] = k "=" v
+				CFGOPTS_PLANE_LEN = 0
+				ensure_cfg_plane_opts()
+			}
 			return kv[2]
+		}
 	}
 }
 
+function ensure_hooks() {
+	if (!HOOKS)
+		HOOKS = get_opt("CFG_HOOKS")
+}
+
 function hooks(    i, hooks) {
-	if (!HOOKS) {
-		if (hooks = get_opt("CFG_HOOKS"))
-			HOOKS = hooks
-	}
+	ensure_hooks()
 	split(HOOKS, hooks, ",")
 	for (i in hooks)
 		print("//!HOOK", hooks[i])
@@ -129,11 +153,16 @@ $0 !~ "^//!" && HOOK_LEN {
 $0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); }
 
 /^\/\/cfg_desc/ {
-	if (argv("DESC")) {
-		print("// Description:", argv("DESC"))
-		next
-	}
-	gsub("^//cfg_desc", "// Description:")
+	$1 = ""; params = trim($0);
+	if (argv("DESC"))
+		$0 = argv("DESC")
+	else
+		$0 = $0 # re-splits $0
+
+	$1 = basename($1)
+	DESC = $0
+	print("// Description:", DESC)
+	next
 }
 /^\/\/cfg_name/ { $1 = ""; NAME = trim($0); next; }
 
@@ -147,8 +176,7 @@ $0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); 
 	for (i in TEXTURES)
 		print("//!BIND", TEXTURES[i])
 
-	desc = argv("DESC")
-	split(desc, desc_words)
+	split(DESC, desc_words)
 	sub(/:$/, "", desc_words[1])
 	print("//!DESC", NAME, "(" desc_words[1] ")")
 
@@ -171,19 +199,24 @@ $0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); 
 	next
 }
 
-# XXX take a parameter for scaling after PRE in order to facilitate guided's I tex?
+# XXX need to handle PRE + non PRE scaling to support guided_lgc
+# XXX EP needs to be LUMA-sized
 function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, shader, cmd, parsed_size) {
+	size_ = get_opt(save)
+	if (size_ != 0)
+		get_opt(save, 1) # e.g., RF=SHARE_LUMA sets the RF macro to 1
+	else
+		return get_opt(save, 0) # e.g., RF=0 sets the RF macro to 0
+
+	if (size_ != "")
+		size = size_
+	bind = copy ? copy : "HOOKED"
+
 	if (size ~ /^PRE/) {
 		sub(/^PRE/, "", size)
-		cfg_tex("PRE" save, "PRE" desc, size, 1)
+		cfg_tex("PRE" save, "PRE" desc, size, "HOOKED")
 		bind = "PRE" save
 		size = "HOOKED"
-	} else {
-		save_ = get_opt(save)
-		sub(/^PRE/, "", save_)
-		if (save_)
-			save = save_
-		bind = "HOOKED"
 	}
 
 	split("", parsed_size)
@@ -195,13 +228,16 @@ function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, s
 		print("//!WIDTH", "HOOKED.w", parsed_size["SCALE"], parsed_size["OPERATOR"])
 		print("//!HEIGHT", "HOOKED.h", parsed_size["SCALE"], parsed_size["OPERATOR"])
 	} else if (size ~ /^SHARE_/) {
-		# XXX should this (have the option to) scale?
+		# XXX should scaling here be configurable?
 		hooks()
 		sub(/^SHARE_/, "", size)
 		print("//!BIND", bind = size)
+		print("//!WIDTH", bind ".w")
+		print("//!HEIGHT", bind ".h")
 		desc = desc ", share"
 	} else if (size ~ /\//) {
 		inject_opts = ""
+		ensure_hooks()
 		ensure_cfg_opts()
 		for (i = 1; i < CFGOPTS_LEN; i++) {
 			if (CFGOPTS[i] ~ /^INJ_/) {
@@ -215,13 +251,13 @@ function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, s
 		shader = size
 		cmd = sprintf("./inject_shader -v OUT_TEX=%s -v HOOKS=%s", save, HOOKS)
 		if (inject_opts)
-			cmd = sprintf("./shader_cfg %s CFG_OPTS=%s | %s", shader, inject_opts, cmd)
+			cmd = sprintf("./shader_cfg %s OPTS=%s | %s", shader, inject_opts, cmd)
 		else
 			cmd = sprintf("%s < %s", cmd, shader)
 
 		print("// The following is shader code injected from", basename(shader))
 		system(cmd)
-		print("// End of source code injected from", basename(shader))
+		print("// End of source code injected from", basename(shader), "\n")
 
 		register_tex(save)
 		return
@@ -253,7 +289,6 @@ function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, s
 # 	- A scaling factor like *2 or 2* or /2 or 2/
 # 		- If the operator is omitted it will default to *
 # 		- A prefix of PRE scales the texture back to the size of HOOKED
-# 			- This part isn't user configurable, since it could break shader code
 # 	- A file name of a shader to derive the texture from
 # 		- Must contain a / or a ./ to be considered a shader file
 # 	- A texture name prefixed by SHARE_
@@ -261,7 +296,8 @@ function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, s
 # 	- A texture name
 # 		- Scales to the size of the specified texture
 #
-# If COPY is 1 then a minimal hook() will be generated
+# If COPY is set to a texture name then a minimal hook() will be generated that 
+# will BIND to that texture and sample from it
 #
 /^\/\/cfg_tex/ {
 	# XXX support range()
@@ -308,7 +344,7 @@ tolower($0) ~ /^\/[\/\*].*shader code/ { SHADER_CODE = 1 }
 
 function int_or_opt(x) { return is_num(x) ? x+0 : get_opt(x)+0 }
 
-# usage: range("assignments template_str")
+# usage: range("directives template_str")
 #
 # Returns a string with a line for each element in the longest of the specified 
 # ranges, where each line is "template_str" with each occurrence of ${variable} 
@@ -316,8 +352,11 @@ function int_or_opt(x) { return is_num(x) ? x+0 : get_opt(x)+0 }
 #
 # ...e.g., range("i=1...10; ${i}") -> "1\n2\n3\n4\n5\n6\n7\n8\n9\n10"
 #
-# "assignments" is an optional semicolon delimited+terminated list of the form:
-# variable=value; variable=value;
+# "directives" is an optional semicolon delimited+terminated list containing:
+# 	- An assignment of the form: variable=value
+# 	- A condition of the form: if opt
+# 		- The value of option "opt" will be retrieved and tested for truthiness
+# 		- If the value is falsey, then range() will return nothing
 #
 # "variable" is an arbitrary name
 #
@@ -334,7 +373,7 @@ function int_or_opt(x) { return is_num(x) ? x+0 : get_opt(x)+0 }
 #
 # "template_str" is a string optionally containing ${variable}
 #
-function range(s,    param, param_len, template_str, i, vars, var_states, var, kv, result, done, line, startnext_stop, start_next) {
+function range(s,    param, param_len, param_words, template_str, i, vars, var_states, var, kv, result, done, line, startnext_stop, start_next) {
 	param_len = split(s, param, ";")
 
 	# split template from assigments while preserving the template's semicolons
@@ -342,14 +381,23 @@ function range(s,    param, param_len, template_str, i, vars, var_states, var, k
 	template_str = ""
 	for (i in param) {
 		param[i] = trim(param[i])
-		if (param[i] !~ /^[_[:alpha:]][_[:alnum:]]*=[_.[:alnum:]]+$/) {
-			if (param[i])
-				template_str = sprintf("%s\n%s", template_str, param[i])
+		if (param[i] ~ /^[_[:alpha:]][_[:alnum:]]*=[_.[:alnum:]]+$/) {
+			continue
+		} else if (param[i] ~ /^if [_[:alpha:]][_[:alnum:]]*$/) {
+			split(param[i], param_words)
+			if (!get_opt(param_words[2]))
+				return ""
 			else
-				template_str = template_str ";"
-			delete param[i]
-			param_len--
+				continue
 		}
+
+		# any other forms are considered fragments of the template_str
+		if (param[i])
+			template_str = sprintf("%s\n%s", template_str, param[i])
+		else
+			template_str = template_str ";"
+		delete param[i]
+		param_len--
 	}
 	sub("^\n", "", template_str)
 
@@ -412,7 +460,7 @@ function range(s,    param, param_len, template_str, i, vars, var_states, var, k
 # XXX preserve the comment's indentation
 /\/\/cfg_range/ { $1 = ""; print(range(trim($0))); next; }
 
-# usage: //cfg_storage TEXTURE=name SIZE=width:height FORMAT=format
+# usage: //cfg_storage TEXTURE=name SIZE=id=widthxheight FORMAT=format
 #
 # The order of the parameters does matter
 #
@@ -429,8 +477,11 @@ function range(s,    param, param_len, template_str, i, vars, var_states, var, k
 				register_tex(kv[2])
 				TEXTURE_BLOCKS = sprintf("%s\n//!TEXTURE %s", TEXTURE_BLOCKS, kv[2])
 			} else if (kv[1] == "SIZE") {
-				sub(":", " ", kv[2])
-				TEXTURE_BLOCKS = sprintf("%s\n//!SIZE %s", TEXTURE_BLOCKS, kv[2])
+				opt = get_opt(kv[2])
+				if (!opt)
+					opt = kv[3]
+				sub("x", " ", opt)
+				TEXTURE_BLOCKS = sprintf("%s\n//!SIZE %s", TEXTURE_BLOCKS, opt)
 			} else if (kv[1] == "FORMAT") {
 				TEXTURE_BLOCKS = sprintf("%s\n//!FORMAT %s", TEXTURE_BLOCKS, kv[2])
 			}

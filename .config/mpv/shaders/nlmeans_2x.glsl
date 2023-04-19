@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Profile description: Experimental upscaler
+// Description: nlmeans_2x.glsl: Experimental upscaler
 
 /* The recommended usage of this shader and its variant profiles is to add them 
  * to input.conf and then dispatch the appropriate shader via a keybind during 
@@ -499,21 +499,11 @@ ivec2 index = ivec2(fcoord * vec2(2));
 vec4 res = _INJ_SUBCONV1_tex(base);
 return vec4(res[index.x * 2 + index.y], 0, 0, 1); 
 }
-// End of source code injected from FSRCNNX_x2_8-0-4-1.glsl
-//!HOOK LUMA
-//!DESC Non-local means (share)
-//!BIND RF_LUMA
-//!SAVE RF
-
-vec4 hook()
-{
-	return RF_LUMA_texOff(0);
-}
+// End of source code injected from FSRCNNX_x2_8-0-4-1.glsl 
 
 //!HOOK LUMA
 //!BIND HOOKED
 //!BIND RF_LUMA
-//!BIND RF
 //!DESC Non-local means (nlmeans_2x.glsl)
 //!WIDTH HOOKED.w 2 *
 //!HEIGHT HOOKED.h 2 *
@@ -545,7 +535,7 @@ vec4 hook()
 #define P 3
 #define R 5
 #else
-#define S 5.0
+#define S 1.5
 #define P 3
 #define R 5
 #endif
@@ -661,11 +651,8 @@ vec4 hook()
  * Compares the pixel-of-interest against a guide, which could be a downscaled 
  * image or the output of another shader such as guided.glsl
  */
-#ifdef LUMA_raw
-#define RF 1
-#else
-#define RF 1
-#endif
+#define RF_LUMA 1
+#define RF 0
 
 /* Search shape
  *
@@ -776,7 +763,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define SF 2
 #else
-#define SF 1
+#define SF 2
 #endif
 
 /* Estimator
@@ -882,14 +869,20 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 #define T1 (T+1)
 #define FOR_FRAME(r) for (r.z = 0; r.z < T1; r.z++)
 
+#ifdef LUMA_raw
+#define RF_ RF_LUMA
+#else
+#define RF_ RF
+#endif
+
 // Skip comparing the pixel-of-interest against itself, unless RF is enabled
-#if RF
+#if RF_
 #define RINCR(z,c) (z.c++)
 #else
 #define RINCR DINCR
 #endif
 
-#define R_AREA(a) (a * T1 + RF-1)
+#define R_AREA(a) (a * T1 + RF_-1)
 
 // research shapes
 // XXX would be nice to have the option of temporally-varying research sizes
@@ -980,15 +973,15 @@ const float p_scale = 1.0/p_area;
 
 #define load_(off)  HOOKED_tex(HOOKED_pos + HOOKED_pt * vec2(off))
 
-#if RF && defined(LUMA_raw)
+#if RF_ && defined(LUMA_raw)
 #define load2_(off) RF_LUMA_tex(RF_LUMA_pos + RF_LUMA_pt * vec2(off))
 #define gather_offs(off, off_arr) (RF_LUMA_mul * vec4(textureGatherOffsets(RF_LUMA_raw, RF_LUMA_pos + vec2(off) * RF_LUMA_pt, off_arr)))
 #define gather(off) RF_LUMA_gather(RF_LUMA_pos + (off) * RF_LUMA_pt, 0)
-#elif RF && D1W
+#elif RF_ && D1W
 #define load2_(off) RF_tex(RF_pos + RF_pt * vec2(off))
 #define gather_offs(off, off_arr) (RF_mul * vec4(textureGatherOffsets(RF_raw, RF_pos + vec2(off) * RF_pt, off_arr)))
 #define gather(off) RF_gather(RF_pos + (off) * RF_pt, 0)
-#elif RF
+#elif RF_
 #define load2_(off) RF_tex(RF_pos + RF_pt * vec2(off))
 #else
 #define load2_(off) HOOKED_tex(HOOKED_pos + HOOKED_pt * vec2(off))
@@ -1001,13 +994,12 @@ vec4 load(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0: return load_(off);
+
 	}
 }
 vec4 load2(vec3 off)
 {
-	switch (int(off.z)) {
-	case 0: return load2_(off);
-	}
+	return off.z == 0 ? load2_(off) : load(off);
 }
 #else
 #define load(off) load_(off)
@@ -1260,6 +1252,7 @@ vec4 hook()
 
 	// XXX optionally put the denoised pixel into the frame buffer?
 #if T // temporal
+
 #endif
 
 	vec4 avg_weight = total_weight * r_scale;

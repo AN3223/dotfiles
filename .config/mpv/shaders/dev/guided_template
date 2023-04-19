@@ -17,7 +17,7 @@
  */
 
 //cfg_name Guided filter
-//cfg_desc guided: Guided by the downscaled image
+//cfg_desc guided.glsl: Guided by the downscaled image
 //cfg_defaults CFG_HOOKS=LUMA,CHROMA,RGB
 
 /* The radius can be adjusted with the MEANI stage's downscaling factor. 

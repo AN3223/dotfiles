@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Profile description: Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
+// Description: nlmeans_lgc.glsl: Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
 
 /* The recommended usage of this shader and its variant profiles is to add them 
  * to input.conf and then dispatch the appropriate shader via a keybind during 
@@ -86,20 +86,10 @@
  */
 
 //!HOOK CHROMA
-//!DESC Non-local means (downscale)
-//!WIDTH LUMA.w 3 /
-//!HEIGHT LUMA.h 3 /
 //!BIND LUMA
-//!SAVE EP
-
-vec4 hook()
-{
-	return LUMA_texOff(0);
-}
-
-//!HOOK CHROMA
-//!DESC Non-local means (share)
-//!BIND LUMA
+//!WIDTH LUMA.w
+//!HEIGHT LUMA.h
+//!DESC Non-local means (RF, share)
 //!SAVE RF
 
 vec4 hook()
@@ -109,7 +99,6 @@ vec4 hook()
 
 //!HOOK CHROMA
 //!BIND HOOKED
-//!BIND EP
 //!BIND RF
 //!DESC Non-local means (nlmeans_lgc.glsl)
 //!WIDTH LUMA.w
@@ -138,7 +127,7 @@ vec4 hook()
  * incompatible with textureGather optimizations, so NG=1 to disable them.
  */
 #ifdef LUMA_raw
-#define S 2.0
+#define S 11.66
 #define P 3
 #define R 5
 #else
@@ -192,7 +181,7 @@ vec4 hook()
  * local noise level, e.g., SW=max(avg_weight, EPSILON)
  */
 #ifdef LUMA_raw
-#define SW 1.0
+#define SW 0.75
 #else
 #define SW 0.75
 #endif
@@ -212,7 +201,7 @@ vec4 hook()
  * WDP (only for WD=1): Increasing reduces the threshold for small sample sizes
  */
 #ifdef LUMA_raw
-#define WD 2
+#define WD 0
 #define WDT 0.5
 #define WDP 6.0
 #else
@@ -235,7 +224,7 @@ vec4 hook()
  * BP: EP strength on bright patches, 0 to fully denoise
  */
 #ifdef LUMA_raw
-#define EP 1
+#define EP 0
 #define BP 0.75
 #define DP 0.25
 #else
@@ -258,11 +247,8 @@ vec4 hook()
  * Compares the pixel-of-interest against a guide, which could be a downscaled 
  * image or the output of another shader such as guided.glsl
  */
-#ifdef LUMA_raw
-#define RF 0
-#else
+#define RF_LUMA 0
 #define RF 1
-#endif
 
 /* Search shape
  *
@@ -431,7 +417,7 @@ vec4 hook()
 
 // Duplicate 1st weight (for LGC)
 #ifdef LUMA_raw
-#define D1W 0
+#define D1W 1
 #else
 #define D1W 1
 #endif
@@ -479,14 +465,20 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 #define T1 (T+1)
 #define FOR_FRAME(r) for (r.z = 0; r.z < T1; r.z++)
 
+#ifdef LUMA_raw
+#define RF_ RF_LUMA
+#else
+#define RF_ RF
+#endif
+
 // Skip comparing the pixel-of-interest against itself, unless RF is enabled
-#if RF
+#if RF_
 #define RINCR(z,c) (z.c++)
 #else
 #define RINCR DINCR
 #endif
 
-#define R_AREA(a) (a * T1 + RF-1)
+#define R_AREA(a) (a * T1 + RF_-1)
 
 // research shapes
 // XXX would be nice to have the option of temporally-varying research sizes
@@ -577,15 +569,15 @@ const float p_scale = 1.0/p_area;
 
 #define load_(off)  HOOKED_tex(HOOKED_pos + HOOKED_pt * vec2(off))
 
-#if RF && defined(LUMA_raw)
+#if RF_ && defined(LUMA_raw)
 #define load2_(off) RF_LUMA_tex(RF_LUMA_pos + RF_LUMA_pt * vec2(off))
 #define gather_offs(off, off_arr) (RF_LUMA_mul * vec4(textureGatherOffsets(RF_LUMA_raw, RF_LUMA_pos + vec2(off) * RF_LUMA_pt, off_arr)))
 #define gather(off) RF_LUMA_gather(RF_LUMA_pos + (off) * RF_LUMA_pt, 0)
-#elif RF && D1W
+#elif RF_ && D1W
 #define load2_(off) RF_tex(RF_pos + RF_pt * vec2(off))
 #define gather_offs(off, off_arr) (RF_mul * vec4(textureGatherOffsets(RF_raw, RF_pos + vec2(off) * RF_pt, off_arr)))
 #define gather(off) RF_gather(RF_pos + (off) * RF_pt, 0)
-#elif RF
+#elif RF_
 #define load2_(off) RF_tex(RF_pos + RF_pt * vec2(off))
 #else
 #define load2_(off) HOOKED_tex(HOOKED_pos + HOOKED_pt * vec2(off))
@@ -598,13 +590,12 @@ vec4 load(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0: return load_(off);
+
 	}
 }
 vec4 load2(vec3 off)
 {
-	switch (int(off.z)) {
-	case 0: return load2_(off);
-	}
+	return off.z == 0 ? load2_(off) : load(off);
 }
 #else
 #define load(off) load_(off)
@@ -857,6 +848,7 @@ vec4 hook()
 
 	// XXX optionally put the denoised pixel into the frame buffer?
 #if T // temporal
+
 #endif
 
 	vec4 avg_weight = total_weight * r_scale;

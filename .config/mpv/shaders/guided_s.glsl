@@ -16,7 +16,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-//desc: "Self-guided" guided filter
+// Description: guided_s.glsl: Self-guided
 
 /* The radius can be adjusted with the MEANIP stage's downscaling factor. 
  * Higher numbers give a bigger radius.
