@@ -219,7 +219,6 @@ $0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); 
 	next
 }
 
-# XXX need to handle PRE + non PRE scaling to support guided_lgc
 function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, shader, cmd, parsed_size) {
 	size_ = get_opt(save)
 	if (size_ != "CFG_NULL")

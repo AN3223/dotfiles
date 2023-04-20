@@ -33,10 +33,10 @@
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (PREI)
 //!BIND HOOKED
 //!WIDTH HOOKED.w 1.25 /
 //!HEIGHT HOOKED.h 1.25 /
+//!DESC Guided filter (PREI)
 //!SAVE PREI
 
 vec4 hook()
@@ -47,16 +47,17 @@ vec4 hook()
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (I)
 //!BIND PREI
-//!WIDTH HOOKED.w 1.0 /
-//!HEIGHT HOOKED.h 1.0 /
+//!WIDTH HOOKED.w
+//!HEIGHT HOOKED.h
+//!DESC Guided filter (I)
 //!SAVE I
 
 vec4 hook()
 {
 	return PREI_texOff(0);
 }
+
 
 //!HOOK LUMA
 //!HOOK CHROMA

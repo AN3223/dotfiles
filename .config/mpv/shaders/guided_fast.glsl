@@ -33,30 +33,17 @@
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
-//!DESC Guided filter (PREI)
 //!BIND HOOKED
-//!SAVE PREI
-//!WIDTH HOOKED.w 1.125 /
-//!HEIGHT HOOKED.h 1.125 /
+//!WIDTH HOOKED.w 2 /
+//!HEIGHT HOOKED.h 2 /
+//!DESC Guided filter (I)
+//!SAVE I
 
 vec4 hook()
 {
 	return HOOKED_texOff(0);
 }
 
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (I)
-//!BIND PREI
-//!SAVE I
-//!WIDTH HOOKED.w 2 /
-//!HEIGHT HOOKED.h 2 /
-
-vec4 hook()
-{
-	return PREI_texOff(0);
-}
 
 //!HOOK LUMA
 //!HOOK CHROMA

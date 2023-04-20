@@ -8,7 +8,7 @@ LGC_DESC=Luma-guided-chroma denoising.
 LGC=CFG_HOOKS=CHROMA:I=SHARE_LUMA:MEANI=2.0/:E=100.0
 
 FAST_DESC=Fast.
-FAST=I=2/:MEANI=1.5/:PREI=1.125/
+FAST=I=2/:MEANI=1.5/
 FAST_S=IP=2/:MEANIP=1.5/:E=0.001
 
 all: ../guided.glsl ../guided_s.glsl ../guided_fast.glsl ../guided_s_fast.glsl ../guided_lgc.glsl

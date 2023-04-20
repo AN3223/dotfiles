@@ -32,33 +32,7 @@
  * factor. Higher numbers downscale more.
  */
 
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (PREI)
-//!BIND HOOKED
-//!WIDTH HOOKED.w 1.25 /
-//!HEIGHT HOOKED.h 1.25 /
-//!SAVE PREI
-
-vec4 hook()
-{
-	return HOOKED_texOff(0);
-}
-
-//!HOOK LUMA
-//!HOOK CHROMA
-//!HOOK RGB
-//!DESC Guided filter (I)
-//!BIND PREI
-//!WIDTH HOOKED.w 1.0 /
-//!HEIGHT HOOKED.h 1.0 /
-//!SAVE I
-
-vec4 hook()
-{
-	return PREI_texOff(0);
-}
+//cfg_tex SAVE=I DESC=I SIZE=PRE1.25/ COPY=HOOKED
 
 //!HOOK LUMA
 //!HOOK CHROMA
