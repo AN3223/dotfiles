@@ -64,11 +64,10 @@ sub avgssim(Str $out --> FatRat) {
 
 # dispatches the appropriate cfg script (if any) w/ $cfgopts
 # returns the path to the new shader
-# XXX allow custom cfg scripts to be dispatched
+# XXX allow custom cfg scripts to be dispatched?
 sub run_cfg(Str $cfgopts --> Str) {
 	return %gbl<shader> if !$cfgopts && %gbl<shader>.IO.basename !~~ /_template$/;
 
-	my $in-shader = open %gbl<shader>;
 	my $out-shader;
 	loop { # ensure a unique filename
 		try { $out-shader = open("{%gbl<tmp>}.{999.rand.Int}.glsl", :rx); }
@@ -76,22 +75,9 @@ sub run_cfg(Str $cfgopts --> Str) {
 		note($!) if %gbl<verbose>;
 	}
 	my $path = $out-shader.IO.path;
-	LEAVE { $out-shader.close with $out-shader; $in-shader.close with $in-shader; }
+	LEAVE { $out-shader.close with $out-shader; }
 
-	given %gbl<shader> {
-	when /nlmeans/ {
-		run <./nlmeans_cfg>, :in($in-shader), :out($out-shader),
-			:env(
-				"NLM_{%gbl<plane> eq 'LUMA' ?? 'LUMA' !! 'CHROMA'}" => $cfgopts,
-				# XXX allow for scaling
-				"NLM_OPTS" => "HOOKS=%gbl<plane>"
-			);
-	}
-	when /guided/ {
-		run <./guided_cfg>, :in($in-shader), :out($out-shader),
-			:env("GUIDED_OPTS" => "$cfgopts\:HOOKS=%gbl<plane>");
-	}
-	}
+	run <<./shader_cfg "{%gbl<shader>}" "OPTS=CFG_HOOKS={%gbl<plane>}\:$cfgopts">>, :out($out-shader);
 
 	%tmp{$path} = $path;
 }
@@ -185,6 +171,7 @@ sub test(Str $cfgopts, :$prev = (""=>0.0), *%state_ --> Pair) {
 		note("maximizer: starting binary search");
 
 		my %max := {value => %state<value> / %state<step>, result => $prev};
+		# XXX would be more fast/accurate to have a step size for both sides of the binary search, now that step is squared instead of factored
 		my $step_sz = %state<value> - %max<value>;
 		loop (my $i = 1 ;; $i++) {
 			my $substep = $step_sz/($i*2);
