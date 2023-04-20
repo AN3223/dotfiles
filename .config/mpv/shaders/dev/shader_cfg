@@ -2,7 +2,6 @@
 
 # XXX implement guided_cfg's featureset
 # XXX merge with inject_shader? lots of duplicate functionality
-# XXX could really use a refactor
 
 function basename(s) {
 	sub("/$", "", s)
@@ -22,10 +21,35 @@ function is_num(x,    is_obviously_num, is_str_zero) {
 	return (x+0 == int(x)) && (int(x) != 0 || is_str_zero)
 }
 
+# Retrieves key=value style options from ARGV
+# If given "val", sets key=val and return the old value
+function argv(key, val,    i, kv) {
+	for (i = 1; i < ARGC; i++) {
+		if (ARGV[i] ~ "^" key "=") {
+			kv = ARGV[i]
+			sub(/^[_[:alpha:]][_[:alnum:]]*=/, "", kv)
+			if (val != "")
+				ARGV[i] = key "=" val
+			return kv
+		}
+	}
+}
+
+# returns all of the params to a //cfg_ directive
+function parse_params(s) {
+	sub(".*//cfg_[_[:alnum:]]+", "", s)
+	return s
+}
+
+# returns everything prior to a //cfg_ directive
+function parse_nonparams(s) {
+	sub("//cfg_.*", "", s)
+	return s
+}
+
 function ensure_cfg_opts(    cfgopts) {
 	if (CFGOPTS_LEN)
 		return
-	# XXX awk's spec says ARGV may be modified
 	cfgopts = argv("OPTS") ":" DEFAULTS
 	sub(/^:/, "", cfgopts)
 	CFGOPTS_LEN = split(cfgopts, CFGOPTS, ":")
@@ -53,6 +77,11 @@ function ensure_cfg_plane_opts(    concat, i) {
 	CFGOPTS_PLANE_LEN = split(concat, CFGOPTS_PLANE, ":")
 }
 
+function ensure_hooks() {
+	if (!HOOKS)
+		HOOKS = get_opt("CFG_HOOKS")
+}
+
 # get_opt(opt) will simply return the opt's value
 # get_opt(opt, val) will also set the opt's value to "val"
 function get_opt(k, v,    i, kv) {
@@ -69,12 +98,7 @@ function get_opt(k, v,    i, kv) {
 			return kv[2]
 		}
 	}
-	return -1 # XXX use a different placeholder to prevent collisions
-}
-
-function ensure_hooks() {
-	if (!HOOKS)
-		HOOKS = get_opt("CFG_HOOKS")
+	return "CFG_NULL"
 }
 
 function hooks(    i, hooks_) {
@@ -91,16 +115,6 @@ function register_tex(tex,    i) {
 	TEXTURES[++TEXTURES_LEN] = tex
 }
 
-function argv(var,    i, kv) {
-	for (i = 1; i < ARGC; i++) {
-		if (ARGV[i] ~ /^[_[:alpha:]][_[:alnum:]]*=/ && ARGV[i] ~ ("^" var)) {
-			kv = ARGV[i]
-			sub(/^[_[:alpha:]][_[:alnum:]]*=/, "", kv)
-			return kv
-		}
-	}
-}
-
 function parse_size(size, parsed_size) {
 	parsed_size["OPERATOR"] = (size ~ "/") ? "/" : "*"
 	sub("[*/]", "", size)
@@ -113,6 +127,7 @@ BEGIN {
 
 # record is part of a HOOK block
 $0 ~ "^//!" {
+	SHADER_CODE = 0
 	HOOK_LINES[++HOOK_LEN] = $0
 	sub("^//!", "")
 	directive = $1; $1 = "";
@@ -129,10 +144,7 @@ $0 !~ "^//!" && HOOK_LEN {
 	save = HOOK_DIRECTIVES["SAVE"]
 	if (save)
 		size_ = get_opt(save)
-	if (size_ != -1)
-		size = size_
-	else
-		size = ""
+	size = (size_ != "CFG_NULL") ? size_ : ""
 
 	# print HOOK_LINES besides //!HOOK, and besides //!(WIDTH|HEIGHT) if size
 	for (i = 1; i <= HOOK_LEN; i++)
@@ -144,7 +156,6 @@ $0 !~ "^//!" && HOOK_LEN {
 	parse_size(size, parsed_size)
 	if (size && is_num(parsed_size["SCALE"])) {
 		# determine the relevant texture from existing WIDTH/HEIGHT directives
-		# XXX ideally cfg_tex should have this functionality too
 		try_get_tex = HOOK_DIRECTIVES["HEIGHT"] ? HOOK_DIRECTIVES["HEIGHT"] : HOOK_DIRECTIVES["WIDTH"]
 		split(try_get_tex, try_get_tex_words)
 		sub(/\../, "", try_get_tex_words[1])
@@ -166,7 +177,7 @@ $0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); 
 	if (argv("DESC"))
 		$0 = argv("DESC")
 	else
-		$0 = $0 # re-splits $0
+		$0 = $0 # re-split $0
 
 	$1 = basename($1)
 	DESC = $0
@@ -175,7 +186,7 @@ $0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); 
 }
 /^\/\/cfg_name/ { $1 = ""; NAME = trim($0); next; }
 
-# XXX need a way to do this per plane
+# XXX there should be a way to do this per plane
 /^\/\/cfg_defaults/ { $1 = ""; DEFAULTS = trim($0); next; }
 
 # XXX better support multi-stage shader templates?
@@ -192,7 +203,7 @@ $0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); 
 	if (!SIZE)
 		SIZE = get_opt("CFG_SIZE")
 
-	if (SIZE != -1) {
+	if (SIZE != "CFG_NULL") {
 		split("", parsed_size)
 		parse_size(SIZE, parsed_size)
 
@@ -211,7 +222,7 @@ $0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); 
 # XXX need to handle PRE + non PRE scaling to support guided_lgc
 function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, shader, cmd, parsed_size) {
 	size_ = get_opt(save)
-	if (size_ != -1)
+	if (size_ != "CFG_NULL")
 		size = size_
 
 	if (size && size != "0")
@@ -244,7 +255,7 @@ function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, s
 		print("//!WIDTH", bind ".w")
 		print("//!HEIGHT", bind ".h")
 		desc = desc ", share"
-	} else if (size ~ /\//) {
+	} else if (size ~ "/") {
 		inject_opts = ""
 		ensure_hooks()
 		ensure_cfg_opts()
@@ -327,7 +338,6 @@ function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, s
 	next
 }
 
-# XXX unset this between stages
 # XXX make it possible for the user to force disable this
 tolower($0) ~ /^\/[\/\*].*shader code/ { SHADER_CODE = 1 }
 
@@ -356,7 +366,7 @@ function int_or_opt(x,    opt) {
 		return x+0
 	} else {
 		opt = get_opt(x)+0
-		return (opt && opt != -1) ? opt : 0
+		return (opt && opt != "CFG_NULL") ? opt : 0
 	}
 }
 
@@ -389,7 +399,7 @@ function int_or_opt(x,    opt) {
 #
 # "template_str" is a string optionally containing ${variable}
 #
-function range(s,    param, param_len, param_words, param_opt, template_str, i, vars, var_states, var, kv, result, done, line, startnext_stop, start_next) {
+function range(s, ws,    param, param_len, param_words, param_opt, template_str, i, vars, var_states, var, kv, result, done, line, startnext_stop, start_next) {
 	param_len = split(s, param, ";")
 
 	# split template from assigments while preserving the template's semicolons
@@ -402,7 +412,7 @@ function range(s,    param, param_len, param_words, param_opt, template_str, i, 
 		} else if (param[i] ~ /^if [_[:alpha:]][_[:alnum:]]*$/) {
 			split(param[i], param_words)
 			param_opt = get_opt(param_words[2])+0
-			if (!param_opt || param_opt == -1)
+			if (!param_opt || param_opt == "CFG_NULL")
 				return ""
 			else
 				continue
@@ -468,14 +478,19 @@ function range(s,    param, param_len, param_words, param_opt, template_str, i, 
 			}
 			gsub(sprintf("\\$\\{%s\\}", var), var_states[var], line)
 		}
-		result = sprintf("%s\n%s", result, line)
+		if (!result)
+			result = ws line
+		else
+			result = sprintf("%s\n%s%s", result, ws, line)
 	}
-	sub("^\n", "", result)
 	return result
 }
 
-# XXX preserve the comment's indentation
-/\/\/cfg_range/ { $1 = ""; print(range(trim($0))); next; }
+/\/\/cfg_range/ {
+	result = range(parse_params($0), parse_nonparams($0))
+	print(result)
+	next
+}
 
 # usage: //cfg_storage TEXTURE=name SIZE=id=widthxheight FORMAT=format
 #
@@ -495,7 +510,7 @@ function range(s,    param, param_len, param_words, param_opt, template_str, i, 
 				TEXTURE_BLOCKS = sprintf("%s\n//!TEXTURE %s", TEXTURE_BLOCKS, kv[2])
 			} else if (kv[1] == "SIZE") {
 				opt = get_opt(kv[2])
-				if (!opt || opt == -1)
+				if (!opt || opt == "CFG_NULL")
 					opt = kv[3]
 				sub("x", " ", opt)
 				TEXTURE_BLOCKS = sprintf("%s\n//!SIZE %s", TEXTURE_BLOCKS, opt)

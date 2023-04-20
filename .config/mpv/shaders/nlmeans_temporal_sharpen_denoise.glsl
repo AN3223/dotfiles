@@ -835,9 +835,9 @@ vec4 load(vec3 off)
 {
 	switch (int(off.z)) {
 	case 0: return load_(off);
-case 1: return imageLoad(PREV1, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1)));
-case 2: return imageLoad(PREV2, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2)));
-case 3: return imageLoad(PREV3, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV3)));
+	case 1: return imageLoad(PREV1, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1)));
+	case 2: return imageLoad(PREV2, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2)));
+	case 3: return imageLoad(PREV3, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV3)));
 	}
 }
 vec4 load2(vec3 off)
@@ -1095,9 +1095,9 @@ vec4 hook()
 
 	// XXX optionally put the denoised pixel into the frame buffer?
 #if T // temporal
-imageStore(PREV3, ivec2(HOOKED_pos*imageSize(PREV3)), load2(vec3(0,0,3-1)));
-imageStore(PREV2, ivec2(HOOKED_pos*imageSize(PREV2)), load2(vec3(0,0,2-1)));
-imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), load2(vec3(0,0,1-1)));
+	imageStore(PREV3, ivec2(HOOKED_pos*imageSize(PREV3)), load2(vec3(0,0,3-1)));
+	imageStore(PREV2, ivec2(HOOKED_pos*imageSize(PREV2)), load2(vec3(0,0,2-1)));
+	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), load2(vec3(0,0,1-1)));
 #endif
 
 	vec4 avg_weight = total_weight * r_scale;
