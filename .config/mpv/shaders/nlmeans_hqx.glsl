@@ -48,8 +48,8 @@
  * of noise.
  *
  * The denoiser will not work properly if the content has been upscaled 
- * beforehand, whether it was done by you or someone down the line. Consider 
- * issuing a command to downscale in the mpv console, like so:
+ * beforehand (whether it was done by you or not). In such cases, consider 
+ * issuing a command to downscale in the mpv console (backtick ` key):
  *
  * vf toggle scale=-2:720
  *
@@ -65,10 +65,11 @@
  * may be different for your system.
  *
  * If your GPU doesn't support textureGather, or if you are on a version of mpv 
- * prior to 0.35.0, then consider setting RI/RFI to 0, or try the LQ and VLQ 
- * profiles.
+ * prior to 0.35.0, then consider setting RI/RFI to 0, or try the LQ profile
  *
- * textureGather is LUMA only and limited to the following configurations:
+ * If you plan on tinkering with NLM's settings, read below:
+ *
+ * textureGather only applies to luma and limited to the these configurations:
  *
  * - PS={3,7}:P=3:PST=0:RI={0,1,3}:RFI={0,1,2}:M!=1
  *   - Default, very fast, rotations and reflections should be free
@@ -83,6 +84,7 @@
  *
  * Options which always disable textureGather:
  * 	- PD
+ * 	- NG
  */
 
 // The following is shader code injected from guided.glsl
@@ -120,10 +122,10 @@
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!DESC Guided filter (PREI)
 //!BIND HOOKED
 //!WIDTH HOOKED.w 1.25 /
 //!HEIGHT HOOKED.h 1.25 /
+//!DESC Guided filter (PREI)
 //!SAVE _INJ_PREI
 
 vec4 hook()
@@ -133,16 +135,17 @@ vec4 hook()
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!DESC Guided filter (I)
 //!BIND _INJ_PREI
-//!WIDTH HOOKED.w 1.0 /
-//!HEIGHT HOOKED.h 1.0 /
+//!WIDTH HOOKED.w
+//!HEIGHT HOOKED.h
+//!DESC Guided filter (I)
 //!SAVE _INJ_I
 
 vec4 hook()
 {
 return _INJ_PREI_texOff(0);
 }
+
 
 //!HOOK LUMA
 //!HOOK CHROMA
@@ -346,36 +349,16 @@ vec4 hook()
 //!BIND EP
 //!DESC Non-local means (nlmeans_hqx.glsl)
 
-/* User variables
- *
- * It is usually preferable to denoise chroma and luma differently, so the user 
- * variables for luma and chroma are split.
- */
+// User variables
 
-/* S = denoising factor
- * P = patch size
- * R = research size
- *
- * The denoising factor controls the level of blur, higher is blurrier.
- *
- * Patch size should usually be an odd number greater than or equal to 3. 
- * Higher values are slower and not always better.
- *
- * Research size usually be an odd number greater than or equal to 3. Higher 
- * values are usually better, but slower and offer diminishing returns.
- *
- * Even-numbered patch/research sizes will sample between pixels unless PS=6. 
- * It's not known whether this is ever useful behavior or not. This is 
- * incompatible with textureGather optimizations, so NG=1 to disable them.
- */
+// It is generally preferable to denoise luma and chroma differently, so the 
+// user variables for luma and chroma are split.
+
+// Denoising factor (level of blur, higher means more blur)
 #ifdef LUMA_raw
 #define S 2.25
-#define P 5
-#define R 5
 #else
 #define S 5.0
-#define P 5
-#define R 5
 #endif
 
 /* Adaptive sharpening
@@ -383,11 +366,14 @@ vec4 hook()
  * Uses the blur incurred by denoising to perform an unsharp mask, and uses the 
  * weight map to restrict the sharpening to edges.
  *
- * Use M=4 to get a good look at which areas are/aren't sharpened.
+ * Use M=4 to visualize which areas are sharpened (black means sharpen).
  *
- * AS: 2 for sharpening, 1 for sharpening+denoising, 0 to disable
- * ASF: Sharpening factor, higher numbers make a sharper underlying image
- * ASP: Weight power, higher numbers use more of the sharp image
+ * AS:
+ * 	- 0 to disable
+ * 	- 1 to sharpen+denoise
+ * 	- 2 to sharpen only
+ * ASF: Higher numbers make a sharper image
+ * ASP: Higher numbers use more of the sharp image
  * ASW:
  * 	- 0 to use pre-WD weights
  * 	- 1 to use post-WD weights (ASP should be ~2x to compensate)
@@ -415,12 +401,10 @@ vec4 hook()
 
 /* Starting weight
  *
- * Lower numbers give less weight to the pixel-of-interest, which may help 
- * handle higher noise levels, ringing, and may be useful for other things too?
+ * Also known as the center weight. This represents the weight of the 
+ * pixel-of-interest. Lower numbers may help handle heavy noise & ringing.
  *
- * EPSILON should be used instead of zero to avoid divide-by-zero errors. The 
- * avg_weight/old_avg_weight variables may be used to make SW adapt to the 
- * local noise level, e.g., SW=max(avg_weight, EPSILON)
+ * EPSILON should be used instead of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
 #define SW 1.0
@@ -454,12 +438,14 @@ vec4 hook()
 
 /* Extremes preserve
  *
- * Reduces denoising around very bright/dark areas. The downscaling factor of 
- * EP (located near the top of this shader) controls the area sampled for 
- * luminance (higher numbers consider more area).
+ * Reduces denoising around very bright/dark areas.
+ *
+ * The downscaling factor of the EP shader stage affects what is considered a 
+ * bright/dark area. The default of 3 should be fine, it's not recommended to 
+ * change this.
  *
  * This is incompatible with RGB. If you have RGB hooks enabled then you will 
- * have to delete the EP shader stage or specify EP=0 through nlmeans_cfg.
+ * have to delete the EP shader stage or specify EP=0 through shader_cfg.
  *
  * EP: 1 to enable, 0 to disable
  * DP: EP strength on dark patches, 0 to fully denoise
@@ -481,22 +467,26 @@ vec4 hook()
 /* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
 /* ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS * ADVANCED OPTIONS */
 
-/* Robust filtering
+/* Patch & research sizes
  *
- * This setting is dependent on code generation from nlmeans_cfg, so this 
- * setting can only be enabled via nlmeans_cfg.
+ * Patch size should be an odd number greater than or equal to 3. Higher values 
+ * are slower and not always better.
  *
- * Compares the pixel-of-interest against a guide, which could be a downscaled 
- * image or the output of another shader such as guided.glsl
+ * Research size be an odd number greater than or equal to 3. Higher values are 
+ * generally better, but slower, blurrier, and gives diminishing returns.
  */
-#define RF_LUMA 1
-#define RF 1
+#ifdef LUMA_raw
+#define P 5
+#define R 5
+#else
+#define P 5
+#define R 5
+#endif
 
-/* Search shape
+/* Patch and research shapes
  *
- * Determines the shape of patches and research zones. Different shapes have 
- * different speed and quality characteristics. Every shape (besides square) is 
- * smaller than square.
+ * Different shapes have different speed and quality characteristics. Every 
+ * shape (besides square) is smaller than square.
  *
  * PS applies applies to patches, RS applies to research zones.
  *
@@ -519,11 +509,22 @@ vec4 hook()
 #define PS 3
 #endif
 
+/* Robust filtering
+ *
+ * This setting is dependent on code generation from shader_cfg, so this 
+ * setting can only be enabled via shader_cfg.
+ *
+ * Compares the pixel-of-interest against a guide, which could be a downscaled 
+ * image or the output of another shader
+ */
+#define RF_LUMA 1
+#define RF 1
+
 /* Rotational/reflectional invariance
  *
- * Number of rotations/reflections to try for each patch comparison. Slow, but 
- * improves feature preservation, although adding more rotations/reflections 
- * gives diminishing returns. The most similar rotation/reflection will be used.
+ * Number of rotations/reflections to try for each patch comparison. Can be 
+ * slow, but improves feature preservation. More rotations/reflections gives 
+ * diminishing returns. The most similar rotation/reflection will be used.
  *
  * The angle in degrees of each rotation is 360/(RI+1), so RI=1 will do a 
  * single 180 degree rotation, RI=3 will do three 90 degree rotations, etc.
@@ -541,16 +542,20 @@ vec4 hook()
 
 /* Temporal denoising
  *
+ * This setting is dependent on code generation from shader_cfg, so this 
+ * setting can only be enabled via shader_cfg.
+ *
  * Caveats:
- * 	- Slower, each frame needs to be researched
- * 	- Requires vo=gpu-next and nlmeans_temporal.glsl
+ * 	- Slower:
+ * 		- Each frame needs to be researched (more samples & more math)
+ * 		- Gather optimizations only apply to the current frame
+ * 	- Requires vo=gpu-next
  * 	- Luma-only (this is a bug)
  * 	- Buggy
  *
- * Gather samples across multiple frames. May cause motion blur and may 
- * struggle more with noise that persists across multiple frames (e.g., from 
- * compression or duplicate frames), but can work very well on high quality 
- * video.
+ * May cause motion blur and may struggle more with noise that persists across 
+ * multiple frames (e.g., from compression or duplicate frames), but can work 
+ * very well on high quality video.
  *
  * Motion estimation (ME) should improve quality without impacting speed.
  *
@@ -574,8 +579,8 @@ vec4 hook()
  * closer/further, for instance SD=(1,1,0.5) would make the temporal axis 
  * appear closer and increase blur between frames.
  *
- * The intra-patch variants do not yet have well-understood effects. They are 
- * intended to make large patch sizes more useful. Likely slower.
+ * The intra-patch variants are supposed to help with larger patch sizes. 
+ * Probably not helpful for P<9. They do have some performance impact.
  *
  * SS: spatial denoising factor
  * SD: spatial distortion (X, Y, time)
@@ -607,8 +612,8 @@ vec4 hook()
 /* Estimator
  *
  * 0: means
- * 1: Euclidean medians (extremely slow, may be good for heavy noise)
- * 2: weight map (not a denoiser, maybe useful for generating image masks)
+ * 1: Euclidean medians (extremely slow, might be okay for heavy noise?)
+ * 2: weight map (not a denoiser)
  * 3: weighted median intensity (slow, may be good for heavy noise)
  * 4: edge map (based on the relevant AS settings)
  */
@@ -632,11 +637,7 @@ vec4 hook()
 #define DV 0
 #endif
 
-/* Blur factor
- *
- * 0 to 1, only useful for alternative estimators. You're probably looking for 
- * "S" (denoising factor), go back to the top of the shader!
- */
+// Blur factor (0.0 returns the input image, 1.0 returns the output image)
 #ifdef LUMA_raw
 #define BF 1.0
 #else
@@ -657,18 +658,19 @@ vec4 hook()
 #define PD 0
 #endif
 
-// Duplicate 1st weight (for LGC)
+// Duplicate 1st weight (for luma-guided-chroma)
 #ifdef LUMA_raw
 #define D1W 0
 #else
 #define D1W 0
 #endif
 
-/* Shader code */
+// Shader code
 
 #define EPSILON 0.00000000001
 #define M_PI 3.14159265358979323846
 
+// XXX don't allow sampling between pixels
 #if PS == 6
 const int hp = P/2;
 #else
@@ -682,27 +684,78 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 #endif
 
 // donut increment, increments without landing on (0,0,0)
-// much faster than a "continue" statement
+// much faster than a continue statement
 #define DINCR(z,c) (z.c++,(z.c += int(z == vec3(0))))
 
-// search shapes and their corresponding areas
-#define S_1X1(z) for (z = vec3(0); z.x <= 0; z.x++)
+// patch/research shapes
+// each shape is depicted in a comment, where Z=5 (Z corresponds to P or R)
+// dots (.) represent samples (pixels) and X represents the pixel-of-interest
 
+// Z    .....
+// Z    .....
+// Z    ..X..
+// Z    .....
+// Z    .....
+#define S_SQUARE(z,hz,incr) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -hz; z.y <= hz; incr)
+
+// (in this instance Z=4)
+// Z    ....
+// Z    ....
+// Z    ..X.
+// Z    ....
+#define S_SQUARE_EVEN(z,hz,incr) for (z.x = -hz; z.x < hz; z.x++) for (z.y = -hz; z.y < hz; incr)
+
+// Z-4    .
+// Z-2   ...
+// Z    ..X..
 #define S_TRIANGLE(z,hz,incr) for (z.y = -hz; z.y <= 0; z.y++) for (z.x = -abs(abs(z.y) - hz); z.x <= abs(abs(z.y) - hz); incr)
+
+// Z-4    .
+// Z-2   ...
+// hz+1 ..X
 #define S_TRUNC_TRIANGLE(z,hz,incr) for (z.y = -hz; z.y <= 0; z.y++) for (z.x = -abs(abs(z.y) - hz); z.x <= abs(abs(z.y) - hz)*int(z.y!=0); incr)
 #define S_TRIANGLE_A(hz,Z) int(hz*hz+Z)
 
+// Z-4    .
+// Z-2   ...
+// Z    ..X..
+// Z-2   ...
+// Z-4    .
 #define S_DIAMOND(z,hz,incr) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -abs(abs(z.x) - hz); z.y <= abs(abs(z.x) - hz); incr)
 #define S_DIAMOND_A(hz,Z) int(hz*hz*2+Z)
 
-#define S_VERTICAL(z,hz,incr) for (z.x = 0; z.x <= 0; z.x++) for (z.y = -hz; z.y <= hz; incr)
+//
+// Z    ..X..
+//
 #define S_HORIZONTAL(z,hz,incr) for (z.x = -hz; z.x <= hz; incr) for (z.y = 0; z.y <= 0; z.y++)
 
+// 90 degree rotation of S_HORIZONTAL
+#define S_VERTICAL(z,hz,incr) for (z.x = 0; z.x <= 0; z.x++) for (z.y = -hz; z.y <= hz; incr)
+
+// 1      .
+// 1      . 
+// Z    ..X..
+// 1      . 
+// 1      .
 #define S_PLUS(z,hz,incr) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -hz * int(z.x == 0); z.y <= hz * int(z.x == 0); incr)
 #define S_PLUS_A(hz,Z) (Z*2 - 1)
 
-#define S_SQUARE(z,hz,incr) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -hz; z.y <= hz; incr)
-#define S_SQUARE_EVEN(z,hz,incr) for (z.x = -hz; z.x < hz; z.x++) for (z.y = -hz; z.y < hz; incr)
+// XXX implement S_PLUS w/ an X overlayed:
+// 3    . . .
+// 3     ...
+// Z    ..X..
+// 3     ...
+// 3    . . .
+
+// XXX implement an X shape:
+// 2    .   .
+// 2     . .
+// 1      X  
+// 2     . .
+// 2    .   .
+
+// 1x1 square
+#define S_1X1(z) for (z = vec3(0); z.x <= 0; z.x++)
 
 #define T1 (T+1)
 #define FOR_FRAME(r) for (r.z = 0; r.z < T1; r.z++)
@@ -955,7 +1008,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 			for (float i = 0; i < ri; i+=90)
 				transformer = transformer.wxyz; // rotate 90 degrees
 #endif
-#if RFI // XXX output is a little off
+#if RFI
 			switch(rfi) {
 			case 1: transformer = transformer.zyxw; break;
 			case 2: transformer = transformer.xwzy; break;
@@ -1159,7 +1212,6 @@ vec4 hook()
 	vec4 sharpening_strength = vec4(ASP);
 #endif
 
-	// XXX maybe allow for alternative blurs? e.g., replace result w/ load2?
 #if AS == 1 // sharpen+denoise
 	vec4 sharpened = result + (poi - result) * ASF;
 #elif AS == 2 // sharpen only
