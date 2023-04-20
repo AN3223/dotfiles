@@ -71,7 +71,7 @@
  *
  * textureGather only applies to luma and limited to the these configurations:
  *
- * - PS={3,7}:P=3:PST=0:RI={0,1,3}:RFI={0,1,2}:M!=1
+ * - PS={3,7}:P=3:PST=0:RI={0,1,3}:RFI={0,1,2}
  *   - Default, very fast, rotations and reflections should be free
  *   - If this is unusually slow then try changing gpu-api and vo
  *   - If it's still slow, try setting RI/RFI to 0.
@@ -410,9 +410,7 @@ vec4 hook()
 /* Estimator
  *
  * 0: means
- * 1: Euclidean medians (extremely slow, might be okay for heavy noise?)
  * 2: weight map (not a denoiser)
- * 3: weighted median intensity (slow, may be good for heavy noise)
  * 4: edge map (based on the relevant AS settings)
  */
 #ifdef LUMA_raw
@@ -467,6 +465,14 @@ vec4 hook()
 
 #define EPSILON 0.00000000001
 #define M_PI 3.14159265358979323846
+
+// XXX could maybe be better optimized on LGC
+#ifdef LUMA_raw
+#define val float
+#else
+// XXX could probably refactor to use vec3 and pass the alpha channel unchanged
+#define val vec4
+#endif
 
 // XXX don't allow sampling between pixels
 #if PS == 6
@@ -660,7 +666,7 @@ const int p_area = P_AREA(P*P);
 const float r_scale = 1.0/r_area;
 const float p_scale = 1.0/p_area;
 
-#define load_(off)  HOOKED_tex(HOOKED_pos + HOOKED_pt * vec2(off))
+#define load_(off) HOOKED_tex(HOOKED_pos + HOOKED_pt * vec2(off))
 
 #if RF_ && defined(LUMA_raw)
 #define load2_(off) RF_LUMA_tex(RF_LUMA_pos + RF_LUMA_pt * vec2(off))
@@ -679,24 +685,36 @@ const float p_scale = 1.0/p_area;
 #endif
 
 #if T
-vec4 load(vec3 off)
+val load(vec3 off)
 {
 	switch (int(off.z)) {
+#ifdef LUMA_raw
+	case 0: return load_(off).x;
+
+#else
 	case 0: return load_(off);
 
+#endif
 	}
 }
-vec4 load2(vec3 off)
+val load2(vec3 off)
 {
+#ifdef LUMA_raw
+	return off.z == 0 ? load2_(off).x : load(off);
+#else
 	return off.z == 0 ? load2_(off) : load(off);
+#endif
 }
+#elif defined(LUMA_raw)
+#define load(off) load_(off).x
+#define load2(off) load2_(off).x
 #else
 #define load(off) load_(off)
 #define load2(off) load2_(off)
 #endif
 
-vec4 poi = load(vec3(0)); // pixel-of-interest
-vec4 poi2 = load2(vec3(0)); // guide pixel-of-interest
+val poi = load(vec3(0)); // pixel-of-interest
+val poi2 = load2(vec3(0)); // guide pixel-of-interest
 
 #if RI // rotation
 vec2 rot(vec2 p, float d)
@@ -723,21 +741,21 @@ vec2 ref(vec2 p, int d)
 #define ref(p, d) (p)
 #endif
 
-vec4 patch_comparison(vec3 r, vec3 r2)
+val patch_comparison(vec3 r, vec3 r2)
 {
 	vec3 p;
-	vec4 min_rot = vec4(p_area);
+	val min_rot = val(p_area);
 
 	FOR_ROTATION FOR_REFLECTION {
-		vec4 pdiff_sq = vec4(0);
+		val pdiff_sq = val(0);
 		FOR_PATCH(p) {
 			vec3 transformed_p = vec3(ref(rot(p.xy, ri), rfi), p.z);
-			vec4 diff_sq = load2(p + r2) - load2((transformed_p + r) * SF);
+			val diff_sq = load2(p + r2) - load2((transformed_p + r) * SF);
 			diff_sq *= diff_sq;
 #if PST && P >= PST
 			float pdist = length(p.xy*PSD)*PSS;
 			pdist = exp(-(pdist*pdist));
-			diff_sq = pow(max(diff_sq, EPSILON), vec4(pdist));
+			diff_sq = pow(max(diff_sq, EPSILON), val(pdist));
 #endif
 			pdiff_sq += diff_sq;
 		}
@@ -750,14 +768,14 @@ vec4 patch_comparison(vec3 r, vec3 r2)
 #define NO_GATHER (PD == 0 && NG == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3)
 
-#if (defined(LUMA_gather) || D1W) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && M != 1 && REGULAR_ROTATIONS && NO_GATHER
+#if (defined(LUMA_gather) || D1W) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && REGULAR_ROTATIONS && NO_GATHER
 // 3x3 diamond/plus patch_comparison_gather
 // XXX extend to support arbitrary sizes (probably requires code generation)
 // XXX extend to support 3x3 square
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
 const ivec2 offsets_sf[4] = { ivec2(0,-1) * SF, ivec2(-1,0) * SF, ivec2(0,1) * SF, ivec2(1,0) * SF };
 vec4 poi_patch = gather_offs(0, offsets);
-vec4 patch_comparison_gather(vec3 r, vec3 r2)
+float patch_comparison_gather(vec3 r, vec3 r2)
 {
 	float min_rot = p_area - 1;
 	vec4 transformer = gather_offs(r, offsets_sf);
@@ -781,13 +799,13 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 	}
 	float center_diff_sq = poi2.x - load2(r).x;
 	center_diff_sq *= center_diff_sq;
-	return vec4(min_rot + center_diff_sq, 0, 0, 0) * p_scale;
+	return (min_rot + center_diff_sq) * p_scale;
 }
 #elif (defined(LUMA_gather) || D1W) && PS == 6 && REGULAR_ROTATIONS && NO_GATHER
 // tiled even square patch_comparison_gather
 // XXX extend to support odd square?
 // XXX rotations/reflections appear to be subtly broken
-vec4 patch_comparison_gather(vec3 r, vec3 r2)
+float patch_comparison_gather(vec3 r, vec3 r2)
 {
 	vec2 tile;
 	float min_rot = p_area;
@@ -829,7 +847,7 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 		min_rot = min(min_rot, pdiff_sq);
 	}
 
-	return vec4(min_rot, 0, 0, 0) * p_scale;
+	return min_rot * p_scale;
 }
 #else
 #define patch_comparison_gather patch_comparison
@@ -837,8 +855,8 @@ vec4 patch_comparison_gather(vec3 r, vec3 r2)
 
 vec4 hook()
 {
-	vec4 total_weight = vec4(0);
-	vec4 sum = vec4(0);
+	val total_weight = val(0);
+	val sum = val(0);
 	vec4 result = vec4(0);
 
 	vec3 r = vec3(0);
@@ -853,18 +871,14 @@ vec4 hook()
 	float me_weight = 0;
 #endif
 
-#if WD == 2 || M == 3 // weight discard, weighted median intensities
+#if WD == 2 // weight discard
 	int r_index = 0;
-	vec4 all_weights[r_area];
-	vec4 all_pixels[r_area];
+	val all_weights[r_area];
+	val all_pixels[r_area];
 #elif WD == 1 // weight discard
-	vec4 no_weights = vec4(0);
-	vec4 discard_total_weight = vec4(0);
-	vec4 discard_sum = vec4(0);
-#endif
-
-#if M == 1 // Euclidean medians
-	vec4 minsum = vec4(0);
+	val no_weights = val(0);
+	val discard_total_weight = val(0);
+	val discard_sum = val(0);
 #endif
 
 	FOR_FRAME(r) {
@@ -882,12 +896,11 @@ vec4 hook()
 		me_weight = 0;
 	}
 #endif
-	FOR_RESEARCH(r) {
-		// main NLM logic
+	FOR_RESEARCH(r) { // main NLM logic
 		const float h = S*0.013;
 		const float pdiff_scale = 1.0/(h*h);
-		vec4 pdiff_sq = (r.z == 0) ? patch_comparison_gather(r+me, vec3(0)) : patch_comparison(r+me, vec3(0));
-		vec4 weight = exp(-pdiff_sq * pdiff_scale);
+		val pdiff_sq = (r.z == 0) ? val(patch_comparison_gather(r+me, vec3(0))) : patch_comparison(r+me, vec3(0));
+		val weight = exp(-pdiff_sq * pdiff_scale);
 
 #if T && ME == 1 // temporal & motion estimation max weight
 		me_tmp = vec3(r.xy,0) * step(maxweight, weight.x) + me_tmp * (1 - step(maxweight, weight.x));
@@ -898,18 +911,18 @@ vec4 hook()
 #endif
 
 #if D1W
-		weight = vec4(weight.x);
+		weight = val(weight.x);
 #endif
 
 		weight *= exp(-(length(r*SD)*SS * length(r*SD)*SS)); // spatial kernel
 
-#if WD == 2 || M == 3 // weight discard, weighted median intensity
+#if WD == 2 // weight discard
 		all_weights[r_index] = weight;
 		all_pixels[r_index] = load(r+me);
 		r_index++;
 #elif WD == 1 // weight discard
-		vec4 wd_scale = 1.0/max(no_weights, 1);
-		vec4 keeps = step(total_weight*wd_scale * WDT*exp(-wd_scale*WDP), weight);
+		val wd_scale = 1.0/max(no_weights, 1);
+		val keeps = step(total_weight*wd_scale * WDT*exp(-wd_scale*WDP), weight);
 		discard_sum += load(r+me) * weight * (1 - keeps);
 		discard_total_weight += weight * (1 - keeps);
 		no_weights += keeps;
@@ -917,43 +930,25 @@ vec4 hook()
 
 		sum += load(r+me) * weight;
 		total_weight += weight;
-
-#if M == 1 // Euclidean median
-		// Based on: https://arxiv.org/abs/1207.3056
-		// XXX might not work with ME
-		vec3 r2;
-		vec4 wpdist_sum = vec4(0);
-		FOR_FRAME(r2) FOR_RESEARCH(r2) {
-			vec4 pdist = (r.z + r2.z) == 0 ? patch_comparison_gather(r+me, r2+me) : patch_comparison(r+me, r2+me);
-			wpdist_sum += sqrt(pdist) * (1-weight);
-		}
-
-		vec4 newmin = step(wpdist_sum, minsum); // wpdist_sum <= minsum
-		newmin *= 1 - step(wpdist_sum, vec4(0)); // && wpdist_sum > 0
-		newmin += step(minsum, vec4(0)); // || minsum <= 0
-		newmin = min(newmin, 1);
-
-		minsum = (newmin * wpdist_sum) + ((1-newmin) * minsum);
-		result = (newmin * load(r+me)) + ((1-newmin) * result);
-#endif
 	} // FOR_RESEARCH
 	} // FOR_FRAME
 
 	// XXX optionally put the denoised pixel into the frame buffer?
-#if T // temporal
+	// store frames for temporal
+#if T
 
 #endif
 
-	vec4 avg_weight = total_weight * r_scale;
-	vec4 old_avg_weight = avg_weight;
+	val avg_weight = total_weight * r_scale;
+	val old_avg_weight = avg_weight;
 
 #if WD == 2 // true average
-	total_weight = vec4(0);
-	sum = vec4(0);
-	vec4 no_weights = vec4(0);
+	total_weight = val(0);
+	sum = val(0);
+	val no_weights = val(0);
 
 	for (int i = 0; i < r_area; i++) {
-		vec4 keeps = step(avg_weight*WDT, all_weights[i]);
+		val keeps = step(avg_weight*WDT, all_weights[i]);
 		all_weights[i] *= keeps;
 		sum += all_pixels[i] * all_weights[i];
 		total_weight += all_weights[i];
@@ -970,26 +965,10 @@ vec4 hook()
 	total_weight += SW;
 	sum += poi * SW;
 
-#if M == 3 // weighted median intensity
-	const float hr_area = r_area/2.0;
-	vec4 is_median, gt, lt, gte, lte, neq;
-
-	for (int i = 0; i < r_area; i++) {
-		gt = lt = vec4(0);
-		for (int j = 0; j < r_area; j++) {
-			gte = step(all_pixels[i]*all_weights[i], all_pixels[j]*all_weights[j]);
-			lte = step(all_pixels[j]*all_weights[j], all_pixels[i]*all_weights[i]);
-			neq = 1 - gte * lte;
-			gt += gte * neq;
-			lt += lte * neq;
-		}
-		is_median = step(gt, vec4(hr_area)) * step(lt, vec4(hr_area));
-		result += step(result, vec4(0)) * is_median * all_pixels[i];
-	}
-#elif M == 2 // weight map
-	result = avg_weight;
+#if M == 2 // weight map
+	result = vec4(avg_weight);
 #elif M == 0 // mean
-	result = sum / total_weight;
+	result = vec4(sum / total_weight);
 #endif
 
 #if ASW == 0 // pre-WD weights
@@ -999,34 +978,34 @@ vec4 hook()
 #endif
 
 #if ASK == 0
-	vec4 sharpening_strength = pow(AS_weight, vec4(ASP));
+	val sharpening_strength = pow(AS_weight, val(ASP));
 #elif ASK == 1
 #define sigmoid(x) (tanh(x * 2*M_PI - M_PI)*0.5+0.5)
-	vec4 sharpening_strength = mix(pow(sigmoid(AS_weight), vec4(ASP)),
-	                               AS_weight, ASC);
+	val sharpening_strength = mix(pow(sigmoid(AS_weight), val(ASP)),
+	                              AS_weight, ASC);
 	// just in case ASC < 0 (will sharpen but it's janky XXX)
 	sharpening_strength = clamp(sharpening_strength, 0.0, 1.0);
 #elif ASK == 2
-	vec4 sharpening_strength = vec4(ASP);
+	val sharpening_strength = val(ASP);
 #endif
 
 #if AS == 1 // sharpen+denoise
-	vec4 sharpened = result + (poi - result) * ASF;
+	vec4 sharpened = vec4(result + (poi - result) * ASF);
 #elif AS == 2 // sharpen only
-	vec4 sharpened = poi + (poi - result) * ASF;
+	vec4 sharpened = vec4(poi + (poi - result) * ASF);
 #endif
 
 #if EP // extremes preserve
 	float luminance = EP_texOff(0).x;
 	// EPSILON is needed since pow(0,0) is undefined
 	float ep_weight = pow(max(min(1-luminance, luminance)*2, EPSILON), (luminance < 0.5 ? DP : BP));
-	result = mix(poi, result, ep_weight);
+	result = mix(vec4(poi), result, ep_weight);
 #endif
 
 #if AS == 1 // sharpen+denoise
 	result = mix(sharpened, result, sharpening_strength);
 #elif AS == 2 // sharpen only
-	result = mix(sharpened, poi, sharpening_strength);
+	result = mix(sharpened, vec4(poi), sharpening_strength);
 #endif
 
 #if M == 4 // edge map
@@ -1038,11 +1017,11 @@ vec4 hook()
 #endif
 
 #if DV == 1
-	result = clamp(abs(poi - result) * S, 0.0, 1.0);
+	result = clamp(abs(vec4(poi) - result) * S, 0.0, 1.0);
 #elif DV == 2
-	result = (poi - result) * 0.5 + 0.5;
+	result = (vec4(poi) - result) * 0.5 + 0.5;
 #endif
 
-	return mix(poi, result, BF);
+	return mix(vec4(poi), result, BF);
 }
 
