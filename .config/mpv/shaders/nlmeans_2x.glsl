@@ -830,18 +830,19 @@ return vec4(res[index.x * 2 + index.y], 0, 0, 1);
 #define M_PI 3.14159265358979323846
 
 // XXX could maybe be better optimized on LGC
+// XXX return original alpha component instead of 1.0
 #ifdef LUMA_raw
 #define val float
 #define val_swizz(v) (v.x)
-#define unval(v) vec4(v.x, 0, 0, 0)
+#define unval(v) vec4(v.x, 0, 0, 1.0)
 #elif CHROMA_raw
 #define val vec2
 #define val_swizz(v) (v.xy)
-#define unval(v) vec4(v.x, v.y, 0, 0)
+#define unval(v) vec4(v.x, v.y, 0, 1.0)
 #else
 #define val vec3
 #define val_swizz(v) (v.xyz)
-#define unval(v) vec4(v.x, v.y, v.z, 0)
+#define unval(v) vec4(v.x, v.y, v.z, 1.0)
 #endif
 
 // XXX don't allow sampling between pixels
@@ -1380,8 +1381,6 @@ vec4 hook()
 	result = (poi - result) * 0.5 + 0.5;
 #endif
 
-	vec4 final_result = unval(mix(poi, result, BF));
-	final_result.a = 1.0; // XXX return original alpha unchanged
-	return final_result;
+	return unval(mix(poi, result, BF));
 }
 
