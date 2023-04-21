@@ -832,9 +832,16 @@ return vec4(res[index.x * 2 + index.y], 0, 0, 1);
 // XXX could maybe be better optimized on LGC
 #ifdef LUMA_raw
 #define val float
+#define val_swizz(v) (v.x)
+#define unval(v) vec4(v.x, 0, 0, 0)
+#elif CHROMA_raw
+#define val vec2
+#define val_swizz(v) (v.xy)
+#define unval(v) vec4(v.x, v.y, 0, 0)
 #else
-// XXX could probably refactor to use vec3 and pass the alpha channel unchanged
-#define val vec4
+#define val vec3
+#define val_swizz(v) (v.xyz)
+#define unval(v) vec4(v.x, v.y, v.z, 0)
 #endif
 
 // XXX don't allow sampling between pixels
@@ -1051,29 +1058,17 @@ const float p_scale = 1.0/p_area;
 val load(vec3 off)
 {
 	switch (int(off.z)) {
-#ifdef LUMA_raw
-	case 0: return load_(off).x;
+	case 0: return val_swizz(load_(off));
 
-#else
-	case 0: return load_(off);
-
-#endif
 	}
 }
 val load2(vec3 off)
 {
-#ifdef LUMA_raw
-	return off.z == 0 ? load2_(off).x : load(off);
-#else
-	return off.z == 0 ? load2_(off) : load(off);
-#endif
+	return off.z == 0 ? val_swizz(load2_(off)) : load(off);
 }
-#elif defined(LUMA_raw)
-#define load(off) load_(off).x
-#define load2(off) load2_(off).x
 #else
-#define load(off) load_(off)
-#define load2(off) load2_(off)
+#define load(off) val_swizz(load_(off))
+#define load2(off) val_swizz(load2_(off))
 #endif
 
 val poi = load(vec3(0)); // pixel-of-interest
@@ -1220,7 +1215,7 @@ vec4 hook()
 {
 	val total_weight = val(0);
 	val sum = val(0);
-	vec4 result = vec4(0);
+	val result = val(0);
 
 	vec3 r = vec3(0);
 	vec3 p = vec3(0);
@@ -1329,9 +1324,9 @@ vec4 hook()
 	sum += poi * SW;
 
 #if M == 2 // weight map
-	result = vec4(avg_weight);
+	result = val(avg_weight);
 #elif M == 0 // mean
-	result = vec4(sum / total_weight);
+	result = val(sum / total_weight);
 #endif
 
 #if ASW == 0 // pre-WD weights
@@ -1353,22 +1348,22 @@ vec4 hook()
 #endif
 
 #if AS == 1 // sharpen+denoise
-	vec4 sharpened = vec4(result + (poi - result) * ASF);
+	val sharpened = result + (poi - result) * ASF;
 #elif AS == 2 // sharpen only
-	vec4 sharpened = vec4(poi + (poi - result) * ASF);
+	val sharpened = poi + (poi - result) * ASF;
 #endif
 
 #if EP // extremes preserve
 	float luminance = EP_texOff(0).x;
 	// EPSILON is needed since pow(0,0) is undefined
 	float ep_weight = pow(max(min(1-luminance, luminance)*2, EPSILON), (luminance < 0.5 ? DP : BP));
-	result = mix(vec4(poi), result, ep_weight);
+	result = mix(poi, result, ep_weight);
 #endif
 
 #if AS == 1 // sharpen+denoise
 	result = mix(sharpened, result, sharpening_strength);
 #elif AS == 2 // sharpen only
-	result = mix(sharpened, vec4(poi), sharpening_strength);
+	result = mix(sharpened, poi, sharpening_strength);
 #endif
 
 #if M == 4 // edge map
@@ -1382,9 +1377,11 @@ vec4 hook()
 #if DV == 1
 	result = clamp(abs(vec4(poi) - result) * S, 0.0, 1.0);
 #elif DV == 2
-	result = (vec4(poi) - result) * 0.5 + 0.5;
+	result = (poi - result) * 0.5 + 0.5;
 #endif
 
-	return mix(vec4(poi), result, BF);
+	vec4 final_result = unval(mix(poi, result, BF));
+	final_result.a = 1.0; // XXX return original alpha unchanged
+	return final_result;
 }
 

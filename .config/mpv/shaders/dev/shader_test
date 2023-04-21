@@ -46,6 +46,7 @@ multi sub msafe(Numeric $x --> Str) { sprintf('%f', $x) }
 multi sub msafe($x --> Str()) { $x }
 
 # parses output from ffmpeg's SSIM filter and outputs an average
+# XXX RGB testing is broken (not sure if it's here or somewhere else)
 sub avgssim(Str $out --> FatRat) {
 	$out.note if %gbl<verbose>;
 	my %avg;
