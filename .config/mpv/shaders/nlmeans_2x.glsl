@@ -790,7 +790,7 @@ return vec4(res[index.x * 2 + index.y], 0, 0, 1);
  * Visualizes the difference between input/output image
  *
  * 0: off
- * 1: absolute difference scaled by S
+ * 1: absolute difference to the power of 0.25
  * 2: difference centered on 0.5
  */
 #ifdef LUMA_raw
@@ -1375,11 +1375,11 @@ vec4 hook()
 #endif
 
 #if (M == 2 || M == 4) && defined(CHROMA_raw) // drop chroma for weight maps
-	result = vec4(0.5);
+	return vec4(0.5);
 #endif
 
 #if DV == 1
-	result = clamp(abs(vec4(poi) - result) * S, 0.0, 1.0);
+	result = clamp(pow(abs(poi - result), val(0.25)), 0.0, 1.0);
 #elif DV == 2
 	result = (poi - result) * 0.5 + 0.5;
 #endif

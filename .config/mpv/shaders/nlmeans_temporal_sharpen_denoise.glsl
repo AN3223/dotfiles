@@ -632,7 +632,7 @@ vec4 hook()
  * Visualizes the difference between input/output image
  *
  * 0: off
- * 1: absolute difference scaled by S
+ * 1: absolute difference to the power of 0.25
  * 2: difference centered on 0.5
  */
 #ifdef LUMA_raw
@@ -1142,9 +1142,9 @@ vec4 hook()
 	// XXX optionally put the denoised pixel into the frame buffer?
 	// store frames for temporal
 #if T
-	imageStore(PREV3, ivec2(HOOKED_pos*imageSize(PREV3)), vec4(load2(vec3(0,0,3-1))));
-	imageStore(PREV2, ivec2(HOOKED_pos*imageSize(PREV2)), vec4(load2(vec3(0,0,2-1))));
-	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), vec4(load2(vec3(0,0,1-1))));
+	imageStore(PREV3, ivec2(HOOKED_pos*imageSize(PREV3)), unval(load2(vec3(0,0,3-1))));
+	imageStore(PREV2, ivec2(HOOKED_pos*imageSize(PREV2)), unval(load2(vec3(0,0,2-1))));
+	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(load2(vec3(0,0,1-1))));
 #endif
 
 	val avg_weight = total_weight * r_scale;
@@ -1221,11 +1221,11 @@ vec4 hook()
 #endif
 
 #if (M == 2 || M == 4) && defined(CHROMA_raw) // drop chroma for weight maps
-	result = vec4(0.5);
+	return vec4(0.5);
 #endif
 
 #if DV == 1
-	result = clamp(abs(vec4(poi) - result) * S, 0.0, 1.0);
+	result = clamp(pow(abs(poi - result), val(0.25)), 0.0, 1.0);
 #elif DV == 2
 	result = (poi - result) * 0.5 + 0.5;
 #endif
