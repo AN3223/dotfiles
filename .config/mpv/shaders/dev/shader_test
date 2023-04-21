@@ -4,6 +4,7 @@
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
 # XXX it may be possible to aggressively merge some calls to ffmpeg
+# XXX sometimes ffmpeg hangs for a bit and then spits out a very high inaccurate SSIM
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
