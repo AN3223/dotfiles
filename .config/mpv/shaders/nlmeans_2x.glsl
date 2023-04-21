@@ -722,13 +722,16 @@ return vec4(res[index.x * 2 + index.y], 0, 0, 1);
  *
  * T: number of frames used
  * ME: motion estimation, 0 for none, 1 for max weight, 2 for weighted avg
+ * MEF: estimate factor, compensates for ME being one frame behind
  */
 #ifdef LUMA_raw
 #define T 0
 #define ME 1
+#define MEF 2
 #else
 #define T 0
 #define ME 0
+#define MEF 2
 #endif
 
 /* Spatial kernel
@@ -1244,13 +1247,13 @@ vec4 hook()
 	// XXX ME is always a frame behind, should have to option to re-research after applying ME (could do it an arbitrary number of times per frame if desired)
 #if T && ME == 1 // temporal & motion estimation max weight
 	if (r.z > 0) {
-		me += me_tmp;
+		me += me_tmp * MEF;
 		me_tmp = vec3(0);
 		maxweight = 0;
 	}
 #elif T && ME == 2 // temporal & motion estimation weighted average
 	if (r.z > 0) {
-		me += round(me_sum / me_weight);
+		me += round(me_sum / me_weight * MEF);
 		me_sum = vec3(0);
 		me_weight = 0;
 	}
