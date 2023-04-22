@@ -32,7 +32,7 @@
 -- The default step and aspect ratios can be changed via script-opts, see options below.
 --
 
-require 'mp.options'
+local options = require 'mp.options'
 local o = {
 	step = 64,
 	ars = {
@@ -43,7 +43,7 @@ local o = {
 		{ 4,  3 }
 	}
 }
-read_options(o)
+options.read_options(o)
 step,ars = o.step,o.ars
 
 -- keep x/y/w/h in the bounds of the image & initialize them if not already
@@ -117,15 +117,10 @@ local function cropmode()
 		print(filter()); mp.commandv("show-text", filter());
 		mp.commandv("vf", "remove", "@crop")
 
-		local c = { 'x', 'y', 'w', 'h' }
-		for i = 1, 4 do
-			mp.remove_key_binding("sub"..c[i])
-			mp.remove_key_binding("sub"..c[i].."vi")
-			mp.remove_key_binding("add"..c[i])
-			mp.remove_key_binding("add"..c[i].."vi")
+		local binds = { "aspectwidthrev", "aspectheightrev", "aspectwidth", "aspectheight", "substep", "addstep", "hlfstep", "dblstep", "center", "addx", "suby", "addy", "subx", "addxvi", "subyvi", "addyvi", "subxvi", "addw", "subh", "addh", "subw", "addwvi", "subhvi", "addhvi", "subwvi" }
+		for k,v in pairs(binds) do
+			mp.remove_key_binding(v)
 		end
-		mp.remove_key_binding("addstep")
-		mp.remove_key_binding("substep")
 	end
 end
 
