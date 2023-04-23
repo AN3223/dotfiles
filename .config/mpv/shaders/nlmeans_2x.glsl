@@ -723,15 +723,18 @@ return vec4(res[index.x * 2 + index.y], 0, 0, 1);
  * T: number of frames used
  * ME: motion estimation, 0 for none, 1 for max weight, 2 for weighted avg
  * MEF: estimate factor, compensates for ME being one frame behind
+ * TRF: compare against the denoised frames
  */
 #ifdef LUMA_raw
 #define T 0
 #define ME 1
 #define MEF 2
+#define TRF 0
 #else
 #define T 0
 #define ME 0
 #define MEF 2
+#define TRF 0
 #endif
 
 /* Spatial kernel
@@ -754,13 +757,13 @@ return vec4(res[index.x * 2 + index.y], 0, 0, 1);
  */
 #ifdef LUMA_raw
 #define SS 0.25
-#define SD vec3(1,1,1.5)
+#define SD vec3(1,1,1.0)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
 #else
 #define SS 0.25
-#define SD vec3(1,1,1.5)
+#define SD vec3(1,1,1.0)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
@@ -1061,7 +1064,7 @@ const float p_scale = 1.0/p_area;
 #if T
 val load(vec3 off)
 {
-	switch (int(off.z)) {
+	switch (min(int(off.z), frame)) {
 	case 0: return val_swizz(load_(off));
 
 	}
@@ -1295,12 +1298,6 @@ vec4 hook()
 	} // FOR_RESEARCH
 	} // FOR_FRAME
 
-	// XXX optionally put the denoised pixel into the frame buffer?
-	// store frames for temporal
-#if T
-
-#endif
-
 	val avg_weight = total_weight * r_scale;
 	val old_avg_weight = avg_weight;
 
@@ -1331,6 +1328,16 @@ vec4 hook()
 	result = val(avg_weight);
 #elif M == 0 // mean
 	result = val(sum / total_weight);
+#endif
+
+	// store frames for temporal
+#if T > 1
+
+#endif
+#if T && TRF
+
+#elif T
+
 #endif
 
 #if ASW == 0 // pre-WD weights

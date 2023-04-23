@@ -349,7 +349,6 @@ vec4 hook()
 //!BIND EP
 //!BIND PREV1
 //!BIND PREV2
-//!BIND PREV3
 //!DESC Non-local means (nlmeans_temporal_sharpen_denoise.glsl)
 
 // User variables
@@ -565,15 +564,18 @@ vec4 hook()
  * T: number of frames used
  * ME: motion estimation, 0 for none, 1 for max weight, 2 for weighted avg
  * MEF: estimate factor, compensates for ME being one frame behind
+ * TRF: compare against the denoised frames
  */
 #ifdef LUMA_raw
 #define T 2
 #define ME 1
 #define MEF 2
+#define TRF 0
 #else
 #define T 0
 #define ME 0
 #define MEF 2
+#define TRF 0
 #endif
 
 /* Spatial kernel
@@ -596,13 +598,13 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SS 0.25
-#define SD vec3(1,1,1.5)
+#define SD vec3(1,1,1.0)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
 #else
 #define SS 0.25
-#define SD vec3(1,1,1.5)
+#define SD vec3(1,1,1.0)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
@@ -903,11 +905,10 @@ const float p_scale = 1.0/p_area;
 #if T
 val load(vec3 off)
 {
-	switch (int(off.z)) {
+	switch (min(int(off.z), frame)) {
 	case 0: return val_swizz(load_(off));
 	case 1: return val_swizz(imageLoad(PREV1, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1))));
 	case 2: return val_swizz(imageLoad(PREV2, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2))));
-	case 3: return val_swizz(imageLoad(PREV3, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV3))));
 	}
 }
 val load2(vec3 off)
@@ -1139,14 +1140,6 @@ vec4 hook()
 	} // FOR_RESEARCH
 	} // FOR_FRAME
 
-	// XXX optionally put the denoised pixel into the frame buffer?
-	// store frames for temporal
-#if T
-	imageStore(PREV3, ivec2(HOOKED_pos*imageSize(PREV3)), unval(load2(vec3(0,0,3-1))));
-	imageStore(PREV2, ivec2(HOOKED_pos*imageSize(PREV2)), unval(load2(vec3(0,0,2-1))));
-	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(load2(vec3(0,0,1-1))));
-#endif
-
 	val avg_weight = total_weight * r_scale;
 	val old_avg_weight = avg_weight;
 
@@ -1177,6 +1170,19 @@ vec4 hook()
 	result = val(avg_weight);
 #elif M == 0 // mean
 	result = val(sum / total_weight);
+#endif
+
+	// store frames for temporal
+#if T > 1
+	imageStore(PREV2, ivec2(HOOKED_pos*imageSize(PREV2)), unval(load2(vec3(0,0,2-1))));
+	imageStore(PREV2, ivec2(HOOKED_pos*imageSize(PREV2)), unval(load2(vec3(0,0,2-1))));
+#endif
+#if T && TRF
+	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(result));
+	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(result));
+#elif T
+	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi));
+	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi));
 #endif
 
 #if ASW == 0 // pre-WD weights
@@ -1235,15 +1241,10 @@ vec4 hook()
 
 //!TEXTURE PREV1
 //!SIZE 1920 1080
-//!FORMAT r32f
+//!FORMAT r16f
 //!STORAGE
 
 //!TEXTURE PREV2
 //!SIZE 1920 1080
-//!FORMAT r32f
-//!STORAGE
-
-//!TEXTURE PREV3
-//!SIZE 1920 1080
-//!FORMAT r32f
+//!FORMAT r16f
 //!STORAGE
