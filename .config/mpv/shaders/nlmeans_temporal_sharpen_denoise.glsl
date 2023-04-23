@@ -1175,13 +1175,10 @@ vec4 hook()
 	// store frames for temporal
 #if T > 1
 	imageStore(PREV2, ivec2(HOOKED_pos*imageSize(PREV2)), unval(load2(vec3(0,0,2-1))));
-	imageStore(PREV2, ivec2(HOOKED_pos*imageSize(PREV2)), unval(load2(vec3(0,0,2-1))));
 #endif
 #if T && TRF
 	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(result));
-	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(result));
 #elif T
-	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi));
 	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi));
 #endif
 

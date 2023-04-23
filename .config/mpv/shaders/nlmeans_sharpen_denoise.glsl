@@ -1174,9 +1174,9 @@ vec4 hook()
 
 #endif
 #if T && TRF
-
+	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(result));
 #elif T
-
+	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi));
 #endif
 
 #if ASW == 0 // pre-WD weights

@@ -920,9 +920,9 @@ vec4 hook()
 	//cfg_range if T_FRAME_LIMIT; i=T_FRAME_LIMIT...2; imageStore(PREV${i}, ivec2(HOOKED_pos*imageSize(PREV${i})), unval(load2(vec3(0,0,${i}-1))));
 #endif
 #if T && TRF
-	//cfg_range if T_FRAME_LIMIT; imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(result));
+	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(result));
 #elif T
-	//cfg_range if T_FRAME_LIMIT; imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi));
+	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi));
 #endif
 
 #if ASW == 0 // pre-WD weights

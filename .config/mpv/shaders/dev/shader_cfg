@@ -461,7 +461,10 @@ function range(s, ws,    param, param_len, param_words, param_opt, template_str,
 		line = template_str
 		for (var in vars) {
 			if (!result) { # first iteration of while loop
-				done = 0
+				if (var_states[var] == var_states[var "stop"])
+					done = 1
+				else
+					done = 0
 			} else if (var_states[var "step"] > 0 && var_states[var] < var_states[var "stop"]) {
 				var_states[var] += var_states[var "step"]
 				if (var_states[var] >= var_states[var "stop"])
