@@ -54,13 +54,14 @@ vec4 hook()
 		poi_gol = 1;
 	}
 
-	if (SEED_IF || frame % RESET == 0) { // seed (hidden from output)
-		imageStore(GOL, ivec2(LUMA_pos*LUMA_size), vec4(1, 0, 0, 0));
-		return poi;
-	} else {
-		imageStore(GOL, ivec2(LUMA_pos*LUMA_size), vec4(poi_gol, 0, 0, 0));
-		return vec4(clamp(VISUALIZATION, 0.0, 1.0), 0, 0, 1.0);
-	}
+	if (SEED_IF)
+		poi_gol = 1;
+
+	if (frame % RESET == 0) // reset
+		poi_gol = 0;
+
+	imageStore(GOL, ivec2(LUMA_pos*LUMA_size), vec4(poi_gol, 0, 0, 0));
+	return vec4(clamp(VISUALIZATION, 0.0, 1.0), 0, 0, 1.0);
 }
 
 //!TEXTURE GOL
