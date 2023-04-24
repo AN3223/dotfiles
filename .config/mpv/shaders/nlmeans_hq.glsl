@@ -385,15 +385,15 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 0
-#define ASF 2.0
+#define ASF 3.0
 #define ASP 1
 #define ASW 0
 #define ASK 1
 #define ASC 0.0
 #else
 #define AS 0
-#define ASF 2.0
-#define ASP 4.0
+#define ASF 3.0
+#define ASP 1.0
 #define ASW 0
 #define ASK 1
 #define ASC 0.0
@@ -1188,11 +1188,10 @@ vec4 hook()
 #if ASK == 0
 	val sharpening_strength = pow(AS_weight, val(ASP));
 #elif ASK == 1
-#define sigmoid(x) (tanh(x * 2*M_PI - M_PI)*0.5+0.5)
-	val sharpening_strength = mix(pow(sigmoid(AS_weight), val(ASP)),
-	                              AS_weight, ASC);
-	// just in case ASC < 0 (will sharpen but it's janky XXX)
-	sharpening_strength = clamp(sharpening_strength, 0.0, 1.0);
+	val sharpening_strength = mix(
+			pow(smoothstep(0.0, 1.0, AS_weight), val(ASP)),
+			AS_weight, ASC);
+	// XXX normalize the result to account for a negative ASC?
 #elif ASK == 2
 	val sharpening_strength = val(ASP);
 #endif
