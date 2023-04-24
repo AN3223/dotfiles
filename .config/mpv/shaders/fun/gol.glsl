@@ -7,11 +7,14 @@
 //!BIND GOL
 
 // seed if this condition is true
-#define SEED_IF (laplacian < 0.375)
+#define SEED_IF (laplacian < 0.4 || laplacian > 0.6)
 //#define SEED_IF (poi.x < 0.25)
 
+#define VISUALIZATION mix(poi.x, poi_gol, 0.5)
+//#define VISUALIZATION (poi.x - poi_gol)
+
 // reset at this frame interval
-#define RESET (24*10)
+#define RESET (24*20)
 
 // whether or not to compute the laplacian image
 #define LAPLACIAN 1
@@ -56,9 +59,7 @@ vec4 hook()
 		return poi;
 	} else {
 		imageStore(GOL, ivec2(LUMA_pos*LUMA_size), vec4(poi_gol, 0, 0, 0));
-		return vec4(
-				clamp(poi.x - poi_gol, 0.0, 1.0),
-				0, 0, 1.0);
+		return vec4(clamp(VISUALIZATION, 0.0, 1.0), 0, 0, 1.0);
 	}
 }
 
