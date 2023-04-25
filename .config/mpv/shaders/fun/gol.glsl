@@ -14,18 +14,66 @@
 // enable if you don't want cells to linger in non-edge areas
 #define DECAY_DEATH 0
 
-// if death is enabled, cells die after they decay below this value
+// if DECAY_DEATH is enabled, cells die after they decay below this value
 // otherwise, cells just stop decaying at this value
-#define DEATH_THRESHOLD 0.05
+#define DEATH_THRESHOLD 0.2
 
-// lower numbers decay faster
+// lower numbers decay faster, 1.0 doesn't decay at all
 #define DECAY 0.9
 
-// decays near frame edges
-#define EDGE_DECAY 0.05
+// decays near frame edges, lower numbers decay more, 1.0 doesn't decay at all
+#define EDGE_DECAY 0.1
 
-// lower numbers seed more
+// 1.0 seeds nothing, 0.0 seeds everything
 #define LAPLACIAN_THRESHOLD 0.1
+
+// My favorites: (0, 5, 7, 9, 10, 13)
+#define RULE    0
+#if     RULE == 0  // Life
+#define B (live_neighbors == 3)
+#define S (live_neighbors == 2 || live_neighbors == 3)
+#elif   RULE == 1  // Seeds
+#define B (live_neighbors == 2)
+#define S (false)
+#elif   RULE == 2  // Day and Night
+#define B (live_neighbors == 3 || live_neighbors == 6 || live_neighbors == 7 || live_neighbors == 8)
+#define S (live_neighbors == 3 || live_neighbors == 4 || live_neighbors == 6 || live_neighbors == 7 || live_neighbors == 8)
+#elif   RULE == 3  // Geology
+#define B (live_neighbors == 3 || live_neighbors == 5 || live_neighbors == 7 || live_neighbors == 8)
+#define S (live_neighbors == 2 || live_neighbors == 4 || live_neighbors == 6 || live_neighbors == 7 || live_neighbors == 8)
+#elif   RULE == 4  // Gnarl
+#define B (live_neighbors == 1)
+#define S (live_neighbors == 1)
+#elif   RULE == 5  // HighLife
+#define B (live_neighbors == 3 || live_neighbors == 6)
+#define S (live_neighbors == 2 || live_neighbors == 3)
+#elif   RULE == 6  // DotLife
+#define B (live_neighbors == 3)
+#define S (live_neighbors == 0 || live_neighbors == 2 || live_neighbors == 3)
+#elif   RULE == 7  // 3-4 Life
+#define B (live_neighbors == 3 || live_neighbors == 4)
+#define S (live_neighbors == 3 || live_neighbors == 4)
+#elif   RULE == 8  // Pseudo Life
+#define B (live_neighbors == 3 || live_neighbors == 5 || live_neighbors == 7)
+#define S (live_neighbors == 2 || live_neighbors == 3 || live_neighbors == 8)
+#elif   RULE == 9  // DryLife
+#define B (live_neighbors == 3 || live_neighbors == 7)
+#define S (live_neighbors == 2 || live_neighbors == 3)
+#elif   RULE == 10 // Pedestrian Life
+#define B (live_neighbors == 3 || live_neighbors == 8)
+#define S (live_neighbors == 2 || live_neighbors == 3)
+#elif   RULE == 11 // Amoeba
+#define B (live_neighbors == 3 || live_neighbors == 5 || live_neighbors == 7)
+#define S (live_neighbors == 1 || live_neighbors == 3 || live_neighbors == 5 || live_neighbors == 8)
+#elif   RULE == 12 // 2x2
+#define B (live_neighbors == 3 || live_neighbors == 6)
+#define S (live_neighbors == 1 || live_neighbors == 2 || live_neighbors == 5)
+#elif   RULE == 13 // DrighLife
+#define B (live_neighbors == 3 || live_neighbors == 6 || live_neighbors == 7)
+#define S (live_neighbors == 2 || live_neighbors == 3)
+#endif
+
+// Shader code
 
 vec4 hook()
 {
@@ -50,9 +98,13 @@ vec4 hook()
 #define DINCR(z,c) (z.c++,(z.c += int(z == vec2(0))))
 	for (neighbor.x = -1; neighbor.x <= 1; DINCR(neighbor,x))
 	for (neighbor.y = -1; neighbor.y <= 1; DINCR(neighbor,y)) {
-		float cell = imageLoad(GOL, ivec2((LUMA_pos + LUMA_pt * neighbor) * LUMA_size)).x + 0.001;
+		float cell = imageLoad(GOL, ivec2((LUMA_pos + LUMA_pt * neighbor) * LUMA_size)).x;
 
+#if DECAY_DEATH
 		if (cell >= DEATH_THRESHOLD) {
+#else
+		if (cell > 0) {
+#endif
 			live_neighbors++;
 			avg_live_neighbor += cell;
 		}
@@ -63,11 +115,11 @@ vec4 hook()
 	avg_live_neighbor /= live_neighbors;
 
 	if (poi_cell > 0) {
-		if (live_neighbors < 2 || live_neighbors > 3) // {under,over}population
-			poi_cell = 0;
-		else if (live_neighbors >= 2) // survive
+		if (S)
 			poi_cell = max(poi_cell*DECAY*edge_decay, DEATH_THRESHOLD-DECAY_DEATH);
-	} else if (live_neighbors == 3) { // reproduction
+		else
+			poi_cell = 0;
+	} else if (B) {
 		poi_cell = max(avg_live_neighbor, DEATH_THRESHOLD);
 	}
 
