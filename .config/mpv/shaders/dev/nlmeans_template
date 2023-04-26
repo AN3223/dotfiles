@@ -725,6 +725,16 @@ float spatial_p(vec2 v)
 #define spatial_p(v) (1)
 #endif
 
+val range(val pdiff_sq)
+{
+	const float h = S*0.013;
+	const float pdiff_scale = 1.0/(h*h);
+	return exp(-pdiff_sq * pdiff_scale);
+
+	// weight function from the NLM paper, it's not very good
+	//return exp(-max(pdiff_sq - 2*S*S, 0.0) * pdiff_scale);
+}
+
 val patch_comparison(vec3 r, vec3 r2)
 {
 	vec3 p;
@@ -853,10 +863,8 @@ vec4 hook()
 	}
 #endif
 	FOR_RESEARCH(r) { // main NLM logic
-		const float h = S*0.013;
-		const float pdiff_scale = 1.0/(h*h);
 		val pdiff_sq = (r.z == 0) ? val(patch_comparison_gather(r+me, vec3(0))) : patch_comparison(r+me, vec3(0));
-		val weight = exp(-pdiff_sq * pdiff_scale); // XXX split off into range()
+		val weight = range(pdiff_sq);
 
 #if T && ME == 1 // temporal & motion estimation max weight
 		me_tmp = vec3(r.xy,0) * step(maxweight, weight.x) + me_tmp * (1 - step(maxweight, weight.x));

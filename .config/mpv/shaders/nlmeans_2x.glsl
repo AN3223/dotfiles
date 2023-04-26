@@ -1140,6 +1140,16 @@ float spatial_p(vec2 v)
 #define spatial_p(v) (1)
 #endif
 
+val range(val pdiff_sq)
+{
+	const float h = S*0.013;
+	const float pdiff_scale = 1.0/(h*h);
+	return exp(-pdiff_sq * pdiff_scale);
+
+	// weight function from the NLM paper, it's not very good
+	//return exp(-max(pdiff_sq - 2*S*S, 0.0) * pdiff_scale);
+}
+
 val patch_comparison(vec3 r, vec3 r2)
 {
 	vec3 p;
@@ -1196,10 +1206,9 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 	center_diff_sq *= center_diff_sq;
 	return (min_rot + center_diff_sq) * p_scale;
 }
-#elif (defined(LUMA_gather) || D1W) && PS == 6 && REGULAR_ROTATIONS && NO_GATHER
+#elif (defined(LUMA_gather) || D1W) && PS == 6 && RI == 0 && RFI == 0 && NO_GATHER
 // tiled even square patch_comparison_gather
 // XXX extend to support odd square?
-// XXX rotations/reflections appear to be subtly broken
 float patch_comparison_gather(vec3 r, vec3 r2)
 {
 	vec2 tile;
@@ -1209,30 +1218,15 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 	 * w z
 	 * x y
 	 */
-	FOR_ROTATION FOR_REFLECTION {
-		float pdiff_sq = 0;
-		for (tile.x = -hp; tile.x < hp; tile.x+=2) for (tile.y = -hp; tile.y < hp; tile.y+=2) {
-			vec4 poi_patch = gather(tile + r2.xy);
-			vec4 transformer = gather(ref(rot(tile + 0.5, ri), rfi) - 0.5 + r.xy);
-
-#if RI
-			for (float i = 0; i < ri; i+=90)
-				transformer = transformer.wxyz; // rotate 90 degrees
-#endif
-#if RFI
-			switch(rfi) {
-			case 1: transformer = transformer.zyxw; break;
-			case 2: transformer = transformer.xwzy; break;
-			}
-#endif
-
-			vec4 diff_sq = (poi_patch - transformer) * (poi_patch - transformer);
-			diff_sq = 1 - (1 - diff_sq) * vec4(spatial_p(tile+vec2(0,1)), spatial_p(tile+vec2(1,1)),
-			                                   spatial_p(tile+vec2(1,0)), spatial_p(tile+vec2(0,0)));
-			pdiff_sq += dot(diff_sq, vec4(1));
-		}
-		min_rot = min(min_rot, pdiff_sq);
+	float pdiff_sq = 0;
+	for (tile.x = -hp; tile.x < hp; tile.x+=2) for (tile.y = -hp; tile.y < hp; tile.y+=2) {
+		vec4 diff_sq = gather(tile + r.xy) - gather(tile + r2.xy);
+		diff_sq *= diff_sq;
+		diff_sq = 1 - (1 - diff_sq) * vec4(spatial_p(tile+vec2(0,1)), spatial_p(tile+vec2(1,1)),
+			                                 spatial_p(tile+vec2(1,0)), spatial_p(tile+vec2(0,0)));
+		pdiff_sq += dot(diff_sq, vec4(1));
 	}
+	min_rot = min(min_rot, pdiff_sq);
 
 	return min_rot * p_scale;
 }
@@ -1284,10 +1278,8 @@ vec4 hook()
 	}
 #endif
 	FOR_RESEARCH(r) { // main NLM logic
-		const float h = S*0.013;
-		const float pdiff_scale = 1.0/(h*h);
 		val pdiff_sq = (r.z == 0) ? val(patch_comparison_gather(r+me, vec3(0))) : patch_comparison(r+me, vec3(0));
-		val weight = exp(-pdiff_sq * pdiff_scale); // XXX split off into range()
+		val weight = range(pdiff_sq);
 
 #if T && ME == 1 // temporal & motion estimation max weight
 		me_tmp = vec3(r.xy,0) * step(maxweight, weight.x) + me_tmp * (1 - step(maxweight, weight.x));
