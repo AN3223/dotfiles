@@ -419,7 +419,7 @@ vec4 hook()
  * result, especially around edges.
  * 
  * WD:
- * 	- 2: True average. Very good quality, but slower and uses more memory.
+ * 	- 2: True average. Better quality, but slower and requires GLSL 4.0 or later
  * 	- 1: Moving cumulative average. Inaccurate, tends to blur directionally.
  * 	- 0: Disable
  *
@@ -676,18 +676,27 @@ vec4 hook()
 
 // XXX could maybe be better optimized on LGC
 // XXX return original alpha component instead of 1.0
-#ifdef LUMA_raw
+#if defined(LUMA_raw)
 #define val float
 #define val_swizz(v) (v.x)
 #define unval(v) vec4(v.x, 0, 0, 1.0)
-#elif CHROMA_raw
+#define val_packed val
+#define val_pack(v) (v)
+#define val_unpack(v) (v)
+#elif defined(CHROMA_raw)
 #define val vec2
 #define val_swizz(v) (v.xy)
 #define unval(v) vec4(v.x, v.y, 0, 1.0)
+#define val_packed uint
+#define val_pack(v) packUnorm2x16(v)
+#define val_unpack(v) unpackUnorm2x16(v)
 #else
 #define val vec3
 #define val_swizz(v) (v.xyz)
 #define unval(v) vec4(v.x, v.y, v.z, 1.0)
+#define val_packed val
+#define val_pack(v) (v)
+#define val_unpack(v) (v)
 #endif
 
 #if PS == 6
@@ -1087,8 +1096,8 @@ vec4 hook()
 
 #if WD == 2 // weight discard
 	int r_index = 0;
-	val all_weights[r_area];
-	val all_pixels[r_area];
+	val_packed all_weights[r_area];
+	val_packed all_pixels[r_area];
 #elif WD == 1 // weight discard
 	val no_weights = val(0);
 	val discard_total_weight = val(0);
@@ -1131,8 +1140,8 @@ vec4 hook()
 		weight *= spatial3(r);
 
 #if WD == 2 // weight discard
-		all_weights[r_index] = weight;
-		all_pixels[r_index] = load(r+me);
+		all_weights[r_index] = val_pack(weight);
+		all_pixels[r_index] = val_pack(load(r+me));
 		r_index++;
 #elif WD == 1 // weight discard
 		val wd_scale = 1.0/max(no_weights, 1);
@@ -1156,10 +1165,13 @@ vec4 hook()
 	val no_weights = val(0);
 
 	for (int i = 0; i < r_area; i++) {
-		val keeps = step(avg_weight*WDT, all_weights[i]);
-		all_weights[i] *= keeps;
-		sum += all_pixels[i] * all_weights[i];
-		total_weight += all_weights[i];
+		val w = val_unpack(all_weights[i]);
+		val px = val_unpack(all_pixels[i]);
+		val keeps = step(avg_weight*WDT, w);
+
+		w *= keeps;
+		sum += px * w;
+		total_weight += w;
 		no_weights += keeps;
 	}
 #elif WD == 1 // moving cumulative average
