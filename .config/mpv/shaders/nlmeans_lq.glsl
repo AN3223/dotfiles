@@ -383,22 +383,24 @@ vec4 hook()
  * closer/further, for instance SD=(1,1,0.5) would make the temporal axis 
  * appear closer and increase blur between frames.
  *
- * The intra-patch variants are supposed to help with larger patch sizes. 
- * Probably not helpful for P<9. They do have some performance impact.
+ * The intra-patch variants are supposed to help with larger patch sizes.
  *
- * SS: spatial denoising factor
+ * SST: enables spatial kernel if R>=PST, 0 fully disables
+ * SS: spatial sigma
  * SD: spatial distortion (X, Y, time)
- * PSS: intra-patch spatial denoising factor
+ * PSS: intra-patch spatial sigma
  * PST: enables intra-patch spatial kernel if P>=PST, 0 fully disables
  * PSD: intra-patch spatial distortion (X, Y)
  */
 #ifdef LUMA_raw
+#define SST 1
 #define SS 0.25
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
 #else
+#define SST 1
 #define SS 0.25
 #define SD vec3(1,1,1)
 #define PST 0
@@ -754,18 +756,26 @@ vec2 ref(vec2 p, int d)
 
 // XXX implement more spatial/range kernels
 
-float spatial3(vec3 v) // XXX maybe make optional in the style of PST
+#if SST && R >= SST
+float spatial_r(vec3 v)
 {
 	v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size);
 	float l = length(v*SD)*SS;
 	return exp(-1 * l * l);
 }
+#else
+#define spatial_r(v) (1)
+#endif
 
-float spatial2(vec2 v) // XXX maybe move PST logic here
+#if PST && P >= PST
+float spatial_p(vec2 v)
 {
 	float l = length(v*PSD)*PSS;
 	return exp(-1 * l * l);
 }
+#else
+#define spatial_p(v) (1)
+#endif
 
 val patch_comparison(vec3 r, vec3 r2)
 {
@@ -778,11 +788,7 @@ val patch_comparison(vec3 r, vec3 r2)
 			vec3 transformed_p = vec3(ref(rot(p.xy, ri), rfi), p.z);
 			val diff_sq = load2(p + r2) - load2((transformed_p + r) * SF);
 			diff_sq *= diff_sq;
-#if PST && P >= PST
-			float pdist = length(p.xy*PSD)*PSS;
-			pdist = exp(-(pdist*pdist));
-			diff_sq = pow(max(diff_sq, EPSILON), val(pdist));
-#endif
+			diff_sq = 1 - (1 - diff_sq) * spatial_p(p.xy);
 			pdiff_sq += diff_sq;
 		}
 		min_rot = min(min_rot, pdiff_sq);
@@ -858,11 +864,8 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 #endif
 
 			vec4 diff_sq = (poi_patch - transformer) * (poi_patch - transformer);
-#if PST && P >= PST
-			vec4 pdist = vec4(spatial2(tile+vec2(0,1)), spatial2(tile+vec2(1,1)),
-			                  spatial2(tile+vec2(1,0)), spatial2(tile+vec2(0,0)));
-			diff_sq = pow(max(diff_sq, EPSILON), pdist);
-#endif
+			diff_sq = 1 - (1 - diff_sq) * vec4(spatial_p(tile+vec2(0,1)), spatial_p(tile+vec2(1,1)),
+			                                   spatial_p(tile+vec2(1,0)), spatial_p(tile+vec2(0,0)));
 			pdiff_sq += dot(diff_sq, vec4(1));
 		}
 		min_rot = min(min_rot, pdiff_sq);
@@ -935,7 +938,7 @@ vec4 hook()
 		weight = val(weight.x);
 #endif
 
-		weight *= spatial3(r);
+		weight *= spatial_r(r);
 
 #if WD == 2 // weight discard
 		all_weights[r_index] = val_pack(weight);
@@ -980,8 +983,8 @@ vec4 hook()
 	avg_weight = total_weight / no_weights;
 #endif
 
-	total_weight += SW * spatial3(vec3(0));
-	sum += poi * SW * spatial3(vec3(0));
+	total_weight += SW * spatial_r(vec3(0));
+	sum += poi * SW * spatial_r(vec3(0));
 
 #if M == 2 // weight map
 	result = val(avg_weight);
