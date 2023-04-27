@@ -344,6 +344,9 @@ vec4 hook()
  *
  * The intra-patch variants are supposed to help with larger patch sizes.
  *
+ * The K suffixed options select the kernel used. RK is the range kernel, used 
+ * for weighting patch differences.
+ *
  * SST: enables spatial kernel if R>=PST, 0 fully disables
  * SS: spatial sigma
  * SD: spatial distortion (X, Y, time)
@@ -354,17 +357,23 @@ vec4 hook()
 #ifdef LUMA_raw
 #define SST 1
 #define SS 0.25
+#define SK gaussian
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
+#define PSK gaussian
 #define PSD vec2(1,1)
+#define RK gaussian
 #else
 #define SST 1
 #define SS 0.25
+#define SK gaussian
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
+#define PSK gaussian
 #define PSD vec2(1,1)
+#define RK gaussian
 #endif
 
 // Scaling factor (should match WIDTH/HEIGHT)
@@ -432,6 +441,8 @@ vec4 hook()
 
 #define EPSILON 0.00000000001
 #define M_PI 3.14159265358979323846
+#define POW2(x) ((x)*(x))
+#define POW3(x) ((x)*(x)*(x))
 
 // XXX could maybe be better optimized on LGC
 // XXX return original alpha component instead of 1.0
@@ -713,25 +724,25 @@ vec2 ref(vec2 p, int d)
 #define ref(p, d) (p)
 #endif
 
-// XXX implement more spatial/range kernels
+#define bicubic(x) ((1.0/6.0) * (POW3((x)+2) - 4 * POW3((x)+1) + 6 * POW3(x) - 4 * POW3(max((x)-1, 0))))
+#define gaussian(x) exp(-1 * POW2(x))
+#define lanczos(x) POW2(sinc(x))
+#define quadratic(x) ((x) < 0.5 ? 0.75 - POW2(x) : 0.5 * POW2((x) - 1.5))
+#define sinc(x) ((x) < 1e-8 ? 1.0 : sin((x)*M_PI) / ((x)*M_PI))
+#define sphinx(x) ((x) < 1e-8 ? 1.0 : 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
 
 #if SST && R >= SST
 float spatial_r(vec3 v)
 {
 	v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size);
-	float l = length(v*SD)*SS;
-	return exp(-1 * l * l);
+	return SK(length(v*SD)*SS);
 }
 #else
 #define spatial_r(v) (1)
 #endif
 
 #if PST && P >= PST
-float spatial_p(vec2 v)
-{
-	float l = length(v*PSD)*PSS;
-	return exp(-1 * l * l);
-}
+#define spatial_p(v) PSK(length(v*PSD)*PSS)
 #else
 #define spatial_p(v) (1)
 #endif
@@ -740,7 +751,15 @@ val range(val pdiff_sq)
 {
 	const float h = S*0.013;
 	const float pdiff_scale = 1.0/(h*h);
-	return exp(-pdiff_sq * pdiff_scale);
+	pdiff_sq = sqrt(pdiff_sq * pdiff_scale);
+#if defined(LUMA_raw)
+	return RK(pdiff_sq);
+#elif defined(CHROMA_raw)
+	return vec2(RK(pdiff_sq.x), RK(pdiff_sq.y));
+#else
+	return vec3(RK(pdiff_sq.x), RK(pdiff_sq.y), RK(pdiff_sq.z));
+#endif
+	//return exp(-pdiff_sq * pdiff_scale);
 
 	// weight function from the NLM paper, it's not very good
 	//return exp(-max(pdiff_sq - 2*S*S, 0.0) * pdiff_scale);
