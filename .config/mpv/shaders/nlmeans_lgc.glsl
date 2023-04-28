@@ -103,8 +103,6 @@ vec4 hook()
 //!BIND HOOKED
 //!BIND RF
 //!DESC Non-local means (nlmeans_lgc.glsl)
-//!WIDTH LUMA.w
-//!HEIGHT LUMA.h
 
 // User variables
 

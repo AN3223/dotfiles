@@ -39,7 +39,7 @@ SHARPEN_DENOISE=AS=1
 2X=CFG_HOOKS=LUMA:CFG_SIZE=2*:S=1.5:RF_LUMA=../FSRCNNX_x2_8-0-4-1.glsl:RF=0:SF=2:$(MEDIUM):EP=0
 
 LGC_DESC=Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
-LGC=CFG_HOOKS=CHROMA:CFG_SIZE=LUMA:RF=SHARE_LUMA:RF_LUMA=0:EP=0:D1W=1:S=11.66:WD=0:SW=0.75:RI=3:RFI=2
+LGC=CFG_HOOKS=CHROMA:RF=SHARE_LUMA:RF_LUMA=0:EP=0:D1W=1:S=11.66:WD=0:SW=0.75:RI=3:RFI=2
 
 all: ../nlmeans.glsl nlmeans_no_rf.glsl ../nlmeans_lgc.glsl ../nlmeans_2x.glsl ../nlmeans_heavy.glsl ../nlmeans_medium.glsl ../nlmeans_temporal.glsl ../nlmeans_hq.glsl ../nlmeans_hq_heavy.glsl ../nlmeans_hq_medium.glsl ../nlmeans_hqx.glsl ../nlmeans_lq.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../nlmeans_hq_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl
 
