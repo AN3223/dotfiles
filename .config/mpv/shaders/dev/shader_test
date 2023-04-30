@@ -276,18 +276,18 @@ sub MAIN(
 	note('Corrupting test media...');
 	given $corruption.split('=') {
 	when $_[0] eq "NOISE" { # NOISE=NOISE_LEVEL:REALIZATIONS
+		# XXX filtergraph is very long, use -filter_complex_script instead
 		my ($noise, $realizations) = $_[1].split(':');
-		^$realizations ==> map({
-			my $file = "{%gbl<tmp>}.corrupt$_.mkv";
-			my $vf = "noise=alls=$noise\:all_seed=$_\:allf=t";
-			run <<$ffmpeg -i "%tmp<media>" %gbl<ffv1> -vf "$vf" "$file">>;
-			$file;
-		}) ==> list() ==> %tmp<corrupt>;
-
-		if not $no-concat { # concat corrupt media, pad test media to same length
-			%tmp<corrupt> = (vfconcat(%tmp<corrupt>, :rm, :ext('corrupt')));
-			%tmp<media> = vfconcat(List(%tmp<media>), :rm, :loop($realizations), :ext('looped'));
+		my $split-vf = "split=$realizations" ~ (do "[s$_]" for ^$realizations).join();
+		my @noise-vf = do "[s$_]noise=alls=$noise\:all_seed=$_\:allf=t[n$_]" for ^$realizations;
+		my $concat-vf = (do "[n$_]" for ^$realizations).join() ~ "concat=$realizations,setpts=N/(FR*TB)";
+		my $vf = ($split-vf, @noise-vf.join(";"), $concat-vf if not $no-concat).join(";");
+		if $no-concat {
+			%tmp<corrupt> = do "{%gbl<tmp>}.corrupt$_.mkv" for ^$realizations;
+		} else {
+			%tmp<corrupt> = "{%gbl<tmp>}.corrupt.mkv";
 		}
+		run <<$ffmpeg -i "%tmp<media>" %gbl<ffv1> -lavfi "$vf">>, %tmp<corrupt>;
 	}
 	when $_[0] eq "JPEG" { # JPEG=QUALITY
 		my $codec = "-q\:v {$_[1]} -c\:v mjpeg";
