@@ -276,7 +276,6 @@ sub MAIN(
 	note('Corrupting test media...');
 	given $corruption.split('=') {
 	when $_[0] eq "NOISE" { # NOISE=NOISE_LEVEL:REALIZATIONS
-		# XXX filtergraph is very long, use -filter_complex_script instead
 		my ($noise, $realizations) = $_[1].split(':');
 		my $split-vf = "split=$realizations" ~ (do "[s$_]" for ^$realizations).join();
 		my @noise-vf = do "[s$_]noise=alls=$noise\:all_seed=$_\:allf=t[n$_]" for ^$realizations;
@@ -287,7 +286,8 @@ sub MAIN(
 		} else {
 			%tmp<corrupt> = "{%gbl<tmp>}.corrupt.mkv";
 		}
-		run <<$ffmpeg -i "%tmp<media>" %gbl<ffv1> -lavfi "$vf">>, %tmp<corrupt>;
+		spurt (%tmp<filter_script> = "{%gbl<tmp>}.filter_script"), $vf;
+		run <<$ffmpeg -i "%tmp<media>" %gbl<ffv1> -filter_script "{%tmp<filter_script>}">>, %tmp<corrupt>;
 	}
 	when $_[0] eq "JPEG" { # JPEG=QUALITY
 		my $codec = "-q\:v {$_[1]} -c\:v mjpeg";
