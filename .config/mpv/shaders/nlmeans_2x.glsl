@@ -527,6 +527,8 @@ return vec4(res[index.x * 2 + index.y], 0, 0, 1);
  * Uses the blur incurred by denoising to perform an unsharp mask, and uses the 
  * weight map to restrict the sharpening to edges.
  *
+ * If you just want to increase/decrease sharpness then you want to change ASF.
+ *
  * Use M=4 to visualize which areas are sharpened (black means sharpen).
  *
  * AS:
