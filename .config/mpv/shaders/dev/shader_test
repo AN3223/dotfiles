@@ -3,7 +3,6 @@
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
-# XXX it may be possible to aggressively merge some calls to ffmpeg
 # XXX sometimes ffmpeg hangs for a bit and then spits out a very high inaccurate SSIM
 
 use MONKEY-SEE-NO-EVAL;
@@ -90,23 +89,6 @@ sub shader_ssim(Str $in1, Str $in2, Str $shader --> Str) {
 }
 
 sub stats($cfgopts, $ssim, :$erronly = False --> Pair) {
-# XXX what?
-# S=5:WDT=1.125000:SW=1.000000:EP=0 0.8301903091
-# S=6.250000:WDT=1.125000:SW=1.000000:EP=0 0.8269018
-# maximizer: changing course
-# S=4.000000:WDT=1.125000:SW=1.000000:EP=0 0.8343822
-# S=3.200000:WDT=1.125000:SW=1.000000:EP=0 0.8397176182
-# S=2.560000:WDT=1.125000:SW=1.000000:EP=0 0.8462903455
-# S=2.048000:WDT=1.125000:SW=1.000000:EP=0 0.8537578545
-# S=1.638400:WDT=1.125000:SW=1.000000:EP=0 0.8611217091
-# S=1.310720:WDT=1.125000:SW=1.000000:EP=0 0.8669498909
-# S=1.048576:WDT=1.125000:SW=1.000000:EP=0 0.8700674
-# S=0.838861:WDT=1.125000:SW=1.000000:EP=0 0.8699686545
-# Use of uninitialized value element of type Any in string context.
-# Methods .^name, .raku, .gist, or .say can be used to stringify it to something meaningful.
-#   in sub stats at ./shader_test line 104
-# S=1.048576:WDT=1.125000:SW=1.000000:EP=0	0.8700674
-# maximizer: finished in 10 iterations
 	my $s = "{$cfgopts || 'NO_CFGOPTS'} $ssim";
 	if $erronly {
 		note($s);
@@ -120,7 +102,7 @@ sub stats($cfgopts, $ssim, :$erronly = False --> Pair) {
 
 # runs ffmpeg for testing, optionally maximizes a parameter
 # XXX maybe break the maximization logic off into a separate function
-sub test(Str $cfgopts, :$prev = (""=>0.0), *%state_ --> Pair) {
+sub test(Str $cfgopts = "", :$prev = (""=>0.0), *%state_ --> Pair) {
 	my %state = %state_; # for mutating
 
 	# set default values
@@ -131,7 +113,10 @@ sub test(Str $cfgopts, :$prev = (""=>0.0), *%state_ --> Pair) {
 	%state<depth> = %state<depth> || 0;
 	%state<sandtrap> = %state<sandtrap> || 0;
 
-	my $cfgopts_ = $m_opt ?? "$m_opt={msafe(%state<value>)}:$cfgopts" !! $cfgopts;
+	my $cfgopts_;
+	$cfgopts_ ~= "$m_opt={msafe(%state<value>)}" if $m_opt;
+	$cfgopts_ ~= ":$cfgopts" if $cfgopts;
+
 	my $shader = run_cfg($cfgopts_);
 	my @out = %tmp<corrupt>.map({ shader_ssim($_, %tmp<media>, $shader) });
 	unlink %tmp{$shader}:delete with %tmp{$shader};
@@ -142,32 +127,42 @@ sub test(Str $cfgopts, :$prev = (""=>0.0), *%state_ --> Pair) {
 	return $cfgopts_ => $ssim if %state<oneshot>;
 
 	if ++%state<depth> >= %state<iter> {
-		($cfgopts_, $ssim) = $prev if $prev.value > $ssim;
+		if $prev.value > $ssim {
+			$cfgopts_ = $prev.key;
+			$ssim = $prev.value;
+		}
 		stats($cfgopts_, $ssim);
 		note("maximizer: finished in %state<depth> iterations\n");
 		return $cfgopts_ => $ssim;
 	}
 
 	given $prev.value {
-	# XXX it's an error if the two SSIMs are the same after a course change
 	when abs($ssim - $_) < $m_epsilon && !%state<course-change> {
-		# XXX if the optimal value is very very large then this behaves horribly (E on guided LGC)
-		note("maximizer: sandtrap");
 		%state<sandtrap>++;
-		%state<step> = %state<step>**%state<step>;
 		%state<step> = 1/%state<step> if $ssim < $_; # estimate best travel direction
-		return test($cfgopts, |%state, :prev($cfgopts_ => $ssim), :value(%state<value> * %state<step>**2));
+		%state<step> = %state<step>**%state<step>;
+		%state<value> *= %state<step>**2;
+
+		# XXX maybe make the upper/lower bounds separate parameters?
+		if %state<value> < $m_epsilon || %state<value> > 1/$m_epsilon {
+			note("maximizer: pointless endeavor");
+			return stats($cfgopts_, $ssim);
+		} else {
+			note("maximizer: sandtrap");
+			return test($cfgopts, |%state, :prev($cfgopts_ => $ssim));
+		}
 	}
 	when $ssim > $_ { # just keep going
-		%state<step> *= %state<step>; # XXX should probably scale with SSIM somehow
-		return test($cfgopts, |%state, :prev($cfgopts_ => $ssim), :value(%state<value> * %state<step>));
+		%state<value> *= %state<step> *= %state<step>; # XXX should probably scale with SSIM somehow
+		return test($cfgopts, |%state, :prev($cfgopts_ => $ssim));
 	}
-	when $ssim < $_ {
+	default {
 		if %state<depth> <= 2 { # handle overestimates
 			note("maximizer: changing course");
-			%state<step> = 1/%state<step>;
 			%state<course-change> = True;
-			return test($cfgopts, |%state, :prev($prev), :value(%state<value> * %state<step>**2));
+			%state<step> = 1/%state<step>;
+			%state<value> *= %state<step>**2;
+			return test($cfgopts, |%state, :prev($prev));
 		}
 
 		note("maximizer: starting binary search");
@@ -177,14 +172,14 @@ sub test(Str $cfgopts, :$prev = (""=>0.0), *%state_ --> Pair) {
 		my $step_sz = %state<value> - %max<value>;
 		loop (my $i = 1 ;; $i++) {
 			my $substep = $step_sz/($i*2);
-			my @tests = [];
+			my @tests;
 			@tests.push(%max);
 
 			my $done = False;
 			for [%max<value> + $substep, %max<value> - $substep] -> $incr {
 				@tests.push({value=>$incr, result=>test($cfgopts, |%state, :value($incr), :oneshot)});
-				@tests.=sort: *<result>.value;
-				%max := @tests[*-1];
+				@tests.=sort(*<result>.value);
+				%max = @tests[*-1];
 
 				$done = True if ++%state<depth> >= %state<iter>;
 				$done = True if abs(%max<result>.value - @tests[*-2]<result>.value) < $m_epsilon;
