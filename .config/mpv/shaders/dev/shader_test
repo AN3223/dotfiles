@@ -207,21 +207,19 @@ sub vfconcat(@media, Str :$ext = "concat", Bool :$rm = False, Int() :$loop = 0) 
 		(<<-stream_loop $loop>> if $loop),
 		@media.map({ ('-i', $_) }).flat,
 		(<<-lavfi "concat={@media.elems},setpts=N/(FR*TB)">> if @media.elems > 1),
-		<<%gbl<ffv1> "$out-file">>;
+		<<%gbl<outopts> "$out-file">>;
 
 	@media.map(&unlink) if $rm;
 	$out-file;
 }
 
 # XXX add a "bring your own" corruption where you can specify your own corrupt test media
-# XXX add a corruption for arbitrary codecs (replace JPEG)
-# XXX add a corruption for arbitrary filters (replace FORMAT & SCALE)
 # XXX it would be more efficient for "single realization" corruptions to go to the beginning, right after split
 # XXX maybe measure baseline here?
 sub corrupt(Str $corruptions, Bool $no-concat) {
 	my Int $realizations = 1;
 	my Callable @vf;
-	my Str $codec = %gbl<ffv1>;
+	my Str $outopts = %gbl<outopts>;
 	for $corruptions.split(',') -> $corruption {
 		given $corruption.split('=') {
 		when $_[0] eq "NOISE" { # NOISE=NOISE_LEVEL:REALIZATIONS
@@ -229,16 +227,12 @@ sub corrupt(Str $corruptions, Bool $no-concat) {
 			$realizations = Int($realizations_);
 			@vf.push({ "noise=alls=$noise\:all_seed=$^i\:allf=t" });
 		}
-		when $_[0] eq "JPEG" { # JPEG=QUALITY
-			$codec = "-q\:v {$_[1]} -c\:v mjpeg";
+		when $_[0] eq "OUTOPTS" { # OUTOPTS=OPTS
+			$outopts = $_[1..*].join("=");
 		}
-		when $_[0] eq "SCALE" { # SCALE=SCALE_OPTS
-			my $opts = $_[1..*].join("=");
-			@vf.push({ "scale=$opts" });
-		}
-		when $_[0] eq "FORMAT" { # FORMAT=FORMAT
-			my $opts = $_[1..*].join("=");
-			@vf.push({ "format=$opts" });
+		when $_[0] eq "VF" { # VF=VF
+			my $vf = $_[1..*].join("=");
+			@vf.push({ $vf });
 		}
 		}
 	}
@@ -252,7 +246,7 @@ sub corrupt(Str $corruptions, Bool $no-concat) {
 	%tmp<corrupt> = do "{%gbl<tmp>}.corrupt$_.mkv" for ^$realizations;
 
 	spurt (%tmp<filter_script> = "{%gbl<tmp>}.filter_script"), $vf;
-	run <<$ffmpeg -i "%tmp<media>" %gbl<ffv1> -filter_script "{%tmp<filter_script>}">>, %tmp<corrupt>;
+	run <<$ffmpeg -i "%tmp<media>" $outopts -filter_script "{%tmp<filter_script>}">>, %tmp<corrupt>;
 }
 
 # recursive ls
@@ -278,7 +272,7 @@ sub MAIN(
 	Bool :$force = False #= Force overwrite the stats file
 ) {
 	%gbl<shader verbose vk plane resolution> = $shader, ($verbose || $v), $vk-device, $plane, $resolution;
-	%gbl<ffv1 pix-fmt colorspace> = "-c:v ffv1 -colorspace $colorspace -pix_fmt $pix-fmt", $pix-fmt, $colorspace;
+	%gbl<outopts pix-fmt colorspace> = "-c:v ffv1 -colorspace $colorspace -pix_fmt $pix-fmt", $pix-fmt, $colorspace;
 	%gbl<max> = roundrobin($max.split(':'), ":10:1.25:1e-6:10".split(':')).map({ $_[0] || $_[1] }).list;
 
 	die 'no test media specified' if not @test-media;
@@ -319,7 +313,7 @@ sub MAIN(
 	note('Measuring baseline...');
 	# XXX baseline should be generated from libplacebo upscaling
 	my $baseline = avgssim(%tmp<corrupt>.map({
-		run(<<$ffmpeg -i "$_" -i "%tmp<media>" -lavfi "scale={%gbl<resolution>},ssim=-" {%gbl<ffv1>} -f null ->>, :out).out.slurp(:close)
+		run(<<$ffmpeg -i "$_" -i "%tmp<media>" -lavfi "scale={%gbl<resolution>},ssim=-" {%gbl<outopts>} -f null ->>, :out).out.slurp(:close)
 	}).join("\n"));
 	stats "BASELINE=$corruption", $baseline;
 
