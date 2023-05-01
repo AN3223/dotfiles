@@ -214,10 +214,10 @@ sub vfconcat(@media, Str :$ext = "concat", Bool :$rm = False, Int() :$loop = 0) 
 }
 
 # XXX add a "bring your own" corruption where you can specify your own corrupt test media
-# XXX it would be more efficient for "single realization" corruptions to go to the beginning, right after split
 # XXX maybe measure baseline here?
 sub corrupt(Str $corruptions, Bool $no-concat) {
 	my Int $realizations = 1;
+	my Str @pre-vf;
 	my Callable @vf;
 	my Str $outopts = %gbl<outopts>;
 	for $corruptions.split(',') -> $corruption {
@@ -231,16 +231,17 @@ sub corrupt(Str $corruptions, Bool $no-concat) {
 			$outopts = $_[1..*].join("=");
 		}
 		when $_[0] eq "VF" { # VF=VF
-			my $vf = $_[1..*].join("=");
-			@vf.push({ $vf });
+			@pre-vf.push($_[1..*].join("="));
 		}
 		}
 	}
 
-	my $split-vf = "split=$realizations" ~ (do "[s$_]" for ^$realizations).join();
-	my $vf-vf = join(";\n", do "[s$_]{@vf.map({ $^f($_) }).join(',')}[n$_]" for ^$realizations);
-	my $concat-vf = (do "[n$_]" for ^$realizations).join() ~ "concat=$realizations,setpts=N/(FR*TB)";
-	my $vf = ($split-vf, $vf-vf, $concat-vf if not $no-concat).join(";\n");
+	@pre-vf.push("split=$realizations");
+	my Str $vf = (
+		@pre-vf.join(",") ~ (do "[s$_]" for ^$realizations).join(),
+		(do "[s$_]{@vf.map({ $^f($_) }).join(',')}[n$_]" for ^$realizations).join(";\n"),
+		(do "[n$_]" for ^$realizations).join() ~ "concat=$realizations,setpts=N/(FR*TB)" if not $no-concat
+	).join(";\n");
 
 	$realizations = 1 if not $no-concat;
 	%tmp<corrupt> = do "{%gbl<tmp>}.corrupt$_.mkv" for ^$realizations;
