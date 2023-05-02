@@ -1,5 +1,6 @@
 #!/usr/bin/env raku
 
+# XXX SSIMs are unusually low for images/
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
@@ -42,7 +43,7 @@ my $ffmpeg = "ffmpeg -nostdin -y";
 
 # GLSL macro-safe number representation
 multi sub msafe(Int $x --> Str()) { $x }
-multi sub msafe(Numeric $x --> Str) { sprintf('%f', $x) }
+multi sub msafe(Numeric $x --> Str) { sprintf('%f', $x.FatRat) }
 multi sub msafe($x --> Str()) { $x }
 
 # parses output from ffmpeg's SSIM filter and outputs an average
@@ -88,7 +89,7 @@ sub shader_ssim(Str $in1, Str $in2, Str $shader --> Str) {
 	run(<<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out).out.slurp(:close);
 }
 
-sub stats($cfgopts, $ssim, :$erronly = False --> Pair) {
+sub stats($cfgopts, $ssim, :$erronly = False) {
 	my $s = "{$cfgopts || 'NO_CFGOPTS'} $ssim";
 	if $erronly {
 		note($s);
@@ -97,12 +98,13 @@ sub stats($cfgopts, $ssim, :$erronly = False --> Pair) {
 		%gbl<statsfile>.print("$s\n") if %gbl<statsfile>;
 		%gbl<statsfile>.flush if %gbl<statsfile>;
 	}
-	return $cfgopts => $ssim;
+	return;
 }
 
 # runs ffmpeg for testing, optionally maximizes a parameter
 # XXX maybe break the maximization logic off into a separate function
-sub test(Str $cfgopts = "", :$prev = (""=>0.0), *%state_ --> Pair) {
+# XXX refactor to loop instead of recursing
+sub test(Str $cfgopts = "", :@history = [], *%state_ --> Pair) {
 	my %state = %state_; # for mutating
 
 	# set default values
@@ -113,27 +115,34 @@ sub test(Str $cfgopts = "", :$prev = (""=>0.0), *%state_ --> Pair) {
 	%state<depth> = %state<depth> || 0;
 	%state<sandtrap> = %state<sandtrap> || 0;
 
-	my $cfgopts_;
-	$cfgopts_ ~= "$m_opt={msafe(%state<value>)}" if $m_opt;
-	$cfgopts_ ~= ":$cfgopts" if $cfgopts;
+	my Pair $prev = @history.head || (Nil=>0.0);
+	my &max = { @history.sort(*.value)[*-1] };
 
-	my $shader = run_cfg($cfgopts_);
+	# XXX refactor with better variable names
+	my &value_str = {
+		(("$m_opt={msafe($_)}" if $m_opt),
+		("$cfgopts" if $cfgopts)).join(":")
+	}
+
+	my $shader = run_cfg(&value_str(%state<value>));
 	my @out = %tmp<corrupt>.map({ shader_ssim($_, %tmp<media>, $shader) });
 	unlink %tmp{$shader}:delete with %tmp{$shader};
 	my $ssim = avgssim(@out.join("\n"));
+	@history = [%state<value> => $ssim, |@history];
 
-	return stats($cfgopts_, $ssim) if not $m_opt;
-	stats($cfgopts_, $ssim, :erronly) if $m_opt;
-	return $cfgopts_ => $ssim if %state<oneshot>;
+	if $m_opt {
+		stats(&value_str(%state<value>), $ssim, :erronly) if $m_opt;
+	} else {
+		stats(&value_str(%state<value>), $ssim);
+		return %state<value> => $ssim;
+	}
+	return %state<value> => $ssim if %state<oneshot>;
 
 	if ++%state<depth> >= %state<iter> {
-		if $prev.value > $ssim {
-			$cfgopts_ = $prev.key;
-			$ssim = $prev.value;
-		}
-		stats($cfgopts_, $ssim);
+		my Pair $max = &max();
+		stats($max.key, $max.value);
 		note("maximizer: finished in %state<depth> iterations\n");
-		return $cfgopts_ => $ssim;
+		return $max;
 	}
 
 	given $prev.value {
@@ -146,15 +155,16 @@ sub test(Str $cfgopts = "", :$prev = (""=>0.0), *%state_ --> Pair) {
 		# XXX maybe make the upper/lower bounds separate parameters?
 		if %state<value> < $m_epsilon || %state<value> > 1/$m_epsilon {
 			note("maximizer: pointless endeavor");
-			return stats($cfgopts_, $ssim);
+			stats(&value_str(%state<value>), $ssim);
+			return %state<value> => $ssim;
 		} else {
 			note("maximizer: sandtrap");
-			return test($cfgopts, |%state, :prev($cfgopts_ => $ssim));
+			return test($cfgopts, |%state, :history(@history));
 		}
 	}
 	when $ssim > $_ { # just keep going
 		%state<value> *= %state<step> *= %state<step>; # XXX should probably scale with SSIM somehow
-		return test($cfgopts, |%state, :prev($cfgopts_ => $ssim));
+		return test($cfgopts, |%state, :history(@history));
 	}
 	default {
 		if %state<depth> <= 2 { # handle overestimates
@@ -162,34 +172,42 @@ sub test(Str $cfgopts = "", :$prev = (""=>0.0), *%state_ --> Pair) {
 			%state<course-change> = True;
 			%state<step> = 1/%state<step>;
 			%state<value> *= %state<step>**2;
-			return test($cfgopts, |%state, :prev($prev));
+			return test($cfgopts, |%state, :history(@history));
 		}
 
 		note("maximizer: starting binary search");
 
-		my %max := {value => %state<value> / %state<step>, result => $prev};
-		# XXX would be more fast/accurate to have a step size for both sides of the binary search, now that step is squared instead of factored
-		my $step_sz = %state<value> - %max<value>;
-		loop (my $i = 1 ;; $i++) {
-			my $substep = $step_sz/($i*2);
-			my @tests;
-			@tests.push(%max);
+		loop {
+			my @best_to_worst = @history.sort(*.value).reverse;
+			my @values = @history.map(*.key);
+			last if abs(@best_to_worst[0].value - @best_to_worst[1].value) < $m_epsilon;
+
+			my $maxval = @best_to_worst[0].key;
+			my $lower = @best_to_worst.grep({ $_.key < $maxval })[0].key;
+			my $higher = @best_to_worst.grep({ $_.key > $maxval })[0].key;
+
+			# divide until value isn't in history
+			my ($low_step, $high_step, $i);
+			loop ($i = 1 ;; $i++) {
+				$low_step = $lower + ($maxval - $lower) / (2**$i);
+				last if not $low_step (elem) @values;
+			}
+			loop ($i = 1 ;; $i++) {
+				$high_step = $maxval + ($higher - $maxval) / (2**$i);
+				last if not $high_step (elem) @values;
+			}
 
 			my $done = False;
-			for [%max<value> + $substep, %max<value> - $substep] -> $incr {
-				@tests.push({value=>$incr, result=>test($cfgopts, |%state, :value($incr), :oneshot)});
-				@tests.=sort(*<result>.value);
-				%max = @tests[*-1];
-
-				$done = True if ++%state<depth> >= %state<iter>;
-				$done = True if abs(%max<result>.value - @tests[*-2]<result>.value) < $m_epsilon;
-				last if $done;
+			for ($low_step, $high_step) -> $step {
+				@history.push(test($cfgopts, |%state, :value($step), :oneshot));
+				last if $done = ++%state<depth> >= %state<iter>;
 			}
 			last if $done;
 		}
-		stats %max<result>.key, %max<result>.value;
+		my $max = &max();
+		stats(&value_str($max.key), $max.value);
 		note("maximizer: finished in %state<depth> iterations\n");
-		return %max<result>;
+		return $max;
 	}
 	}
 }
