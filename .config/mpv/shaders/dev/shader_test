@@ -56,6 +56,7 @@ sub avgssim(Str $out --> FatRat) {
 	     ==> { [>>+<<] $_ >>/>> .elems }() # hash average
 	     ==> %avg;
 	
+	# XXX delete %avg<All>
 	given %gbl<plane> {
 	when 'LUMA' { return %avg<Y>; }
 	when 'CHROMA' { return (%avg<U> + %avg<V>)/2; }
@@ -251,14 +252,21 @@ sub corrupt(Str $corruptions, Bool $no-concat --> Int) {
 	@pre-vf.push("split=$realizations");
 	my Str $vf = (
 		@pre-vf.join(",") ~ (do "[s$_]" for ^$realizations).join(),
-		(do "[s$_]{@vf.map({ $^f($_) }).join(',')}[n$_]" for ^$realizations).join(";\n"),
-		(do "[n$_]" for ^$realizations).join() ~ "concat=$realizations,setpts=N/(FR*TB)" if not $no-concat
+		(do "[s$_]{@vf.map({ $^f($_) }).join(',')}[out$_]" for ^$realizations).join(";\n"),
+		((do "[out$_]" for ^$realizations).join() ~ "concat=$realizations,setpts=N/(FR*TB)" if not $no-concat)
 	).join(";\n");
 
-	%tmp<corrupt> = do "{%gbl<tmp>}.corrupt$_.mkv" for ^($no-concat ?? $realizations !! 1);
+	my @outs;
+	if $no-concat {
+		%tmp<corrupt> = do "{%gbl<tmp>}.corrupt$_.mkv" for ^$realizations;
+		@outs = %tmp<corrupt>.pairs.map({ <<$outopts -map "[out{$_.key}]" "{$_.value}">> }).flat;
+	} else {
+		%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
+		@outs = <<$outopts "{%tmp<corrupt>[0]}">>;
+	}
 
 	spurt (%tmp<filter_script> = "{%gbl<tmp>}.filter_script"), $vf;
-	run <<$ffmpeg -i "%tmp<media>" $outopts -filter_script "{%tmp<filter_script>}">>, %tmp<corrupt>;
+	run <<$ffmpeg -i "%tmp<media>" -filter_complex_script "{%tmp<filter_script>}">>, |@outs;
 
 	return $realizations;
 }
@@ -322,13 +330,17 @@ sub MAIN(
 	%tmp<media> = vfconcat(@test-media);
 
 	note('Corrupting test media...');
-	my $realizations = max(0, corrupt($corruption, $no-concat) - 1);
-	%gbl<media> = <<-stream_loop "$realizations" -i "%tmp<media>">>;
+	my $realizations = corrupt($corruption, $no-concat) - 1;
+	if not $no-concat && $realizations > 0 { # XXX is this right?
+		%gbl<media> = <<-stream_loop "$realizations" -i "%tmp<media>">>;
+	} else {
+		%gbl<media> = <<-i %tmp<media>>>;
+	}
 
 	note('Measuring baseline...');
 	# XXX baseline should be generated from libplacebo upscaling
 	my $baseline = avgssim(%tmp<corrupt>.map({
-		run(<<$ffmpeg -i "$_">>, |%gbl<media>, <<-lavfi "scale={%gbl<resolution>},ssim=-" {%gbl<outopts>} -f null ->>, :out).out.slurp(:close)
+		run(<<$ffmpeg -i "$_">>, |%gbl<media>, <<-lavfi "scale={%gbl<resolution>},ssim=-" %gbl<outopts> -f null ->>, :out).out.slurp(:close)
 	}).join("\n"));
 	stats "BASELINE=$corruption", $baseline;
 
