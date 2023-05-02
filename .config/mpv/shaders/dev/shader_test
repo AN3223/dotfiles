@@ -1,6 +1,5 @@
 #!/usr/bin/env raku
 
-# XXX SSIMs are unusually low for images/
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
@@ -84,9 +83,9 @@ sub run_cfg(Str $cfgopts --> Str) {
 	%tmp{$path} = $path;
 }
 
-sub shader_ssim(Str $in1, Str $in2, Str $shader --> Str) {
+sub shader_ssim(Str $in1, Str $shader --> Str) {
 	my $vf = "hwupload,libplacebo={%gbl<resolution>.split(':')[0..1].join(':')}\:{%gbl<pix-fmt>}:custom_shader_path=$shader,hwdownload[placebo]; [placebo]ssim=-";
-	run(<<$ffmpeg -i "$in1" -i "$in2" -init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out).out.slurp(:close);
+	run(<<$ffmpeg -i "$in1">>, |%gbl<media>, <<-init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out).out.slurp(:close);
 }
 
 sub stats($cfgopts, $ssim, :$erronly = False) {
@@ -125,7 +124,7 @@ sub test(Str $cfgopts = "", :@history = [], *%state_ --> Pair) {
 	}
 
 	my $shader = run_cfg(&value_str(%state<value>));
-	my @out = %tmp<corrupt>.map({ shader_ssim($_, %tmp<media>, $shader) });
+	my @out = %tmp<corrupt>.map({ shader_ssim($_, $shader) });
 	unlink %tmp{$shader}:delete with %tmp{$shader};
 	my $ssim = avgssim(@out.join("\n"));
 	@history = [%state<value> => $ssim, |@history];
@@ -228,7 +227,7 @@ sub vfconcat(@media, Str :$ext = "concat", Bool :$rm = False, Int() :$loop = 0) 
 
 # XXX add a "bring your own" corruption where you can specify your own corrupt test media
 # XXX maybe measure baseline here?
-sub corrupt(Str $corruptions, Bool $no-concat) {
+sub corrupt(Str $corruptions, Bool $no-concat --> Int) {
 	my Int $realizations = 1;
 	my Str @pre-vf;
 	my Callable @vf;
@@ -256,11 +255,12 @@ sub corrupt(Str $corruptions, Bool $no-concat) {
 		(do "[n$_]" for ^$realizations).join() ~ "concat=$realizations,setpts=N/(FR*TB)" if not $no-concat
 	).join(";\n");
 
-	$realizations = 1 if not $no-concat;
-	%tmp<corrupt> = do "{%gbl<tmp>}.corrupt$_.mkv" for ^$realizations;
+	%tmp<corrupt> = do "{%gbl<tmp>}.corrupt$_.mkv" for ^($no-concat ?? $realizations !! 1);
 
 	spurt (%tmp<filter_script> = "{%gbl<tmp>}.filter_script"), $vf;
 	run <<$ffmpeg -i "%tmp<media>" $outopts -filter_script "{%tmp<filter_script>}">>, %tmp<corrupt>;
+
+	return $realizations;
 }
 
 # recursive ls
@@ -322,12 +322,13 @@ sub MAIN(
 	%tmp<media> = vfconcat(@test-media);
 
 	note('Corrupting test media...');
-	corrupt($corruption, $no-concat);
+	my $realizations = max(0, corrupt($corruption, $no-concat) - 1);
+	%gbl<media> = <<-stream_loop "$realizations" -i "%tmp<media>">>;
 
 	note('Measuring baseline...');
 	# XXX baseline should be generated from libplacebo upscaling
 	my $baseline = avgssim(%tmp<corrupt>.map({
-		run(<<$ffmpeg -i "$_" -i "%tmp<media>" -lavfi "scale={%gbl<resolution>},ssim=-" {%gbl<outopts>} -f null ->>, :out).out.slurp(:close)
+		run(<<$ffmpeg -i "$_">>, |%gbl<media>, <<-lavfi "scale={%gbl<resolution>},ssim=-" {%gbl<outopts>} -f null ->>, :out).out.slurp(:close)
 	}).join("\n"));
 	stats "BASELINE=$corruption", $baseline;
 
