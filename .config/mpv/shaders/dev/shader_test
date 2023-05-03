@@ -56,7 +56,7 @@ sub avgssim(Str $out --> FatRat) {
 	     ==> { [>>+<<] $_ >>/>> .elems }() # hash average
 	     ==> %avg;
 	
-	# XXX delete %avg<All>
+	%avg<All>:delete;
 	given %gbl<plane> {
 	when 'LUMA' { return %avg<Y>; }
 	when 'CHROMA' { return (%avg<U> + %avg<V>)/2; }
@@ -104,7 +104,7 @@ sub stats($cfgopts, $ssim, :$erronly = False) {
 # runs ffmpeg for testing, optionally maximizes a parameter
 # XXX maybe break the maximization logic off into a separate function
 # XXX refactor to loop instead of recursing
-sub test(Str $cfgopts = "", :@history = [], *%state_ --> Pair) {
+sub test(Str $cfgopts = "", :@history, *%state_ --> Pair) {
 	my %state = %state_; # for mutating
 
 	# set default values
@@ -116,7 +116,6 @@ sub test(Str $cfgopts = "", :@history = [], *%state_ --> Pair) {
 	%state<sandtrap> = %state<sandtrap> || 0;
 
 	my Pair $prev = @history.head || (Nil=>0.0);
-	my &max = { @history.sort(*.value)[*-1] };
 
 	# XXX refactor with better variable names
 	my &value_str = {
@@ -128,7 +127,7 @@ sub test(Str $cfgopts = "", :@history = [], *%state_ --> Pair) {
 	my @out = %tmp<corrupt>.map({ shader_ssim($_, $shader) });
 	unlink %tmp{$shader}:delete with %tmp{$shader};
 	my $ssim = avgssim(@out.join("\n"));
-	@history = [%state<value> => $ssim, |@history];
+	@history = %state<value> => $ssim, |@history;
 
 	if $m_opt {
 		stats(&value_str(%state<value>), $ssim, :erronly) if $m_opt;
@@ -138,11 +137,15 @@ sub test(Str $cfgopts = "", :@history = [], *%state_ --> Pair) {
 	}
 	return %state<value> => $ssim if %state<oneshot>;
 
+	my @best_to_worst = @history.sort(*.value).reverse;
+	my &done = {
+		stats(&value_str(@best_to_worst.head.key), @best_to_worst.head.value);
+	}
+
 	if ++%state<depth> >= %state<iter> {
-		my Pair $max = &max();
-		stats($max.key, $max.value);
+		&done();
 		note("maximizer: finished in %state<depth> iterations\n");
-		return $max;
+		return @best_to_worst.head;
 	}
 
 	given $prev.value {
@@ -154,9 +157,9 @@ sub test(Str $cfgopts = "", :@history = [], *%state_ --> Pair) {
 
 		# XXX maybe make the upper/lower bounds separate parameters?
 		if %state<value> < $m_epsilon || %state<value> > 1/$m_epsilon {
+			&done();
 			note("maximizer: pointless endeavor");
-			stats(&value_str(%state<value>), $ssim);
-			return %state<value> => $ssim;
+			return @best_to_worst.head;
 		} else {
 			note("maximizer: sandtrap");
 			return test($cfgopts, |%state, :history(@history));
@@ -178,7 +181,7 @@ sub test(Str $cfgopts = "", :@history = [], *%state_ --> Pair) {
 		note("maximizer: starting binary search");
 
 		loop {
-			my @best_to_worst = @history.sort(*.value).reverse;
+			@best_to_worst = @history.sort(*.value).reverse;
 			my @values = @history.map(*.key);
 			last if abs(@best_to_worst[0].value - @best_to_worst[1].value) < $m_epsilon;
 
@@ -186,7 +189,7 @@ sub test(Str $cfgopts = "", :@history = [], *%state_ --> Pair) {
 			my $lower = @best_to_worst.grep({ $_.key < $maxval })[0].key;
 			my $higher = @best_to_worst.grep({ $_.key > $maxval })[0].key;
 
-			# divide until value isn't in history
+			# divide by half until value isn't in history
 			my ($low_step, $high_step, $i);
 			loop ($i = 1 ;; $i++) {
 				$low_step = $lower + ($maxval - $lower) / (2**$i);
@@ -197,6 +200,8 @@ sub test(Str $cfgopts = "", :@history = [], *%state_ --> Pair) {
 				last if not $high_step (elem) @values;
 			}
 
+			# XXX it should be possible to test both of these in a single ffmpeg command
+			# XXX same goes for the first two tests also
 			my $done = False;
 			for ($low_step, $high_step) -> $step {
 				@history.push(test($cfgopts, |%state, :value($step), :oneshot));
@@ -204,26 +209,11 @@ sub test(Str $cfgopts = "", :@history = [], *%state_ --> Pair) {
 			}
 			last if $done;
 		}
-		my $max = &max();
-		stats(&value_str($max.key), $max.value);
+		&done();
 		note("maximizer: finished in %state<depth> iterations\n");
-		return $max;
+		return @best_to_worst.head;
 	}
 	}
-}
-
-# Concatenates or loops files and removes the originals if requested
-sub vfconcat(@media, Str :$ext = "concat", Bool :$rm = False, Int() :$loop = 0) {
-	my $out-file = "{%gbl<tmp>}.$ext.mkv";
-
-	run <<$ffmpeg>>,
-		(<<-stream_loop $loop>> if $loop),
-		@media.map({ ('-i', $_) }).flat,
-		(<<-lavfi "concat={@media.elems},setpts=N/(FR*TB)">> if @media.elems > 1),
-		<<%gbl<outopts> "$out-file">>;
-
-	@media.map(&unlink) if $rm;
-	$out-file;
 }
 
 # XXX add a "bring your own" corruption where you can specify your own corrupt test media
@@ -232,7 +222,7 @@ sub corrupt(Str $corruptions, Bool $no-concat --> Int) {
 	my Int $realizations = 1;
 	my Str @pre-vf;
 	my Callable @vf;
-	my Str $outopts = %gbl<outopts>;
+	my @outopts = |%gbl<outopts>;
 	for $corruptions.split(',') -> $corruption {
 		given $corruption.split('=') {
 		when $_[0] eq "NOISE" { # NOISE=NOISE_LEVEL:REALIZATIONS
@@ -241,7 +231,7 @@ sub corrupt(Str $corruptions, Bool $no-concat --> Int) {
 			@vf.push({ "noise=alls=$noise\:all_seed=$^i\:allf=t" });
 		}
 		when $_[0] eq "OUTOPTS" { # OUTOPTS=OPTS
-			$outopts = $_[1..*].join("=");
+			@outopts = Array($_[1..*].join("=").split(" "));
 		}
 		when $_[0] eq "VF" { # VF=VF
 			@pre-vf.push($_[1..*].join("="));
@@ -250,19 +240,20 @@ sub corrupt(Str $corruptions, Bool $no-concat --> Int) {
 	}
 
 	@pre-vf.push("split=$realizations");
+	@vf.push({ "split=1" }) if @vf.elems == 0;
 	my Str $vf = (
-		@pre-vf.join(",") ~ (do "[s$_]" for ^$realizations).join(),
-		(do "[s$_]{@vf.map({ $^f($_) }).join(',')}[out$_]" for ^$realizations).join(";\n"),
-		((do "[out$_]" for ^$realizations).join() ~ "concat=$realizations,setpts=N/(FR*TB)" if not $no-concat)
+		@pre-vf.join(",") ~ ((do "[s$_]" for ^$realizations).join()),
+		(do "[s$_]{@vf.map({ $^f($_) }).join(',')}[o$_]" for ^$realizations).join(";\n"),
+		((do "[o$_]" for ^$realizations).join() ~ "concat=$realizations,setpts=N/(FR*TB)" if not $no-concat)
 	).join(";\n");
 
 	my @outs;
 	if $no-concat {
 		%tmp<corrupt> = do "{%gbl<tmp>}.corrupt$_.mkv" for ^$realizations;
-		@outs = %tmp<corrupt>.pairs.map({ <<$outopts -map "[out{$_.key}]" "{$_.value}">> }).flat;
+		@outs = %tmp<corrupt>.pairs.map({ (|@outopts, "-map", "[o{$_.key}]", $_.value) }).flat;
 	} else {
 		%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
-		@outs = <<$outopts "{%tmp<corrupt>[0]}">>;
+		@outs = (|@outopts, %tmp<corrupt>[0]);
 	}
 
 	spurt (%tmp<filter_script> = "{%gbl<tmp>}.filter_script"), $vf;
@@ -293,9 +284,9 @@ sub MAIN(
 	Bool :$no-concat = False, #= Skip concatenation step, very slow but may be necessary for temporal testing
 	Bool :$force = False #= Force overwrite the stats file
 ) {
-	%gbl<shader verbose vk plane resolution> = $shader, ($verbose || $v), $vk-device, $plane, $resolution;
-	%gbl<outopts pix-fmt colorspace> = "-c:v ffv1 -colorspace $colorspace -pix_fmt $pix-fmt", $pix-fmt, $colorspace;
-	%gbl<max> = roundrobin($max.split(':'), ":10:1.25:1e-6:10".split(':')).map({ $_[0] || $_[1] }).list;
+	%gbl<shader verbose vk plane resolution pix-fmt> = $shader, ($verbose || $v), $vk-device, $plane, $resolution, $pix-fmt;
+	%gbl<outopts> = <<-c\:v ffv1 -colorspace "$colorspace" -pix_fmt "$pix-fmt">>;
+	%gbl<max> = roundrobin($max.split(':'), ":1:1.25:1e-6:10".split(':')).map({ $_[0] || $_[1] }).list;
 
 	die 'no test media specified' if not @test-media;
 
@@ -327,7 +318,10 @@ sub MAIN(
 		}
 	}
 	note('Encoding test media...');
-	%tmp<media> = vfconcat(@test-media);
+	%tmp<media> = "{%gbl<tmp>}.concat.mkv";
+	run <<$ffmpeg>>, @test-media.map({ ('-i', $_) }).flat,
+		(<<-lavfi "concat={@test-media.elems},setpts=N/(FR*TB)">> if @test-media.elems > 1),
+		|%gbl<outopts>, %tmp<media>;
 
 	note('Corrupting test media...');
 	my $realizations = corrupt($corruption, $no-concat) - 1;
@@ -340,7 +334,7 @@ sub MAIN(
 	note('Measuring baseline...');
 	# XXX baseline should be generated from libplacebo upscaling
 	my $baseline = avgssim(%tmp<corrupt>.map({
-		run(<<$ffmpeg -i "$_">>, |%gbl<media>, <<-lavfi "scale={%gbl<resolution>},ssim=-" %gbl<outopts> -f null ->>, :out).out.slurp(:close)
+		run(<<$ffmpeg -i "$_">>, |%gbl<media>, <<-lavfi "scale={%gbl<resolution>},ssim=-">>, |%gbl<outopts>, <-f null ->, :out).out.slurp(:close)
 	}).join("\n"));
 	stats "BASELINE=$corruption", $baseline;
 
