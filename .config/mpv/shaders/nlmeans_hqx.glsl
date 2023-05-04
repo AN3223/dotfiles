@@ -589,9 +589,6 @@ vec4 hook()
  *
  * The intra-patch variants are supposed to help with larger patch sizes.
  *
- * The K suffixed options select the kernel used. RK is the range kernel, used 
- * for weighting patch differences.
- *
  * SST: enables spatial kernel if R>=PST, 0 fully disables
  * SS: spatial sigma
  * SD: spatial distortion (X, Y, time)
@@ -602,23 +599,43 @@ vec4 hook()
 #ifdef LUMA_raw
 #define SST 1
 #define SS 0.25
-#define SK gaussian
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
-#define PSK gaussian
 #define PSD vec2(1,1)
-#define RK gaussian
 #else
 #define SST 1
 #define SS 0.25
-#define SK gaussian
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
-#define PSK gaussian
 #define PSD vec2(1,1)
+#endif
+
+/* Kernels
+ *
+ * SK: spatial kernel
+ * RK: range kernel (takes patch differences)
+ * PSK: intra-patch spatial kernel
+ *
+ * List of available kernels:
+ *
+ * bicubic
+ * cos
+ * gaussian
+ * lanczos
+ * quadratic
+ * sinc
+ * sphinx
+ */
+#ifdef LUMA_raw
+#define SK gaussian
 #define RK gaussian
+#define PSK gaussian
+#else
+#define SK gaussian
+#define RK gaussian
+#define PSK gaussian
 #endif
 
 // Scaling factor (should match WIDTH/HEIGHT)
@@ -688,6 +705,12 @@ vec4 hook()
 #define M_PI 3.14159265358979323846
 #define POW2(x) ((x)*(x))
 #define POW3(x) ((x)*(x)*(x))
+#define bicubic(x) ((1.0/6.0) * (POW3((x)+2) - 4 * POW3((x)+1) + 6 * POW3(x) - 4 * POW3(max((x)-1, 0))))
+#define gaussian(x) exp(-1 * POW2(x))
+#define lanczos(x) POW2(sinc(x))
+#define quadratic(x) ((x) < 0.5 ? 0.75 - POW2(x) : 0.5 * POW2((x) - 1.5))
+#define sinc(x) ((x) < 1e-8 ? 1.0 : sin((x)*M_PI) / ((x)*M_PI))
+#define sphinx(x) ((x) < 1e-8 ? 1.0 : 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
 
 // XXX could maybe be better optimized on LGC
 // XXX return original alpha component instead of 1.0
@@ -969,13 +992,6 @@ vec2 ref(vec2 p, int d)
 #define ref(p, d) (p)
 #endif
 
-#define bicubic(x) ((1.0/6.0) * (POW3((x)+2) - 4 * POW3((x)+1) + 6 * POW3(x) - 4 * POW3(max((x)-1, 0))))
-#define gaussian(x) exp(-1 * POW2(x))
-#define lanczos(x) POW2(sinc(x))
-#define quadratic(x) ((x) < 0.5 ? 0.75 - POW2(x) : 0.5 * POW2((x) - 1.5))
-#define sinc(x) ((x) < 1e-8 ? 1.0 : sin((x)*M_PI) / ((x)*M_PI))
-#define sphinx(x) ((x) < 1e-8 ? 1.0 : 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
-
 #if SST && R >= SST
 float spatial_r(vec3 v)
 {
@@ -1037,6 +1053,7 @@ val patch_comparison(vec3 r, vec3 r2)
 // 3x3 diamond/plus patch_comparison_gather
 // XXX extend to support arbitrary sizes (probably requires code generation)
 // XXX extend to support 3x3 square
+// XXX support PSS
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
 const ivec2 offsets_sf[4] = { ivec2(0,-1) * SF, ivec2(-1,0) * SF, ivec2(0,1) * SF, ivec2(1,0) * SF };
 vec4 poi_patch = gather_offs(0, offsets);
