@@ -354,7 +354,7 @@ vec4 hook()
  *
  * If you just want to increase/decrease sharpness then you want to change ASF.
  *
- * Use M=4 to visualize which areas are sharpened (black means sharpen).
+ * Use V=4 to visualize which areas are sharpened (black means sharpen).
  *
  * AS:
  * 	- 0 to disable
@@ -631,30 +631,18 @@ vec4 hook()
 #define SF 1
 #endif
 
-/* Estimator
+/* Visualization
  *
- * 0: means
- * 2: weight map (not a denoiser)
+ * 0: off
+ * 1: absolute difference between input/output to the power of 0.25
+ * 2: difference between input/output centered on 0.5
+ * 3: avg_weight
  * 4: edge map (based on the relevant AS settings)
  */
 #ifdef LUMA_raw
-#define M 0
+#define V 0
 #else
-#define M 0
-#endif
-
-/* Difference visualization
- *
- * Visualizes the difference between input/output image
- *
- * 0: off
- * 1: absolute difference to the power of 0.25
- * 2: difference centered on 0.5
- */
-#ifdef LUMA_raw
-#define DV 0
-#else
-#define DV 0
+#define V 0
 #endif
 
 // Blur factor (0.0 returns the input image, 1.0 returns the output image)
@@ -1204,9 +1192,9 @@ vec4 hook()
 	total_weight += SW * spatial_r(vec3(0));
 	sum += poi * SW * spatial_r(vec3(0));
 
-#if M == 2 // weight map
+#if V == 3 // weight map
 	result = val(avg_weight);
-#elif M == 0 // mean
+#else // mean
 	result = val(sum / total_weight);
 #endif
 
@@ -1256,17 +1244,17 @@ vec4 hook()
 	result = mix(sharpened, poi, sharpening_strength);
 #endif
 
-#if M == 4 // edge map
+#if V == 4 // edge map
 	result = sharpening_strength;
 #endif
 
-#if (M == 2 || M == 4) && defined(CHROMA_raw) // drop chroma for weight maps
+#if (V == 3 || V == 4) && defined(CHROMA_raw) // drop chroma for these visualizations
 	return vec4(0.5);
 #endif
 
-#if DV == 1
+#if V == 1
 	result = clamp(pow(abs(poi - result), val(0.25)), 0.0, 1.0);
-#elif DV == 2
+#elif V == 2
 	result = (poi - result) * 0.5 + 0.5;
 #endif
 
