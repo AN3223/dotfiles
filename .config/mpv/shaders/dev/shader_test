@@ -84,9 +84,37 @@ sub run_cfg(Str $cfgopts --> Str) {
 	%tmp{$path} = $path;
 }
 
-sub shader_ssim(Str $in1, Str $shader --> Str) {
-	my $vf = "hwupload,libplacebo={%gbl<resolution>.split(':')[0..1].join(':')}\:{%gbl<pix-fmt>}:custom_shader_path=$shader,hwdownload[placebo]; [placebo]ssim=-";
-	run(<<$ffmpeg -i "$in1">>, |%gbl<media>, <<-init_hw_device "%gbl<vk>" -lavfi "$vf" -f null ->>, :out).out.slurp(:close);
+# XXX should be able to handle multiple files at a time too
+# XXX SSIMS aren't quite the same when batching?
+sub shader_ssim($corrupt-media, @shaders) {
+	my Str $res = %gbl<resolution>.split(':')[0..1].join(':');
+	my Bool $batch = @shaders.elems > 1;
+
+	my (@crptpads, @inpads);
+	if $batch {
+		@crptpads = do "[crpt$_]" for ^@shaders.elems;
+		@inpads = do "[in$_]" for ^@shaders.elems;
+	} else {
+		@crptpads = "[0:v]";
+		@inpads = "[1:v]";
+	}
+
+	my $vf = (
+		("hwupload,split={@shaders.elems}" ~ @crptpads.join() if $batch),
+		("split={@shaders.elems}" ~ @inpads.join() if $batch),
+		(do @crptpads[$_.key] ~ ("hwupload," if not $batch) ~ "libplacebo=$res\:{%gbl<pix-fmt>}:custom_shader_path={$_.value},hwdownload[out{$_.key}]" for @shaders.pairs).join(";\n"),
+		(do "{@inpads[$_]}[out$_]ssim={%gbl<tmpdir>}/ssim$_" for ^@shaders.elems).join(";\n")
+	).join(";\n");
+
+	spurt (%tmp<filter_script> = "{%gbl<tmp>}.filter_script"), $vf;
+	run(<<$ffmpeg -i "$corrupt-media">>, |%gbl<media>, <<-init_hw_device "%gbl<vk>" -filter_complex_script "{%tmp<filter_script>}" -f null ->>);
+
+	my @ssims;
+	for ^@shaders.elems {
+		@ssims.push(slurp "{%gbl<tmpdir>}/ssim$_");
+		unlink "{%gbl<tmpdir>}/ssim$_";
+	}
+	return @ssims;
 }
 
 sub stats($cfgopts, $ssim, :$erronly = False) {
@@ -101,9 +129,24 @@ sub stats($cfgopts, $ssim, :$erronly = False) {
 	return;
 }
 
+sub run_tests(*@cfgopts --> List) {
+	my @shaders = @cfgopts.map(&run_cfg);
+
+	my @outs;
+	for %tmp<corrupt><> -> $corrupt {
+		for shader_ssim($corrupt, @shaders).pairs {
+			@outs[.key] = join("\n", (@outs[.key] || ""), .value);
+		}
+	}
+
+	@shaders.map({ unlink %tmp{$_}:delete with %tmp{$_} });
+	return eager @outs.map(&avgssim);
+}
+
 # runs ffmpeg for testing, optionally maximizes a parameter
-# XXX maybe break the maximization logic off into a separate function
+# XXX break the maximization logic off into a separate function
 # XXX refactor to loop instead of recursing
+# XXX batch the first two run_tests() calls when maximizing
 sub test(Str $cfgopts = "", :@history, *%state_ --> Pair) {
 	my %state = %state_; # for mutating
 
@@ -123,14 +166,11 @@ sub test(Str $cfgopts = "", :@history, *%state_ --> Pair) {
 		("$cfgopts" if $cfgopts)).join(":")
 	}
 
-	my $shader = run_cfg(&value_str(%state<value>));
-	my @out = %tmp<corrupt>.map({ shader_ssim($_, $shader) });
-	unlink %tmp{$shader}:delete with %tmp{$shader};
-	my $ssim = avgssim(@out.join("\n"));
+	my $ssim = run_tests(&value_str(%state<value>))[0];
 	@history = %state<value> => $ssim, |@history;
 
 	if $m_opt {
-		stats(&value_str(%state<value>), $ssim, :erronly) if $m_opt;
+		stats(&value_str(%state<value>), $ssim, :erronly);
 	} else {
 		stats(&value_str(%state<value>), $ssim);
 		return %state<value> => $ssim;
@@ -200,14 +240,12 @@ sub test(Str $cfgopts = "", :@history, *%state_ --> Pair) {
 				last if not $high_step (elem) @values;
 			}
 
-			# XXX it should be possible to test both of these in a single ffmpeg command
-			# XXX same goes for the first two tests also
-			my $done = False;
-			for ($low_step, $high_step) -> $step {
-				@history.push(test($cfgopts, |%state, :value($step), :oneshot));
-				last if $done = ++%state<depth> >= %state<iter>;
-			}
-			last if $done;
+			my @ssims[2] = run_tests(&value_str($low_step), &value_str($high_step));
+			stats(&value_str($low_step), @ssims[0], :erronly);
+			@history.push($low_step => @ssims[0]);
+			stats(&value_str($high_step), @ssims[1], :erronly);
+			@history.push($high_step => @ssims[1]);
+			last if (%state<depth> += 2) >= %state<iter>;
 		}
 		&done();
 		note("maximizer: finished in %state<depth> iterations\n");
@@ -325,7 +363,7 @@ sub MAIN(
 
 	note('Corrupting test media...');
 	my $realizations = corrupt($corruption, $no-concat) - 1;
-	if not $no-concat && $realizations > 0 { # XXX is this right?
+	if not $no-concat && $realizations > 0 {
 		%gbl<media> = <<-stream_loop "$realizations" -i "%tmp<media>">>;
 	} else {
 		%gbl<media> = <<-i %tmp<media>>>;
