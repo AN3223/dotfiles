@@ -143,114 +143,117 @@ sub run_tests(*@cfgopts --> List) {
 	return eager @outs.map(&avgssim);
 }
 
-# runs ffmpeg for testing, optionally maximizes a parameter
-# XXX break the maximization logic off into a separate function
-# XXX refactor to loop instead of recursing
-# XXX batch the first two run_tests() calls when maximizing
-sub test(Str $cfgopts = "", :@history, *%state_ --> Pair) {
-	my %state = %state_; # for mutating
+# XXX refactor to not use pairs? kinda confusing
+# XXX make the logging optional
+# XXX implement a fancier optimization algorithm(s), optimize multiple parameters at once
+sub optimize(
+	&test, #= takes the value(s) to optimize and returns a list of scores
+	:&cmp = { $^x > $^y }, #= true when x is more optimal than y
+	:$start = 1, #= starting point for the value to optimize
+	:$first_step = 1.25, #= value is multiplied by this and it squares each iteration
+	:$epsilon = 1e-6, #= exit early if the two best scores differ less than this (may be Inf)
+	:$iter = 10 #= exit after this many iterations (may be Inf)
+) {
+	my $value = $start; # value to optimize
+	my $step = $first_step;
+	my @history; # $value => $score in chronological order
+	my @history_b2w; # $value => $score best to worst order
+	my $course_change = False;
 
-	# set default values
-	my ($m_opt, $m_start, $m_step, $m_epsilon, $m_iter) = |%gbl<max>;
-	%state<value> = %state<value> || $m_start;
-	%state<step> = %state<step> || $m_step;
-	%state<iter> = $m_opt ?? (%state<iter> || $m_iter) !! 1;
-	%state<depth> = %state<depth> || 0;
-	%state<sandtrap> = %state<sandtrap> || 0;
-
-	my Pair $prev = @history.head || (Nil=>0.0);
-
-	# XXX refactor with better variable names
-	my &value_str = {
-		(("$m_opt={msafe($_)}" if $m_opt),
-		("$cfgopts" if $cfgopts)).join(":")
-	}
-
-	my $ssim = run_tests(&value_str(%state<value>))[0];
-	@history = %state<value> => $ssim, |@history;
-
-	if $m_opt {
-		stats(&value_str(%state<value>), $ssim, :erronly);
+	loop (my $i = 2; $i < $iter; $i++) {
+	my ($prev_score, $score);
+	if ($i == 2) { # batch the first two tests
+		@history.push(|&test($start, $value *= $step *= $step));
+		($prev_score, $score) = @history.map(*.value);
 	} else {
-		stats(&value_str(%state<value>), $ssim);
-		return %state<value> => $ssim;
+		@history.push(|&test($value));
+		$prev_score = @history[*-2].value;
+		$score      = @history[*-1].value;
 	}
-	return %state<value> => $ssim if %state<oneshot>;
+	my Bool $diff_too_small = abs($score - $prev_score) < $epsilon;
+	@history_b2w = @history.sort({ not &cmp($^x.value, $^y.value) });
 
-	my @best_to_worst = @history.sort(*.value).reverse;
-	my &done = {
-		stats(&value_str(@best_to_worst.head.key), @best_to_worst.head.value);
-	}
+	# XXX take callables for modifying $step
+	# XXX guard against a NaN or Inf $value
+	if $diff_too_small && !$course_change {
+		$step = 1/$step if not &cmp($score, $prev_score);
+		$step = $step**$step;
+		$value *= $step**2;
 
-	if ++%state<depth> >= %state<iter> {
-		&done();
-		note("maximizer: finished in %state<depth> iterations\n");
-		return @best_to_worst.head;
-	}
-
-	given $prev.value {
-	when abs($ssim - $_) < $m_epsilon && !%state<course-change> {
-		%state<sandtrap>++;
-		%state<step> = 1/%state<step> if $ssim < $_; # estimate best travel direction
-		%state<step> = %state<step>**%state<step>;
-		%state<value> *= %state<step>**2;
-
-		# XXX maybe make the upper/lower bounds separate parameters?
-		if %state<value> < $m_epsilon || %state<value> > 1/$m_epsilon {
-			&done();
-			note("maximizer: pointless endeavor");
-			return @best_to_worst.head;
+		# XXX take parameters for these lower/upper bounds
+		if $value < $epsilon || $value > 1/$epsilon {
+			note("optimizer: pointless endeavor");
+			last;
 		} else {
-			note("maximizer: sandtrap");
-			return test($cfgopts, |%state, :history(@history));
+			note("optimizer: sandtrap");
 		}
-	}
-	when $ssim > $_ { # just keep going
-		%state<value> *= %state<step> *= %state<step>; # XXX should probably scale with SSIM somehow
-		return test($cfgopts, |%state, :history(@history));
-	}
-	default {
-		if %state<depth> <= 2 { # handle overestimates
-			note("maximizer: changing course");
-			%state<course-change> = True;
-			%state<step> = 1/%state<step>;
-			%state<value> *= %state<step>**2;
-			return test($cfgopts, |%state, :history(@history));
+	} elsif &cmp($score, $prev_score) && !$diff_too_small { # keep going
+		$value *= $step *= $step;
+	} else { # XXX not running on decrease?
+		if $i <= 2 { # handle overestimates
+			$course_change = True;
+			$step = 1/$step;
+			$value *= $step**2;
+			next;
 		}
 
-		note("maximizer: starting binary search");
+		note("optimizer: starting binary search");
 
-		loop {
-			@best_to_worst = @history.sort(*.value).reverse;
+		loop (; $i < $iter; $i += 2) {
+			#
+			# find the points halfway between the best known upper/lower values
+			#
+			# repeatedly divides by two just in case a suboptimal value exists 
+			# halfway between the best known value and the best known upper/lower 
+			# values
+			#
+			my $optval = @history_b2w[0].key;
+			my $lowval = @history_b2w.grep({ .key < $optval })[0].key;
+			my $highval = @history_b2w.grep({ .key > $optval })[0].key;
 			my @values = @history.map(*.key);
-			last if abs(@best_to_worst[0].value - @best_to_worst[1].value) < $m_epsilon;
+			my ($low_step, $high_step, $j);
+			$j = 1; repeat {
+				$low_step = $lowval + ($optval - $lowval) / (2**$j++);
+			} until not $low_step ∈ @values;
+			$j = 1; repeat {
+				$high_step = $optval + ($highval - $optval) / (2**$j++);
+			} until not $high_step ∈ @values;
 
-			my $maxval = @best_to_worst[0].key;
-			my $lower = @best_to_worst.grep({ $_.key < $maxval })[0].key;
-			my $higher = @best_to_worst.grep({ $_.key > $maxval })[0].key;
-
-			# divide by half until value isn't in history
-			my ($low_step, $high_step, $i);
-			loop ($i = 1 ;; $i++) {
-				$low_step = $lower + ($maxval - $lower) / (2**$i);
-				last if not $low_step (elem) @values;
-			}
-			loop ($i = 1 ;; $i++) {
-				$high_step = $maxval + ($higher - $maxval) / (2**$i);
-				last if not $high_step (elem) @values;
-			}
-
-			my @ssims[2] = run_tests(&value_str($low_step), &value_str($high_step));
-			stats(&value_str($low_step), @ssims[0], :erronly);
-			@history.push($low_step => @ssims[0]);
-			stats(&value_str($high_step), @ssims[1], :erronly);
-			@history.push($high_step => @ssims[1]);
-			last if (%state<depth> += 2) >= %state<iter>;
+			@history.push(|&test($low_step, $high_step));
+			@history_b2w = @history.sort({ not &cmp($^x.value, $^y.value) });
+			last if abs(@history_b2w[0].value - @history_b2w[1].value) < $epsilon;
 		}
-		&done();
-		note("maximizer: finished in %state<depth> iterations\n");
-		return @best_to_worst.head;
+		last;
 	}
+	}
+
+	note("optimizer: finished in $i iterations\n");
+	return @history_b2w[0];
+}
+
+# runs ffmpeg for testing, optionally maximizes a parameter
+sub test(Str $cfgopts = "") {
+	my %optimizer_args;
+	%optimizer_args<option start first_step epsilon iter> = |%gbl<max>;
+	%optimizer_args.map(-> $p {
+		%optimizer_args{$p.key}:delete without $p.value
+	});
+
+	if %optimizer_args<option> {
+		my $option = %optimizer_args<option>:delete;
+		my &val_to_opts = -> $value {
+			$cfgopts ?? ("$option=$value", $cfgopts).join(":") !! "$option=$value"
+		};
+		my &test = -> *@values {
+			my @cfgopts = @values.map(&val_to_opts);
+			my @scores = run_tests(|@cfgopts);
+			(@cfgopts Z=> @scores).map({ stats(.key, .value, :erronly) });
+			@values Z=> @scores
+		};
+		my $optimal = optimize(&test, |%optimizer_args);
+		stats(&val_to_opts($optimal.key), $optimal.value);
+	} else {
+		stats($cfgopts, run_tests($cfgopts)[0]);
 	}
 }
 
@@ -324,7 +327,7 @@ sub MAIN(
 ) {
 	%gbl<shader verbose vk plane resolution pix-fmt> = $shader, ($verbose || $v), $vk-device, $plane, $resolution, $pix-fmt;
 	%gbl<outopts> = <<-c\:v ffv1 -colorspace "$colorspace" -pix_fmt "$pix-fmt">>;
-	%gbl<max> = roundrobin($max.split(':'), ":1:1.25:1e-6:10".split(':')).map({ $_[0] || $_[1] }).list;
+	%gbl<max> = List($max.split(':'));
 
 	die 'no test media specified' if not @test-media;
 
