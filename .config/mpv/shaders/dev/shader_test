@@ -191,6 +191,7 @@ sub optimize(
 		$value *= $step *= $step;
 	} else {
 		if $i <= 2 { # handle overestimates
+			note("optimizer: changing course");
 			$course_change = True;
 			$step = 1/$step;
 			$value *= $step**2;
@@ -208,25 +209,19 @@ sub optimize(
 			# values
 			#
 			my $optval = @history_b2w[0].key;
-			my $lowval = @history_b2w.grep({ .key < $optval })[0].key;
-			my $highval = @history_b2w.grep({ .key > $optval })[0].key;
+			my $lower_bound = @history_b2w.grep({ .key < $optval })[0].key;
+			my $upper_bound = @history_b2w.grep({ .key > $optval })[0].key;
 			my @values = @history.map(*.key);
-			my ($low_step, $high_step, $j);
+			my ($lower, $upper, $j);
 			$j = 1; repeat {
-				# XXX
-				# optimizer: starting binary search
-				# Use of uninitialized value of type Any in numeric context
-				# in block  at ./shader_test line 215
-				# Use of uninitialized value of type Any in numeric context
-				# in block  at ./shader_test line 215
-				# S=1:SS=1.2259964326927111e-07:WDT=1.907349:CFG_SIZE=2*:SF=1:SK=gaussian:EP=0 0.7821679
-				$low_step = $lowval + ($optval - $lowval) / (2**$j++);
-			} until not $low_step ∈ @values;
+				$lower = $lower_bound + ($optval - $lower_bound) / (2**$j++);
+			} until not $lower ∈ @values or $lower < $epsilon;
 			$j = 1; repeat {
-				$high_step = $optval + ($highval - $optval) / (2**$j++);
-			} until not $high_step ∈ @values;
+				$upper = $optval + ($upper_bound - $optval) / (2**$j++);
+			} until not $upper ∈ @values or $upper > 1/$epsilon;
+			last if $lower < $epsilon || $upper > 1/$epsilon;
 
-			@history.push(|&f($low_step, $high_step));
+			@history.push(|&f($lower, $upper));
 			@history_b2w = @history.sort({ not &cmp($^x.value, $^y.value) });
 			last if abs(@history_b2w[0].value - @history_b2w[1].value) < $epsilon;
 		}
