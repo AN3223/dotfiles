@@ -3,7 +3,7 @@
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
-# XXX sometimes ffmpeg hangs for a bit and then spits out a very high inaccurate SSIM or nothing
+# XXX sometimes ffmpeg hangs for a bit and then spits out a very high inaccurate SSIM or nothing (seems to only happen after PC has been running for a long time)
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
@@ -231,6 +231,7 @@ sub optimize(
 }
 
 # runs ffmpeg for testing, optionally maximizes a parameter
+# XXX optionally set the %args<start> to the option's previous optimal value (or maybe the mean/median)
 sub test(Str $cfgopts = "") {
 	my Hash @optimizer_args;
 	for %gbl<max>.split(",") -> $args { 
@@ -353,16 +354,10 @@ sub MAIN(
 	%gbl<tmpdir> = run(<<mktemp -d "$tmpdir/shader_test.XXXXXX">>, :out).out.slurp(:close).subst("\n");
 	%gbl<tmp> = %gbl<tmpdir> ~ '/shader_test.tmp';
 	
-	# XXX maybe just derive the filename from ARGV instead?
-	my @statsfile = (
-		# friendly shader name
-		%gbl<shader>.IO.basename.subst(/nlmeans/, "NLM").subst(/(_template$|\.glsl$)/),
-		# comma delimited basenames of test-media w/o extensions
-		@test-media.map({ .IO.basename.split('.', :skip-empty)[0] }).join(','),
-		%gbl<plane>, $corruption, %gbl<resolution>.subst(':', 'x'), %gbl<pix-fmt>,
-		"CAT={(!$no-concat).Int}", "MAX={%gbl<max>.join(':')}", $cfgopts
-	);
-	my $statsfile = "$stats-dir/{@statsfile.join(':').trans('/' => '_')}.stats";
+	my $statsfile = "$stats-dir/"
+		~ @*ARGS.grep(/^\-/).map({ S:g/^\-\-?// }).join('_').trans('/' => '\\')
+		~ "_media=" ~ @test-media.map({ .IO.basename.split('.', :skip-empty)[0] }).join(',')
+		~ ".stats";
 
 	@test-media = @test-media.flatmap(&find).grep({ $_.path !~~ /\.txt$/ });
 	@test-media.map({ .f || die "$_ doesn't exist or is unreadable" });
