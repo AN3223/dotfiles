@@ -1,1 +1,6 @@
 *
+!.config/
+!.config/mpv/
+!.config/mpv/shaders/
+!.config/mpv/shaders/dev/
+!.config/mpv/shaders/dev/**
