@@ -146,14 +146,14 @@ sub run_tests(*@cfgopts --> List) {
 # XXX make the logging optional
 # XXX implement a fancier optimization algorithm
 sub optimize(
-	&test, #= takes the value(s) to optimize and returns a list of scores
+	&f, #= the function to optimize, takes the value and returns a list of scores
 	:&cmp = { $^x > $^y }, #= true when x is more optimal than y
-	:$start = 1, #= starting point for the value to optimize
+	:$start = 1, #= starting point for the value passed to &f
 	:$first_step = 1.25, #= value is multiplied by this and it squares each iteration
 	:$epsilon = 1e-6, #= exit early if the two best scores differ less than this (may be Inf)
 	:$iter = 10 #= exit after this many iterations (may be Inf)
 ) {
-	my $value = $start; # value to optimize
+	my $value = $start; # value passed to &f
 	my $step = $first_step;
 	my @history; # $value => $score in chronological order
 	my @history_b2w; # $value => $score best to worst order
@@ -162,10 +162,10 @@ sub optimize(
 	loop (my $i = 2; $i < $iter; $i++) {
 	my ($prev_score, $score);
 	if ($i == 2) { # batch the first two tests
-		@history.push(|&test($start, $value *= $step *= $step));
+		@history.push(|&f($start, $value *= $step *= $step));
 		($prev_score, $score) = @history.map(*.value);
 	} else {
-		@history.push(|&test($value));
+		@history.push(|&f($value));
 		$prev_score = @history[*-2].value;
 		$score      = @history[*-1].value;
 	}
@@ -174,6 +174,7 @@ sub optimize(
 
 	# XXX take callables for modifying $step
 	# XXX guard against a NaN or Inf $value
+	# XXX add a sandtrap limit
 	if $diff_too_small && !$course_change {
 		$step = 1/$step if not &cmp($score, $prev_score);
 		$step = $step**$step;
@@ -212,13 +213,20 @@ sub optimize(
 			my @values = @history.map(*.key);
 			my ($low_step, $high_step, $j);
 			$j = 1; repeat {
+				# XXX
+				# optimizer: starting binary search
+				# Use of uninitialized value of type Any in numeric context
+				# in block  at ./shader_test line 215
+				# Use of uninitialized value of type Any in numeric context
+				# in block  at ./shader_test line 215
+				# S=1:SS=1.2259964326927111e-07:WDT=1.907349:CFG_SIZE=2*:SF=1:SK=gaussian:EP=0 0.7821679
 				$low_step = $lowval + ($optval - $lowval) / (2**$j++);
 			} until not $low_step ∈ @values;
 			$j = 1; repeat {
 				$high_step = $optval + ($highval - $optval) / (2**$j++);
 			} until not $high_step ∈ @values;
 
-			@history.push(|&test($low_step, $high_step));
+			@history.push(|&f($low_step, $high_step));
 			@history_b2w = @history.sort({ not &cmp($^x.value, $^y.value) });
 			last if abs(@history_b2w[0].value - @history_b2w[1].value) < $epsilon;
 		}
@@ -241,12 +249,12 @@ sub test(Str $cfgopts = "") {
 		@optimizer_args.push(%args);
 	}
 
-	# for S=x:SS=y:... optimize SS by using a &test that optimizes S w/ the current state of SS
+	# S=x:SS=y:... &f(y) is optimized using an &f that optimizes &f(x)
 	my Callable @optimizers;
 	for @optimizer_args.kv -> $i, %args {
 		my $option = %args<option>:delete;
 		my &val_to_opts = -> $value, *@inject { ("$option=$value", |@inject).join(":") };
-		my &test = -> *@inject {
+		my &f = -> *@inject {
 			-> *@values {
 				if @optimizers[$i-1] {
 					@values.map({ $^value => @optimizers[$i-1]("$option=$^value", |@inject)().value });
@@ -260,7 +268,7 @@ sub test(Str $cfgopts = "") {
 		};
 		@optimizers.push: -> *@inject {
 			-> {
-				my $optimal = optimize(&test(|@inject), |%args);
+				my $optimal = optimize(&f(|@inject), |%args);
 				if $i == 0 {
 					stats(&val_to_opts($optimal.key, |@inject), $optimal.value);
 					note("");
