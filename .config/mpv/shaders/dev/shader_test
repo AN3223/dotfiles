@@ -3,7 +3,7 @@
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
-# XXX sometimes ffmpeg hangs for a bit and then spits out a very high inaccurate SSIM
+# XXX sometimes ffmpeg hangs for a bit and then spits out a very high inaccurate SSIM or nothing
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
@@ -143,9 +143,8 @@ sub run_tests(*@cfgopts --> List) {
 	return eager @outs.map(&avgssim);
 }
 
-# XXX refactor to not use pairs? kinda confusing
 # XXX make the logging optional
-# XXX implement a fancier optimization algorithm(s), optimize multiple parameters at once
+# XXX implement a fancier optimization algorithm
 sub optimize(
 	&test, #= takes the value(s) to optimize and returns a list of scores
 	:&cmp = { $^x > $^y }, #= true when x is more optimal than y
@@ -189,7 +188,7 @@ sub optimize(
 		}
 	} elsif &cmp($score, $prev_score) && !$diff_too_small { # keep going
 		$value *= $step *= $step;
-	} else { # XXX not running on decrease?
+	} else {
 		if $i <= 2 { # handle overestimates
 			$course_change = True;
 			$step = 1/$step;
@@ -227,31 +226,51 @@ sub optimize(
 	}
 	}
 
-	note("optimizer: finished in $i iterations\n");
+	note("optimizer: finished in $i iterations");
 	return @history_b2w[0];
 }
 
 # runs ffmpeg for testing, optionally maximizes a parameter
 sub test(Str $cfgopts = "") {
-	my %optimizer_args;
-	%optimizer_args<option start first_step epsilon iter> = |%gbl<max>;
-	%optimizer_args.map(-> $p {
-		%optimizer_args{$p.key}:delete without $p.value
-	});
+	my Hash @optimizer_args;
+	for %gbl<max>.split(",") -> $args { 
+		my %args;
+		%args<option start first_step epsilon iter> = $args.split(":");
+		%args.map({ %args{$^p.key}:delete without $^p.value });
+		@optimizer_args.push(%args);
+	}
 
-	if %optimizer_args<option> {
-		my $option = %optimizer_args<option>:delete;
-		my &val_to_opts = -> $value {
-			$cfgopts ?? ("$option=$value", $cfgopts).join(":") !! "$option=$value"
+	# for S=x:SS=y:... optimize SS by using a &test that optimizes S w/ the current state of SS
+	my Callable @optimizers;
+	for @optimizer_args.kv -> $i, %args {
+		my $option = %args<option>:delete;
+		my &val_to_opts = -> $value, *@inject { ("$option=$value", |@inject).join(":") };
+		my &test = -> *@inject {
+			-> *@values {
+				if @optimizers[$i-1] {
+					@values.map({ $^value => @optimizers[$i-1]("$option=$^value", |@inject)().value });
+				} else {
+					my @cfgopts = @values.map({ &val_to_opts($^val, |@inject) });
+					my @scores = run_tests(|@cfgopts);
+					(@cfgopts Z=> @scores).map({ stats(.key, .value, :erronly) });
+					@values Z=> @scores
+				}
+			}
 		};
-		my &test = -> *@values {
-			my @cfgopts = @values.map(&val_to_opts);
-			my @scores = run_tests(|@cfgopts);
-			(@cfgopts Z=> @scores).map({ stats(.key, .value, :erronly) });
-			@values Z=> @scores
+		@optimizers.push: -> *@inject {
+			-> {
+				my $optimal = optimize(&test(|@inject), |%args);
+				if $i == 0 {
+					stats(&val_to_opts($optimal.key, |@inject), $optimal.value);
+					note("");
+				}
+				$optimal
+			}
 		};
-		my $optimal = optimize(&test, |%optimizer_args);
-		stats(&val_to_opts($optimal.key), $optimal.value);
+	}
+
+	if @optimizer_args {
+		@optimizers[*-1]($cfgopts)();
 	} else {
 		stats($cfgopts, run_tests($cfgopts)[0]);
 	}
@@ -327,7 +346,7 @@ sub MAIN(
 ) {
 	%gbl<shader verbose vk plane resolution pix-fmt> = $shader, ($verbose || $v), $vk-device, $plane, $resolution, $pix-fmt;
 	%gbl<outopts> = <<-c\:v ffv1 -colorspace "$colorspace" -pix_fmt "$pix-fmt">>;
-	%gbl<max> = List($max.split(':'));
+	%gbl<max> = $max;
 
 	die 'no test media specified' if not @test-media;
 
