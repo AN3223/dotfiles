@@ -218,6 +218,7 @@ sub optimize(
 			# values
 			#
 			my $optval = @history_b2w[0].key;
+			# XXX handle Nil bounds?
 			my $lower_bound = @history_b2w.grep({ .key < $optval })[0].key;
 			my $upper_bound = @history_b2w.grep({ .key > $optval })[0].key;
 			my @values = @history.map(*.key);
@@ -243,7 +244,6 @@ sub optimize(
 }
 
 # runs ffmpeg for testing, optionally maximizes a parameter
-# XXX optionally set the %args<start> to the option's previous optimal value (or maybe the mean/median)
 # XXX batch this across permutations
 sub test(Str $cfgopts = "") {
 	my Hash @optimizer_args;
@@ -258,6 +258,8 @@ sub test(Str $cfgopts = "") {
 	my Callable @optimizers;
 	for @optimizer_args.kv -> $i, %args {
 		my $option = %args<option>:delete;
+		my $stateful = Bool($option ~~ s/^\^//);
+
 		my &val_to_opts = -> $value, *@inject { ("$option=$value", |@inject).join(":") };
 		my &f = -> *@inject {
 			-> *@values {
@@ -278,6 +280,7 @@ sub test(Str $cfgopts = "") {
 					stats(&val_to_opts($optimal.key, |@inject), $optimal.value);
 					note("");
 				}
+				%args<start> = $optimal.key if $stateful;
 				$optimal
 			}
 		};
@@ -348,7 +351,7 @@ sub MAIN(
 	Str :$corruption = "NOISE=10:10", #= Corruption type, can be NOISE, JPEG, or SCALE
 	Str :$vk-device = "vulkan", #= Device name passed to ffmpeg's -init_hw_device option
 	Str :$stats-dir where *.IO.d = "stats", #= Directory where stats will be stored
-	Str :$max = "", #= Maximize a parameter, syntax goes PARAM:ESTIMATE:STEP_FACTOR:EPSILON:ITERATION_LIMIT
+	Str :$max = "", #= Optimizer settings: OPTION:START:STEP:EPSILON:ITER (all optional, multiple can be chained with commas)
 	Str :$pix-fmt = "yuv444p", #= Pixel format used for everything
 	Str :$colorspace = "bt709", #= Colorspace used for everything
 	Str :$resolution where /^\d+ ':' \d+$/ = "1080:1080", #= Resolution used for everything
