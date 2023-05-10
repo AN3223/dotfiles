@@ -167,6 +167,7 @@ sub optimize(
 	my @history; # $value => $score in chronological order
 	my @history_b2w; # $value => $score best to worst order
 	my $course_change = False;
+	my $sandtrap = 0;
 
 	loop (my $i = 2; $i < $iter; $i++) {
 	my ($prev_score, $score);
@@ -183,8 +184,8 @@ sub optimize(
 
 	# XXX take callables for modifying $step
 	# XXX guard against a NaN or Inf $value
-	# XXX add a sandtrap limit
 	if $diff_too_small && !$course_change {
+		last if $sandtrap++ >= floor($iter/3);
 		$step = 1/$step if not &cmp($score, $prev_score);
 		$step = $step**$step;
 		$value *= $step**2;
@@ -199,7 +200,7 @@ sub optimize(
 	} elsif &cmp($score, $prev_score) && !$diff_too_small { # keep going
 		$value *= $step *= $step;
 	} else {
-		if $i <= 2 { # handle overestimates
+		if $i == 2 { # handle overestimates
 			note("optimizer: changing course");
 			$course_change = True;
 			$step = 1/$step;
@@ -217,19 +218,21 @@ sub optimize(
 			# halfway between the best known value and the best known upper/lower 
 			# values
 			#
+			my @values = @history.map(*.key);
 			my $optval = @history_b2w[0].key;
-			# XXX handle Nil bounds?
 			my $lower_bound = @history_b2w.grep({ .key < $optval })[0].key;
 			my $upper_bound = @history_b2w.grep({ .key > $optval })[0].key;
-			my @values = @history.map(*.key);
+
+			# might happen if $diff_too_small && $course_change
+			last if !$lower_bound.defined or !$upper_bound.defined;
+
 			my ($lower, $upper, $j);
 			$j = 1; repeat {
 				$lower = $lower_bound + ($optval - $lower_bound) / (2**$j++);
-			} until not $lower ∈ @values or $lower < $epsilon;
+			} until not $lower ∈ @values;
 			$j = 1; repeat {
 				$upper = $optval + ($upper_bound - $optval) / (2**$j++);
-			} until not $upper ∈ @values or $upper > 1/$epsilon;
-			last if $lower < $epsilon || $upper > 1/$epsilon;
+			} until not $upper ∈ @values;
 
 			@history.push(|&f($lower, $upper));
 			@history_b2w = @history.sort({ not &cmp($^x.value, $^y.value) });
