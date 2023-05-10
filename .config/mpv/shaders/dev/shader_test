@@ -3,7 +3,6 @@
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
-# XXX sometimes ffmpeg hangs for a bit and then spits out a very high inaccurate SSIM or nothing (seems to only happen after PC has been running for a long time)
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
@@ -129,13 +128,23 @@ sub stats($cfgopts, $ssim, :$erronly = False) {
 	return;
 }
 
+my Int $test_len = 0;
 sub run_tests(*@cfgopts --> List) {
 	my @shaders = @cfgopts.map(&run_cfg);
 
 	my @outs;
 	for %tmp<corrupt><> -> $corrupt {
-		for shader_ssim($corrupt, @shaders).pairs {
-			@outs[.key] = join("\n", (@outs[.key] || ""), .value);
+		# rerun batch until lengths match to work around intermittent libplacebo(?) failure
+		my (@ssims, @linec);
+		repeat {
+			@ssims = shader_ssim($corrupt, @shaders);
+			@linec = List(@ssims.map({ .split("\n").elems }));
+			$test_len = @linec[0] if not $test_len and @linec[0] == all(@linec);
+		} until $test_len == all(@linec);
+
+		# join ssim outputs for each file
+		for @ssims.kv -> $i, $ssim {
+			@outs[$i] = join("\n", (@outs[$i] if @outs[$i]), $ssim);
 		}
 	}
 
@@ -235,6 +244,7 @@ sub optimize(
 
 # runs ffmpeg for testing, optionally maximizes a parameter
 # XXX optionally set the %args<start> to the option's previous optimal value (or maybe the mean/median)
+# XXX batch this across permutations
 sub test(Str $cfgopts = "") {
 	my Hash @optimizer_args;
 	for %gbl<max>.split(",") -> $args { 
