@@ -170,6 +170,11 @@ sub optimize(
 	my $sandtrap = 0;
 
 	loop (my $i = 2; $i < $iter; $i++) {
+	if $value < $epsilon || $value > 1/$epsilon || $value === NaN {
+		note("optimizer: pointless endeavor");
+		last;
+	}
+
 	my ($prev_score, $score);
 	if ($i == 2) { # batch the first two tests
 		@history.push(|&f($start, $value *= $step *= $step));
@@ -182,21 +187,12 @@ sub optimize(
 	my Bool $diff_too_small = abs($score - $prev_score) < $epsilon;
 	@history_b2w = @history.sort({ not &cmp($^x.value, $^y.value) });
 
-	# XXX take callables for modifying $step
-	# XXX guard against a NaN or Inf $value
 	if $diff_too_small && !$course_change {
 		last if $sandtrap++ >= floor($iter/3);
 		$step = 1/$step if not &cmp($score, $prev_score);
 		$step = $step**$step;
 		$value *= $step**2;
-
-		# XXX take parameters for these lower/upper bounds
-		if $value < $epsilon || $value > 1/$epsilon {
-			note("optimizer: pointless endeavor");
-			last;
-		} else {
-			note("optimizer: sandtrap");
-		}
+		note("optimizer: sandtrap");
 	} elsif &cmp($score, $prev_score) && !$diff_too_small { # keep going
 		$value *= $step *= $step;
 	} else {
