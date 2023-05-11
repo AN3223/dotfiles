@@ -444,6 +444,13 @@ vec4 hook()
 #define D1W 0
 #endif
 
+// Skip patch comparison
+#ifdef LUMA_raw
+#define SKIP_PATCH 0
+#else
+#define SKIP_PATCH 0
+#endif
+
 // Shader code
 
 #define EPSILON 0.00000000001
@@ -900,8 +907,12 @@ vec4 hook()
 	}
 #endif
 	FOR_RESEARCH(r) { // main NLM logic
+#if SKIP_PATCH
+		val weight = val(1);
+#else
 		val pdiff_sq = (r.z == 0) ? val(patch_comparison_gather(r+me, vec3(0))) : patch_comparison(r+me, vec3(0));
 		val weight = range(pdiff_sq);
+#endif
 
 #if T && ME == 1 // temporal & motion estimation max weight
 		me_tmp = vec3(r.xy,0) * step(maxweight, weight.x) + me_tmp * (1 - step(maxweight, weight.x));
