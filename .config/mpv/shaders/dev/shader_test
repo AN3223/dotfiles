@@ -170,7 +170,7 @@ sub optimize(
 	my $sandtrap = 0;
 
 	loop (my $i = 2; $i < $iter; $i++) {
-	if $value < $epsilon || $value > 1/$epsilon || $value === NaN {
+	if @history && ($value < $epsilon || $value > 1/$epsilon || $value === NaN) {
 		note("optimizer: pointless endeavor");
 		last;
 	}
