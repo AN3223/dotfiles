@@ -3,6 +3,7 @@
 # XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
+# XXX apparently "".split(char).elems == 1, make sure this doesn't break anything
 
 use MONKEY-SEE-NO-EVAL;
 use soft;
@@ -246,7 +247,7 @@ sub optimize(
 # XXX batch this across permutations
 sub test(Str $cfgopts = "") {
 	my Hash @optimizer_args;
-	for %gbl<max>.split(",") -> $args { 
+	for %gbl<max>.split(",", :skip-empty) -> $args { 
 		my %args;
 		%args<option start first_step epsilon iter> = $args.split(":");
 		%args.map({ %args{$^p.key}:delete without $^p.value });
