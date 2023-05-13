@@ -1,3 +1,4 @@
 # smallest audio stream
---format-sort res~480,fps~30,vcodec:vp9.2,+size
+--format-sort res~1080
 --no-check-certificate
+--no-mtime
