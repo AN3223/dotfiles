@@ -8,7 +8,7 @@ LQ_LUMA=S=1.25:R=3:WD=1:$(NO_ROTATE)
 LQ=WD=1:RF_LUMA=PRE1.25/
 
 HQ_DESC=Slow, but higher quality.
-HQ_LUMA=S=2.25:P=4:PS=6:$(NO_ROTATE):ASP=1:RF_LUMA=../nlmeans.glsl
+HQ_LUMA=S=2.25:P=4:PS=6:$(NO_ROTATE):RF_LUMA=../nlmeans.glsl
 HQ=
 
 HEAVY_DESC=Tuned for heavy noise.
@@ -26,7 +26,7 @@ TEMPORAL=T_FRAME_LIMIT=2:T_RES=1920x1080
 TEMPORAL_LUMA=T=2:WD=1:$(NO_ROTATE)
 
 TEMPORAL_SHARPEN_DENOISE_DESC=$(TEMPORAL_DESC) $(SHARPEN_DENOISE_DESC)
-TEMPORAL_SHARPEN_DENOISE_LUMA=ASP=1:$(TEMPORAL_LUMA)
+TEMPORAL_SHARPEN_DENOISE_LUMA=$(TEMPORAL_LUMA)
 TEMPORAL_SHARPEN_DENOISE=$(TEMPORAL):$(SHARPEN_DENOISE)
 
 SHARPEN_ONLY_DESC=Sharpen without denoising.
@@ -41,12 +41,10 @@ SHARPEN_DENOISE=AS=1
 LGC_DESC=Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
 LGC=CFG_HOOKS=CHROMA:RF=SHARE_LUMA:RF_LUMA=0:EP=0:D1W=1:S=11.66:WD=0:SW=0.75:RI=3:RFI=2
 
-all: ../nlmeans.glsl nlmeans_no_rf.glsl ../nlmeans_lgc.glsl ../nlmeans_2x.glsl ../nlmeans_heavy.glsl ../nlmeans_medium.glsl ../nlmeans_temporal.glsl ../nlmeans_hq.glsl ../nlmeans_hq_heavy.glsl ../nlmeans_hq_medium.glsl ../nlmeans_hqx.glsl ../nlmeans_lq.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../nlmeans_hq_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl
+all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_2x.glsl ../nlmeans_heavy.glsl ../nlmeans_medium.glsl ../nlmeans_temporal.glsl ../nlmeans_hq.glsl ../nlmeans_hq_heavy.glsl ../nlmeans_hq_medium.glsl ../nlmeans_hqx.glsl ../nlmeans_lq.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../nlmeans_hq_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl
 
 ../nlmeans.glsl: nlmeans_template
 	./shader_cfg $? > $@
-nlmeans_no_rf.glsl: nlmeans_template
-	./shader_cfg OPTS=RF=0:RF_LUMA=0 $? > $@
 ../nlmeans_lgc.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(LGC_DESC)" OPTS="$(LGC)" $? > $@
 ../nlmeans_2x.glsl: nlmeans_template
