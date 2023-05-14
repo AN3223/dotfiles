@@ -231,11 +231,9 @@ bindsym $mod+Escape mode "passthrough"
 # Multi-monitor
 #
 output "Acer Technologies Acer H226HQL LX2AA0024210" position 0 0
-output "Dell Inc. DELL P2310H N918R9BB0MRS" position 1920 0
-output "VIZIO, Inc E422VA 0x00000101" position 3840 0
+output "Dell Inc. DELL P2310H N918R9BB0MRS" position 2250 0
 workspace 1 output "Acer Technologies Acer H226HQL LX2AA0024210"
 workspace 2 output "Dell Inc. DELL P2310H N918R9BB0MRS"
-workspace 3 output "VIZIO, Inc E422VA 0x00000101"
 exec swaymsg focus output "Acer Technologies Acer H226HQL LX2AA0024210"
 
 include windows
