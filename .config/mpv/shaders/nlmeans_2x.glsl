@@ -381,18 +381,20 @@ return _INJ_MEANA_texOff(0) * HOOKED_texOff(0) + _INJ_MEANB_texOff(0);
 
 /* Extremes preserve
  *
- * Reduces denoising around very bright/dark areas.
+ * Reduce denoising in very bright/dark areas.
+ *
+ * Disabled by default now. If you want to reenable this, set EP=3/ in 
+ * Makefile.nlm and rebuild.
  *
  * The downscaling factor of the EP shader stage affects what is considered a 
- * bright/dark area. The default of 3 should be fine, it's not recommended to 
- * change this.
+ * bright/dark area.
  *
  * This is incompatible with RGB. If you have RGB hooks enabled then you will 
  * have to delete the EP shader stage or specify EP=0 through shader_cfg.
  *
  * EP: 1 to enable, 0 to disable
- * DP: EP strength on dark patches, 0 to fully denoise
- * BP: EP strength on bright patches, 0 to fully denoise
+ * DP: EP strength on dark areas, 0 to fully denoise
+ * BP: EP strength on bright areas, 0 to fully denoise
  */
 #ifdef LUMA_raw
 #define EP 0
