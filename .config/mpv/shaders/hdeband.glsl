@@ -43,7 +43,7 @@
 #define RADIUS 16
 
 // Bigger numbers search further, but less accurate
-#define SPARSITY 1
+#define SPARSITY 0.25
 
 // Bigger numbers search in more directions, slower (max 8)
 // Only 4 and 8 are symmetrical, everything else blurs directionally
@@ -63,10 +63,6 @@
 #define NOT(x) (1 - (x))
 #define AND *
 #define TERNARY(cond, x, y) ((x)*(cond) + (y)*NOT(cond))
-
-const float r_scale = 1/float(RADIUS*DIRECTIONS);
-const float ss_scale = 1/(SS*r_scale);
-const float si_scale = 1/(SI);
 
 // from NLM
 #if defined(LUMA_raw)
@@ -91,6 +87,10 @@ const float si_scale = 1/(SI);
 #define val_pack(v) (v)
 #define val_unpack(v) (v)
 #endif
+
+const float r_scale = 1/float(RADIUS*DIRECTIONS);
+const float ss_scale = 1/(SS*r_scale);
+const float si_scale = 1/(SI);
 
 vec4 hook()
 {
@@ -127,10 +127,9 @@ vec4 hook()
 		val run1_size = val(1); // includes POI
 		val run2_size = val(0);
 
-		// XXX have SPARSITY (optionally) increase more than linearly
 		// XXX textureGather
 		for (int i = 1; i <= RADIUS; i++) {
-			val px = val_swizz(HOOKED_texOff(direction * i * SPARSITY));
+			val px = val_swizz(HOOKED_texOff(direction * i + floor(i * SPARSITY)));
 			val is_run = val(step(abs(prev - px), val(TOLERANCE)));
 
 			runs += NOT(is_run);
