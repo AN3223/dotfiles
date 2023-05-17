@@ -127,7 +127,6 @@ vec4 hook()
 		val run1_size = val(1); // includes POI
 		val run2_size = val(0);
 
-		// XXX textureGather
 		for (int i = 1; i <= RADIUS; i++) {
 			val px = val_swizz(HOOKED_texOff(direction * i + floor(i * SPARSITY)));
 			val is_run = val(step(abs(prev - px), val(TOLERANCE)));
