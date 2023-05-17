@@ -28,6 +28,7 @@
 //!HOOK CHROMA
 //!HOOK RGB
 //!BIND HOOKED
+//!DESC hdeband
 
 // Higher numbers blur more when the neighbor run is further away
 #define SS 500.0
@@ -67,21 +68,43 @@ const float r_scale = 1/float(RADIUS*DIRECTIONS);
 const float ss_scale = 1/(SS*r_scale);
 const float si_scale = 1/(SI);
 
-// XXX implement dynamic types
+// from NLM
+#if defined(LUMA_raw)
+#define val float
+#define val_swizz(v) (v.x)
+#define unval(v) vec4(v.x, 0, 0, 1.0)
+#define val_packed val
+#define val_pack(v) (v)
+#define val_unpack(v) (v)
+#elif defined(CHROMA_raw)
+#define val vec2
+#define val_swizz(v) (v.xy)
+#define unval(v) vec4(v.x, v.y, 0, 1.0)
+#define val_packed uint
+#define val_pack(v) packUnorm2x16(v)
+#define val_unpack(v) unpackUnorm2x16(v)
+#else
+#define val vec3
+#define val_swizz(v) (v.xyz)
+#define unval(v) vec4(v.x, v.y, v.z, 1.0)
+#define val_packed val
+#define val_pack(v) (v)
+#define val_unpack(v) (v)
+#endif
 
 vec4 hook()
 {
-	vec4 poi = HOOKED_texOff(0);
+	val poi = val_swizz(HOOKED_texOff(0));
 
 #if STRATEGY == 0
-	vec4 total_weight = vec4(SW);
-	vec4 sum = poi * SW;
+	val total_weight = val(SW);
+	val sum = poi * SW;
 #elif STRATEGY == 1
-	vec4 extremum_px = poi;
-	vec4 extremum_weight = vec4(1);
+	val extremum_px = poi;
+	val extremum_weight = val(1);
 #elif STRATEGY == 2
-	vec4 extremum_px = poi;
-	vec4 extremum_weight = vec4(0);
+	val extremum_px = poi;
+	val extremum_weight = val(0);
 #endif
 
 	for (int dir = 0; dir < DIRECTIONS; dir++) {
@@ -97,29 +120,34 @@ vec4 hook()
 		case 7: direction = vec2(-1, 1); break;
 		}
 
-		// XXX support blurring more than two regions together at once
+		// XXX support blurring more than two runs together at once
 		// XXX (optionally?) replace POI with avg of its run
-		vec4 prev = poi;
-		vec4 region = vec4(1);
-		vec4 region1_size = vec4(1); // includes POI
-		vec4 region2_size = vec4(0);
+		val prev = poi;
+		val runs = val(1);
+		val run1_size = val(1); // includes POI
+		val run2_size = val(0);
 
 		// XXX have SPARSITY (optionally) increase more than linearly
 		// XXX textureGather
 		for (int i = 1; i <= RADIUS; i++) {
-			vec4 px = HOOKED_texOff(direction * i * SPARSITY);
-			vec4 is_run = vec4(step(abs(prev - px), vec4(TOLERANCE)));
+			val px = val_swizz(HOOKED_texOff(direction * i * SPARSITY));
+			val is_run = val(step(abs(prev - px), val(TOLERANCE)));
 
-			region += NOT(is_run);
-			vec4 in_bounds = vec4(step(region, vec4(2)));
+			runs += NOT(is_run);
+			val in_bounds = step(runs, val(2));
 			prev = TERNARY(NOT(is_run) AND in_bounds, px, prev);
 
-			region1_size += is_run AND vec4(equal(region, vec4(1)));
-			region2_size += is_run AND vec4(equal(region, vec4(2)));
+#ifdef LUMA_raw
+			run1_size += is_run AND val(runs == 1);
+			run2_size += is_run AND val(runs == 2);
+#else
+			run1_size += is_run AND val(equal(runs, val(1)));
+			run2_size += is_run AND val(equal(runs, val(2)));
+#endif
 		}
 
-		vec4 weight = vec4(1);
-		weight *= gaussian(min(region1_size, region2_size) * ss_scale);
+		val weight = val(1);
+		weight *= gaussian(min(run1_size, run2_size) * ss_scale);
 		weight *= gaussian(abs(poi - prev) * si_scale);
 
 // XXX if (weight == extremum_weight) px should be picked randomly to prevent directional blur
@@ -136,13 +164,13 @@ vec4 hook()
 	}
 
 #if STRATEGY == 0
-	vec4 result = sum / total_weight;
+	val result = sum / total_weight;
 #elif STRATEGY == 1 || STRATEGY == 2
-	vec4 result = (extremum_px * extremum_weight + poi) / (extremum_weight + 1);
+	val result = (extremum_px * extremum_weight + poi) / (extremum_weight + 1);
 #endif
 
 // XXX implement visualizations
 
-	return result;
+	return unval(result);
 }
 
