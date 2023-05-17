@@ -127,9 +127,26 @@ vec4 hook()
 		val run1_size = val(1); // includes POI
 		val run2_size = val(0);
 
-		// XXX textureGather
+#ifdef LUMA_gather
+		// XXX directional blur
+		/* z w
+		 * x y */
+		for (int i = 1; i <= RADIUS; i += 2) {
+		vec2 pixels;
+		if (dir == 0)
+			pixels = LUMA_gather(HOOKED_pos + i * direction * HOOKED_pt, 0).zw;
+		else if (dir == 1)
+			pixels = LUMA_gather(HOOKED_pos + (i+1) * direction * HOOKED_pt, 0).wz;
+		else if (dir == 2)
+			pixels = LUMA_gather(HOOKED_pos + (i+1) * direction * HOOKED_pt, 0).xz;
+		else if (dir == 2)
+			pixels = LUMA_gather(HOOKED_pos + i * direction * HOOKED_pt, 0).zx;
+		for (int j = 0; j < 2; j++) {
+			val px = pixels[j];
+#else
 		for (int i = 1; i <= RADIUS; i++) {
 			val px = val_swizz(HOOKED_texOff(direction * i + floor(i * SPARSITY)));
+#endif
 			val is_run = val(step(abs(prev - px), val(TOLERANCE)));
 
 			runs += NOT(is_run);
@@ -144,6 +161,9 @@ vec4 hook()
 			run2_size += is_run AND val(equal(runs, val(2)));
 #endif
 		}
+#ifdef LUMA_gather
+		}
+#endif
 
 		val weight = val(1);
 		weight *= gaussian(min(run1_size, run2_size) * ss_scale);
