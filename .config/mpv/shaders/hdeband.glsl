@@ -128,12 +128,17 @@ vec4 hook()
 		val run2_size = val(0);
 
 		for (int i = 1; i <= RADIUS; i++) {
-			val px = val_swizz(HOOKED_texOff(direction * i + floor(i * SPARSITY) * direction));
+			float sparsity = floor(i * SPARSITY);
+			float new_sparsity = sparsity - floor((i - 1) * SPARSITY);
+			val px = val_swizz(HOOKED_texOff(direction * i + sparsity * direction));
 			val is_run = val(step(abs(prev - px), val(TOLERANCE)));
 
 			runs += NOT(is_run);
 			val in_bounds = step(runs, val(2));
 			prev = TERNARY(NOT(is_run) AND in_bounds, px, prev);
+
+			// consider skipped pixels as runs if their neighbors are both runs
+			is_run += is_run AND new_sparsity;
 
 #ifdef LUMA_raw
 			run1_size += is_run AND val(runs == 1);
