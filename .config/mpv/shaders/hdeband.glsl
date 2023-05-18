@@ -43,7 +43,7 @@
 #define RADIUS 16
 
 // Bigger numbers search further, but less accurate
-#define SPARSITY 0.25
+#define SPARSITY 0.0
 
 // Bigger numbers search in more directions, slower (max 8)
 // Only 4 and 8 are symmetrical, everything else blurs directionally
