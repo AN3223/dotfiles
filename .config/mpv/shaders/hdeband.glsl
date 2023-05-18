@@ -50,7 +50,7 @@
 #define DIRECTIONS 4
 
 // A region is considered a run if it varies less than this
-#define TOLERANCE 0.001
+#define TOLERANCE 0.01
 
 // 0 for avg, 1 for min, 2 for max
 #define STRATEGY 0
@@ -121,17 +121,24 @@ vec4 hook()
 		}
 
 		// XXX support blurring more than two runs together at once
-		// XXX (optionally?) replace POI with avg of its run
 		val prev = poi;
+		val normalized_prev;
 		val runs = val(1);
 		val run1_size = val(1); // includes POI
 		val run2_size = val(0);
 
 		for (int i = 1; i <= RADIUS; i++) {
+#ifdef LUMA_raw
+			normalized_prev = prev / TERNARY(int(runs == 1), run1_size, max(1, run2_size));
+#else
+			normalized_prev = prev / TERNARY(val(equal(runs, val(1))), run1_size, max(val(1), run2_size));
+#endif
+
 			float sparsity = floor(i * SPARSITY);
 			float new_sparsity = sparsity - floor((i - 1) * SPARSITY);
 			val px = val_swizz(HOOKED_texOff(direction * i + sparsity * direction));
-			val is_run = val(step(abs(prev - px), val(TOLERANCE)));
+			val is_run = val(step(abs(normalized_prev - px), val(TOLERANCE)));
+			prev += px * is_run;
 
 			runs += NOT(is_run);
 			val in_bounds = step(runs, val(2));
@@ -151,17 +158,17 @@ vec4 hook()
 
 		val weight = val(1);
 		weight *= 1 - gaussian(run1_size * SS * r_scale);
-		weight *= gaussian(abs(poi - prev) * si_scale);
+		weight *= gaussian(abs(poi - normalized_prev) * si_scale);
 
 // XXX if (weight == extremum_weight) px should be picked randomly to prevent directional blur
 #if STRATEGY == 0
-		sum += prev * weight;
+		sum += normalized_prev * weight;
 		total_weight += weight;
 #elif STRATEGY == 1
-		extremum_px = TERNARY(step(weight, extremum_weight), prev, extremum_px);
+		extremum_px = TERNARY(step(weight, extremum_weight), normalized_prev, extremum_px);
 		extremum_weight = min(weight, extremum_weight);
 #elif STRATEGY == 2
-		extremum_px = TERNARY(step(weight, extremum_weight), extremum_px, prev);
+		extremum_px = TERNARY(step(weight, extremum_weight), extremum_px, normalized_prev);
 		extremum_weight = max(weight, extremum_weight);
 #endif
 	}
