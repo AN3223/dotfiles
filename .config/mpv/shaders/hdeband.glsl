@@ -127,7 +127,7 @@ vec4 hook()
 		val run2_size = val(0);
 
 		for (int i = 1; i <= RADIUS; i++) {
-			val px = val_swizz(HOOKED_texOff(direction * i + floor(i * SPARSITY)));
+			val px = val_swizz(HOOKED_texOff(direction * i + floor(i * SPARSITY) * direction));
 			val is_run = val(step(abs(prev - px), val(TOLERANCE)));
 
 			runs += NOT(is_run);
