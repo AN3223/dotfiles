@@ -121,7 +121,6 @@ vec4 hook()
 		}
 
 		// XXX support blurring more than two runs together at once
-		// XXX (optionally?) replace POI with avg of its run
 		val prev = poi;
 		val runs = val(1);
 		val run1_size = val(1); // includes POI
