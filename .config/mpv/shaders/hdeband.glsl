@@ -68,33 +68,34 @@
 #if defined(LUMA_raw)
 #define val float
 #define val_swizz(v) (v.x)
-#define unval(v) vec4(v.x, 0, 0, 1.0)
+#define unval(v) vec4(v.x, 0, 0, poi_.a)
 #define val_packed val
 #define val_pack(v) (v)
 #define val_unpack(v) (v)
 #elif defined(CHROMA_raw)
 #define val vec2
 #define val_swizz(v) (v.xy)
-#define unval(v) vec4(v.x, v.y, 0, 1.0)
+#define unval(v) vec4(v.x, v.y, 0, poi_.a)
 #define val_packed uint
 #define val_pack(v) packUnorm2x16(v)
 #define val_unpack(v) unpackUnorm2x16(v)
 #else
 #define val vec3
 #define val_swizz(v) (v.xyz)
-#define unval(v) vec4(v.x, v.y, v.z, 1.0)
+#define unval(v) vec4(v.x, v.y, v.z, poi_.a)
 #define val_packed val
 #define val_pack(v) (v)
 #define val_unpack(v) (v)
 #endif
+
+vec4 poi_ = HOOKED_texOff(0);
+val poi = val_swizz(poi_);
 
 const float r_scale = 1/float(RADIUS*DIRECTIONS);
 const float si_scale = 1/(SI);
 
 vec4 hook()
 {
-	val poi = val_swizz(HOOKED_texOff(0));
-
 #if STRATEGY == 0
 	val total_weight = val(SW);
 	val sum = poi * SW;
