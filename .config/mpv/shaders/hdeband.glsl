@@ -31,7 +31,7 @@
 //!DESC hdeband
 
 // Higher numbers blur more when the neighbor run is further away
-#define SS 500.0
+#define SS 100.0
 
 // Higher numbers blur more when intensity varies more between bands
 #define SI 0.005
@@ -89,7 +89,6 @@
 #endif
 
 const float r_scale = 1/float(RADIUS*DIRECTIONS);
-const float ss_scale = 1/(SS*r_scale);
 const float si_scale = 1/(SI);
 
 vec4 hook()
@@ -145,7 +144,7 @@ vec4 hook()
 		}
 
 		val weight = val(1);
-		weight *= gaussian(min(run1_size, run2_size) * ss_scale);
+		weight *= 1 - gaussian(run1_size * SS * r_scale);
 		weight *= gaussian(abs(poi - prev) * si_scale);
 
 // XXX if (weight == extremum_weight) px should be picked randomly to prevent directional blur
