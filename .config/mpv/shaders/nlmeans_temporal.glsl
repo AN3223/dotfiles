@@ -344,7 +344,7 @@ vec4 hook()
 
 // Denoising factor (level of blur, higher means more blur)
 #ifdef LUMA_raw
-#define S 2.0
+#define S 2.26
 #else
 #define S 5.0
 #endif
@@ -570,14 +570,14 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.25
+#define SS 0.39
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
 #else
 #define SST 1
-#define SS 0.25
+#define SS 0.39
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
