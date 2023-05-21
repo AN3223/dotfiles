@@ -31,7 +31,7 @@
 //!DESC hdeband
 
 // Higher numbers blur more when the neighbor run is further away
-#define SS 100.0
+#define SS 0.1
 
 // Higher numbers blur more when intensity varies more between bands
 #define SI 0.005
@@ -91,8 +91,9 @@
 vec4 poi_ = HOOKED_texOff(0);
 val poi = val_swizz(poi_);
 
-const float r_scale = 1/float(RADIUS*DIRECTIONS);
-const float si_scale = 1/(SI);
+const float r_scale = 1.0/float(RADIUS*DIRECTIONS);
+const float ss_scale = 1.0/float(SS) * r_scale;
+const float si_scale = 1.0/float(SI);
 
 vec4 hook()
 {
@@ -149,7 +150,7 @@ vec4 hook()
 		}
 
 		val weight = val(1);
-		weight *= 1 - gaussian(run1_size * SS * r_scale);
+		weight *= gaussian(1/run1_size * ss_scale);
 		weight *= gaussian(abs(poi - prev) * si_scale);
 
 // XXX if (weight == extremum_weight) px should be picked randomly to prevent directional blur
