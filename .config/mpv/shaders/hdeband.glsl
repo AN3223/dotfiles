@@ -31,9 +31,6 @@
 
 // User variables
 
-// 0.0 is no blur, 1.0 is full blur
-#define BLUR 1.0
-
 // Higher numbers blur more when intensity varies more between bands
 #define SI 0.005
 
@@ -145,10 +142,6 @@ vec4 hook()
 		}
 	}
 
-	val result = mix(poi, sum / total_weight, BLUR);
-
-// XXX implement visualizations
-
-	return unval(result);
+	return unval(sum / total_weight);
 }
 
