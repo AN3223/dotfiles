@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: nlmeans_lq.glsl: Faster, but lower quality.
+// Description: nlmeans.glsl: Slow, but higher quality.
 
 /* The recommended usage of this shader and its variant profiles is to add them 
  * to input.conf and then dispatch the appropriate shader via a keybind during 
@@ -87,31 +87,233 @@
  * 	- NG
  */
 
+// The following is shader code injected from guided.glsl
+/* vi: ft=c
+ *
+ * Copyright (c) 2022 an3223 <ethanr2048@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify it 
+ * under the terms of the GNU Lesser General Public License as published by 
+ * the Free Software Foundation, either version 2.1 of the License, or (at 
+ * your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY;  without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License 
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License 
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+// Description: guided.glsl: Guided by the downscaled image
+
+/* The radius can be adjusted with the MEANI stage's downscaling factor. 
+ * Higher numbers give a bigger radius.
+ *
+ * The E variable can be found in the A stage.
+ *
+ * The subsampling (fast guided filter) can be adjusted with the I stage's 
+ * downscaling factor. Higher numbers are faster.
+ *
+ * The guide's subsampling can be adjusted with the PREI stage's downscaling 
+ * factor. Higher numbers downscale more.
+ */
+
 //!HOOK LUMA
 //!HOOK CHROMA
 //!BIND HOOKED
 //!WIDTH HOOKED.w 1.25 /
 //!HEIGHT HOOKED.h 1.25 /
-//!DESC Non-local means (PRERF)
-//!SAVE PRERF_LUMA
+//!DESC Guided filter (PREI)
+//!SAVE _INJ_PREI
 
 vec4 hook()
 {
-	return HOOKED_texOff(0);
+	 return HOOKED_texOff(0); 
 }
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!BIND PRERF_LUMA
+//!BIND _INJ_PREI
 //!WIDTH HOOKED.w
 //!HEIGHT HOOKED.h
-//!DESC Non-local means (RF)
+//!DESC Guided filter (I)
+//!SAVE _INJ_I
+
+vec4 hook()
+{
+return _INJ_PREI_texOff(0);
+}
+
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!DESC Guided filter (P)
+//!BIND HOOKED
+//!WIDTH _INJ_I.w
+//!HEIGHT _INJ_I.h
+//!SAVE _INJ_P
+
+vec4 hook()
+{
+	 return HOOKED_texOff(0); 
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!DESC Guided filter (MEANI)
+//!BIND _INJ_I
+//!WIDTH _INJ_I.w 1.5 /
+//!HEIGHT _INJ_I.h 1.5 /
+//!SAVE _INJ_MEANI
+
+vec4 hook()
+{
+return _INJ_I_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!DESC Guided filter (MEANP)
+//!BIND _INJ_P
+//!WIDTH _INJ_MEANI.w
+//!HEIGHT _INJ_MEANI.h
+//!SAVE _INJ_MEANP
+
+vec4 hook()
+{
+return _INJ_P_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!DESC Guided filter (_INJ_I_SQ)
+//!BIND _INJ_I
+//!WIDTH _INJ_I.w
+//!HEIGHT _INJ_I.h
+//!SAVE _INJ_I_SQ
+
+vec4 hook()
+{
+return _INJ_I_texOff(0) * _INJ_I_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!DESC Guided filter (_INJ_IXP)
+//!BIND _INJ_I
+//!BIND _INJ_P
+//!WIDTH _INJ_I.w
+//!HEIGHT _INJ_I.h
+//!SAVE _INJ_IXP
+
+vec4 hook()
+{
+return _INJ_I_texOff(0) * _INJ_P_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!DESC Guided filter (CORRI)
+//!BIND _INJ_I_SQ
+//!WIDTH _INJ_MEANI.w
+//!HEIGHT _INJ_MEANI.h
+//!SAVE _INJ_CORRI
+
+vec4 hook()
+{
+return _INJ_I_SQ_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!DESC Guided filter (CORRP)
+//!BIND _INJ_IXP
+//!WIDTH _INJ_MEANI.w
+//!HEIGHT _INJ_MEANI.h
+//!SAVE _INJ_CORRP
+
+vec4 hook()
+{
+return _INJ_IXP_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!DESC Guided filter (A)
+//!BIND _INJ_MEANI
+//!BIND _INJ_MEANP
+//!BIND _INJ_CORRI
+//!BIND _INJ_CORRP
+//!WIDTH _INJ_I.w
+//!HEIGHT _INJ_I.h
+//!SAVE _INJ_A
+
+#define E 0.0013
+
+vec4 hook()
+{
+vec4 var = _INJ_CORRI_texOff(0) - _INJ_MEANI_texOff(0) * _INJ_MEANI_texOff(0);
+vec4 cov = _INJ_CORRP_texOff(0) - _INJ_MEANI_texOff(0) * _INJ_MEANP_texOff(0);
+	 return cov / (var + E); 
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!DESC Guided filter (B)
+//!BIND _INJ_A
+//!BIND _INJ_MEANI
+//!BIND _INJ_MEANP
+//!WIDTH _INJ_I.w
+//!HEIGHT _INJ_I.h
+//!SAVE _INJ_B
+
+vec4 hook()
+{
+return _INJ_MEANP_texOff(0) - _INJ_A_texOff(0) * _INJ_MEANI_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!DESC Guided filter (MEANA)
+//!BIND _INJ_A
+//!WIDTH _INJ_MEANI.w
+//!HEIGHT _INJ_MEANI.h
+//!SAVE _INJ_MEANA
+
+vec4 hook()
+{
+return _INJ_A_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!DESC Guided filter (MEANB)
+//!BIND _INJ_B
+//!WIDTH _INJ_MEANI.w
+//!HEIGHT _INJ_MEANI.h
+//!SAVE _INJ_MEANB
+
+vec4 hook()
+{
+return _INJ_B_texOff(0);
+}
+
+//!HOOK LUMA
+//!HOOK CHROMA
+//!DESC Guided filter
+//!BIND HOOKED
+//!BIND _INJ_MEANA
+//!BIND _INJ_MEANB
 //!SAVE RF_LUMA
 
 vec4 hook()
 {
-	return PRERF_LUMA_texOff(0);
+return _INJ_MEANA_texOff(0) * HOOKED_texOff(0) + _INJ_MEANB_texOff(0);
 }
+
+// End of source code injected from guided.glsl 
 
 //!HOOK LUMA
 //!HOOK CHROMA
@@ -131,7 +333,7 @@ vec4 hook()
 //!BIND HOOKED
 //!BIND RF_LUMA
 //!BIND RF
-//!DESC Non-local means (nlmeans_lq.glsl)
+//!DESC Non-local means (nlmeans.glsl)
 
 // User variables
 
@@ -140,7 +342,7 @@ vec4 hook()
 
 // Denoising factor (level of blur, higher means more blur)
 #ifdef LUMA_raw
-#define S 1.25
+#define S 2.25
 #else
 #define S 5.0
 #endif
@@ -195,11 +397,11 @@ vec4 hook()
  * WDP (only for WD=1): Increasing reduces the threshold for small sample sizes
  */
 #ifdef LUMA_raw
-#define WD 1
+#define WD 2
 #define WDT 0.5
 #define WDP 6.0
 #else
-#define WD 1
+#define WD 2
 #define WDT 0.75
 #define WDP 6.0
 #endif
@@ -246,8 +448,8 @@ vec4 hook()
  * generally better, but slower, blurrier, and gives diminishing returns.
  */
 #ifdef LUMA_raw
-#define P 3
-#define R 3
+#define P 4
+#define R 5
 #else
 #define P 3
 #define R 5
@@ -273,7 +475,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define RS 3
-#define PS 3
+#define PS 6
 #else
 #define RS 3
 #define PS 3

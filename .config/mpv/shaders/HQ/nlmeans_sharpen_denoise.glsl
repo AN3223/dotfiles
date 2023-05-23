@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: nlmeans_hq.glsl: Slow, but higher quality.
+// Description: nlmeans_sharpen_denoise.glsl: Slow, but higher quality. Sharpen and denoise.
 
 /* The recommended usage of this shader and its variant profiles is to add them 
  * to input.conf and then dispatch the appropriate shader via a keybind during 
@@ -333,7 +333,7 @@ vec4 hook()
 //!BIND HOOKED
 //!BIND RF_LUMA
 //!BIND RF
-//!DESC Non-local means (nlmeans_hq.glsl)
+//!DESC Non-local means (nlmeans_sharpen_denoise.glsl)
 
 // User variables
 
@@ -362,10 +362,10 @@ vec4 hook()
  * ASF: Higher numbers make a sharper image
  */
 #ifdef LUMA_raw
-#define AS 0
+#define AS 1
 #define ASF 0.5
 #else
-#define AS 0
+#define AS 1
 #define ASF 0.5
 #endif
 

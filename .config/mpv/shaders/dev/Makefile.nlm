@@ -4,18 +4,15 @@
 NO_ROTATE=RI=0:RFI=0
 
 LQ_DESC=Faster, but lower quality.
-LQ_LUMA=S=1.25:R=3:WD=1:$(NO_ROTATE)
-LQ=WD=1:RF_LUMA=PRE1.25/
+LQ_LUMA=PS=4:$(NO_ROTATE)
+LQ=WD=1:RF=0:RF_LUMA=0
 
 HQ_DESC=Slow, but higher quality.
-HQ_LUMA=S=2.25:P=4:PS=6:$(NO_ROTATE):RF_LUMA=../nlmeans.glsl
+HQ_LUMA=S=2.25:P=4:PS=6:RF_LUMA=../nlmeans.glsl:$(NO_ROTATE)
 HQ=
 
-HEAVY_DESC=Tuned for heavy noise.
-HEAVY=SW=EPSILON:EP=0
-
 MEDIUM_DESC=Tuned for medium noise.
-MEDIUM=SW=0.5:$(HEAVY)
+MEDIUM=SW=0.5
 
 HQX_DESC=Very slow, should offer the best quality.
 HQX_LUMA=P=5:$(HQ_LUMA)
@@ -36,12 +33,12 @@ SHARPEN_DENOISE_DESC=Sharpen and denoise.
 SHARPEN_DENOISE=AS=1
 
 2X_DESC=Experimental upscaler
-2X=CFG_HOOKS=LUMA:CFG_SIZE=2*:RF=0:S=12.8125:SS=0.5547703803256947:WDT=0.63888239592:SW=0.14876:SK=lanczos:SF=1:EP=0
+2X=CFG_HOOKS=LUMA:CFG_SIZE=2*:RF=0:S=12.8125:SS=0.5547703803256947:WDT=0.63888239592:SW=0.14876:SK=lanczos:SF=1
 
 LGC_DESC=Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
-LGC=CFG_HOOKS=CHROMA:RF=SHARE_LUMA:RF_LUMA=0:EP=0:D1W=1:S=11.66:WD=0:SW=0.75:RI=3:RFI=2
+LGC=CFG_HOOKS=CHROMA:RF=SHARE_LUMA:RF_LUMA=0:D1W=1:S=11.66:WD=0:SW=0.75:RI=3:RFI=2
 
-all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_2x.glsl ../nlmeans_heavy.glsl ../nlmeans_medium.glsl ../nlmeans_temporal.glsl ../nlmeans_hq.glsl ../nlmeans_hq_heavy.glsl ../nlmeans_hq_medium.glsl ../nlmeans_hqx.glsl ../nlmeans_lq.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../nlmeans_hq_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl
+all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_2x.glsl ../nlmeans_medium.glsl ../nlmeans_temporal.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../HQ/nlmeans.glsl ../HQ/nlmeans_medium.glsl ../HQ/nlmeans_sharpen_denoise.glsl ../HQX/nlmeans.glsl ../LQ/nlmeans.glsl
 
 ../nlmeans.glsl: nlmeans_template
 	./shader_cfg $? > $@
@@ -49,28 +46,28 @@ all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_2x.glsl ../nlmeans_heavy.gls
 	./shader_cfg DESC="$@: $(LGC_DESC)" OPTS="$(LGC)" $? > $@
 ../nlmeans_2x.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(2X_DESC)" OPTS="$(2X)" $? > $@
-../nlmeans_heavy.glsl: nlmeans_template
-	./shader_cfg DESC="$@: $(HEAVY_DESC)" OPTS="$(HEAVY)" $? > $@
 ../nlmeans_medium.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(MEDIUM_DESC)" OPTS="$(MEDIUM)" $? > $@
 ../nlmeans_temporal.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(TEMPORAL_DESC)" OPTS="$(TEMPORAL)" OPTS_LUMA="$(TEMPORAL_LUMA)" $? > $@
-../nlmeans_hq.glsl: nlmeans_template
-	./shader_cfg DESC="$@: $(HQ_DESC)" OPTS="$(HQ)" OPTS_LUMA="$(HQ_LUMA)" $? > $@
-../nlmeans_hq_heavy.glsl: nlmeans_template
-	./shader_cfg DESC="$@: $(HQ_DESC) $(HEAVY_DESC)" OPTS="$(HEAVY):$(HQ)" OPTS_LUMA="$(HEAVY):$(HQ_LUMA)" $? > $@
-../nlmeans_hq_medium.glsl: nlmeans_template
-	./shader_cfg DESC="$@: $(HQ_DESC) $(MEDIUM_DESC)" OPTS="$(MEDIUM):$(HQ)" OPTS_LUMA="$(MEDIUM):$(HQ_LUMA)" $? > $@
-../nlmeans_hqx.glsl: nlmeans_template
-	./shader_cfg DESC="$@: $(HQX_DESC)" OPTS="$(HQX)" OPTS_LUMA="$(HQX_LUMA)" $? > $@
-../nlmeans_lq.glsl: nlmeans_template
-	./shader_cfg DESC="$@: $(LQ_DESC)" OPTS="$(LQ)" OPTS_LUMA="$(LQ_LUMA)" $? > $@
 ../nlmeans_sharpen_denoise.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(SHARPEN_DENOISE_DESC)" OPTS="$(SHARPEN_DENOISE)" OPTS_LUMA="$(SHARPEN_DENOISE)" $? > $@
-../nlmeans_temporal_sharpen_denoise.glsl: nlmeans_template
-	./shader_cfg DESC="$@: $(TEMPORAL_SHARPEN_DENOISE_DESC)" OPTS="$(TEMPORAL_SHARPEN_DENOISE)" OPTS_LUMA="$(TEMPORAL_SHARPEN_DENOISE_LUMA)" $? > $@
-../nlmeans_hq_sharpen_denoise.glsl: nlmeans_template
-	./shader_cfg DESC="$@: $(HQ_DESC) $(SHARPEN_DENOISE_DESC)" OPTS="$(SHARPEN_DENOISE):$(HQ)" OPTS_LUMA="$(SHARPEN_DENOISE):$(HQ_LUMA)" $? > $@
 ../nlmeans_sharpen_only.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(SHARPEN_ONLY_DESC)" OPTS="$(SHARPEN_ONLY)" OPTS_LUMA="$(SHARPEN_ONLY)" $? > $@
+../nlmeans_temporal_sharpen_denoise.glsl: nlmeans_template
+	./shader_cfg DESC="$@: $(TEMPORAL_SHARPEN_DENOISE_DESC)" OPTS="$(TEMPORAL_SHARPEN_DENOISE)" OPTS_LUMA="$(TEMPORAL_SHARPEN_DENOISE_LUMA)" $? > $@
+
+../HQ/nlmeans.glsl: nlmeans_template
+	./shader_cfg DESC="$@: $(HQ_DESC)" OPTS="$(HQ)" OPTS_LUMA="$(HQ_LUMA)" $? > $@
+../HQ/nlmeans_medium.glsl: nlmeans_template
+	./shader_cfg DESC="$@: $(HQ_DESC) $(MEDIUM_DESC)" OPTS="$(MEDIUM):$(HQ)" OPTS_LUMA="$(MEDIUM):$(HQ_LUMA)" $? > $@
+../HQ/nlmeans_sharpen_denoise.glsl: nlmeans_template
+	./shader_cfg DESC="$@: $(HQ_DESC) $(SHARPEN_DENOISE_DESC)" OPTS="$(SHARPEN_DENOISE):$(HQ)" OPTS_LUMA="$(SHARPEN_DENOISE):$(HQ_LUMA)" $? > $@
+
+../HQX/nlmeans.glsl: nlmeans_template
+	./shader_cfg DESC="$@: $(HQX_DESC)" OPTS="$(HQX)" OPTS_LUMA="$(HQX_LUMA)" $? > $@
+
+../LQ/nlmeans.glsl: nlmeans_template
+	./shader_cfg DESC="$@: $(LQ_DESC)" OPTS="$(LQ)" OPTS_LUMA="$(LQ_LUMA)" $? > $@
+
 

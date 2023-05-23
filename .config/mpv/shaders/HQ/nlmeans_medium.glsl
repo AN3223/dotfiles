@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: nlmeans_heavy.glsl: Tuned for heavy noise.
+// Description: nlmeans_medium.glsl: Slow, but higher quality. Tuned for medium noise.
 
 /* The recommended usage of this shader and its variant profiles is to add them 
  * to input.conf and then dispatch the appropriate shader via a keybind during 
@@ -333,7 +333,7 @@ vec4 hook()
 //!BIND HOOKED
 //!BIND RF_LUMA
 //!BIND RF
-//!DESC Non-local means (nlmeans_heavy.glsl)
+//!DESC Non-local means (nlmeans_medium.glsl)
 
 // User variables
 
@@ -342,7 +342,7 @@ vec4 hook()
 
 // Denoising factor (level of blur, higher means more blur)
 #ifdef LUMA_raw
-#define S 2.26
+#define S 2.25
 #else
 #define S 5.0
 #endif
@@ -377,9 +377,9 @@ vec4 hook()
  * EPSILON should be used instead of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
-#define SW EPSILON
+#define SW 0.5
 #else
-#define SW EPSILON
+#define SW 0.5
 #endif
 
 /* Weight discard
@@ -448,7 +448,7 @@ vec4 hook()
  * generally better, but slower, blurrier, and gives diminishing returns.
  */
 #ifdef LUMA_raw
-#define P 3
+#define P 4
 #define R 5
 #else
 #define P 3
@@ -475,7 +475,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define RS 3
-#define PS 3
+#define PS 6
 #else
 #define RS 3
 #define PS 3
@@ -505,8 +505,8 @@ vec4 hook()
  * RFI (0 to 2): Reflectional invariance
  */
 #ifdef LUMA_raw
-#define RI 3
-#define RFI 2
+#define RI 0
+#define RFI 0
 #else
 #define RI 0
 #define RFI 0

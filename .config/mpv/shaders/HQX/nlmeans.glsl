@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: nlmeans_hq_medium.glsl: Slow, but higher quality. Tuned for medium noise.
+// Description: nlmeans.glsl: Very slow, should offer the best quality.
 
 /* The recommended usage of this shader and its variant profiles is to add them 
  * to input.conf and then dispatch the appropriate shader via a keybind during 
@@ -333,7 +333,7 @@ vec4 hook()
 //!BIND HOOKED
 //!BIND RF_LUMA
 //!BIND RF
-//!DESC Non-local means (nlmeans_hq_medium.glsl)
+//!DESC Non-local means (nlmeans.glsl)
 
 // User variables
 
@@ -377,7 +377,7 @@ vec4 hook()
  * EPSILON should be used instead of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
-#define SW 0.5
+#define SW 1.0
 #else
 #define SW 0.5
 #endif
@@ -448,10 +448,10 @@ vec4 hook()
  * generally better, but slower, blurrier, and gives diminishing returns.
  */
 #ifdef LUMA_raw
-#define P 4
+#define P 5
 #define R 5
 #else
-#define P 3
+#define P 5
 #define R 5
 #endif
 
