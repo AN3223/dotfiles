@@ -1,5 +1,31 @@
 #!/usr/bin/make -f
-# Usually used like: ./Makefile.nlm -B
+
+# guided filter
+
+SELF_DESC=Self-guided.
+# XXX non-self desc
+
+G_LGC_DESC=Luma-guided-chroma denoising.
+G_LGC=CFG_HOOKS=CHROMA:I=SHARE_LUMA:MEANI=2.0/:E=100.0
+
+FAST_DESC=Fast.
+FAST=I=2/:MEANI=1.5/
+FAST_S=IP=2/:MEANIP=1.5/:E=0.001
+
+all: ../guided.glsl ../guided_s.glsl ../guided_fast.glsl ../guided_s_fast.glsl ../guided_lgc.glsl
+
+../guided.glsl: guided_template
+	./shader_cfg $? > $@
+../guided_s.glsl: guided_s_template
+	./shader_cfg $? > $@
+../guided_s_fast.glsl: guided_s_template
+	./shader_cfg DESC="$@: $(SELF_DESC) $(FAST_DESC)" OPTS="$(FAST_S)" $? > $@
+../guided_fast.glsl: guided_template
+	./shader_cfg DESC="$@: $(FAST_DESC)" OPTS="$(FAST)" $? > $@
+../guided_lgc.glsl: guided_template
+	./shader_cfg DESC="$@: $(G_LGC_DESC)" OPTS="$(G_LGC)" $? > $@
+
+# nlmeans
 
 NO_ROTATE=RI=0:RFI=0
 
@@ -91,3 +117,4 @@ all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_medium.glsl ../nlmeans_tempo
 
 experimental/nlmeans_2x.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(2X_DESC)" OPTS="$(2X)" $? > $@
+
