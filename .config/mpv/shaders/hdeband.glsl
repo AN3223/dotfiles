@@ -142,6 +142,7 @@ vec4 hook()
 		}
 	}
 
-	return unval(sum / total_weight);
+	val result = sum / total_weight;
+	return unval(result);
 }
 
