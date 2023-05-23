@@ -23,7 +23,6 @@
  * blurring runs together.
  */
 
-//cfg_defaults CFG_HOOKS=LUMA,CHROMA,RGB
 
 //!HOOK LUMA
 //!HOOK CHROMA
@@ -40,14 +39,14 @@
 #define SW 0.25
 
 // Bigger numbers search further, but slower
-#define RADIUS 16
+#define RADIUS 8
 
 // Bigger numbers search further, but less accurate
-#define SPARSITY 0.0
+#define SPARSITY 0.5
 
 // Bigger numbers search in more directions, slower (max 8)
 // Only 4 and 8 are symmetrical, everything else blurs directionally
-#define DIRECTIONS 4
+#define DIRECTIONS 3
 
 // A region is considered a run if it varies less than this
 #define TOLERANCE 0.001

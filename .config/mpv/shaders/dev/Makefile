@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 
+all: ../guided.glsl ../guided_s.glsl ../guided_fast.glsl ../guided_s_fast.glsl ../guided_lgc.glsl ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_medium.glsl ../nlmeans_temporal.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../HQ/nlmeans.glsl ../HQ/nlmeans_medium.glsl ../HQ/nlmeans_sharpen_denoise.glsl ../HQX/nlmeans.glsl ../LQ/nlmeans.glsl ../LQ/nlmeans_lgc.glsl  ../LQ/nlmeans_medium.glsl  ../LQ/nlmeans_temporal.glsl  ../LQ/nlmeans_sharpen_denoise.glsl  ../LQ/nlmeans_sharpen_only.glsl  ../LQ/nlmeans_temporal_sharpen_denoise.glsl  ../HQ/nlmeans_lgc.glsl  ../HQ/nlmeans_temporal.glsl  ../HQ/nlmeans_sharpen_only.glsl  ../HQ/nlmeans_temporal_sharpen_denoise.glsl experimental/nlmeans_2x.glsl ../LQ/hdeband.glsl
+
 # guided filter
 
 SELF_DESC=Self-guided.
@@ -11,8 +13,6 @@ G_LGC=CFG_HOOKS=CHROMA:I=SHARE_LUMA:MEANI=2.0/:E=100.0
 FAST_DESC=Fast.
 FAST=I=2/:MEANI=1.5/
 FAST_S=IP=2/:MEANIP=1.5/:E=0.001
-
-all: ../guided.glsl ../guided_s.glsl ../guided_fast.glsl ../guided_s_fast.glsl ../guided_lgc.glsl
 
 ../guided.glsl: guided_template
 	./shader_cfg $? > $@
@@ -63,8 +63,6 @@ SHARPEN_DENOISE=AS=1
 
 LGC_DESC=Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
 LGC=CFG_HOOKS=CHROMA:RF=SHARE_LUMA:RF_LUMA=0:D1W=1:S=11.66:WD=0:SW=0.75:RI=3:RFI=2
-
-all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_medium.glsl ../nlmeans_temporal.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../HQ/nlmeans.glsl ../HQ/nlmeans_medium.glsl ../HQ/nlmeans_sharpen_denoise.glsl ../HQX/nlmeans.glsl ../LQ/nlmeans.glsl ../LQ/nlmeans_lgc.glsl  ../LQ/nlmeans_medium.glsl  ../LQ/nlmeans_temporal.glsl  ../LQ/nlmeans_sharpen_denoise.glsl  ../LQ/nlmeans_sharpen_only.glsl  ../LQ/nlmeans_temporal_sharpen_denoise.glsl  ../HQ/nlmeans_lgc.glsl  ../HQ/nlmeans_temporal.glsl  ../HQ/nlmeans_sharpen_only.glsl  ../HQ/nlmeans_temporal_sharpen_denoise.glsl experimental/nlmeans_2x.glsl 
 
 ../nlmeans.glsl: nlmeans_template
 	./shader_cfg $? > $@
@@ -117,4 +115,9 @@ all: ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_medium.glsl ../nlmeans_tempo
 
 experimental/nlmeans_2x.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(2X_DESC)" OPTS="$(2X)" $? > $@
+
+# hdeband
+
+../LQ/hdeband.glsl: ../hdeband.glsl
+	./shader_cfg OPTS="RADIUS=8:SPARSITY=0.5:DIRECTIONS=3" $? > $@
 

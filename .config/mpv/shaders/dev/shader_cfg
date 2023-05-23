@@ -126,6 +126,7 @@ BEGIN {
 }
 
 # record is part of a HOOK block
+# XXX handle lack of CFG_HOOKS (or entirely skip processing HOOK blocks if there's nothing to do?)
 $0 ~ "^//!" {
 	SHADER_CODE = 0
 	HOOK_LINES[++HOOK_LEN] = $0
