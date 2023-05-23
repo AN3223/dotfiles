@@ -19,9 +19,8 @@
 /* This is an implementation of a debanding algorithm where homogeneous regions 
  * are blurred with neighboring homogeneous regions.
  *
- * This is achieved by searching 1-dimensionally in multiple directions, 
- * identifying runs, and blurring them together based on the minimum run length 
- * and the difference in intensity between runs.
+ * This is achieved by searching 1-dimensionally in multiple directions and 
+ * blurring runs together.
  */
 
 //!HOOK LUMA
