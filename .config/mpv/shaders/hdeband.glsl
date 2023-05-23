@@ -134,7 +134,7 @@ vec4 hook()
 
 			weight *= gaussian(abs(poi - px) * si_scale);
 
-			weight *= 1 - EQ(poi, px) * SW;
+			weight *= 1 - step(abs(poi - px), val(TOLERANCE)) * SW;
 
 			sum += prev_px * weight * not_done;
 			total_weight += weight * not_done;
