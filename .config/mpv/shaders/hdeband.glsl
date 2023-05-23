@@ -37,6 +37,9 @@
 // Higher numbers blur more when intensity varies more between bands
 #define SI 0.005
 
+// Starting weight, lower values give less weight to the input image
+#define SW 0.75
+
 // Bigger numbers search further, but slower
 #define RADIUS 16
 
@@ -95,8 +98,8 @@ val poi = val_swizz(poi_);
 
 vec4 hook()
 {
-	val sum = poi;
-	val total_weight = val(1);
+	val sum = poi * SW;
+	val total_weight = val(SW);
 
 	for (int dir = 0; dir < DIRECTIONS; dir++) {
 		vec2 direction;
@@ -130,6 +133,8 @@ vec4 hook()
 			weight += weight * NOT(prev_weight);
 
 			weight *= gaussian(abs(poi - px) * si_scale);
+
+			weight *= 1 - EQ(poi, px) * SW;
 
 			sum += prev_px * weight * not_done;
 			total_weight += weight * not_done;
