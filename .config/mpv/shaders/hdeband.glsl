@@ -38,7 +38,7 @@
 #define SI 0.005
 
 // Starting weight, lower values give less weight to the input image
-#define SW 0.75
+#define SW 0.25
 
 // Bigger numbers search further, but slower
 #define RADIUS 16
@@ -134,7 +134,7 @@ vec4 hook()
 
 			weight *= gaussian(abs(poi - px) * si_scale);
 
-			weight *= 1 - step(abs(poi - px), val(TOLERANCE)) * SW;
+			weight *= 1 - step(abs(poi - px), val(TOLERANCE)) * (1 - SW);
 
 			sum += prev_px * weight * not_done;
 			total_weight += weight * not_done;
