@@ -17,10 +17,11 @@
  */
 
 /* This is an implementation of a debanding algorithm where homogeneous regions 
- * are blurred with neighboring homogeneous regions.
+ * are blurred with neighboring homogeneous regions by searching 
+ * 1-dimensionally in multiple directions and blurring runs together.
  *
- * This is achieved by searching 1-dimensionally in multiple directions and 
- * blurring runs together.
+ * This should run prior to any other shaders and mpv's built in debanding 
+ * should be disabled by setting deband=no in mpv.conf
  */
 
 //cfg_defaults CFG_HOOKS=LUMA,CHROMA,RGB
