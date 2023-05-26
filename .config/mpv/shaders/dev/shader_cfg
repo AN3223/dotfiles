@@ -399,17 +399,35 @@ function int_or_opt(x,    opt) {
 #
 # "template_str" is a string optionally containing ${variable}
 #
-function range(s, ws,    param, param_len, param_words, param_opt, template_str, i, vars, var_states, var, kv, result, done, line, startnext_stop, start_next) {
+function range(s, ws,    param, param_len, param_words, param_opt, template_str, i, vars, vars_len, var_states, var, kv, result, done, line, startnext_stop, start_next) {
 	param_len = split(s, param, ";")
 
-	# split template from assigments while preserving the template's semicolons
-	# (technically allows for odd syntax, but shouldn't occur in regular use)
-	template_str = ""
-	for (i in param) {
+	# parse params
+	for (i = 1; i <= param_len; i++) {
 		param[i] = trim(param[i])
-		if (param[i] ~ /^[_[:alpha:]][_[:alnum:]]*=[_.[:alnum:]]+$/) {
+		if (param[i] ~ /^[_[:alpha:]][_[:alnum:]]*=[_.[:alnum:]]+$/) { # parse variable assignments
+			split(param[i], kv, "=")
+			vars[kv[1]] = kv[2]
+			vars_len++;
+
+			if (kv[2] !~ /\.\.\./) {         # non-range
+				var_states[kv[1]] = int_or_opt(kv[2])
+			} else {                         # range
+				split(kv[2], startnext_stop, /\.\.\./)
+				if (startnext_stop[1] ~ /,/) { # start,next...stop
+					split(startnext_stop[1], start_next, ",")
+					var_states[kv[1] "start"] = int_or_opt(start_next[1])
+					var_states[kv[1] "stop"] = int_or_opt(startnext_stop[2])
+					var_states[kv[1] "step"] = int_or_opt(start_next[2]) - var_states[kv[1] "start"]
+				} else {                       # start...stop
+					var_states[kv[1] "start"] = int_or_opt(startnext_stop[1])
+					var_states[kv[1] "stop"] = int_or_opt(startnext_stop[2])
+					var_states[kv[1] "step"] = (var_states[kv[1] "start"] < var_states[kv[1] "stop"]) ? 1 : -1
+				}
+				var_states[kv[1]] = var_states[kv[1] "start"]
+			}
 			continue
-		} else if (param[i] ~ /^if [_[:alpha:]][_[:alnum:]]*$/) {
+		} else if (param[i] ~ /^if [_[:alpha:]][_[:alnum:]]*$/) { # evaluate if statements
 			split(param[i], param_words)
 			param_opt = get_opt(param_words[2])+0
 			if (!param_opt || param_opt == "CFG_NULL")
@@ -418,45 +436,17 @@ function range(s, ws,    param, param_len, param_words, param_opt, template_str,
 				continue
 		}
 
-		# any other forms are considered fragments of the template_str
+		# unrecognized forms are considered (fragments of) the template_str
 		if (param[i])
 			template_str = sprintf("%s\n%s", template_str, param[i])
 		else
 			template_str = template_str ";"
-		delete param[i]
-		param_len--
 	}
 	sub("^\n", "", template_str)
 
-	if (!param_len) # nothing to do
+	if (!vars_len) # nothing to do
 		return template_str
 	
-	split("", vars)
-	split("", var_states)
-	for (i in param) { # parse ranges
-		split(param[i], kv, "=")
-		vars[kv[1]] = kv[2]
-
-		if (kv[2] !~ /\.\.\./) {
-			var_states[kv[1]] = int_or_opt(kv[2])
-		} else {
-			split(kv[2], startnext_stop, /\.\.\./)
-			if (startnext_stop[1] ~ /,/) { # start,next...stop
-				split(startnext_stop[1], start_next, ",")
-				var_states[kv[1] "start"] = int_or_opt(start_next[1])
-				var_states[kv[1] "stop"] = int_or_opt(startnext_stop[2])
-				var_states[kv[1] "step"] = int_or_opt(start_next[2]) - var_states[kv[1] "start"]
-			} else {                       # start...stop
-				var_states[kv[1] "start"] = int_or_opt(startnext_stop[1])
-				var_states[kv[1] "stop"] = int_or_opt(startnext_stop[2])
-				var_states[kv[1] "step"] = (var_states[kv[1] "start"] < var_states[kv[1] "stop"]) ? 1 : -1
-			}
-			var_states[kv[1]] = var_states[kv[1] "start"]
-		}
-	}
-
-	result = ""
-	done = 0
 	while (!done) {
 		done = 1 # done unless stated otherwise
 		line = template_str
