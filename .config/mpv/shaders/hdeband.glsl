@@ -17,8 +17,7 @@
  */
 
 /* This is an implementation of a debanding algorithm where homogeneous regions 
- * are blurred with neighboring homogeneous regions by searching 
- * 1-dimensionally in multiple directions and blurring runs together.
+ * are blurred with neighboring homogeneous regions.
  *
  * This should run prior to any other shaders and mpv's built in debanding 
  * should be disabled by setting deband=no in mpv.conf
@@ -95,6 +94,31 @@ const float si_scale = 1.0/float(SI);
 
 vec4 poi_ = HOOKED_texOff(0);
 val poi = val_swizz(poi_);
+
+/* Description of the algorithm:
+ *
+ * 1. For each pixel in the image (pixel-of-interest, POI):
+ *   2. Accumulate its value with a weight of 1
+ *   3. For each direction (adjacent/diagonal):
+ *     4. For each pixel in that direction, originating from the POI and ending at an arbitrary limit, excluding the POI itself:
+ *       5. If this pixel has the same value as the previous pixel (including POI) or the next pixel:
+ *         5a. Accumulate its value with a weight of 1
+ *       5b. Otherwise, stop accumulating in this direction
+ *   6. Return the sum of the accumulated weighted pixel values divided by the sum of their weights
+ *
+ * Things this implementation does to make this algorithm more useful:
+ *   - For steps 2 and 5, better weights should be used:
+ *     - For step 5, multiply the weight by the gaussian of the absolute difference between the pixel's value and the POI value
+ *       - This decreases blur for large shifts in intensity
+ *       - The difference is scaled with a user parameter (SI)
+ *     - For steps 2 and 5, multiply the weight of any pixels with values identical to the POI value by a user-specified value (SW)
+ *       - Decreasing SW increases the amount of blur
+ *   - For step 4, a parameter (SPARSITY) is taken which directs pixels to be skipped at a specified interval
+ *     - If the pixel after a skipped pixel has the same value as the previous unskipped pixel then its weight is doubled
+ *     - This works well in big flat banded areas but may result in artifacts elsewhere
+ *   - For step 5 and SW, pixels are considered to have the same value if their absolute difference is within a threshold
+ *   - The number of directions in step 3 are user configurable
+ */
 
 vec4 hook()
 {
