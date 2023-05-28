@@ -23,12 +23,19 @@ local function recursive_ls(dir)
 	end
 	return result
 end
-shader_dir = mp.command_native({"expand-path", o.shader_dir})
-shaders = recursive_ls(shader_dir)
-for i,shader in pairs(shaders) do -- basename
-	shaders[i] = shaders[i]:sub(shader_dir:len() + 2)
+
+shaders = nil
+local function init_shaders()
+	if shaders ~= nil then
+		return
+	end
+	local shader_dir = mp.command_native({"expand-path", o.shader_dir})
+	shaders = recursive_ls(shader_dir)
+	for i,shader in pairs(shaders) do -- basename
+		shaders[i] = shaders[i]:sub(shader_dir:len() + 2)
+	end
+	table.sort(shaders)
 end
-table.sort(shaders)
 
 grepped_arr = {}
 grepped_pattern = ""
@@ -124,6 +131,8 @@ local function pickshader()
 	if not mode_on then
 		mode_on = true
 		overlay = mp.create_osd_overlay("ass-events")
+		init_shaders()
+
 		mp.add_forced_key_binding("ESC", "mode_off1", mode_off)
 		mp.add_forced_key_binding("Ctrl+[", "mode_off2", mode_off)
 		mp.add_forced_key_binding("Ctrl+c", "mode_off3", mode_off)
