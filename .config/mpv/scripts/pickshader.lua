@@ -49,6 +49,7 @@ local function draw()
 		cursor = 1
 		for i,shader in pairs(shaders) do
 			-- XXX maybe split by space and interpret each part as a separate pattern
+			-- XXX handle pattern error
 			if string.match(shader:lower(), current_pattern:lower()) then
 				grepped_arr[#grepped_arr + 1] = shader
 			end
@@ -65,11 +66,16 @@ local function draw()
 	end
 	results_str = results_str:sub(2) -- trim leading newline
 
+	-- lazy underlining, lua doesn't support case insensitive matching
+	if current_pattern ~= "" then
+		results_str = results_str:gsub(current_pattern, "{\\u1}%0{\\u0}")
+		results_str = results_str:gsub(current_pattern:upper(), "{\\u1}%0{\\u0}")
+	end
+
 	if results_str == "" then
 		results_str = "> " .. current_pattern
 	end
 
-	-- XXX highlight the "current_pattern" part
 	overlay.data = results_str
 	overlay:update()
 end
@@ -110,10 +116,12 @@ local function clear()
 end
 
 local function pick(op)
+	local shader = grepped_arr[cursor]
 	if op == nil then op = "add" end
-	mp.commandv("no-osd", "change-list", "glsl-shaders",
-	            op, o.shader_dir.."/"..grepped_arr[cursor])
+
+	mp.commandv("change-list", "glsl-shaders", op, o.shader_dir.."/"..shader)
 	mode_off()
+	mp.commandv("show-text", op.." "..shader)
 end
 
 current_pattern = ""
