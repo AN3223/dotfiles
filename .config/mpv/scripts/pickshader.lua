@@ -43,15 +43,19 @@ cursor = 1
 local function draw()
 	if current_pattern == "" then
 		grepped_arr = shaders
+		grepped_pattern = current_pattern
+		cursor = 1
 	elseif grepped_pattern ~= current_pattern then
 		grepped_arr = {}
 		grepped_pattern = current_pattern
 		cursor = 1
 		for i,shader in pairs(shaders) do
 			-- XXX maybe split by space and interpret each part as a separate pattern
-			-- XXX handle pattern error
-			if string.match(shader:lower(), current_pattern:lower()) then
+			local e, match = pcall(string.match, shader:lower(), current_pattern:lower())
+			if match and e then
 				grepped_arr[#grepped_arr + 1] = shader
+			elseif not e then
+				break
 			end
 		end
 	end
@@ -68,8 +72,10 @@ local function draw()
 
 	-- lazy underlining, lua doesn't support case insensitive matching
 	if current_pattern ~= "" then
-		results_str = results_str:gsub(current_pattern, "{\\u1}%0{\\u0}")
-		results_str = results_str:gsub(current_pattern:upper(), "{\\u1}%0{\\u0}")
+		local e, underlined = pcall(string.gsub, results_str, current_pattern, "{\\u1}%0{\\u0}")
+		if e then results_str = underlined end
+		local e, underlined = pcall(string.gsub, results_str, current_pattern:upper(), "{\\u1}%0{\\u0}")
+		if e then results_str = underlined end
 	end
 
 	if results_str == "" then
