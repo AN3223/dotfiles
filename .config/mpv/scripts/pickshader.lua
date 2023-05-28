@@ -1,8 +1,33 @@
--- XXX summarize & document keybinds & stuff
+-- This script provides an easy interface for setting/appending to 
+-- --glsl-shaders.
+--
+-- Ctrl+r is the default keybind, but if desired this can be changed in 
+-- input.conf, for example:
+--
+-- Ctrl+t script-binding pickshader
+--
+-- The interface is similar to ^R from Unix shells. Once it's open, simply type 
+-- a query to narrow down the results.
+--
+-- These keybinds can be used within the interface:
+--
+-- ESC or Ctrl+c will close the interface
+--
+-- ENTER will ADD the selected shader to --glsl-shaders
+--
+-- Ctrl+ENTER will SET --glsl-shaders to the selected shader
+--
+-- UP, DOWN, Ctrl+n, Ctrl+p will move the cursor up/down
+--
+-- This script assumes shaders are installed under ~~/shaders/ (~~ being the 
+-- directory where mpv.conf is). If they aren't located there, either relocate 
+-- them or make a symlink.
 
 local utils = require 'mp.utils'
 local options = require 'mp.options'
 
+-- If you really don't want to use ~~/shaders for some reason this can be 
+-- changed in ~~/script-opts/pickshader.conf
 local o = {
 	shader_dir = "~~/shaders"
 }
