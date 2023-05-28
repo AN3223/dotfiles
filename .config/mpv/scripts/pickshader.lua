@@ -69,7 +69,6 @@ local function draw()
 	if current_pattern == "" then
 		grepped_arr = shaders
 		grepped_pattern = current_pattern
-		cursor = 1
 	elseif grepped_pattern ~= current_pattern then
 		grepped_arr = {}
 		grepped_pattern = current_pattern
