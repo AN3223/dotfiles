@@ -34,7 +34,9 @@ grepped_arr = {}
 grepped_pattern = ""
 cursor = 1
 local function draw()
-	if grepped_pattern == "" or grepped_pattern ~= current_pattern then
+	if current_pattern == "" then
+		grepped_arr = shaders
+	elseif grepped_pattern ~= current_pattern then
 		grepped_arr = {}
 		grepped_pattern = current_pattern
 		cursor = 1
@@ -54,7 +56,7 @@ local function draw()
 			results_str = results_str .. "\n" .. shader
 		end
 	end
-	results_str = results_str:sub(2)
+	results_str = results_str:sub(2) -- trim leading newline
 
 	if results_str == "" then
 		results_str = "> " .. current_pattern
@@ -146,5 +148,6 @@ local function pickshader()
 	end
 end
 
-mp.add_key_binding("Ctrl+r", "pickshader", pickshader)
+mp.add_key_binding("Ctrl+r", "pickshader", pickshader,
+                   { repeatable = true })
 
