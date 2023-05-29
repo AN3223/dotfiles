@@ -1,12 +1,109 @@
+# Installation
+
+Assuming you are on Linux/BSD/MacOS/etc and your `mpv.conf` is located at `~/.config/mpv/`:
+
+```
+cd ~/.config/mpv/
+mkdir shaders
+git clone --depth 1 https://github.com/an3223/dotfiles an3223_dotfiles
+cd shaders
+ln -s ../an3223_dotfiles/.config/mpv/shaders/* ./
+```
+
+Refer to mpv's man page for more details.
+
+# Usage
+
+There are multiple ways to use shaders in mpv. Here are three:
+
+## input.conf
+
+As an example, this will bind toggling the default Non-local means shader to the F4 key:
+
+```
+F4 no-osd change-list glsl-shaders toggle "~~/shaders/nlmeans.glsl"; show-text "Non-local means"
+```
+
+Being able to easily clear the list of shaders can be useful too:
+
+```
+F12 no-osd change-list glsl-shaders clr ""; show-text "GLSL shaders cleared"
+```
+
+Refer to mpv's man page for more details.
+
+## pickshader.lua
+
+Assuming you just followed the installation guide above, you can install this script like so:
+
+```
+cd ~/.config/mpv/
+mkdir scripts
+cd scripts
+ln -s ../an3223_dotfiles/.config/mpv/scripts/pickshader.lua ./
+```
+
+It provides an interface similar to `^R` in Unix shells, if you're familiar with that. Pretty much just type `Ctrl+r` and then type a query for the shader you want, and then hit Enter.
+
+More detailed documentation can be found in the header of the script itself.
+
+## mpv.conf
+
+To load a shader (for example, `nlmeans.glsl`) every time mpv starts up:
+
+```
+glsl-shaders='~~/shaders/nlmeans.glsl'
+```
+
+Conditional auto profiles are useful for enabling shaders (or any feature) automatically when a condition is met. For example:
+
+```
+[LQ]
+profile-desc="Resolution less than 1/2 of 1280x720"
+profile-cond=(width*height)<(1280*720/2)
+profile-restore=copy-equal
+glsl-shaders='~~/shaders/hdeband.glsl:~~/shaders/nlmeans_sharpen_denoise.glsl'
+```
+
+Refer to mpv's man page for more details.
+
+# About
+
 The nlmeans shaders are denoisers and/or adaptive sharpeners. They have documentation embedded in them, with each nlmeans profile having a profile description near the top. 
 
-`hdeband` is a debanding algorithm that works by blurring homegeneous regions together. It should be ran prior to any other shaders and mpv's built-in debanding should be disabled by setting `deband=no` in `mpv.conf`.
+`hdeband` is a debanding algorithm that blurs homogeneous regions together. It should be ran prior to any other shaders and mpv's built-in debanding should be disabled by setting `deband=no` in `mpv.conf`.
 
 The guided shaders are also denoisers. They are faster but lower quality than NLM. The self-guided (\_s) variants are slightly faster but even lower quality.
 
+I unwisely placed these shaders in my dotfiles repository, not anticipating ever having more than just one shader here. They are here to stay though, since I do not want to break links/clones. I recommend cloning with `--depth 1` to save space/bandwidth/time. Issues and PRs are still welcome, big or small!
+
+# Troubleshooting
+
+## Not seeing much effect
+
+Denoisers/sharpeners have less effect as the resolution increases, since they only target the high frequency noise/detail. If the content has been upscaled beforehand (whether it was done by you or not), consider issuing a command to downscale in the mpv console (backtick ` key):
+
+```
+vf toggle scale=-2:720
+```
+
+...replacing 720 with whatever resolution seems appropriate. Rerun the command to undo its effect. It may take some trial-and-error to find the proper resolution.
+
+## Too slow
+
+Many shaders have LQ variants located in the LQ subdirectory here.
+
+Consider trying alternative `--vo` and `--gpu-api` settings to get better performance, e.g., `--vo=gpu-next --gpu-api=vulkan`
+
+## Totally broken
+
 If you are an Nvidia user experiencing problems with nlmeans try using a `gpu-api=vulkan`, or `gpu-api=opengl` with `gpu-context=win`. Macbook Pro 2019 has been reported to be non-functional with NLM as well, any info on workarounds/fixes would be greatly appreciated.
 
-I unwisely placed these shaders in my dotfiles repository, not anticipating ever having more than just one shader here. They are here to stay though, since I do not want to break links/clones. I recommend cloning with `--depth 1` to save space/bandwidth/time.
+Otherwise, please open an issue!
 
-Despite the fact that this is a dotfiles repository, please feel free to open issues and send pull requests, big or small!
+# Advanced usage
+
+There is a Makefile in the dev directory which builds all of the shaders (only requires a POSIX system & awk).
+
+There is also a testing script called `shader_test` in the dev directory, it requires `raku` and `ffmpeg` built with `--enable-libplacebo`.
 
