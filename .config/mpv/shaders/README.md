@@ -69,13 +69,19 @@ Refer to mpv's man page for more details.
 
 # About
 
-The nlmeans shaders are denoisers and/or adaptive sharpeners. They have documentation embedded in them, with each nlmeans profile having a profile description near the top. 
+## nlmeans
 
-`hdeband` is a debanding algorithm that blurs homogeneous regions together. It should be ran prior to any other shaders and mpv's built-in debanding should be disabled by setting `deband=no` in `mpv.conf`.
+These shaders are denoisers and/or adaptive sharpeners. They have documentation embedded in them, with each nlmeans profile having a profile description near the top. 
 
-The guided shaders are also denoisers. They are faster but lower quality than NLM. The self-guided (\_s) variants are slightly faster but even lower quality.
+## hdeband
 
-I unwisely placed these shaders in my dotfiles repository, not anticipating ever having more than just one shader here. They are here to stay though, since I do not want to break links/clones. I recommend cloning with `--depth 1` to save space/bandwidth/time. Issues and PRs are still welcome, big or small!
+This is a debanding algorithm that blurs homogeneous regions together. It should be higher quality than mpv's built-in debanding, but slower.
+
+It should be ran prior to any other shaders and mpv's built-in debanding should be disabled by setting `deband=no` in `mpv.conf`.
+
+## guided
+
+Also denoisers. They are faster but lower quality than NLM. The self-guided (\_s) variants are slightly faster but even lower quality.
 
 # Troubleshooting
 
