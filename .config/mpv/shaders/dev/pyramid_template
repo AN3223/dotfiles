@@ -1,0 +1,39 @@
+// vi: ft=c
+
+// Quantized pyramid of bilinear downscales minus the high frequencies
+
+// XXX support non-luma
+
+//cfg_name Pyramid
+//cfg_desc pyramid.glsl:
+//cfg_defaults CFG_HOOKS=LUMA
+
+//cfg_tex SAVE=BLUR1 DESC=BLUR1 SIZE=1.125/ COPY=HOOKED
+//cfg_tex SAVE=BLUR2 DESC=BLUR2 SIZE=8.0/ COPY=HOOKED
+//cfg_tex SAVE=BLUR3 DESC=BLUR3 SIZE=16.0/ COPY=HOOKED
+//cfg_tex SAVE=BLUR4 DESC=BLUR4 SIZE=32.0/ COPY=HOOKED
+
+//cfg_hook
+
+vec4 hook()
+{
+	float blur1 = BLUR1_texOff(0).x;
+	float blur2 = BLUR2_texOff(0).x;
+	float blur3 = BLUR3_texOff(0).x;
+	float blur4 = BLUR4_texOff(0).x;
+
+	const float scale = 1.0/127.0;
+	float result = packSnorm4x8(vec4(
+		blur1 - blur2,
+		blur2 - blur3,
+		blur3 - blur4,
+		blur4 * 2 - 1
+	)) * scale;
+
+	// reconstruct
+	//vec4 unpacked = unpackSnorm4x8(uint(result * 127));
+	//result = unpacked.x + unpacked.y + unpacked.z + (unpacked.w * 0.5 + 0.5);
+
+	return vec4(result, 0, 0, 1.0);
+}
+

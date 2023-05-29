@@ -1,6 +1,11 @@
 #!/usr/bin/make -f
 
-all: ../guided.glsl ../guided_s.glsl ../guided_fast.glsl ../guided_s_fast.glsl ../guided_lgc.glsl ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_medium.glsl ../nlmeans_temporal.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../HQ/nlmeans.glsl ../HQ/nlmeans_medium.glsl ../HQ/nlmeans_sharpen_denoise.glsl ../HQX/nlmeans.glsl ../LQ/nlmeans.glsl ../LQ/nlmeans_lgc.glsl  ../LQ/nlmeans_medium.glsl  ../LQ/nlmeans_temporal.glsl  ../LQ/nlmeans_sharpen_denoise.glsl  ../LQ/nlmeans_sharpen_only.glsl  ../LQ/nlmeans_temporal_sharpen_denoise.glsl  ../HQ/nlmeans_lgc.glsl  ../HQ/nlmeans_temporal.glsl  ../HQ/nlmeans_sharpen_only.glsl  ../HQ/nlmeans_temporal_sharpen_denoise.glsl experimental/nlmeans_2x.glsl ../LQ/hdeband.glsl
+all: ../guided.glsl ../guided_s.glsl ../guided_fast.glsl ../guided_s_fast.glsl ../guided_lgc.glsl ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_medium.glsl ../nlmeans_temporal.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../HQ/nlmeans.glsl ../HQ/nlmeans_medium.glsl ../HQ/nlmeans_sharpen_denoise.glsl ../HQX/nlmeans.glsl ../LQ/nlmeans.glsl ../LQ/nlmeans_lgc.glsl  ../LQ/nlmeans_medium.glsl  ../LQ/nlmeans_temporal.glsl  ../LQ/nlmeans_sharpen_denoise.glsl  ../LQ/nlmeans_sharpen_only.glsl  ../LQ/nlmeans_temporal_sharpen_denoise.glsl  ../HQ/nlmeans_lgc.glsl  ../HQ/nlmeans_temporal.glsl  ../HQ/nlmeans_sharpen_only.glsl  ../HQ/nlmeans_temporal_sharpen_denoise.glsl experimental/nlmeans_2x.glsl ../LQ/hdeband.glsl pyramid.glsl
+
+# pyramid
+
+pyramid.glsl: pyramid_template
+	./shader_cfg $? > $@
 
 # guided filter
 
