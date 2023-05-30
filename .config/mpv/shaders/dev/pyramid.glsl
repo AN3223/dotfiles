@@ -8,8 +8,8 @@
 
 //!HOOK LUMA
 //!BIND HOOKED
-//!WIDTH HOOKED.w 1.125 /
-//!HEIGHT HOOKED.h 1.125 /
+//!WIDTH HOOKED.w 1.0 /
+//!HEIGHT HOOKED.h 1.0 /
 //!DESC Pyramid (BLUR1)
 //!SAVE BLUR1
 
@@ -20,8 +20,8 @@ vec4 hook()
 
 //!HOOK LUMA
 //!BIND BLUR1
-//!WIDTH BLUR1.w 4.0 /
-//!HEIGHT BLUR1.h 4.0 /
+//!WIDTH BLUR1.w 1.0 /
+//!HEIGHT BLUR1.h 1.0 /
 //!DESC Pyramid (BLUR2)
 //!SAVE BLUR2
 
@@ -32,8 +32,8 @@ vec4 hook()
 
 //!HOOK LUMA
 //!BIND BLUR2
-//!WIDTH BLUR2.w 4.0 /
-//!HEIGHT BLUR2.h 4.0 /
+//!WIDTH BLUR2.w 1.0 /
+//!HEIGHT BLUR2.h 1.0 /
 //!DESC Pyramid (BLUR3)
 //!SAVE BLUR3
 
@@ -44,8 +44,8 @@ vec4 hook()
 
 //!HOOK LUMA
 //!BIND BLUR3
-//!WIDTH BLUR3.w 4.0 /
-//!HEIGHT BLUR3.h 4.0 /
+//!WIDTH BLUR3.w 1.0 /
+//!HEIGHT BLUR3.h 1.0 /
 //!DESC Pyramid (BLUR4)
 //!SAVE BLUR4
 

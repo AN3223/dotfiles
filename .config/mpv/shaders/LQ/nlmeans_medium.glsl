@@ -357,9 +357,9 @@
  * 6: EP
  */
 #ifdef LUMA_raw
-#define V 0
+#define V 4
 #else
-#define V 0
+#define V 4
 #endif
 
 // Blur factor (0.0 returns the input image, 1.0 returns the output image)
@@ -388,6 +388,13 @@
 #define D1W 0
 #else
 #define D1W 0
+#endif
+
+// Packed RF (for pyramid)
+#ifdef LUMA_raw
+#define PRF 1
+#else
+#define PRF 0
 #endif
 
 // Skip patch comparison
@@ -432,6 +439,21 @@
 #define val_packed val
 #define val_pack(v) (v)
 #define val_unpack(v) (v)
+#endif
+
+// XXX support chroma/RGB
+#if PRF == 1
+#define val_rf vec4
+#define unval_rf(v) (dot((v), vec4(1)) * 0.25)
+#define rf_val_unpack(v) ((unpackSnorm4x8(uint((v) * 127)) + 1) * 0.5)
+#elif PRF == 2
+#define val_rf vec4
+#define unval_rf(v) (dot((v), vec4(1)) * 0.25)
+#define rf_val_unpack(v) unpackUnorm4x8(uint((v) * 255))
+#else
+#define val_rf val
+#define unval_rf(v) (v)
+#define rf_val_unpack(v) (v)
 #endif
 
 #if PS == 6
@@ -654,16 +676,16 @@ val load(vec3 off)
 }
 val load2(vec3 off)
 {
-	return off.z == 0 ? val_swizz(load2_(off)) : load(off);
+	return off.z == 0 ? rf_val_unpack(val_swizz(load2_(off))) : load(off);
 }
 #else
 #define load(off) val_swizz(load_(off))
-#define load2(off) val_swizz(load2_(off))
+#define load2(off) rf_val_unpack(val_swizz(load2_(off)))
 #endif
 
 vec4 poi_ = load_(vec3(0));
 val poi = val_swizz(poi_); // pixel-of-interest
-val poi2 = load2(vec3(0)); // guide pixel-of-interest
+val_rf poi2 = load2(vec3(0)); // guide pixel-of-interest
 
 #if RI // rotation
 vec2 rot(vec2 p, float d)
@@ -729,10 +751,10 @@ val patch_comparison(vec3 r, vec3 r2)
 		val pdiff_sq = val(0);
 		FOR_PATCH(p) {
 			vec3 transformed_p = vec3(ref(rot(p.xy, ri), rfi), p.z);
-			val diff_sq = load2(p + r2) - load2((transformed_p + r) * SF);
+			val_rf diff_sq = load2(p + r2) - load2((transformed_p + r) * SF);
 			diff_sq *= diff_sq;
 			diff_sq = 1 - (1 - diff_sq) * spatial_p(p.xy);
-			pdiff_sq += diff_sq;
+			pdiff_sq += unval_rf(diff_sq);
 		}
 		min_rot = min(min_rot, pdiff_sq);
 	}
@@ -740,7 +762,7 @@ val patch_comparison(vec3 r, vec3 r2)
 	return min_rot * p_scale;
 }
 
-#define NO_GATHER (PD == 0 && NG == 0) // never textureGather if any of these conditions are false
+#define NO_GATHER (PD == 0 && NG == 0 && PRF == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3)
 
 #if (defined(LUMA_gather) || D1W) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && REGULAR_ROTATIONS && NO_GATHER
@@ -944,6 +966,7 @@ vec4 hook()
 #if T && TRF
 	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(result));
 #elif T
+	// XXX re-pack PRF
 	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi2));
 #endif
 

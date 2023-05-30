@@ -29,45 +29,21 @@
  * content. For higher levels of noise there is the "medium" profile.
  */
 
-// The following is shader code injected from guided.glsl
-/* vi: ft=c
- *
- * Copyright (c) 2022 an3223 <ethanr2048@gmail.com>
- *
- * This program is free software: you can redistribute it and/or modify it 
- * under the terms of the GNU Lesser General Public License as published by 
- * the Free Software Foundation, either version 2.1 of the License, or (at 
- * your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
- * ANY WARRANTY;  without even the implied warranty of MERCHANTABILITY or 
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License 
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License 
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
- */
+// The following is shader code injected from pyramid.glsl
+// vi: ft=c
 
-// Description: guided.glsl: Guided by the downscaled image
+// Quantized pyramid of bilinear downscales minus the high frequencies
 
-/* The radius can be adjusted with the MEANI stage's downscaling factor. 
- * Higher numbers give a bigger radius.
- *
- * The E variable can be found in the A stage.
- *
- * The subsampling (fast guided filter) can be adjusted with the I stage's 
- * downscaling factor. Higher numbers are faster.
- *
- * The guide's subsampling can be adjusted with the PREI stage's downscaling 
- * factor. Higher numbers downscale more.
- */
+// XXX support non-luma
+
+// Description: pyramid.glsl:
 
 //!HOOK LUMA
 //!BIND HOOKED
-//!WIDTH HOOKED.w 1.25 /
-//!HEIGHT HOOKED.h 1.25 /
-//!DESC Guided filter (PREI)
-//!SAVE _INJ_PREI
+//!WIDTH HOOKED.w 1.0 /
+//!HEIGHT HOOKED.h 1.0 /
+//!DESC Pyramid (BLUR1)
+//!SAVE _INJ_BLUR1
 
 vec4 hook()
 {
@@ -75,173 +51,74 @@ vec4 hook()
 }
 
 //!HOOK LUMA
-//!BIND _INJ_PREI
-//!WIDTH HOOKED.w
-//!HEIGHT HOOKED.h
-//!DESC Guided filter (I)
-//!SAVE _INJ_I
+//!BIND _INJ_BLUR1
+//!WIDTH _INJ_BLUR1.w 1.0 /
+//!HEIGHT _INJ_BLUR1.h 1.0 /
+//!DESC Pyramid (BLUR2)
+//!SAVE _INJ_BLUR2
 
 vec4 hook()
 {
-return _INJ_PREI_texOff(0);
+return _INJ_BLUR1_texOff(0);
+}
+
+//!HOOK LUMA
+//!BIND _INJ_BLUR2
+//!WIDTH _INJ_BLUR2.w 1.0 /
+//!HEIGHT _INJ_BLUR2.h 1.0 /
+//!DESC Pyramid (BLUR3)
+//!SAVE _INJ_BLUR3
+
+vec4 hook()
+{
+return _INJ_BLUR2_texOff(0);
+}
+
+//!HOOK LUMA
+//!BIND _INJ_BLUR3
+//!WIDTH _INJ_BLUR3.w 1.0 /
+//!HEIGHT _INJ_BLUR3.h 1.0 /
+//!DESC Pyramid (BLUR4)
+//!SAVE _INJ_BLUR4
+
+vec4 hook()
+{
+return _INJ_BLUR3_texOff(0);
 }
 
 
 //!HOOK LUMA
-//!DESC Guided filter (P)
 //!BIND HOOKED
-//!WIDTH _INJ_I.w
-//!HEIGHT _INJ_I.h
-//!SAVE _INJ_P
-
-vec4 hook()
-{
-	 return HOOKED_texOff(0); 
-}
-
-//!HOOK LUMA
-//!DESC Guided filter (MEANI)
-//!BIND _INJ_I
-//!WIDTH _INJ_I.w 1.5 /
-//!HEIGHT _INJ_I.h 1.5 /
-//!SAVE _INJ_MEANI
-
-vec4 hook()
-{
-return _INJ_I_texOff(0);
-}
-
-//!HOOK LUMA
-//!DESC Guided filter (MEANP)
-//!BIND _INJ_P
-//!WIDTH _INJ_MEANI.w
-//!HEIGHT _INJ_MEANI.h
-//!SAVE _INJ_MEANP
-
-vec4 hook()
-{
-return _INJ_P_texOff(0);
-}
-
-//!HOOK LUMA
-//!DESC Guided filter (_INJ_I_SQ)
-//!BIND _INJ_I
-//!WIDTH _INJ_I.w
-//!HEIGHT _INJ_I.h
-//!SAVE _INJ_I_SQ
-
-vec4 hook()
-{
-return _INJ_I_texOff(0) * _INJ_I_texOff(0);
-}
-
-//!HOOK LUMA
-//!DESC Guided filter (_INJ_IXP)
-//!BIND _INJ_I
-//!BIND _INJ_P
-//!WIDTH _INJ_I.w
-//!HEIGHT _INJ_I.h
-//!SAVE _INJ_IXP
-
-vec4 hook()
-{
-return _INJ_I_texOff(0) * _INJ_P_texOff(0);
-}
-
-//!HOOK LUMA
-//!DESC Guided filter (CORRI)
-//!BIND _INJ_I_SQ
-//!WIDTH _INJ_MEANI.w
-//!HEIGHT _INJ_MEANI.h
-//!SAVE _INJ_CORRI
-
-vec4 hook()
-{
-return _INJ_I_SQ_texOff(0);
-}
-
-//!HOOK LUMA
-//!DESC Guided filter (CORRP)
-//!BIND _INJ_IXP
-//!WIDTH _INJ_MEANI.w
-//!HEIGHT _INJ_MEANI.h
-//!SAVE _INJ_CORRP
-
-vec4 hook()
-{
-return _INJ_IXP_texOff(0);
-}
-
-//!HOOK LUMA
-//!DESC Guided filter (A)
-//!BIND _INJ_MEANI
-//!BIND _INJ_MEANP
-//!BIND _INJ_CORRI
-//!BIND _INJ_CORRP
-//!WIDTH _INJ_I.w
-//!HEIGHT _INJ_I.h
-//!SAVE _INJ_A
-
-#define E 0.0013
-
-vec4 hook()
-{
-vec4 var = _INJ_CORRI_texOff(0) - _INJ_MEANI_texOff(0) * _INJ_MEANI_texOff(0);
-vec4 cov = _INJ_CORRP_texOff(0) - _INJ_MEANI_texOff(0) * _INJ_MEANP_texOff(0);
-	 return cov / (var + E); 
-}
-
-//!HOOK LUMA
-//!DESC Guided filter (B)
-//!BIND _INJ_A
-//!BIND _INJ_MEANI
-//!BIND _INJ_MEANP
-//!WIDTH _INJ_I.w
-//!HEIGHT _INJ_I.h
-//!SAVE _INJ_B
-
-vec4 hook()
-{
-return _INJ_MEANP_texOff(0) - _INJ_A_texOff(0) * _INJ_MEANI_texOff(0);
-}
-
-//!HOOK LUMA
-//!DESC Guided filter (MEANA)
-//!BIND _INJ_A
-//!WIDTH _INJ_MEANI.w
-//!HEIGHT _INJ_MEANI.h
-//!SAVE _INJ_MEANA
-
-vec4 hook()
-{
-return _INJ_A_texOff(0);
-}
-
-//!HOOK LUMA
-//!DESC Guided filter (MEANB)
-//!BIND _INJ_B
-//!WIDTH _INJ_MEANI.w
-//!HEIGHT _INJ_MEANI.h
-//!SAVE _INJ_MEANB
-
-vec4 hook()
-{
-return _INJ_B_texOff(0);
-}
-
-//!HOOK LUMA
-//!DESC Guided filter
-//!BIND HOOKED
-//!BIND _INJ_MEANA
-//!BIND _INJ_MEANB
+//!BIND _INJ_BLUR1
+//!BIND _INJ_BLUR2
+//!BIND _INJ_BLUR3
+//!BIND _INJ_BLUR4
+//!DESC Pyramid (pyramid.glsl)
 //!SAVE RF_LUMA
 
 vec4 hook()
 {
-return _INJ_MEANA_texOff(0) * HOOKED_texOff(0) + _INJ_MEANB_texOff(0);
+float blur1 = _INJ_BLUR1_texOff(0).x;
+float blur2 = _INJ_BLUR2_texOff(0).x;
+float blur3 = _INJ_BLUR3_texOff(0).x;
+float blur4 = _INJ_BLUR4_texOff(0).x;
+
+	 const float scale = 1.0/127.0; 
+	 float result = packSnorm4x8(vec4(
+	 	 blur1 - blur2,
+	 	 blur2 - blur3,
+	 	 blur3 - blur4,
+	 	 blur4 * 2 - 1
+	 )) * scale; 
+
+	 // reconstruct
+	 //vec4 unpacked = unpackSnorm4x8(uint(result * 127)); 
+	 //result = unpacked.x + unpacked.y + unpacked.z + (unpacked.w * 0.5 + 0.5); 
+
+	 return vec4(result, 0, 0, 1.0); 
 }
 
-// End of source code injected from guided.glsl 
+// End of source code injected from pyramid.glsl 
 
 //!HOOK LUMA
 //!BIND HOOKED
@@ -442,8 +319,8 @@ return _INJ_MEANA_texOff(0) * HOOKED_texOff(0) + _INJ_MEANB_texOff(0);
  * RFI (0 to 2): Reflectional invariance
  */
 #ifdef LUMA_raw
-#define RI 3
-#define RFI 2
+#define RI 0
+#define RFI 0
 #else
 #define RI 0
 #define RFI 0
@@ -573,9 +450,9 @@ return _INJ_MEANA_texOff(0) * HOOKED_texOff(0) + _INJ_MEANB_texOff(0);
  * 6: EP
  */
 #ifdef LUMA_raw
-#define V 0
+#define V 4
 #else
-#define V 0
+#define V 4
 #endif
 
 // Blur factor (0.0 returns the input image, 1.0 returns the output image)
@@ -604,6 +481,13 @@ return _INJ_MEANA_texOff(0) * HOOKED_texOff(0) + _INJ_MEANB_texOff(0);
 #define D1W 0
 #else
 #define D1W 0
+#endif
+
+// Packed RF (for pyramid)
+#ifdef LUMA_raw
+#define PRF 1
+#else
+#define PRF 0
 #endif
 
 // Skip patch comparison
@@ -648,6 +532,21 @@ return _INJ_MEANA_texOff(0) * HOOKED_texOff(0) + _INJ_MEANB_texOff(0);
 #define val_packed val
 #define val_pack(v) (v)
 #define val_unpack(v) (v)
+#endif
+
+// XXX support chroma/RGB
+#if PRF == 1
+#define val_rf vec4
+#define unval_rf(v) (dot((v), vec4(1)) * 0.25)
+#define rf_val_unpack(v) ((unpackSnorm4x8(uint((v) * 127)) + 1) * 0.5)
+#elif PRF == 2
+#define val_rf vec4
+#define unval_rf(v) (dot((v), vec4(1)) * 0.25)
+#define rf_val_unpack(v) unpackUnorm4x8(uint((v) * 255))
+#else
+#define val_rf val
+#define unval_rf(v) (v)
+#define rf_val_unpack(v) (v)
 #endif
 
 #if PS == 6
@@ -870,16 +769,16 @@ val load(vec3 off)
 }
 val load2(vec3 off)
 {
-	return off.z == 0 ? val_swizz(load2_(off)) : load(off);
+	return off.z == 0 ? rf_val_unpack(val_swizz(load2_(off))) : load(off);
 }
 #else
 #define load(off) val_swizz(load_(off))
-#define load2(off) val_swizz(load2_(off))
+#define load2(off) rf_val_unpack(val_swizz(load2_(off)))
 #endif
 
 vec4 poi_ = load_(vec3(0));
 val poi = val_swizz(poi_); // pixel-of-interest
-val poi2 = load2(vec3(0)); // guide pixel-of-interest
+val_rf poi2 = load2(vec3(0)); // guide pixel-of-interest
 
 #if RI // rotation
 vec2 rot(vec2 p, float d)
@@ -945,10 +844,10 @@ val patch_comparison(vec3 r, vec3 r2)
 		val pdiff_sq = val(0);
 		FOR_PATCH(p) {
 			vec3 transformed_p = vec3(ref(rot(p.xy, ri), rfi), p.z);
-			val diff_sq = load2(p + r2) - load2((transformed_p + r) * SF);
+			val_rf diff_sq = load2(p + r2) - load2((transformed_p + r) * SF);
 			diff_sq *= diff_sq;
 			diff_sq = 1 - (1 - diff_sq) * spatial_p(p.xy);
-			pdiff_sq += diff_sq;
+			pdiff_sq += unval_rf(diff_sq);
 		}
 		min_rot = min(min_rot, pdiff_sq);
 	}
@@ -956,7 +855,7 @@ val patch_comparison(vec3 r, vec3 r2)
 	return min_rot * p_scale;
 }
 
-#define NO_GATHER (PD == 0 && NG == 0) // never textureGather if any of these conditions are false
+#define NO_GATHER (PD == 0 && NG == 0 && PRF == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3)
 
 #if (defined(LUMA_gather) || D1W) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && REGULAR_ROTATIONS && NO_GATHER
@@ -1160,6 +1059,7 @@ vec4 hook()
 #if T && TRF
 	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(result));
 #elif T
+	// XXX re-pack PRF
 	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi2));
 #endif
 
