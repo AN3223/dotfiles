@@ -19,39 +19,39 @@ vec4 hook()
 }
 
 //!HOOK LUMA
-//!BIND HOOKED
-//!WIDTH HOOKED.w 8.0 /
-//!HEIGHT HOOKED.h 8.0 /
+//!BIND BLUR1
+//!WIDTH BLUR1.w 4.0 /
+//!HEIGHT BLUR1.h 4.0 /
 //!DESC Pyramid (BLUR2)
 //!SAVE BLUR2
 
 vec4 hook()
 {
-	return HOOKED_texOff(0);
+	return BLUR1_texOff(0);
 }
 
 //!HOOK LUMA
-//!BIND HOOKED
-//!WIDTH HOOKED.w 16.0 /
-//!HEIGHT HOOKED.h 16.0 /
+//!BIND BLUR2
+//!WIDTH BLUR2.w 4.0 /
+//!HEIGHT BLUR2.h 4.0 /
 //!DESC Pyramid (BLUR3)
 //!SAVE BLUR3
 
 vec4 hook()
 {
-	return HOOKED_texOff(0);
+	return BLUR2_texOff(0);
 }
 
 //!HOOK LUMA
-//!BIND HOOKED
-//!WIDTH HOOKED.w 32.0 /
-//!HEIGHT HOOKED.h 32.0 /
+//!BIND BLUR3
+//!WIDTH BLUR3.w 4.0 /
+//!HEIGHT BLUR3.h 4.0 /
 //!DESC Pyramid (BLUR4)
 //!SAVE BLUR4
 
 vec4 hook()
 {
-	return HOOKED_texOff(0);
+	return BLUR3_texOff(0);
 }
 
 
