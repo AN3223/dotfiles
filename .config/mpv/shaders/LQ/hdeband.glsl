@@ -38,7 +38,7 @@
 #define SW 0.25
 
 // Bigger numbers search further, but slower
-#define RADIUS 8
+#define RADIUS 4
 
 // Bigger numbers search further, but less accurate
 #define SPARSITY 0.5

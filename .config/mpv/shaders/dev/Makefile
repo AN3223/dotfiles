@@ -124,5 +124,5 @@ experimental/nlmeans_2x.glsl: nlmeans_template
 # hdeband
 
 ../LQ/hdeband.glsl: ../hdeband.glsl
-	./shader_cfg OPTS="RADIUS=8:SPARSITY=0.5:DIRECTIONS=3" $? > $@
+	./shader_cfg OPTS="RADIUS=4:SPARSITY=0.5:DIRECTIONS=3" $? > $@
 
