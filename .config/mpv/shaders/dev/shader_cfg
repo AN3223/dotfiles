@@ -103,6 +103,8 @@ function get_opt(k, v,    i, kv) {
 
 function hooks(    i, hooks_) {
 	ensure_hooks()
+	if (HOOKS == "CFG_NULL")
+		return
 	split(HOOKS, hooks_, ",")
 	for (i in hooks_)
 		print("//!HOOK", hooks_[i])
@@ -126,7 +128,6 @@ BEGIN {
 }
 
 # record is part of a HOOK block
-# XXX handle lack of CFG_HOOKS (or entirely skip processing HOOK blocks if there's nothing to do?)
 $0 ~ "^//!" {
 	SHADER_CODE = 0
 	HOOK_LINES[++HOOK_LEN] = $0
@@ -138,18 +139,22 @@ $0 ~ "^//!" {
 
 # end of HOOK block
 $0 !~ "^//!" && HOOK_LEN {
-	hooks()
-	register_tex(HOOK_DIRECTIVES["SAVE"])
-
-	# take an optional user parameter
+	size = ""
 	save = HOOK_DIRECTIVES["SAVE"]
-	if (save)
+	if (save) {
+		register_tex(save)
+
+		# take TEX=SIZE user parameter
 		size_ = get_opt(save)
-	size = (size_ != "CFG_NULL") ? size_ : ""
+		if (size_ != "CFG_NULL")
+			size = size_
+	}
+
+	hooks()
 
 	# print HOOK_LINES besides //!HOOK, and besides //!(WIDTH|HEIGHT) if size
 	for (i = 1; i <= HOOK_LEN; i++)
-		if (HOOK_LINES[i] !~ "^//!HOOK")
+		if (HOOK_LINES[i] !~ "^//!HOOK" || HOOKS == "CFG_NULL")
 			if (!size || HOOK_LINES[i] !~ "^//!(WIDTH|HEIGHT)")
 				print(HOOK_LINES[i])
 

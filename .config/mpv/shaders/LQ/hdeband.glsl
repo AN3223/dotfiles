@@ -23,7 +23,6 @@
  * should be disabled by setting deband=no in mpv.conf
  */
 
-
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
