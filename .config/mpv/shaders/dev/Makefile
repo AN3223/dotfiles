@@ -39,8 +39,8 @@ LQ_LUMA=PS=4:$(NO_ROTATE)
 LQ=WD=1:RF=0:RF_LUMA=0
 
 HQ_DESC=Slow, but higher quality.
-HQ_LUMA=S=2.25:P=4:PS=6:RF_LUMA=../nlmeans.glsl:$(NO_ROTATE)
-HQ=
+HQ_LUMA=S=2.25:P=4:PS=6:$(NO_ROTATE)
+HQ=RF_LUMA=../nlmeans.glsl
 
 MEDIUM_DESC=Tuned for medium noise.
 MEDIUM=SW=0.5
