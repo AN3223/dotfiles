@@ -160,7 +160,7 @@ sub optimize(
 	:&cmp = { $^x > $^y }, #= true when x is more optimal than y
 	:$start = 1, #= starting point for the value passed to &f
 	:$first_step = 1.25, #= value is multiplied by this and it squares each iteration
-	:$epsilon = 1e-6, #= exit early if the two best scores differ less than this (may be Inf)
+	:$epsilon = 1e-6, #= exit early if the two best scores differ less than this (may be zero)
 	:$iter = 10 #= exit after this many iterations (may be Inf)
 ) {
 	my $value = $start; # value passed to &f
@@ -171,7 +171,7 @@ sub optimize(
 	my $sandtrap = 0;
 
 	loop (my $i = 2; $i < $iter; $i++) {
-	if @history && ($value < $epsilon || $value > 1/$epsilon || $value === NaN) {
+	if @history && $epsilon != 0 && ($value < $epsilon || $value > 1/$epsilon || $value === NaN) {
 		note("optimizer: pointless endeavor");
 		last;
 	}
@@ -185,7 +185,7 @@ sub optimize(
 		$prev_score = @history[*-2].value;
 		$score      = @history[*-1].value;
 	}
-	my Bool $diff_too_small = abs($score - $prev_score) < $epsilon;
+	my Bool $diff_too_small = abs($score - $prev_score) <= $epsilon;
 	@history_b2w = @history.sort({ not &cmp($^x.value, $^y.value) });
 
 	if $diff_too_small && !$course_change {
@@ -233,7 +233,7 @@ sub optimize(
 
 			@history.push(|&f($lower, $upper));
 			@history_b2w = @history.sort({ not &cmp($^x.value, $^y.value) });
-			last if abs(@history_b2w[0].value - @history_b2w[1].value) < $epsilon;
+			last if abs(@history_b2w[0].value - @history_b2w[1].value) <= $epsilon;
 		}
 		last;
 	}
