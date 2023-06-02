@@ -426,7 +426,7 @@ vec4 hook()
  *
  * PS applies applies to patches, RS applies to research zones.
  *
- * Be wary of gather optimizations (see the Regarding Speed comment at the top)
+ * Be wary of gather optimizations (see the Regarding Speed comment above)
  *
  * 0: square (symmetrical)
  * 1: horizontal line (asymmetric)
@@ -436,6 +436,7 @@ vec4 hook()
  * 5: truncated triangle (asymmetric on two axis, last row halved)
  * 6: even sized square (asymmetric on two axis)
  * 7: plus (symmetrical)
+ * 8: plus X (symmetrical)
  */
 #ifdef LUMA_raw
 #define RS 3
@@ -689,10 +690,6 @@ const int hr = R/2;
 const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even research sizes
 #endif
 
-// donut increment, increments without landing on (0,0,0)
-// much faster than a continue statement
-#define DINCR(z,c) (z.c++,(z.c += int(z == vec3(0))))
-
 // patch/research shapes
 // each shape is depicted in a comment, where Z=5 (Z corresponds to P or R)
 // dots (.) represent samples (pixels) and X represents the pixel-of-interest
@@ -733,7 +730,7 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 //
 // Z    ..X..
 //
-#define S_HORIZONTAL(z,hz,incr) for (z.x = -hz; z.x <= hz; incr) for (z.y = 0; z.y <= 0; z.y++)
+#define S_HORIZONTAL(z,hz,incr) for (z.y = 0; z.y <= 0; z.y++) for (z.x = -hz; z.x <= hz; incr)
 
 // 90 degree rotation of S_HORIZONTAL
 #define S_VERTICAL(z,hz,incr) for (z.x = 0; z.x <= 0; z.x++) for (z.y = -hz; z.y <= hz; incr)
@@ -746,19 +743,13 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 #define S_PLUS(z,hz,incr) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -hz * int(z.x == 0); z.y <= hz * int(z.x == 0); incr)
 #define S_PLUS_A(hz,Z) (Z*2 - 1)
 
-// XXX implement S_PLUS w/ an X overlayed:
 // 3    . . .
 // 3     ...
 // Z    ..X..
 // 3     ...
 // 3    . . .
-
-// XXX implement an X shape:
-// 2    .   .
-// 2     . .
-// 1      X  
-// 2     . .
-// 2    .   .
+#define S_PLUS_X(z,hz,incr) for (z.x = -hz; z.x <= hz; z.x++) for (z.y = -abs(z.x) + -hz * int(z.x == 0); z.y <= abs(z.x) + hz * int(z.x == 0); incr)
+#define S_PLUS_X_A(hz,Z) (Z*4 - 3)
 
 // 1x1 square
 #define S_1X1(z) for (z = vec3(0); z.x <= 0; z.x++)
@@ -772,9 +763,13 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 #define RF_ RF
 #endif
 
+// donut increment, increments without landing on (0,0,0)
+// much faster than a continue statement
+#define DINCR(z,c,a) ((z.c += a),(z.c += int(z == vec3(0))))
+
 // Skip comparing the pixel-of-interest against itself, unless RF is enabled
 #if RF_
-#define RINCR(z,c) (z.c++)
+#define RINCR(z,c,a) (z.c += a)
 #else
 #define RINCR DINCR
 #endif
@@ -786,29 +781,32 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 #if R == 0 || R == 1
 #define FOR_RESEARCH(r) S_1X1(r)
 const int r_area = R_AREA(1);
+#elif RS == 8
+#define FOR_RESEARCH(r) S_PLUS_X(r,hr,RINCR(r,y,max(1,abs(r.x))))
+const int r_area = R_AREA(S_PLUS_X_A(hr,R));
 #elif RS == 7
-#define FOR_RESEARCH(r) S_PLUS(r,hr,RINCR(r,y))
+#define FOR_RESEARCH(r) S_PLUS(r,hr,RINCR(r,y,1))
 const int r_area = R_AREA(S_PLUS_A(hr,R));
 #elif RS == 6
-#define FOR_RESEARCH(r) S_SQUARE_EVEN(r,hr,RINCR(r,y))
+#define FOR_RESEARCH(r) S_SQUARE_EVEN(r,hr,RINCR(r,y,1))
 const int r_area = R_AREA(R*R);
 #elif RS == 5
-#define FOR_RESEARCH(r) S_TRUNC_TRIANGLE(r,hr,RINCR(r,x))
+#define FOR_RESEARCH(r) S_TRUNC_TRIANGLE(r,hr,RINCR(r,x,1))
 const int r_area = R_AREA(S_TRIANGLE_A(hr,hr));
 #elif RS == 4
-#define FOR_RESEARCH(r) S_TRIANGLE(r,hr,RINCR(r,x))
+#define FOR_RESEARCH(r) S_TRIANGLE(r,hr,RINCR(r,x,1))
 const int r_area = R_AREA(S_TRIANGLE_A(hr,R));
 #elif RS == 3
-#define FOR_RESEARCH(r) S_DIAMOND(r,hr,RINCR(r,y))
+#define FOR_RESEARCH(r) S_DIAMOND(r,hr,RINCR(r,y,1))
 const int r_area = R_AREA(S_DIAMOND_A(hr,R));
 #elif RS == 2
-#define FOR_RESEARCH(r) S_VERTICAL(r,hr,RINCR(r,y))
+#define FOR_RESEARCH(r) S_VERTICAL(r,hr,RINCR(r,y,1))
 const int r_area = R_AREA(R);
 #elif RS == 1
-#define FOR_RESEARCH(r) S_HORIZONTAL(r,hr,RINCR(r,x))
+#define FOR_RESEARCH(r) S_HORIZONTAL(r,hr,RINCR(r,x,1))
 const int r_area = R_AREA(R);
 #elif RS == 0
-#define FOR_RESEARCH(r) S_SQUARE(r,hr,RINCR(r,y))
+#define FOR_RESEARCH(r) S_SQUARE(r,hr,RINCR(r,y,1))
 const int r_area = R_AREA(R*R);
 #endif
 
@@ -830,7 +828,7 @@ const int r_area = R_AREA(R*R);
 #if PD
 #define PINCR DINCR
 #else
-#define PINCR(z,c) (z.c++)
+#define PINCR(z,c,a) (z.c += a)
 #endif
 
 #define P_AREA(a) (a - PD)
@@ -839,29 +837,32 @@ const int r_area = R_AREA(R*R);
 #if P == 0 || P == 1
 #define FOR_PATCH(p) S_1X1(p)
 const int p_area = P_AREA(1);
+#elif PS == 8
+#define FOR_PATCH(p) S_PLUS_X(p,hp,PINCR(p,y,max(1,abs(p.x))))
+const int p_area = P_AREA(S_PLUS_X_A(hp,P));
 #elif PS == 7
-#define FOR_PATCH(p) S_PLUS(p,hp,PINCR(p,y))
+#define FOR_PATCH(p) S_PLUS(p,hp,PINCR(p,y,1))
 const int p_area = P_AREA(S_PLUS_A(hp,P));
 #elif PS == 6
-#define FOR_PATCH(p) S_SQUARE_EVEN(p,hp,PINCR(p,y))
+#define FOR_PATCH(p) S_SQUARE_EVEN(p,hp,PINCR(p,y,1))
 const int p_area = P_AREA(P*P);
 #elif PS == 5
-#define FOR_PATCH(p) S_TRUNC_TRIANGLE(p,hp,PINCR(p,x))
+#define FOR_PATCH(p) S_TRUNC_TRIANGLE(p,hp,PINCR(p,x,1))
 const int p_area = P_AREA(S_TRIANGLE_A(hp,hp));
 #elif PS == 4
-#define FOR_PATCH(p) S_TRIANGLE(p,hp,PINCR(p,x))
+#define FOR_PATCH(p) S_TRIANGLE(p,hp,PINCR(p,x,1))
 const int p_area = P_AREA(S_TRIANGLE_A(hp,P));
 #elif PS == 3
-#define FOR_PATCH(p) S_DIAMOND(p,hp,PINCR(p,y))
+#define FOR_PATCH(p) S_DIAMOND(p,hp,PINCR(p,y,1))
 const int p_area = P_AREA(S_DIAMOND_A(hp,P));
 #elif PS == 2
-#define FOR_PATCH(p) S_VERTICAL(p,hp,PINCR(p,y))
+#define FOR_PATCH(p) S_VERTICAL(p,hp,PINCR(p,y,1))
 const int p_area = P_AREA(P);
 #elif PS == 1
-#define FOR_PATCH(p) S_HORIZONTAL(p,hp,PINCR(p,x))
+#define FOR_PATCH(p) S_HORIZONTAL(p,hp,PINCR(p,x,1))
 const int p_area = P_AREA(P);
 #elif PS == 0
-#define FOR_PATCH(p) S_SQUARE(p,hp,PINCR(p,y))
+#define FOR_PATCH(p) S_SQUARE(p,hp,PINCR(p,y,1))
 const int p_area = P_AREA(P*P);
 #endif
 
