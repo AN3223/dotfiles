@@ -990,39 +990,69 @@ val patch_comparison(vec3 r, vec3 r2)
 #define NO_GATHER (PD == 0 && NG == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3)
 
-#if (defined(LUMA_gather) || D1W) && ((PS == 3 || PS == 7) && P == 3) && PST == 0 && REGULAR_ROTATIONS && NO_GATHER
+#if (defined(LUMA_gather) || D1W) && ((PS == 0 || PS == 3 || PS == 7 || PS == 8) && P == 3) && PST == 0 && REGULAR_ROTATIONS && NO_GATHER
 // 3x3 diamond/plus patch_comparison_gather
 // XXX extend to support arbitrary sizes (probably requires code generation)
-// XXX extend to support 3x3 square
 // XXX support PSS
-const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
-const ivec2 offsets_sf[4] = { ivec2(0,-1) * SF, ivec2(-1,0) * SF, ivec2(0,1) * SF, ivec2(1,0) * SF };
-vec4 poi_patch = gather_offs(0, offsets);
+const ivec2 offsets_adj[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
+const ivec2 offsets_adj_sf[4] = { ivec2(0,-1) * SF, ivec2(-1,0) * SF, ivec2(0,1) * SF, ivec2(1,0) * SF };
+vec4 poi_patch_adj = gather_offs(0, offsets_adj);
+#if PS == 0 || PS == 8
+const ivec2 offsets_diag[4] = { ivec2(-1,-1), ivec2(1,-1), ivec2(1,1), ivec2(-1,1) };
+const ivec2 offsets_diag_sf[4] = { ivec2(-1,-1) * SF, ivec2(1,-1) * SF, ivec2(1,1) * SF, ivec2(-1,1) * SF };
+vec4 poi_patch_diag = gather_offs(0, offsets_diag);
+#endif
 float patch_comparison_gather(vec3 r, vec3 r2)
 {
 	float min_rot = p_area - 1;
-	vec4 transformer = gather_offs(r, offsets_sf);
+	vec4 transformer_adj = gather_offs(r, offsets_adj_sf);
+#if PS == 0 || PS == 8
+	vec4 transformer_diag = gather_offs(r, offsets_diag_sf);
+#endif
 	FOR_ROTATION {
 		FOR_REFLECTION {
-			float diff_sq = dot((poi_patch - transformer) * (poi_patch - transformer), vec4(1));
+			vec4 diff = poi_patch_adj - transformer_adj;
+#if PS == 0 || PS == 8
+			diff += poi_patch_diag - transformer_diag;
+#endif
+			float diff_sq = dot(diff * diff, vec4(1));
 			min_rot = min(diff_sq, min_rot);
 #if RFI
 			switch(rfi) {
-			case 0: transformer = transformer.zyxw; break;
-			case 1: transformer = transformer.zwxy; break; // undoes last mirror, performs another mirror
-			case 2: transformer = transformer.zyxw; break; // undoes last mirror
+			case 0: // performs a mirror
+				transformer_adj = transformer_adj.zyxw;
+#if PS == 0 || PS == 8
+				transformer_diag = transformer_diag.zyxw;
+#endif
+				break;
+			case 1: // undoes last mirror, performs another mirror
+				transformer_adj = transformer_adj.zwxy;
+#if PS == 0 || PS == 8
+				transformer_diag = transformer_diag.zwxy;
+#endif
+				break;
+			case 2: // undoes last mirror
+				transformer_adj = transformer_adj.zyxw;
+#if PS == 0 || PS == 8
+				transformer_diag = transformer_diag.zyxw;
+#endif
+				break;
 			}
 #endif
 		}
 #if RI == 3
-		transformer = transformer.wxyz;
+		transformer_adj = transformer_adj.wxyz;
 #elif RI == 1
-		transformer = transformer.zwxy;
+		transformer_adj = transformer_adj.zwxy;
+#endif
+#if RI == 3 && (PS == 0 || PS == 8)
+		transformer_diag = transformer_diag.wxyz;
+#elif RI == 1 && (PS == 0 || PS == 8)
+		transformer_diag = transformer_diag.zwxy;
 #endif
 	}
-	float center_diff_sq = poi2.x - load2(r).x;
-	center_diff_sq *= center_diff_sq;
-	return (min_rot + center_diff_sq) * p_scale;
+	float center_diff = poi2.x - load2(r).x;
+	return (center_diff * center_diff + min_rot) * p_scale;
 }
 #elif (defined(LUMA_gather) || D1W) && PS == 4 && P == 3 && RI == 0 && RFI == 0 && NO_GATHER
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
