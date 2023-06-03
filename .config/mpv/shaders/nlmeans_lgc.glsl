@@ -760,8 +760,8 @@ val patch_comparison(vec3 r, vec3 r2)
 // 3x3 diamond/plus patch_comparison_gather
 // XXX extend to support arbitrary sizes (probably requires code generation)
 // XXX support PSS
-const ivec2 offsets_adj[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,1), ivec2(1,0) };
-const ivec2 offsets_adj_sf[4] = { ivec2(0,-1) * SF, ivec2(-1,0) * SF, ivec2(0,1) * SF, ivec2(1,0) * SF };
+const ivec2 offsets_adj[4] = { ivec2(0,-1), ivec2(1,0), ivec2(0,1), ivec2(-1,0) };
+const ivec2 offsets_adj_sf[4] = { ivec2(0,-1) * SF, ivec2(1,0) * SF, ivec2(0,1) * SF, ivec2(-1,0) * SF };
 vec4 poi_patch_adj = gather_offs(0, offsets_adj);
 #if PS == 0 || PS == 8
 const ivec2 offsets_diag[4] = { ivec2(-1,-1), ivec2(1,-1), ivec2(1,1), ivec2(-1,1) };
@@ -777,30 +777,47 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 #endif
 	FOR_ROTATION {
 		FOR_REFLECTION {
+#if RFI
+			/* xxy
+			 * w y
+			 * wzz
+			 */
+			switch(rfi) {
+			case 1:
+				transformer_adj = transformer_adj.zyxw;
+#if PS == 0 || PS == 8
+				transformer_diag = transformer_diag.zyxw;
+#endif
+				break;
+			case 2:
+				transformer_adj = transformer_adj.xwzy;
+#if PS == 0 || PS == 8
+				transformer_diag = transformer_diag.xwzy;
+#endif
+				break;
+			}
+#endif
+
 			vec4 diff = poi_patch_adj - transformer_adj;
 #if PS == 0 || PS == 8
 			diff += poi_patch_diag - transformer_diag;
 #endif
 			float diff_sq = dot(diff * diff, vec4(1));
 			min_rot = min(diff_sq, min_rot);
+
+// un-reflect
 #if RFI
 			switch(rfi) {
-			case 0: // performs a mirror
+			case 1:
 				transformer_adj = transformer_adj.zyxw;
 #if PS == 0 || PS == 8
 				transformer_diag = transformer_diag.zyxw;
 #endif
 				break;
-			case 1: // undoes last mirror, performs another mirror
-				transformer_adj = transformer_adj.zwxy;
+			case 2:
+				transformer_adj = transformer_adj.xwzy;
 #if PS == 0 || PS == 8
-				transformer_diag = transformer_diag.zwxy;
-#endif
-				break;
-			case 2: // undoes last mirror
-				transformer_adj = transformer_adj.zyxw;
-#if PS == 0 || PS == 8
-				transformer_diag = transformer_diag.zyxw;
+				transformer_diag = transformer_diag.xwzy;
 #endif
 				break;
 			}
