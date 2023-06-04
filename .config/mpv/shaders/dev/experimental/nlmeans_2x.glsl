@@ -24,9 +24,6 @@
 /* This shader is highly configurable via user variables below. Although the 
  * default settings should offer good quality at a reasonable speed, you are 
  * encouraged to tweak them to your preferences.
- *
- * The default settings are tuned for high detail preservation on low noise 
- * content. For higher levels of noise there is the "medium" profile.
  */
 
 //!HOOK LUMA
@@ -111,7 +108,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 0
-#define WDT 0.5
+#define WDT 0.36410332
 #define WDP 6.0
 #else
 #define WD 0
