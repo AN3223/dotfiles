@@ -329,13 +329,16 @@ return _INJ_RF_LUMA_texOff(0);
  * 	 - 1: sharpen+denoise
  * 	 - 2: sharpen only
  * ASF: Higher numbers make a sharper image
+ * ASA: Anti-ringing, higher numbers increase strength
  */
 #ifdef LUMA_raw
 #define AS 0
-#define ASF 0.5
+#define ASF 1.0
+#define ASA 5.0
 #else
 #define AS 0
-#define ASF 0.5
+#define ASF 1.0
+#define ASA 5.0
 #endif
 
 /* Starting weight
@@ -1254,11 +1257,16 @@ vec4 hook()
 	 imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi2)); 
 #endif
 
-#define USM ((result - sum_s/total_weight_s) * ASF)
 #if AS == 1 // sharpen+denoise
-	 val sharpened = result + USM; 
+#define AS_base result
 #elif AS == 2 // sharpen only
-	 val sharpened = poi + USM; 
+#define AS_base poi
+#endif
+#if AS
+	 val usm = result - sum_s/total_weight_s; 
+	 usm *= gaussian(abs((AS_base + usm - 0.5) / 1.5) * ASA); 
+	 usm *= ASF; 
+	 result = AS_base + usm; 
 #endif
 
 #if EP // extremes preserve
@@ -1270,12 +1278,6 @@ vec4 hook()
 	 float ep_weight = 0; 
 #endif
 
-#if AS == 1 // sharpen+denoise
-	 result = mix(sharpened, result, old_avg_weight); 
-#elif AS == 2 // sharpen only
-	 result = sharpened; 
-#endif
-
 #if V == 1
 	 result = clamp(pow(abs(poi - result), val(0.25)), 0.0, 1.0); 
 #elif V == 2
@@ -1285,7 +1287,7 @@ vec4 hook()
 #elif V == 4 // pre-WD edge map
 	 result = old_avg_weight; 
 #elif V == 5
-	 result = 0.5 + USM; 
+	 result = 0.5 + usm; 
 #elif V == 6
 	 result = val(1 - ep_weight); 
 #endif
@@ -1345,13 +1347,16 @@ vec4 hook()
  * 	- 1: sharpen+denoise
  * 	- 2: sharpen only
  * ASF: Higher numbers make a sharper image
+ * ASA: Anti-ringing, higher numbers increase strength
  */
 #ifdef LUMA_raw
 #define AS 0
-#define ASF 0.5
+#define ASF 1.0
+#define ASA 5.0
 #else
 #define AS 0
-#define ASF 0.5
+#define ASF 1.0
+#define ASA 5.0
 #endif
 
 /* Starting weight
@@ -2270,11 +2275,16 @@ vec4 hook()
 	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi2));
 #endif
 
-#define USM ((result - sum_s/total_weight_s) * ASF)
 #if AS == 1 // sharpen+denoise
-	val sharpened = result + USM;
+#define AS_base result
 #elif AS == 2 // sharpen only
-	val sharpened = poi + USM;
+#define AS_base poi
+#endif
+#if AS
+	val usm = result - sum_s/total_weight_s;
+	usm *= gaussian(abs((AS_base + usm - 0.5) / 1.5) * ASA);
+	usm *= ASF;
+	result = AS_base + usm;
 #endif
 
 #if EP // extremes preserve
@@ -2286,12 +2296,6 @@ vec4 hook()
 	float ep_weight = 0;
 #endif
 
-#if AS == 1 // sharpen+denoise
-	result = mix(sharpened, result, old_avg_weight);
-#elif AS == 2 // sharpen only
-	result = sharpened;
-#endif
-
 #if V == 1
 	result = clamp(pow(abs(poi - result), val(0.25)), 0.0, 1.0);
 #elif V == 2
@@ -2301,7 +2305,7 @@ vec4 hook()
 #elif V == 4 // pre-WD edge map
 	result = old_avg_weight;
 #elif V == 5
-	result = 0.5 + USM;
+	result = 0.5 + usm;
 #elif V == 6
 	result = val(1 - ep_weight);
 #endif
