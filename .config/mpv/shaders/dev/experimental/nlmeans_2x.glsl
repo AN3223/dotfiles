@@ -745,9 +745,9 @@ val patch_comparison(vec3 r, vec3 r2)
 }
 
 #define NO_GATHER (PD == 0 && NG == 0) // never textureGather if any of these conditions are false
-#define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3)
+#define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3 || RI == 7)
 
-#if (defined(LUMA_gather) || D1W) && ((PS == 0 || PS == 3 || PS == 7 || PS == 8) && P == 3) && PST == 0 && REGULAR_ROTATIONS && NO_GATHER
+#if (defined(LUMA_gather) || D1W) && ((PS == 0 || ((PS == 3 || PS == 7) && RI != 7) || PS == 8) && P == 3) && PST == 0 && REGULAR_ROTATIONS && NO_GATHER
 // 3x3 diamond/plus patch_comparison_gather
 // XXX extend to support arbitrary sizes (probably requires code generation)
 // XXX support PSS
@@ -814,7 +814,15 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 			}
 #endif
 		}
-#if RI == 3
+#if RI == 7
+		//vec4 tmp = transformer_diag;
+		//transformer_diag = transformer_adj;
+		//transformer_adj = tmp;
+		// swap adjacents for diagonals
+		transformer_adj += transformer_diag;
+		transformer_diag = transformer_adj - transformer_diag;
+		transformer_adj -= transformer_diag;
+#elif RI == 3
 		transformer_adj = transformer_adj.wxyz;
 #elif RI == 1
 		transformer_adj = transformer_adj.zwxy;
