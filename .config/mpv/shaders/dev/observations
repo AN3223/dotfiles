@@ -16,6 +16,17 @@
 ### XXX test LQ
 ### XXX test temporal (including ME)
 
+#{{{ Optimal non-local means 2x upscale (luma)
+#
+#fn='max=S:13.772975:1.01_cfgopts=CFG_SIZE="2*":SF=2:PS=0:R=7:RS=8:SK="sphinx":SS=1.369:SW="EPSILON":WD=0:RF_LUMA="2*":RF=0:RI=3,7_media=images.stats.bz2'
+#bzcat "stats/$fn" | sort -k 2 -n | tail
+#
+# BASELINE=NOISE=10:10 0.8704759
+# S=10.218485798609118:CFG_SIZE=2*:SF=2:PS=0:R=7:RS=8:SK=sphinx:SS=1.369000:SW=EPSILON:WD=0:RF_LUMA=2*:RF=0:RI=3 0.92082028
+# S=10.218485798609118:CFG_SIZE=2*:SF=2:PS=0:R=7:RS=8:SK=sphinx:SS=1.369000:SW=EPSILON:WD=0:RF_LUMA=2*:RF=0:RI=7 0.92085134
+#
+#}}}
+
 #{{{ Optimal non-local means 2x denoising upscale (luma, P=3:R=5:PS=3:RS=3)
 #
 ### Surprisingly, SF=2 only performs better on gaussian.
