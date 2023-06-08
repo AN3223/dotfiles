@@ -413,12 +413,13 @@ return _INJ_RF_LUMA_texOff(0);
 
 /* textureGather applicable configurations:
  *
- * - PS={0,3,7,8}:P=3:PST=0:RI={0,1,3}:RFI={0,1,2}
+ * - PS={0,3,7,8}:P=3:PST=0:RI={0,1,3,7}:RFI={0,1,2}
  * - PS=6:RI=0:RFI=0
  *   - Currently the only scalable variant
  *
  * Options which always disable textureGather:
  * 	 - NG
+ * 	 - SAMPLE
  * 	 - PD
  *
  * Running without textureGather may be much slower.
@@ -426,10 +427,9 @@ return _INJ_RF_LUMA_texOff(0);
 
 /* Patch & research sizes
  *
- * Patch size should be an odd number greater than or equal to 3. Higher values 
- * are slower and not always better.
+ * P should be an odd number. Higher values are slower and not always better.
  *
- * Research size be an odd number greater than or equal to 3. Higher values are 
+ * R should be an odd number greater than or equal to 3. Higher values are 
  * generally better, but slower, blurrier, and gives diminishing returns.
  */
 #ifdef LUMA_raw
@@ -484,6 +484,9 @@ return _INJ_RF_LUMA_texOff(0);
  *
  * The angle in degrees of each rotation is 360/(RI+1), so RI=1 will do a 
  * single 180 degree rotation, RI=3 will do three 90 degree rotations, etc.
+ *
+ * Consider setting SAMPLE=1 if setting RI to a setting that would require 
+ * sampling between pixels.
  *
  * RI: Rotational invariance
  * RFI (0 to 2): Reflectional invariance
@@ -590,6 +593,20 @@ return _INJ_RF_LUMA_texOff(0);
 #define SK gaussian
 #define RK gaussian
 #define PSK gaussian
+#endif
+
+/* Sampling method
+ *
+ * In most cases this shouldn't make any difference, only set to bilinear if 
+ * it's necessary to sample between pixels (e.g., RI=2).
+ *
+ * 0: nearest neighbor
+ * 1: bilinear
+ */
+#ifdef LUMA_raw
+#define SAMPLE 0
+#else
+#define SAMPLE 0
 #endif
 
 /* Research scaling factor
@@ -888,7 +905,12 @@ const int p_area = P_AREA(P*P);
 const float r_scale = 1.0/r_area; 
 const float p_scale = 1.0/p_area; 
 
-#define sample(tex, pos, size, pt, off) tex(pos + pt * (vec2(off) + 0.5 - fract(pos*size)))
+#if SAMPLE == 0
+#define sample(tex, pos, size, pt, off) tex((pos) + (pt) * (vec2(off) + 0.5 - fract((pos) * (size))))
+#else
+#define sample(tex, pos, size, pt, off) tex((pos) + (pt) * vec2(off))
+#endif
+
 #define load_(off) sample(HOOKED_tex, HOOKED_pos, HOOKED_size, HOOKED_pt, off)
 
 #if _INJ_RF_ && defined(LUMA_raw)
@@ -1003,7 +1025,7 @@ val patch_comparison(vec3 r, vec3 r2)
 	 return min_rot * p_scale; 
 }
 
-#define NO_GATHER (PD == 0 && NG == 0) // never textureGather if any of these conditions are false
+#define NO_GATHER (PD == 0 && NG == 0 && SAMPLE == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3 || RI == 7)
 
 #if (defined(LUMA_gather) || D1W) && ((PS == 0 || ((PS == 3 || PS == 7) && RI != 7) || PS == 8) && P == 3) && PST == 0 && REGULAR_ROTATIONS && NO_GATHER
@@ -1074,9 +1096,6 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 #endif
 	 	 }
 #if RI == 7
-	 	 //vec4 tmp = transformer_diag; 
-	 	 //transformer_diag = transformer_adj; 
-	 	 //transformer_adj = tmp; 
 	 	 // swap adjacents for diagonals
 	 	 transformer_adj += transformer_diag; 
 	 	 transformer_diag = transformer_adj - transformer_diag; 
@@ -1441,12 +1460,13 @@ vec4 hook()
 
 /* textureGather applicable configurations:
  *
- * - PS={0,3,7,8}:P=3:PST=0:RI={0,1,3}:RFI={0,1,2}
+ * - PS={0,3,7,8}:P=3:PST=0:RI={0,1,3,7}:RFI={0,1,2}
  * - PS=6:RI=0:RFI=0
  *   - Currently the only scalable variant
  *
  * Options which always disable textureGather:
  * 	- NG
+ * 	- SAMPLE
  * 	- PD
  *
  * Running without textureGather may be much slower.
@@ -1454,10 +1474,9 @@ vec4 hook()
 
 /* Patch & research sizes
  *
- * Patch size should be an odd number greater than or equal to 3. Higher values 
- * are slower and not always better.
+ * P should be an odd number. Higher values are slower and not always better.
  *
- * Research size be an odd number greater than or equal to 3. Higher values are 
+ * R should be an odd number greater than or equal to 3. Higher values are 
  * generally better, but slower, blurrier, and gives diminishing returns.
  */
 #ifdef LUMA_raw
@@ -1512,6 +1531,9 @@ vec4 hook()
  *
  * The angle in degrees of each rotation is 360/(RI+1), so RI=1 will do a 
  * single 180 degree rotation, RI=3 will do three 90 degree rotations, etc.
+ *
+ * Consider setting SAMPLE=1 if setting RI to a setting that would require 
+ * sampling between pixels.
  *
  * RI: Rotational invariance
  * RFI (0 to 2): Reflectional invariance
@@ -1618,6 +1640,20 @@ vec4 hook()
 #define SK gaussian
 #define RK gaussian
 #define PSK gaussian
+#endif
+
+/* Sampling method
+ *
+ * In most cases this shouldn't make any difference, only set to bilinear if 
+ * it's necessary to sample between pixels (e.g., RI=2).
+ *
+ * 0: nearest neighbor
+ * 1: bilinear
+ */
+#ifdef LUMA_raw
+#define SAMPLE 0
+#else
+#define SAMPLE 0
 #endif
 
 /* Research scaling factor
@@ -1916,7 +1952,12 @@ const int p_area = P_AREA(P*P);
 const float r_scale = 1.0/r_area;
 const float p_scale = 1.0/p_area;
 
-#define sample(tex, pos, size, pt, off) tex(pos + pt * (vec2(off) + 0.5 - fract(pos*size)))
+#if SAMPLE == 0
+#define sample(tex, pos, size, pt, off) tex((pos) + (pt) * (vec2(off) + 0.5 - fract((pos) * (size))))
+#else
+#define sample(tex, pos, size, pt, off) tex((pos) + (pt) * vec2(off))
+#endif
+
 #define load_(off) sample(HOOKED_tex, HOOKED_pos, HOOKED_size, HOOKED_pt, off)
 
 #if RF_ && defined(LUMA_raw)
@@ -2032,7 +2073,7 @@ val patch_comparison(vec3 r, vec3 r2)
 	return min_rot * p_scale;
 }
 
-#define NO_GATHER (PD == 0 && NG == 0) // never textureGather if any of these conditions are false
+#define NO_GATHER (PD == 0 && NG == 0 && SAMPLE == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3 || RI == 7)
 
 #if (defined(LUMA_gather) || D1W) && ((PS == 0 || ((PS == 3 || PS == 7) && RI != 7) || PS == 8) && P == 3) && PST == 0 && REGULAR_ROTATIONS && NO_GATHER
@@ -2103,9 +2144,6 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 #endif
 		}
 #if RI == 7
-		//vec4 tmp = transformer_diag;
-		//transformer_diag = transformer_adj;
-		//transformer_adj = tmp;
 		// swap adjacents for diagonals
 		transformer_adj += transformer_diag;
 		transformer_diag = transformer_adj - transformer_diag;
