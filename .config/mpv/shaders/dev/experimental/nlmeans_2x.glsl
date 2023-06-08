@@ -836,8 +836,9 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 				break;
 			}
 #endif
-		}
+		} // FOR_REFLECTION
 #if RI == 7
+		transformer_adj = transformer_adj.wxyz;
 		// swap adjacents for diagonals
 		transformer_adj += transformer_diag;
 		transformer_diag = transformer_adj - transformer_diag;
@@ -852,7 +853,7 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 #elif RI == 1 && (PS == 0 || PS == 8)
 		transformer_diag = transformer_diag.zwxy;
 #endif
-	}
+	} // FOR_ROTATION
 	float center_diff = poi2.x - load2(r).x;
 	return (center_diff * center_diff + min_rot) * p_scale;
 }
