@@ -414,6 +414,7 @@ return _INJ_RF_LUMA_texOff(0);
 /* textureGather applicable configurations:
  *
  * - PS={0,3,7,8}:P=3:PST=0:RI={0,1,3,7}:RFI={0,1,2}
+ * - PS={0,8}:P=3:PST=0:RI={0,1,3,7}:RFI={0,1,2}
  * - PS=6:RI=0:RFI=0
  *   - Currently the only scalable variant
  *
@@ -1461,6 +1462,7 @@ vec4 hook()
 /* textureGather applicable configurations:
  *
  * - PS={0,3,7,8}:P=3:PST=0:RI={0,1,3,7}:RFI={0,1,2}
+ * - PS={0,8}:P=3:PST=0:RI={0,1,3,7}:RFI={0,1,2}
  * - PS=6:RI=0:RFI=0
  *   - Currently the only scalable variant
  *
