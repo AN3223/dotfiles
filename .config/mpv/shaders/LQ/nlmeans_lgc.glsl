@@ -50,7 +50,7 @@ vec4 hook()
 
 // Denoising factor (level of blur, higher means more blur)
 #ifdef LUMA_raw
-#define S 11.66
+#define S 2.190854454502994284
 #else
 #define S 11.66
 #endif
@@ -88,7 +88,7 @@ vec4 hook()
  * EPSILON should be used instead of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
-#define SW 0.75
+#define SW 0.5018054406951963
 #else
 #define SW 0.75
 #endif

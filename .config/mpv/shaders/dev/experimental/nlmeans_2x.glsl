@@ -111,7 +111,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 0
-#define WDT 0.4205969368932865
+#define WDT 0.42905093532484156
 #define WDP 6.0
 #else
 #define WD 0
