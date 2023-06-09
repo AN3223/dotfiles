@@ -419,7 +419,7 @@ vec4 hook()
 
 // Shader code
 
-#define EPSILON 0.00000000001
+#define EPSILON 1.2e-38
 #define M_PI 3.14159265358979323846
 #define POW2(x) ((x)*(x))
 #define POW3(x) ((x)*(x)*(x))
