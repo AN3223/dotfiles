@@ -109,7 +109,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 0
-#define WDT 0.36410332
+#define WDT 0.4205969368932865
 #define WDP 6.0
 #else
 #define WD 0
@@ -295,7 +295,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.4719
+#define SS 0.46330693798936723
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0

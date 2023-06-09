@@ -52,9 +52,9 @@ vec4 hook()
 
 // Denoising factor (level of blur, higher means more blur)
 #ifdef LUMA_raw
-#define S 13.772975
+#define S 13.266202730959009
 #else
-#define S 13.772975
+#define S 13.266202730959009
 #endif
 
 /* Adaptive sharpening
@@ -111,7 +111,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 0
-#define WDT 0.36410332
+#define WDT 0.4205969368932865
 #define WDP 6.0
 #else
 #define WD 0
