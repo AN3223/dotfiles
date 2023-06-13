@@ -111,12 +111,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 0
-#define WDT 0.42905093532484156
-#define WDP 6.0
+#define WDT 0.3513053819107378
+#define WDP 5.46
 #else
 #define WD 0
 #define WDT 0.75
-#define WDP 6.0
+#define WDP 5.46
 #endif
 
 /* Extremes preserve

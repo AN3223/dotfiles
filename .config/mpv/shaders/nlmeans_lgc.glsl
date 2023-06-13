@@ -109,12 +109,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 0
-#define WDT 0.42905093532484156
-#define WDP 6.0
+#define WDT 0.3513053819107378
+#define WDP 5.46
 #else
 #define WD 0
 #define WDT 0.75
-#define WDP 6.0
+#define WDP 5.46
 #endif
 
 /* Extremes preserve
@@ -295,7 +295,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.5121845143109105
+#define SS 0.48964772837687465
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0

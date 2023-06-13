@@ -38,7 +38,7 @@
 
 // Denoising factor (level of blur, higher means more blur)
 #ifdef LUMA_raw
-#define S 2.190854454502994284
+#define S 3.7301445
 #else
 #define S 5.0
 #endif
@@ -76,7 +76,7 @@
  * EPSILON should be used instead of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
-#define SW 0.5018054406951963
+#define SW 0.763672
 #else
 #define SW 0.5
 #endif
@@ -97,12 +97,12 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.4205969368932865
-#define WDP 6.0
+#define WDT 0.597188
+#define WDP 5.46
 #else
 #define WD 1
 #define WDT 0.75
-#define WDP 6.0
+#define WDP 5.46
 #endif
 
 /* Extremes preserve
@@ -283,7 +283,7 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.46330693798936723
+#define SS 0.524688
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0

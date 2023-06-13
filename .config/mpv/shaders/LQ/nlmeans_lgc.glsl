@@ -50,7 +50,7 @@ vec4 hook()
 
 // Denoising factor (level of blur, higher means more blur)
 #ifdef LUMA_raw
-#define S 2.190854454502994284
+#define S 3.7301445
 #else
 #define S 11.66
 #endif
@@ -88,7 +88,7 @@ vec4 hook()
  * EPSILON should be used instead of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
-#define SW 0.5018054406951963
+#define SW 0.763672
 #else
 #define SW 0.75
 #endif
@@ -109,12 +109,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 0
-#define WDT 0.4205969368932865
-#define WDP 6.0
+#define WDT 0.597188
+#define WDP 5.46
 #else
 #define WD 0
 #define WDT 0.75
-#define WDP 6.0
+#define WDP 5.46
 #endif
 
 /* Extremes preserve
@@ -295,7 +295,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.46330693798936723
+#define SS 0.524688
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
