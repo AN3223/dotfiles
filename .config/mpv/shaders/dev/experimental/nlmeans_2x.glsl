@@ -967,6 +967,9 @@ vec4 hook()
 #endif
 
 		weight *= spatial_weight;
+
+		// for sharpening:
+		spatial_weight *= int(r.z == 0); // ignore temporal
 		sum_s += px * spatial_weight;
 		total_weight_s += spatial_weight;
 
