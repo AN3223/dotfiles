@@ -8,9 +8,11 @@
 -- skip2black fast forwards to the next black video segment
 -- skip2silence fast forwards to the next silent audio segment
 --
--- skip2scene is very useful but not always reliable. It won't budge on 
--- high-motion scenes and, although the default threshold is low, it might 
--- still miss some cuts.
+-- skip2scene is useful but not always reliable. It won't budge on high-motion 
+-- scenes and, although the default threshold is low, it might still miss some 
+-- cuts.
+--
+-- skip2silence doesn't appear to work with hwdec.
 --
 -- Any of these skips can be reverted with revert-seek (bound to Shift+BS by 
 -- default), useful for when it hurtles past the desired point.
