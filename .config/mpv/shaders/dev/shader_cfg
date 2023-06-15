@@ -280,9 +280,9 @@ function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, s
 		else
 			cmd = sprintf("%s < %s", cmd, shader)
 
-		print("// The following is shader code injected from", basename(shader))
+		print("// The following is shader code injected from", shader)
 		system(cmd)
-		print("// End of source code injected from", basename(shader), "\n")
+		print("// End of source code injected from", shader, "\n")
 
 		register_tex(save)
 		return

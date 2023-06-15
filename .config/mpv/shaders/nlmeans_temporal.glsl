@@ -26,7 +26,7 @@
  * encouraged to tweak them to your preferences.
  */
 
-// The following is shader code injected from nlmeans.glsl
+// The following is shader code injected from ../LQ/nlmeans.glsl
 /* vi: ft=c
  *
  * Based on vf_nlmeans.c from FFmpeg.
@@ -1089,7 +1089,7 @@ vec4 hook()
 	 return unval(mix(poi, result, BF)); 
 }
 
-// End of source code injected from nlmeans.glsl 
+// End of source code injected from ../LQ/nlmeans.glsl 
 
 //!HOOK LUMA
 //!HOOK CHROMA
