@@ -81,7 +81,7 @@ It should be ran prior to any other shaders and mpv's built-in debanding should 
 
 ## guided
 
-Also denoisers. They are faster but lower quality than NLM. The self-guided (\_s) variants are slightly faster but even lower quality.
+Also denoisers, lower quality than LQ NLM and not necessarily faster. The self-guided (\_s) variants are slightly faster but even lower quality.
 
 # Troubleshooting
 
