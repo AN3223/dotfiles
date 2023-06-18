@@ -153,6 +153,8 @@ sub run_tests(*@cfgopts --> List) {
 	return eager @outs.map(&avgssim);
 }
 
+sub correlation(@x, $x_avg, @y, $y_avg) { covariance(@x, $x_avg, @y, $y_avg) / (sqrt(variance(@x, $x_avg)) * sqrt(variance(@y, $y_avg))) }
+sub covariance(@x, $x_avg, @y, $y_avg) { sum((@x >>->> $x_avg) >>*<< (@y >>->> $y_avg)) / @x }
 sub variance(@x, $avg) { sum((@x >>->> $avg) >>**>> 2) / @x }
 sub standard(@x, $avg) { (@x >>->> $avg) >>/>> sqrt(variance(@x, $avg)) }
 multi sub transpose(@a where *.elems == 1) { @a[0].rotor(1) }
@@ -162,8 +164,8 @@ sub optimize(
 	&f, #= function to optimize, takes a list of parameter lists and returns a list of scores
 	:@starts = (Nil,), #= starting points for the values passed to &f
 	:@steps = (Nil,),
-	:$samples = 4, #= samples per iteration
-	:$iter = 10 #= exit after this many iterations (may be Inf)
+	:$samples = 5, #= samples per iteration
+	:$iter = 8 #= exit after this many iterations (may be Inf)
 ) {
 	# replace Nil with defaults
 	my @starts_ = List(@starts.map({ with $_ { $_ } else { 1 } }));
@@ -171,19 +173,30 @@ sub optimize(
 
 	my $optimal = &f([@starts_,])[0]; # XXX could be batched
 	my @steps_m = @steps_ xx $samples;
+	my @cor = 0 xx @steps_;
+
 	for ^$iter {
 		my @params = $optimal.key xx $samples;
 
 		# matrix of random offsets, standardized by column (parameter)
-		my @rand = (-1.0..1.0).rand xx @steps_ xx $samples;
+		my @rand = 1.rand xx @steps_ xx $samples;
 		@rand = transpose(List(transpose(@rand).map({ standard(@^x, sum(@^x)/@^x) })));
 
 		# XXX add a decay rate
-		@params = @params >>+<< (@params >>*<< @steps_m >>*<< @rand);
+		my @off_factor = @rand >>+<< (@cor xx $samples);
+		@params = @params >>+<< (@params >>*<< @steps_m >>*<< @off_factor);
 
 		my @results = &f(@params).sort(*.value);
 		$optimal = max($optimal, @results[*-1], :by(*.value));
+
+		my @scores = @results.map(*.value);
+		my $score_avg = sum(@scores) / @scores;
+		@cor = transpose(@results.map(*.key))
+			.map({ correlation(@^x, sum(@^x)/@^x, @scores, $score_avg) })
+			.List;
+		note("Correlation: {@cor}");
 	}
+
 	return $optimal;
 }
 
@@ -277,7 +290,7 @@ sub MAIN(
 	Str :$vk-device = "vulkan", #= Device name passed to ffmpeg's -init_hw_device option
 	Str :$stats-dir where *.IO.d = "stats", #= Directory where stats will be stored
 	Str :$max = "", #= Optimizer settings: OPTION:START:STEP (all optional, multiple can be chained with commas)
-	Str :$max-iter = "4x10", #= Optimizer (samples per iteration)x(iterations)
+	Str :$max-iter = "5x8", #= Optimizer (samples per iteration)x(iterations)
 	Str :$pix-fmt = "yuv444p", #= Pixel format used for everything
 	Str :$colorspace = "bt709", #= Colorspace used for everything
 	Str :$resolution where /^\d+ ':' \d+$/ = "1080:1080", #= Resolution used for everything
