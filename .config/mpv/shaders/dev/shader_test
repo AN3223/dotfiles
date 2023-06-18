@@ -161,6 +161,7 @@ multi sub transpose(@a where *.elems == 1) { @a[0].rotor(1) }
 multi sub transpose(@x) { [Z] @x }
 
 # Description of the algorithm:
+#
 # 1) Start with an estimate of the optimal parameters (@starts)
 # 2) Sample randomly around that estimate
 # 	- The random offsets are standardized for each parameter
@@ -168,8 +169,8 @@ multi sub transpose(@x) { [Z] @x }
 # 	- Add the correlation of the previous iteration to the random offsets (0.0 for the first iteration)
 # 	- Multiply the random offsets by the decay factor (1.0 for the first iteration)
 # 3) Replace the estimate with the best sample if it is better than the estimate
-# 	- If the estimate was replaced, multiply the decay factor by the decay parameter ($decay)
-# 	- Otherwise, divide the decay factor by the decay parameter
+# 	- If the estimate was replaced, multiply the decay factor by the reverse decay parameter ($rev-decay)
+# 	- Otherwise, multiply the decay factor by the decay parameter ($decay)
 # 4) Update correlation
 # 	- The correlation is the Pearson correlation coefficient between each parameter and the score
 # 	- E.g., [correlation(param1, scores), correlation(param2, scores), ...]
@@ -179,8 +180,9 @@ multi sub transpose(@x) { [Z] @x }
 sub optimize(
 	&f, #= function to optimize, takes a list of parameter lists and returns a list of scores
 	:@starts = (Nil,), #= starting points for the values passed to &f
-	:@steps = (Nil,),
-	:$decay = 1.3,
+	:@steps = (Nil,), #= scales the offsets, ideally 0.0 or above
+	:$decay = 0.25, #= ideally 0.0-1.0
+	:$rev-decay = 1.4, #= ideally 1.0-2.0
 	:$samples = 5, #= samples per iteration
 	:$iter = 15 #= exit after this many iterations (may be Inf)
 ) {
@@ -204,12 +206,11 @@ sub optimize(
 		my @off_factor = (@rand >>+<< (@cor xx $samples)) >>*>> $decay_factor;
 		@params = @params >>+<< (@params >>*<< @steps_m >>*<< @off_factor);
 
-		# XXX maybe it would be better to have two decay parameters
 		my @results = &f(@params).sort(*.value);
 		if @results[*-1].value < $optimal.value {
-			$decay_factor /= $decay;
-		} else {
 			$decay_factor *= $decay;
+		} else {
+			$decay_factor *= $rev-decay;
 			$optimal = @results[*-1];
 		}
 
@@ -219,6 +220,7 @@ sub optimize(
 			.map({ correlation(@^x, sum(@^x)/@^x, @scores, $score_avg) })
 			.List;
 		note("Correlation: {@cor}");
+		note("Decay: {$decay_factor}")
 	}
 
 	return $optimal;
@@ -247,7 +249,7 @@ sub test(Str $cfgopts = "") {
 			(@cfgopts Z=> @scores).map: { stats(.key, .value, :erronly) };
 			@arr_of_params Z=> @scores
 		};
-		%optimize_args<iter samples decay> = %gbl<max-iter>, %gbl<max-samples>, %gbl<max-decay>;
+		%optimize_args<iter samples decay rev-decay> = %gbl<max-iter max-samples max-decay max-rev-decay>;
 		%optimize_args.map({ %optimize_args{$^p.key}:delete without $^p.value });
 
 		my $result = optimize(&f, |%optimize_args);
@@ -319,6 +321,7 @@ sub MAIN(
 	Int :$max-iter, #= Optimizer iterations
 	Int :$max-samples, #= Optimizer samples per iteration
 	Rat() :$max-decay, #= Optimizer decay
+	Rat() :$max-rev-decay, #= Optimizer reverse decay
 	Str :$pix-fmt = "yuv444p", #= Pixel format used for everything
 	Str :$colorspace = "bt709", #= Colorspace used for everything
 	Str :$resolution where /^\d+ ':' \d+$/ = "1080:1080", #= Resolution used for everything
