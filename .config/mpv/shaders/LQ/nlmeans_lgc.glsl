@@ -113,7 +113,7 @@ vec4 hook()
 #define WDP 5.46
 #else
 #define WD 0
-#define WDT 0.7137813668231042
+#define WDT 0.960341797329127
 #define WDP 5.46
 #endif
 
@@ -302,7 +302,7 @@ vec4 hook()
 #define PSD vec2(1,1)
 #else
 #define SST 1
-#define SS 0.23700639191398534
+#define SS 0.23341241032450166
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0

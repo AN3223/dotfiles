@@ -115,7 +115,7 @@ vec4 hook()
 #define WDP 5.46
 #else
 #define WD 0
-#define WDT 0.7137813668231042
+#define WDT 0.7376637633530657
 #define WDP 5.46
 #endif
 
