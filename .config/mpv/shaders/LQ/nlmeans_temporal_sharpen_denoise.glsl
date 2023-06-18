@@ -42,7 +42,7 @@
 #ifdef LUMA_raw
 #define S 3.7301445
 #else
-#define S 5.0
+#define S 3.1284382687941554
 #endif
 
 /* Adaptive sharpening
@@ -80,7 +80,7 @@
 #ifdef LUMA_raw
 #define SW 0.763672
 #else
-#define SW 0.5
+#define SW 0.27457772832813027
 #endif
 
 /* Weight discard
@@ -103,7 +103,7 @@
 #define WDP 5.46
 #else
 #define WD 1
-#define WDT 0.75
+#define WDT 0.7137813668231042
 #define WDP 5.46
 #endif
 
@@ -292,7 +292,7 @@
 #define PSD vec2(1,1)
 #else
 #define SST 1
-#define SS 0.39
+#define SS 0.23700639191398534
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
