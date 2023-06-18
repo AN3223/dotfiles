@@ -153,141 +153,66 @@ sub run_tests(*@cfgopts --> List) {
 	return eager @outs.map(&avgssim);
 }
 
-# XXX make the logging optional
-# XXX implement a fancier optimization algorithm
+sub variance(@x, $avg) { sum((@x >>->> $avg) >>**>> 2) / @x }
+sub standard(@x, $avg) { (@x >>->> $avg) >>/>> sqrt(variance(@x, $avg)) }
+multi sub transpose(@a where *.elems == 1) { @a[0].rotor(1) }
+multi sub transpose(@x) { [Z] @x }
+
 sub optimize(
-	&f, #= the function to optimize, takes the value and returns a list of scores
-	:&cmp = { $^x > $^y }, #= true when x is more optimal than y
-	:$start = 1, #= starting point for the value passed to &f
-	:$first_step = 1.25, #= value is multiplied by this and it squares each iteration
-	:$epsilon = 1e-6, #= exit early if the two best scores differ less than this (may be zero)
+	&f, #= function to optimize, takes a list of parameter lists and returns a list of scores
+	:@starts = (Nil,), #= starting points for the values passed to &f
+	:@steps = (Nil,),
+	:$samples = 4, #= samples per iteration
 	:$iter = 10 #= exit after this many iterations (may be Inf)
 ) {
-	my $value = $start; # value passed to &f
-	my $step = $first_step;
-	my @history; # $value => $score in chronological order
-	my @history_b2w; # $value => $score best to worst order
-	my $course_change = False;
-	my $sandtrap = 0;
+	# replace Nil with defaults
+	my @starts_ = List(@starts.map({ with $_ { $_ } else { 1 } }));
+	my @steps_ = List(@steps.map({ with $_ { $_ } else { 0.25 } }));
 
-	loop (my $i = 2; $i < $iter; $i++) {
-	if @history && $epsilon != 0 && ($value < $epsilon || $value > 1/$epsilon || $value === NaN) {
-		note("optimizer: pointless endeavor");
-		last;
+	my $optimal = &f([@starts_,])[0]; # XXX could be batched
+	my @steps_m = @steps_ xx $samples;
+	for ^$iter {
+		my @params = $optimal.key xx $samples;
+
+		# matrix of random offsets, standardized by column (parameter)
+		my @rand = (-1.0..1.0).rand xx @steps_ xx $samples;
+		@rand = transpose(List(transpose(@rand).map({ standard(@^x, sum(@^x)/@^x) })));
+
+		# XXX add a decay rate
+		@params = @params >>+<< (@params >>*<< @steps_m >>*<< @rand);
+
+		my @results = &f(@params).sort(*.value);
+		$optimal = max($optimal, @results[*-1], :by(*.value));
 	}
-
-	my ($prev_score, $score);
-	if ($i == 2) { # batch the first two tests
-		@history.push(|&f($start, $value *= $step *= $step));
-		($prev_score, $score) = @history.map(*.value);
-	} else {
-		@history.push(|&f($value));
-		$prev_score = @history[*-2].value;
-		$score      = @history[*-1].value;
-	}
-	my Bool $diff_too_small = abs($score - $prev_score) <= $epsilon;
-	@history_b2w = @history.sort({ not &cmp($^x.value, $^y.value) });
-
-	if $diff_too_small && !$course_change {
-		last if $sandtrap++ >= floor($iter/3);
-		$step = 1/$step if not &cmp($score, $prev_score);
-		$step = $step**$step;
-		$value *= $step**2;
-		note("optimizer: sandtrap");
-	} elsif &cmp($score, $prev_score) && !$diff_too_small { # keep going
-		$value *= $step *= $step;
-	} else {
-		if $i == 2 { # handle overestimates
-			note("optimizer: changing course");
-			$course_change = True;
-			$step = 1/$step;
-			$value *= $step**2;
-			next;
-		}
-
-		note("optimizer: starting binary search");
-
-		loop (; $i < $iter; $i += 2) {
-			#
-			# find the points halfway between the best known upper/lower values
-			#
-			# repeatedly divides by two just in case a suboptimal value exists 
-			# halfway between the best known value and the best known upper/lower 
-			# values
-			#
-			my @values = @history.map(*.key);
-			my $optval = @history_b2w[0].key;
-			my $lower_bound = @history_b2w.grep({ .key < $optval })[0].key;
-			my $upper_bound = @history_b2w.grep({ .key > $optval })[0].key;
-
-			# might happen if $diff_too_small && $course_change
-			last if !$lower_bound.defined or !$upper_bound.defined;
-
-			my ($lower, $upper, $j);
-			$j = 1; repeat {
-				$lower = $lower_bound + ($optval - $lower_bound) / (2**$j++);
-			} until not $lower ∈ @values;
-			$j = 1; repeat {
-				$upper = $optval + ($upper_bound - $optval) / (2**$j++);
-			} until not $upper ∈ @values;
-
-			@history.push(|&f($lower, $upper));
-			@history_b2w = @history.sort({ not &cmp($^x.value, $^y.value) });
-			last if abs(@history_b2w[0].value - @history_b2w[1].value) <= $epsilon;
-		}
-		last;
-	}
-	}
-
-	note("optimizer: finished in $i iterations");
-	return @history_b2w[0];
+	return $optimal;
 }
 
-# runs ffmpeg for testing, optionally maximizes a parameter
+# glue/wrapper function for run_tests & optimizer
 # XXX batch this across permutations
 sub test(Str $cfgopts = "") {
-	my Hash @optimizer_args;
+	my %optimize_args = options => [], starts => [], steps => [];
 	for %gbl<max>.split(",", :skip-empty) -> $args { 
-		my %args;
-		%args<option start first_step epsilon iter> = $args.split(":");
-		%args.map({ %args{$^p.key}:delete without $^p.value });
-		@optimizer_args.push(%args);
+		my ($option, $start, $step) = $args.split(":");
+		%optimize_args<options>.push($option);
+		%optimize_args<starts>.push($start);
+		%optimize_args<steps>.push($step);
 	}
 
-	# S=x:SS=y:... &f(y) is optimized using an &f that optimizes &f(x)
-	my Callable @optimizers;
-	for @optimizer_args.kv -> $i, %args {
-		my $option = %args<option>:delete;
-		my $stateful = Bool($option ~~ s/^\^//);
-
-		my &val_to_opts = -> $value, *@inject { ("$option=$value", |@inject).join(":") };
-		my &f = -> *@inject {
-			-> *@values {
-				if @optimizers[$i-1] {
-					@values.map({ $^value => @optimizers[$i-1]("$option=$^value", |@inject)().value });
-				} else {
-					my @cfgopts = @values.map({ &val_to_opts($^val, |@inject) });
-					my @scores = run_tests(|@cfgopts);
-					(@cfgopts Z=> @scores).map({ stats(.key, .value, :erronly) });
-					@values Z=> @scores
-				}
-			}
+	if %optimize_args<options> {
+		my @options := %optimize_args<options>:delete;
+		my &params2opts = -> @params {
+			(@options Z~ ("=" xx @options) Z~ @params)
+				.join(":") ~ ":" ~ $cfgopts
 		};
-		@optimizers.push: -> *@inject {
-			-> {
-				my $optimal = optimize(&f(|@inject), |%args);
-				if $i == 0 {
-					stats(&val_to_opts($optimal.key, |@inject), $optimal.value);
-					note("");
-				}
-				%args<start> = $optimal.key if $stateful;
-				$optimal
-			}
+		my &f = -> @arr_of_params {
+			my @cfgopts = List(@arr_of_params.map(&params2opts));
+			my @scores = run_tests(|@cfgopts);
+			(@cfgopts Z=> @scores).map: { stats(.key, .value, :erronly) };
+			@arr_of_params Z=> @scores
 		};
-	}
-
-	if @optimizer_args {
-		@optimizers[*-1]($cfgopts)();
+		%optimize_args<samples iter> = %gbl<max-iter>.split("x");
+		my $result = optimize(&f, |%optimize_args);
+		stats(&params2opts($result.key), $result.value);
 	} else {
 		stats($cfgopts, run_tests($cfgopts)[0]);
 	}
@@ -351,7 +276,8 @@ sub MAIN(
 	Str :$corruption = "NOISE=10:10", #= Corruption type, can be NOISE, JPEG, or SCALE
 	Str :$vk-device = "vulkan", #= Device name passed to ffmpeg's -init_hw_device option
 	Str :$stats-dir where *.IO.d = "stats", #= Directory where stats will be stored
-	Str :$max = "", #= Optimizer settings: OPTION:START:STEP:EPSILON:ITER (all optional, multiple can be chained with commas)
+	Str :$max = "", #= Optimizer settings: OPTION:START:STEP (all optional, multiple can be chained with commas)
+	Str :$max-iter = "4x10", #= Optimizer (samples per iteration)x(iterations)
 	Str :$pix-fmt = "yuv444p", #= Pixel format used for everything
 	Str :$colorspace = "bt709", #= Colorspace used for everything
 	Str :$resolution where /^\d+ ':' \d+$/ = "1080:1080", #= Resolution used for everything
@@ -363,7 +289,7 @@ sub MAIN(
 ) {
 	%gbl<shader verbose vk plane resolution pix-fmt> = $shader, ($verbose || $v), $vk-device, $plane, $resolution, $pix-fmt;
 	%gbl<outopts> = <<-c\:v ffv1 -colorspace "$colorspace" -pix_fmt "$pix-fmt">>;
-	%gbl<max> = $max;
+	%gbl<max max-iter> = $max, $max-iter;
 
 	die 'no test media specified' if not @test-media;
 
