@@ -164,8 +164,9 @@ sub optimize(
 	&f, #= function to optimize, takes a list of parameter lists and returns a list of scores
 	:@starts = (Nil,), #= starting points for the values passed to &f
 	:@steps = (Nil,),
+	:$decay = 1.3,
 	:$samples = 5, #= samples per iteration
-	:$iter = 8 #= exit after this many iterations (may be Inf)
+	:$iter = 15 #= exit after this many iterations (may be Inf)
 ) {
 	# replace Nil with defaults
 	my @starts_ = List(@starts.map({ with $_ { $_ } else { 1 } }));
@@ -174,7 +175,9 @@ sub optimize(
 	my $optimal = &f([@starts_,])[0]; # XXX could be batched
 	my @steps_m = @steps_ xx $samples;
 	my @cor = 0 xx @steps_;
+	my $decay_factor = 1.0;
 
+	# XXX add an early exit condition
 	for ^$iter {
 		my @params = $optimal.key xx $samples;
 
@@ -182,12 +185,16 @@ sub optimize(
 		my @rand = 1.rand xx @steps_ xx $samples;
 		@rand = transpose(List(transpose(@rand).map({ standard(@^x, sum(@^x)/@^x) })));
 
-		# XXX add a decay rate
-		my @off_factor = @rand >>+<< (@cor xx $samples);
+		my @off_factor = (@rand >>+<< (@cor xx $samples)) >>*>> $decay_factor;
 		@params = @params >>+<< (@params >>*<< @steps_m >>*<< @off_factor);
 
 		my @results = &f(@params).sort(*.value);
-		$optimal = max($optimal, @results[*-1], :by(*.value));
+		if @results[*-1].value < $optimal.value {
+			$decay_factor /= $decay;
+		} else {
+			$decay_factor *= $decay;
+			$optimal = @results[*-1];
+		}
 
 		my @scores = @results.map(*.value);
 		my $score_avg = sum(@scores) / @scores;
@@ -223,7 +230,9 @@ sub test(Str $cfgopts = "") {
 			(@cfgopts Z=> @scores).map: { stats(.key, .value, :erronly) };
 			@arr_of_params Z=> @scores
 		};
-		%optimize_args<samples iter> = %gbl<max-iter>.split("x");
+		%optimize_args<iter samples decay> = %gbl<max-iter>, %gbl<max-samples>, %gbl<max-decay>;
+		%optimize_args.map({ %optimize_args{$^p.key}:delete without $^p.value });
+
 		my $result = optimize(&f, |%optimize_args);
 		stats(&params2opts($result.key), $result.value);
 	} else {
@@ -290,7 +299,9 @@ sub MAIN(
 	Str :$vk-device = "vulkan", #= Device name passed to ffmpeg's -init_hw_device option
 	Str :$stats-dir where *.IO.d = "stats", #= Directory where stats will be stored
 	Str :$max = "", #= Optimizer settings: OPTION:START:STEP (all optional, multiple can be chained with commas)
-	Str :$max-iter = "5x8", #= Optimizer (samples per iteration)x(iterations)
+	Int :$max-iter, #= Optimizer iterations
+	Int :$max-samples, #= Optimizer samples per iteration
+	Rat() :$max-decay, #= Optimizer decay
 	Str :$pix-fmt = "yuv444p", #= Pixel format used for everything
 	Str :$colorspace = "bt709", #= Colorspace used for everything
 	Str :$resolution where /^\d+ ':' \d+$/ = "1080:1080", #= Resolution used for everything
@@ -302,7 +313,7 @@ sub MAIN(
 ) {
 	%gbl<shader verbose vk plane resolution pix-fmt> = $shader, ($verbose || $v), $vk-device, $plane, $resolution, $pix-fmt;
 	%gbl<outopts> = <<-c\:v ffv1 -colorspace "$colorspace" -pix_fmt "$pix-fmt">>;
-	%gbl<max max-iter> = $max, $max-iter;
+	%gbl<max max-iter max-samples, max-decay> = $max, $max-iter, $max-samples, $max-decay;
 
 	die 'no test media specified' if not @test-media;
 
