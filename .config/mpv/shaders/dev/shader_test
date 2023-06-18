@@ -160,6 +160,22 @@ sub standard(@x, $avg) { (@x >>->> $avg) >>/>> sqrt(variance(@x, $avg)) }
 multi sub transpose(@a where *.elems == 1) { @a[0].rotor(1) }
 multi sub transpose(@x) { [Z] @x }
 
+# Description of the algorithm:
+# 1) Start with an estimate of the optimal parameters (@starts)
+# 2) Sample randomly around that estimate
+# 	- The random offsets are standardized for each parameter
+# 		- In many cases (e.g., first iteration) this ensures each parameter is increased and decreased
+# 	- Add the correlation of the previous iteration to the random offsets (0.0 for the first iteration)
+# 	- Multiply the random offsets by the decay factor (1.0 for the first iteration)
+# 3) Replace the estimate with the best sample if it is better than the estimate
+# 	- If the estimate was replaced, multiply the decay factor by the decay parameter ($decay)
+# 	- Otherwise, divide the decay factor by the decay parameter
+# 4) Update correlation
+# 	- The correlation is the Pearson correlation coefficient between each parameter and the score
+# 	- E.g., [correlation(param1, scores), correlation(param2, scores), ...]
+# 	- The scope of the correlation is only 1 iteration, previous iterations are ignored
+# 5) Repeat steps 1-4 until the iteration limit is reached
+#
 sub optimize(
 	&f, #= function to optimize, takes a list of parameter lists and returns a list of scores
 	:@starts = (Nil,), #= starting points for the values passed to &f
@@ -188,6 +204,7 @@ sub optimize(
 		my @off_factor = (@rand >>+<< (@cor xx $samples)) >>*>> $decay_factor;
 		@params = @params >>+<< (@params >>*<< @steps_m >>*<< @off_factor);
 
+		# XXX maybe it would be better to have two decay parameters
 		my @results = &f(@params).sort(*.value);
 		if @results[*-1].value < $optimal.value {
 			$decay_factor /= $decay;
