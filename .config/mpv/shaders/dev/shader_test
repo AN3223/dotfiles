@@ -181,10 +181,10 @@ sub optimize(
 	&f, #= function to optimize, takes a list of parameter lists and returns a list of scores
 	:@starts = (Nil,), #= starting points for the values passed to &f
 	:@steps = (Nil,), #= scales the offsets, ideally 0.0 or above
-	:$decay = 0.25, #= ideally 0.0-1.0
-	:$rev-decay = 1.4, #= ideally 1.0-2.0
-	:$samples = 5, #= samples per iteration
-	:$iter = 15 #= exit after this many iterations (may be Inf)
+	:$decay = 0.1, #= ideally 0.0-1.0
+	:$rev-decay = 1.5, #= ideally 1.0-2.0
+	:$samples = 15, #= samples per iteration
+	:$iter = 10 #= exit after this many iterations (may be Inf)
 ) {
 	# replace Nil with defaults
 	my @starts_ = List(@starts.map({ with $_ { $_ } else { 1 } }));
@@ -249,8 +249,7 @@ sub test(Str $cfgopts = "") {
 			(@cfgopts Z=> @scores).map: { stats(.key, .value, :erronly) };
 			@arr_of_params Z=> @scores
 		};
-		%optimize_args<iter samples decay rev-decay> = %gbl<max-iter max-samples max-decay max-rev-decay>;
-		%optimize_args.map({ %optimize_args{$^p.key}:delete without $^p.value });
+		%gbl.map({ %optimize_args{$^p.key.subst(/^max\-/)} = $^p.value if $^p.key ~~ /^max\-/ && $^p.value.defined });
 
 		my $result = optimize(&f, |%optimize_args);
 		stats(&params2opts($result.key), $result.value);
@@ -333,7 +332,7 @@ sub MAIN(
 ) {
 	%gbl<shader verbose vk plane resolution pix-fmt> = $shader, ($verbose || $v), $vk-device, $plane, $resolution, $pix-fmt;
 	%gbl<outopts> = <<-c\:v ffv1 -colorspace "$colorspace" -pix_fmt "$pix-fmt">>;
-	%gbl<max max-iter max-samples, max-decay> = $max, $max-iter, $max-samples, $max-decay;
+	%gbl<max max-iter max-samples max-decay> = $max, $max-iter, $max-samples, $max-decay;
 
 	die 'no test media specified' if not @test-media;
 
