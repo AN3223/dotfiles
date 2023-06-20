@@ -183,6 +183,7 @@ sub optimize(
 	:@steps = (Nil,), #= scales the offsets, ideally 0.0 or above
 	:$decay = 0.1, #= ideally 0.0-1.0
 	:$rev-decay = 1.5, #= ideally 1.0-2.0
+	:$min-decay = 0, #= exit if decay is lower than this
 	:$samples = 15, #= samples per iteration
 	:$iter = 10 #= exit after this many iterations (may be Inf)
 ) {
@@ -195,7 +196,6 @@ sub optimize(
 	my @cor = 0 xx @steps_;
 	my $decay_factor = 1.0;
 
-	# XXX add an early exit condition
 	for ^$iter {
 		my @params = $optimal.key xx $samples;
 
@@ -220,7 +220,9 @@ sub optimize(
 			.map({ correlation(@^x, sum(@^x)/@^x, @scores, $score_avg) })
 			.List;
 		note("Correlation: {@cor}");
-		note("Decay: {$decay_factor}")
+		note("Decay: {$decay_factor}");
+
+		last if $decay_factor <= $min-decay;
 	}
 
 	return $optimal;
@@ -321,6 +323,7 @@ sub MAIN(
 	Int :$max-samples, #= Optimizer samples per iteration
 	Rat() :$max-decay, #= Optimizer decay
 	Rat() :$max-rev-decay, #= Optimizer reverse decay
+	Rat() :$max-min-decay, #= Optimizer minimum decay, exits early when the decay falls below this
 	Str :$pix-fmt = "yuv444p", #= Pixel format used for everything
 	Str :$colorspace = "bt709", #= Colorspace used for everything
 	Str :$resolution where /^\d+ ':' \d+$/ = "1080:1080", #= Resolution used for everything
@@ -332,7 +335,7 @@ sub MAIN(
 ) {
 	%gbl<shader verbose vk plane resolution pix-fmt> = $shader, ($verbose || $v), $vk-device, $plane, $resolution, $pix-fmt;
 	%gbl<outopts> = <<-c\:v ffv1 -colorspace "$colorspace" -pix_fmt "$pix-fmt">>;
-	%gbl<max max-iter max-samples max-decay> = $max, $max-iter, $max-samples, $max-decay;
+	%gbl<max max-iter max-samples max-decay max-min-decay> = $max, $max-iter, $max-samples, $max-decay, $max-min-decay;
 
 	die 'no test media specified' if not @test-media;
 
