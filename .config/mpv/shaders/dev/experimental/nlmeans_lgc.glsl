@@ -745,7 +745,7 @@ float spatial_r(vec3 v)
 
 val range(val pdiff_sq)
 {
-	const float h = S*0.013;
+	const float h = max(S, 0.0) * 0.013;
 	const float pdiff_scale = 1.0/(h*h);
 	pdiff_sq = sqrt(pdiff_sq * pdiff_scale);
 #if defined(LUMA_raw)
