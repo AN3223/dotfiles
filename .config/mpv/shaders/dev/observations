@@ -73,6 +73,17 @@
 # BASELINE=NOISE=10:10 0.72809122
 # S=2.5168955531436197:SW=1.2219854377433914:WDT=0.002713346103131793:SS=0.26295970436981203: 0.95837729
 #
+### WD can be disabled w/o much difference in quality
+#
+#fn='cfgopts=WD=0,1,2_plane=CHROMA_media=images.stats.bz2'
+#bzcat "stats/$fn" | sort -k 2 -n | tail
+#
+# OUTPUT:
+# BASELINE=NOISE=10:10 0.72809122
+# WD=1 0.95836022
+# WD=2 0.95836022
+# WD=0 0.95836025
+#
 #}}}
 
 #{{{ Optimal NLM LGC

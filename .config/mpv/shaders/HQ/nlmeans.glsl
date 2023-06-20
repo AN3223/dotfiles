@@ -1222,7 +1222,7 @@ return _INJ_RF_LUMA_texOff(0);
 #define WDT 0.11671341022864548
 #define WDP 5.381278367349288
 #else
-#define WD 2
+#define WD 0
 #define WDT 0.002713346103131793
 #define WDP 5.832936323930807
 #endif
@@ -2284,7 +2284,7 @@ vec4 hook()
 #define WDT 0.11671341022864548
 #define WDP 5.381278367349288
 #else
-#define WD 2
+#define WD 0
 #define WDT 0.002713346103131793
 #define WDP 5.832936323930807
 #endif
