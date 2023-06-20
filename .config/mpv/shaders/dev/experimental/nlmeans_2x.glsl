@@ -52,9 +52,9 @@ vec4 hook()
 
 // Denoising factor (level of blur, higher means more blur)
 #ifdef LUMA_raw
-#define S 13.266202730959009
+#define S 12.691082060658802
 #else
-#define S 13.266202730959009
+#define S 12.691082060658802
 #endif
 
 /* Adaptive sharpening
@@ -90,9 +90,9 @@ vec4 hook()
  * EPSILON should be used instead of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
-#define SW EPSILON
+#define SW 0.8013639971832847
 #else
-#define SW EPSILON
+#define SW 0.8013639971832847
 #endif
 
 /* Weight discard
@@ -111,12 +111,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 0
-#define WDT 0.3513053819107378
-#define WDP 5.46
+#define WDT 0.11671341022864548
+#define WDP 5.381278367349288
 #else
 #define WD 0
-#define WDT 0.7376637633530657
-#define WDP 5.46
+#define WDT 0.002713346103131793
+#define WDP 5.832936323930807
 #endif
 
 /* Extremes preserve
@@ -212,8 +212,8 @@ vec4 hook()
  * This setting is dependent on code generation from shader_cfg, so this 
  * setting can only be enabled via shader_cfg.
  *
- * Compares the pixel-of-interest against a guide, which could be a downscaled 
- * image or the output of another shader
+ * Computes weights on a guide, which could be a downscaled image or the output 
+ * of another shader, and applies the weights to the original image
  */
 #define RF_LUMA 1
 #define RF 0
@@ -297,14 +297,14 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.369
+#define SS 1.3873631127950998
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
 #else
 #define SST 1
-#define SS 1.369
+#define SS 1.3873631127950998
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
@@ -323,16 +323,19 @@ vec4 hook()
  * cos
  * gaussian
  * lanczos
- * quadratic
+ * quadratic_ (unclamped)
  * sinc
+ * sinc_ (unclamped)
+ * sinc3
  * sphinx
+ * sphinx_ (unclamped)
  */
 #ifdef LUMA_raw
-#define SK sphinx
+#define SK sphinx_
 #define RK gaussian
 #define PSK gaussian
 #else
-#define SK sphinx
+#define SK sphinx_
 #define RK gaussian
 #define PSK gaussian
 #endif
@@ -366,6 +369,13 @@ vec4 hook()
 #define SF 2
 #else
 #define SF 2
+#endif
+
+// Use the guide image as the input image
+#ifdef LUMA_raw
+#define GUIDE_INPUT 0
+#else
+#define GUIDE_INPUT 0
 #endif
 
 /* Visualization
@@ -425,12 +435,17 @@ vec4 hook()
 #define M_PI 3.14159265358979323846
 #define POW2(x) ((x)*(x))
 #define POW3(x) ((x)*(x)*(x))
-#define bicubic(x) ((1.0/6.0) * (POW3((x)+2) - 4 * POW3((x)+1) + 6 * POW3(x) - 4 * POW3(max((x)-1, 0))))
+#define bicubic_(x) ((1.0/6.0) * (POW3((x)+2) - 4 * POW3((x)+1) + 6 * POW3(x) - 4 * POW3(max((x)-1, 0))))
+#define bicubic(x) bicubic_(clamp((x), 0.0, 2.0))
 #define gaussian(x) exp(-1 * POW2(x))
-#define lanczos(x) POW2(sinc(x))
-#define quadratic(x) ((x) < 0.5 ? 0.75 - POW2(x) : 0.5 * POW2((x) - 1.5))
-#define sinc(x) ((x) < 1e-8 ? 1.0 : sin((x)*M_PI) / ((x)*M_PI))
-#define sphinx(x) ((x) < 1e-8 ? 1.0 : 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
+#define quadratic_(x) ((x) < 0.5 ? 0.75 - POW2(x) : 0.5 * POW2((x) - 1.5))
+#define quadratic(x) quadratic_(clamp((x), 0.0, 1.5))
+#define sinc_(x) ((x) < 1e-8 ? 1.0 : sin((x)*M_PI) / ((x)*M_PI))
+#define sinc(x) sinc_(clamp((x), 0.0, 1.0))
+#define sinc3(x) sinc_(clamp((x), 0.0, 3.0))
+#define lanczos(x) (sinc3(x) * sinc(x))
+#define sphinx_(x) ((x) < 1e-8 ? 1.0 : 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
+#define sphinx(x) sphinx_(clamp((x), 0.0, 1.4302966531242027))
 
 // XXX could maybe be better optimized on LGC
 #if defined(LUMA_raw)
@@ -545,14 +560,7 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 // much faster than a continue statement
 #define DINCR(z,c,a) ((z.c += a),(z.c += int(z == vec3(0))))
 
-// Skip comparing the pixel-of-interest against itself, unless RF is enabled
-#if RF_
-#define RINCR(z,c,a) (z.c += a)
-#else
-#define RINCR DINCR
-#endif
-
-#define R_AREA(a) (a * T1 + RF_-1)
+#define R_AREA(a) (a * T1 - 1)
 
 // research shapes
 // XXX would be nice to have the option of temporally-varying research sizes
@@ -560,31 +568,31 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 #define FOR_RESEARCH(r) S_1X1(r)
 const int r_area = R_AREA(1);
 #elif RS == 8
-#define FOR_RESEARCH(r) S_PLUS_X(r,hr,RINCR(r,y,max(1,abs(r.x))))
+#define FOR_RESEARCH(r) S_PLUS_X(r,hr,DINCR(r,y,max(1,abs(r.x))))
 const int r_area = R_AREA(S_PLUS_X_A(hr,R));
 #elif RS == 7
-#define FOR_RESEARCH(r) S_PLUS(r,hr,RINCR(r,y,1))
+#define FOR_RESEARCH(r) S_PLUS(r,hr,DINCR(r,y,1))
 const int r_area = R_AREA(S_PLUS_A(hr,R));
 #elif RS == 6
-#define FOR_RESEARCH(r) S_SQUARE_EVEN(r,hr,RINCR(r,y,1))
+#define FOR_RESEARCH(r) S_SQUARE_EVEN(r,hr,DINCR(r,y,1))
 const int r_area = R_AREA(R*R);
 #elif RS == 5
-#define FOR_RESEARCH(r) S_TRUNC_TRIANGLE(r,hr,RINCR(r,x,1))
+#define FOR_RESEARCH(r) S_TRUNC_TRIANGLE(r,hr,DINCR(r,x,1))
 const int r_area = R_AREA(S_TRIANGLE_A(hr,hr));
 #elif RS == 4
-#define FOR_RESEARCH(r) S_TRIANGLE(r,hr,RINCR(r,x,1))
+#define FOR_RESEARCH(r) S_TRIANGLE(r,hr,DINCR(r,x,1))
 const int r_area = R_AREA(S_TRIANGLE_A(hr,R));
 #elif RS == 3
-#define FOR_RESEARCH(r) S_DIAMOND(r,hr,RINCR(r,y,1))
+#define FOR_RESEARCH(r) S_DIAMOND(r,hr,DINCR(r,y,1))
 const int r_area = R_AREA(S_DIAMOND_A(hr,R));
 #elif RS == 2
-#define FOR_RESEARCH(r) S_VERTICAL(r,hr,RINCR(r,y,1))
+#define FOR_RESEARCH(r) S_VERTICAL(r,hr,DINCR(r,y,1))
 const int r_area = R_AREA(R);
 #elif RS == 1
-#define FOR_RESEARCH(r) S_HORIZONTAL(r,hr,RINCR(r,x,1))
+#define FOR_RESEARCH(r) S_HORIZONTAL(r,hr,DINCR(r,x,1))
 const int r_area = R_AREA(R);
 #elif RS == 0
-#define FOR_RESEARCH(r) S_SQUARE(r,hr,RINCR(r,y,1))
+#define FOR_RESEARCH(r) S_SQUARE(r,hr,DINCR(r,y,1))
 const int r_area = R_AREA(R*R);
 #endif
 
@@ -688,9 +696,13 @@ val load2(vec3 off)
 #define load2(off) val_swizz(load2_(off))
 #endif
 
+val poi2 = load2(vec3(0)); // guide pixel-of-interest
+#if GUIDE_INPUT
+#define poi poi2
+#else
 vec4 poi_ = load_(vec3(0));
 val poi = val_swizz(poi_); // pixel-of-interest
-val poi2 = load2(vec3(0)); // guide pixel-of-interest
+#endif
 
 #if RI // rotation
 vec2 rot(vec2 p, float d)

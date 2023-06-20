@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-all: ../guided.glsl ../guided_s.glsl ../guided_fast.glsl ../guided_s_fast.glsl ../guided_lgc.glsl ../nlmeans.glsl ../nlmeans_lgc.glsl ../nlmeans_temporal.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../HQ/nlmeans.glsl ../HQ/nlmeans_sharpen_denoise.glsl ../HQX/nlmeans.glsl ../LQ/nlmeans.glsl ../LQ/nlmeans_lgc.glsl ../LQ/nlmeans_temporal.glsl ../LQ/nlmeans_sharpen_denoise.glsl ../LQ/nlmeans_sharpen_only.glsl ../LQ/nlmeans_temporal_sharpen_denoise.glsl ../HQ/nlmeans_lgc.glsl ../HQ/nlmeans_temporal.glsl ../HQ/nlmeans_sharpen_only.glsl ../HQ/nlmeans_temporal_sharpen_denoise.glsl experimental/nlmeans_2x.glsl ../LQ/hdeband.glsl pyramid.glsl
+all: ../guided.glsl ../guided_s.glsl ../guided_fast.glsl ../guided_s_fast.glsl experimental/guided_lgc.glsl ../nlmeans.glsl experimental/nlmeans_lgc.glsl ../nlmeans_temporal.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../HQ/nlmeans.glsl ../HQ/nlmeans_sharpen_denoise.glsl ../HQX/nlmeans.glsl ../LQ/nlmeans.glsl ../LQ/nlmeans_temporal.glsl ../LQ/nlmeans_sharpen_denoise.glsl ../LQ/nlmeans_sharpen_only.glsl ../LQ/nlmeans_temporal_sharpen_denoise.glsl ../HQ/nlmeans_temporal.glsl ../HQ/nlmeans_sharpen_only.glsl ../HQ/nlmeans_temporal_sharpen_denoise.glsl experimental/nlmeans_2x.glsl ../LQ/hdeband.glsl pyramid.glsl
 
 # pyramid
 
@@ -26,7 +26,7 @@ GUIDED_FAST_S=IP=2/:MEANIP=1.5/:E=0.001
 	./shader_cfg DESC="$@: $(SELF_DESC) $(GUIDED_FAST_DESC)" OPTS="$(GUIDED_FAST_S)" $? > $@
 ../guided_fast.glsl: guided_template
 	./shader_cfg DESC="$@: $(GUIDED_FAST_DESC)" OPTS="$(GUIDED_FAST)" $? > $@
-../guided_lgc.glsl: guided_template
+experimental/guided_lgc.glsl: guided_template
 	./shader_cfg DESC="$@: $(GUIDED_LGC_DESC)" OPTS="$(GUIDED_LGC)" $? > $@
 
 # nlmeans
@@ -47,19 +47,14 @@ NLM_SHARPEN_ONLY=AS=2
 NLM_SHARPEN_DENOISE_DESC=Sharpen and denoise.
 NLM_SHARPEN_DENOISE=AS=1
 
-NLM_LGC_DESC=Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
-NLM_LGC=CFG_HOOKS=CHROMA:RF=SHARE_LUMA:RF_LUMA=0:D1W=1:S=11.66:WD=0:SW=0.75:RI=3:RFI=2
-
 NLM_LQ_DESC=Faster, but lower quality.
-NLM_LQ_LUMA=PS=4:$(NO_ROTATE):S=3.7301445:SW=0.763672:SS=0.524688:WDT=0.597188
-NLM_LQ=S=4.985978566558599:SW=0.7353169262213034:WDT=0.960341797329127:SS=0.23341241032450166:WD=1:RF=0:RF_LUMA=0
+NLM_LQ_LUMA=PS=4:$(NO_ROTATE):S=3.5968056672833097:SS=0.49764743714339127:SW=0.7392620481427672:WDT=0.580415381682815
+NLM_LQ=S=5.191526541606411:SS=0.32091162692066677:SW=0.6448288408806067:WDT=0.913447511792627:WD=1:RF=0:RF_LUMA=0
 
 # If RF=shader then that shader needs to be added to the prerequisites (i.e., alongside nlmeans_template)
 
 ../LQ/nlmeans.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_LQ_DESC)" OPTS="$(NLM_LQ)" OPTS_LUMA="$(NLM_LQ_LUMA)" nlmeans_template > $@
-../LQ/nlmeans_lgc.glsl: nlmeans_template
-	./shader_cfg DESC="$@: $(NLM_LQ_DESC) $(NLM_LGC_DESC)" OPTS="$(NLM_LGC):$(NLM_LQ)" OPTS_LUMA="$(NLM_LQ_LUMA)" nlmeans_template > $@
 ../LQ/nlmeans_temporal.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_LQ_DESC) $(NLM_TEMPORAL_DESC)" OPTS="$(NLM_TEMPORAL):$(NLM_LQ)" OPTS_LUMA="$(NLM_TEMPORAL_LUMA):$(NLM_LQ_LUMA)" nlmeans_template > $@
 ../LQ/nlmeans_sharpen_denoise.glsl: nlmeans_template
@@ -71,8 +66,6 @@ NLM_LQ=S=4.985978566558599:SW=0.7353169262213034:WDT=0.960341797329127:SS=0.2334
 
 ../nlmeans.glsl: nlmeans_template ../LQ/nlmeans.glsl
 	./shader_cfg nlmeans_template > $@
-../nlmeans_lgc.glsl: nlmeans_template ../LQ/nlmeans.glsl
-	./shader_cfg DESC="$@: $(NLM_LGC_DESC)" OPTS="$(NLM_LGC)" nlmeans_template > $@
 ../nlmeans_temporal.glsl: nlmeans_template ../LQ/nlmeans.glsl
 	./shader_cfg DESC="$@: $(NLM_TEMPORAL_DESC)" OPTS="$(NLM_TEMPORAL)" OPTS_LUMA="$(NLM_TEMPORAL_LUMA)" nlmeans_template > $@
 ../nlmeans_sharpen_denoise.glsl: nlmeans_template ../LQ/nlmeans.glsl
@@ -82,14 +75,13 @@ NLM_LQ=S=4.985978566558599:SW=0.7353169262213034:WDT=0.960341797329127:SS=0.2334
 ../nlmeans_temporal_sharpen_denoise.glsl: nlmeans_template ../LQ/nlmeans.glsl
 	./shader_cfg DESC="$@: $(NLM_TEMPORAL_SHARPEN_DENOISE_DESC)" OPTS="$(NLM_TEMPORAL_SHARPEN_DENOISE)" OPTS_LUMA="$(NLM_TEMPORAL_SHARPEN_DENOISE_LUMA)" nlmeans_template > $@
 
+# XXX test
 NLM_HQ_DESC=Slow, but higher quality.
 NLM_HQ_LUMA=S=2.25:P=4:PS=6:$(NO_ROTATE)
 NLM_HQ=RF_LUMA=../nlmeans.glsl
 
 ../HQ/nlmeans.glsl: nlmeans_template ../nlmeans.glsl
 	./shader_cfg DESC="$@: $(NLM_HQ_DESC)" OPTS="$(NLM_HQ)" OPTS_LUMA="$(NLM_HQ_LUMA)" nlmeans_template > $@
-../HQ/nlmeans_lgc.glsl: nlmeans_template ../nlmeans.glsl
-	./shader_cfg DESC="$@: $(NLM_HQ_DESC) $(NLM_LGC_DESC)" OPTS="$(NLM_LGC):$(NLM_HQ)" OPTS_LUMA="$(NLM_HQ_LUMA)" nlmeans_template > $@
 ../HQ/nlmeans_temporal.glsl: nlmeans_template ../nlmeans.glsl
 	./shader_cfg DESC="$@: $(NLM_HQ_DESC) $(NLM_TEMPORAL_DESC)" OPTS="$(NLM_TEMPORAL):$(NLM_HQ)" OPTS_LUMA="$(NLM_TEMPORAL_LUMA):$(NLM_HQ_LUMA)" nlmeans_template > $@
 ../HQ/nlmeans_sharpen_denoise.glsl: nlmeans_template ../nlmeans.glsl
@@ -108,10 +100,16 @@ NLM_HQX=P=5:$(NLM_HQ)
 	./shader_cfg DESC="$@: $(NLM_HQX_DESC)" OPTS="$(NLM_HQX)" OPTS_LUMA="$(NLM_HQX_LUMA)" nlmeans_template > $@
 
 NLM_2X_DESC=Experimental upscaler
-NLM_2X=CFG_HOOKS=LUMA:CFG_SIZE=2*:SF=2:S=13.266202730959009:PS=0:R=7:RS=8:RI=7:SK=sphinx:SS=1.369:SW=EPSILON:WD=0:RF_LUMA=2*:RF=0
+NLM_2X=CFG_HOOKS=LUMA:CFG_SIZE=2*:SF=2:S=12.691082060658802:SW=0.8013639971832847:SS=1.3873631127950998:PS=0:R=7:RS=8:RI=7:SK=sphinx_:WD=0:RF_LUMA=2*:RF=0
 
 experimental/nlmeans_2x.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_2X_DESC)" OPTS="$(NLM_2X)" nlmeans_template > $@
+
+NLM_LGC_DESC=Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
+NLM_LGC=CFG_HOOKS=CHROMA:RF=SHARE_LUMA:RF_LUMA=0:D1W=1:S=11.66:WD=0:SW=0.75:RI=3:RFI=2
+
+experimental/nlmeans_lgc.glsl: nlmeans_template ../LQ/nlmeans.glsl
+	./shader_cfg DESC="$@: $(NLM_LGC_DESC)" OPTS="$(NLM_LGC)" nlmeans_template > $@
 
 # hdeband
 
