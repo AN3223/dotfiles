@@ -434,6 +434,8 @@
 #define lanczos(x) (sinc3(x) * sinc(x))
 #define sphinx_(x) ((x) < 1e-8 ? 1.0 : 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
 #define sphinx(x) sphinx_(clamp((x), 0.0, 1.4302966531242027))
+#define triangle_(x) (1 - (x))
+#define triangle(x) triangle_(clamp((x), 0.0, 1.0))
 
 // XXX could maybe be better optimized on LGC
 #if defined(LUMA_raw)
