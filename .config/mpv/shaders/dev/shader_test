@@ -183,9 +183,9 @@ sub optimize(
 	:@steps = (Nil,), #= scales the offsets, ideally 0.0 or above
 	:$decay = 0.1, #= ideally 0.0-1.0
 	:$rev-decay = 1.5, #= ideally 1.0-2.0
-	:$min-decay = 0, #= exit if decay is lower than this
+	:$min-decay = 1e-4, #= exit if decay is lower than this (may be zero)
 	:$samples = 15, #= samples per iteration
-	:$iter = 10 #= exit after this many iterations (may be Inf)
+	:$iter = 50 #= exit after this many iterations (may be Inf)
 ) {
 	# replace Nil with defaults
 	my @starts_ = List(@starts.map({ with $_ { $_ } else { 1 } }));
