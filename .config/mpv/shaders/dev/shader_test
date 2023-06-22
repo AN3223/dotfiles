@@ -175,7 +175,7 @@ multi sub transpose(@x) { [Z] @x }
 # 	- The correlation is the Pearson correlation coefficient between each parameter and the score
 # 	- E.g., [correlation(param1, scores), correlation(param2, scores), ...]
 # 	- The scope of the correlation is only 1 iteration, previous iterations are ignored
-# 5) Repeat steps 1-4 until the iteration limit is reached
+# 5) Repeat steps 1-4 until either the iteration limit is reached or the decay falls below a user-defined threshold
 #
 sub optimize(
 	&f, #= function to optimize, takes a list of parameter lists and returns a list of scores
