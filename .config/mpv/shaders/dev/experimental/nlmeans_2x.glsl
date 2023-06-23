@@ -329,6 +329,8 @@ vec4 hook()
  * sinc3
  * sphinx
  * sphinx_ (unclamped)
+ * triangle_ (unclamped)
+ * triangle
  */
 #ifdef LUMA_raw
 #define SK sphinx_

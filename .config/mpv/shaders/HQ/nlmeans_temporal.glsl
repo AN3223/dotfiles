@@ -374,6 +374,8 @@
  * sinc3
  * sphinx
  * sphinx_ (unclamped)
+ * triangle_ (unclamped)
+ * triangle
  */
 #ifdef LUMA_raw
 #define SK gaussian
@@ -1443,6 +1445,8 @@ return _INJ_RF_LUMA_texOff(0);
  * sinc3
  * sphinx
  * sphinx_ (unclamped)
+ * triangle_ (unclamped)
+ * triangle
  */
 #ifdef LUMA_raw
 #define SK gaussian
@@ -2513,6 +2517,8 @@ vec4 hook()
  * sinc3
  * sphinx
  * sphinx_ (unclamped)
+ * triangle_ (unclamped)
+ * triangle
  */
 #ifdef LUMA_raw
 #define SK gaussian
