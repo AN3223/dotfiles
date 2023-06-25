@@ -73,9 +73,28 @@ Refer to mpv's man page for more details.
 
 These shaders are denoisers and/or adaptive sharpeners. They have documentation embedded in them, with each nlmeans profile having a profile description near the top. 
 
+nlmeans.glsl example (clean/noisy/denoised):
+
 ![Clean image](dev/result_images/clean.png)
 ![Noisy image](dev/result_images/noise10.png)
 ![Denoised image](dev/result_images/nlmeans.png)
+
+nlmeans\_sharpen\_denoise.glsl example (clean/noisy/sharpened+denoised):
+
+![Clean image](dev/result_images/clean.png)
+![Noisy image](dev/result_images/noise10.png)
+![Sharpened and denoised image](dev/result_images/nlmeans_sharpen_denoise.png)
+
+nlmeans\_sharpen\_only.glsl example (clean/noisy/sharpened):
+
+![Clean image](dev/result_images/clean.png)
+![Noisy image](dev/result_images/noise10.png)
+![Sharpened noisy image](dev/result_images/nlmeans_sharpen_only_noisy.png)
+
+nlmeans\_sharpen\_only.glsl example (clean/sharpened):
+
+![Clean image](dev/result_images/clean.png)
+![Sharpened noisy image](dev/result_images/nlmeans_sharpen_only_clean.png)
 
 ## hdeband
 
