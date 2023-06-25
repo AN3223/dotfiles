@@ -69,15 +69,18 @@ vec4 hook()
  * 	- 2: sharpen only
  * ASF: Higher numbers make a sharper image
  * ASA: Anti-ringing, higher numbers increase strength
+ * ASP: Power, lower numbers increase sharpening on lower frequency detail
  */
 #ifdef LUMA_raw
 #define AS 0
-#define ASF 1.0
+#define ASF 0.125
 #define ASA 5.0
+#define ASP 0.5
 #else
 #define AS 0
-#define ASF 1.0
+#define ASF 0.125
 #define ASA 5.0
+#define ASP 0.5
 #endif
 
 /* Starting weight
@@ -1055,6 +1058,7 @@ vec4 hook()
 #endif
 #if AS
 	val usm = result - sum_s/total_weight_s;
+	usm = exp(log(abs(usm))*ASP) * sign(usm); // avoiding pow() since it's buggy on nvidia
 	usm *= gaussian(abs((AS_base + usm - 0.5) / 1.5) * ASA);
 	usm *= ASF;
 	result = AS_base + usm;
