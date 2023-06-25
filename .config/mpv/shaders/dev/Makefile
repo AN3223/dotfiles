@@ -116,3 +116,14 @@ experimental/nlmeans_lgc.glsl: nlmeans_template ../LQ/nlmeans.glsl
 ../LQ/hdeband.glsl: ../hdeband.glsl
 	./shader_cfg OPTS="RADIUS=4:SPARSITY=0.5:DIRECTIONS=3" $? > $@
 
+readme: result_images/clean.png result_images/noise10.png result_images/nlmeans.png
+
+result_images/clean.png: ../nlmeans.glsl
+	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p' $@
+
+result_images/noise10.png: ../nlmeans.glsl
+	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10' $@
+
+result_images/nlmeans.png: ../nlmeans.glsl
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p' $@
+

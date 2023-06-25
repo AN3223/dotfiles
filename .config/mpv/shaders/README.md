@@ -73,6 +73,10 @@ Refer to mpv's man page for more details.
 
 These shaders are denoisers and/or adaptive sharpeners. They have documentation embedded in them, with each nlmeans profile having a profile description near the top. 
 
+![Clean image](dev/result_images/clean.png)
+![Noisy image](dev/result_images/noise10.png)
+![Denoised image](dev/result_images/nlmeans.png)
+
 ## hdeband
 
 This is a debanding algorithm that blurs homogeneous regions together. It should be higher quality than mpv's built-in debanding, but slower.
