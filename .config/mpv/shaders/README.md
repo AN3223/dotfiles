@@ -105,6 +105,8 @@ FSR for reference (noisy/sharpened):
 ![Noisy image](dev/result_images/noise10.png)
 ![Sharpened noisy image](dev/result_images/fsr_noise10.png)
 
+Viewing these examples in a browser doesn't really do them justice. Try viewing them in mpv with `--scale=nearest` or `--scale=lanczos` for better clarity.
+
 ## hdeband
 
 This is a debanding algorithm that blurs homogeneous regions together. It should be higher quality than mpv's built-in debanding, but slower.
