@@ -95,15 +95,13 @@ FSR for reference (clean/sharpened):
 ![Clean image](dev/result_images/clean.png)
 ![Sharpened clean image](dev/result_images/fsr.png)
 
-nlmeans\_sharpen\_only.glsl example (clean/noisy/sharpened):
+nlmeans\_sharpen\_only.glsl example (noisy/sharpened):
 
-![Clean image](dev/result_images/clean.png)
 ![Noisy image](dev/result_images/noise10.png)
 ![Sharpened noisy image](dev/result_images/nlmeans_sharpen_only_noise10.png)
 
-FSR for reference (clean/noisy/sharpened):
+FSR for reference (noisy/sharpened):
 
-![Clean image](dev/result_images/clean.png)
 ![Noisy image](dev/result_images/noise10.png)
 ![Sharpened noisy image](dev/result_images/fsr_noise10.png)
 
