@@ -116,7 +116,7 @@ experimental/nlmeans_lgc.glsl: nlmeans_template ../LQ/nlmeans.glsl
 ../LQ/hdeband.glsl: ../hdeband.glsl
 	./shader_cfg OPTS="RADIUS=4:SPARSITY=0.5:DIRECTIONS=3" $? > $@
 
-readme: result_images/clean.png result_images/noise10.png result_images/nlmeans.png result_images/nlmeans_sharpen_denoise.png result_images/nlmeans_sharpen_only_noisy.png result_images/nlmeans_sharpen_only_clean.png result_images/fsr_noisy.png result_images/fsr_clean.png
+readme: result_images/clean.png result_images/noise10.png result_images/nlmeans_noise10.png result_images/nlmeans_sharpen_denoise_noise10.png result_images/nlmeans_sharpen_only_noise10.png result_images/fsr_noise10.png result_images/nlmeans_sharpen_only.png result_images/fsr.png 
 
 result_images/clean.png: ../nlmeans.glsl
 	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p' $@
@@ -124,24 +124,24 @@ result_images/clean.png: ../nlmeans.glsl
 result_images/noise10.png: ../nlmeans.glsl
 	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10' $@
 
-result_images/nlmeans.png: ../nlmeans.glsl
+result_images/nlmeans_noise10.png: ../nlmeans.glsl
 	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p' $@
 
-result_images/nlmeans_sharpen_denoise.png: ../nlmeans_sharpen_denoise.glsl
+result_images/nlmeans_sharpen_denoise_noise10.png: ../nlmeans_sharpen_denoise.glsl
 	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p' $@
 
-result_images/nlmeans_sharpen_only_noisy.png: ../nlmeans_sharpen_only.glsl
+result_images/nlmeans_sharpen_only_noise10.png: ../nlmeans_sharpen_only.glsl
 	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p' $@
 
 ../FSR.glsl:
 	curl -L 'https://gist.githubusercontent.com/agyild/82219c545228d70c5604f865ce0b0ce5/raw/2623d743b9c23f500ba086f05b385dcb1557e15d/FSR.glsl' > $@
 	sed -i '/^\/\/!WHEN/d' $@ # https://github.com/mpv-player/mpv/issues/10246#issuecomment-1303894445
 
-result_images/fsr_noisy.png: ../FSR.glsl
+result_images/fsr_noise10.png: ../FSR.glsl
 	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p' $@
 
-result_images/nlmeans_sharpen_only_clean.png: ../nlmeans_sharpen_only.glsl
+result_images/nlmeans_sharpen_only.png: ../nlmeans_sharpen_only.glsl
 	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p' $@
 
-result_images/fsr_clean.png: ../FSR.glsl
+result_images/fsr.png: ../FSR.glsl
 	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p' $@

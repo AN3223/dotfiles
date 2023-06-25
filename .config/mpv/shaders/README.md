@@ -77,35 +77,35 @@ nlmeans.glsl example (clean/noisy/denoised):
 
 ![Clean image](dev/result_images/clean.png)
 ![Noisy image](dev/result_images/noise10.png)
-![Denoised image](dev/result_images/nlmeans.png)
+![Denoised image](dev/result_images/nlmeans_noise10.png)
 
 nlmeans\_sharpen\_denoise.glsl example (clean/noisy/sharpened+denoised):
 
 ![Clean image](dev/result_images/clean.png)
 ![Noisy image](dev/result_images/noise10.png)
-![Sharpened and denoised image](dev/result_images/nlmeans_sharpen_denoise.png)
+![Sharpened and denoised image](dev/result_images/nlmeans_sharpen_denoise_noise10.png)
 
 nlmeans\_sharpen\_only.glsl example (clean/sharpened):
 
 ![Clean image](dev/result_images/clean.png)
-![Sharpened clean image](dev/result_images/nlmeans_sharpen_only_clean.png)
+![Sharpened clean image](dev/result_images/nlmeans_sharpen_only.png)
 
 FSR for reference (clean/sharpened):
 
 ![Clean image](dev/result_images/clean.png)
-![Sharpened clean image](dev/result_images/fsr_clean.png)
+![Sharpened clean image](dev/result_images/fsr.png)
 
 nlmeans\_sharpen\_only.glsl example (clean/noisy/sharpened):
 
 ![Clean image](dev/result_images/clean.png)
 ![Noisy image](dev/result_images/noise10.png)
-![Sharpened noisy image](dev/result_images/nlmeans_sharpen_only_noisy.png)
+![Sharpened noisy image](dev/result_images/nlmeans_sharpen_only_noise10.png)
 
 FSR for reference (clean/noisy/sharpened):
 
 ![Clean image](dev/result_images/clean.png)
 ![Noisy image](dev/result_images/noise10.png)
-![Sharpened noisy image](dev/result_images/fsr_noisy.png)
+![Sharpened noisy image](dev/result_images/fsr_noise10.png)
 
 ## hdeband
 
