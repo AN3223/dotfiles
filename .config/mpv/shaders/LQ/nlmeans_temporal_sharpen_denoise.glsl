@@ -63,12 +63,12 @@
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.125
+#define ASF 0.1625
 #define ASA 5.0
 #define ASP 0.5
 #else
 #define AS 1
-#define ASF 0.125
+#define ASF 0.1625
 #define ASA 5.0
 #define ASP 0.5
 #endif
