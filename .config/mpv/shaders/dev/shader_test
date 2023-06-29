@@ -232,8 +232,8 @@ sub optimize(
 # XXX batch this across permutations
 sub test(Str $cfgopts = "") {
 	my %optimize_args = options => [], starts => [], steps => [];
-	for %gbl<max>.split(",", :skip-empty) -> $args { 
-		my ($option, $start, $step) = $args.split(":");
+	for %gbl<max>.split(":", :skip-empty) -> $args { 
+		my ($option, $start, $step) = $args.split("=");
 		%optimize_args<options>.push($option);
 		%optimize_args<starts>.push($start);
 		%optimize_args<steps>.push($step);
@@ -318,7 +318,7 @@ sub MAIN(
 	Str :$corruption = "NOISE=10:10", #= Corruption type, can be NOISE, JPEG, or SCALE
 	Str :$vk-device = "vulkan", #= Device name passed to ffmpeg's -init_hw_device option
 	Str :$stats-dir where *.IO.d = "stats", #= Directory where stats will be stored
-	Str :$max = "", #= Optimizer settings: OPTION:START:STEP (all optional, multiple can be chained with commas)
+	Str :$max = "", #= Optimizer settings: OPTION=START=STEP (all optional, multiple can be chained with colons)
 	Int :$max-iter, #= Optimizer iterations
 	Int :$max-samples, #= Optimizer samples per iteration
 	Rat() :$max-decay, #= Optimizer decay
