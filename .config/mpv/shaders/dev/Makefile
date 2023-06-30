@@ -100,7 +100,7 @@ NLM_HQX=P=5:$(NLM_HQ)
 	./shader_cfg DESC="$@: $(NLM_HQX_DESC)" OPTS="$(NLM_HQX)" OPTS_LUMA="$(NLM_HQX_LUMA)" nlmeans_template > $@
 
 NLM_2X_DESC=Experimental upscaler
-NLM_2X=CFG_HOOKS=LUMA:CFG_SIZE=2*:SF=2:S=14.124363412957784:SW=0.8333664345187228:SS=1.382683822518466:PS=0:R=7:RS=8:RI=7:SK=sphinx_:WD=0:RF_LUMA=2*:RF=0
+NLM_2X=CFG_HOOKS=LUMA:S=16.90809288548364:SW=0.811199300207978:SS=1.3870308622552656:CFG_SIZE=2*:RF_LUMA=2*:RF=0:SF=3:PS=0:RI=7:R=7:RS=8:SK=sphinx_:WD=0
 
 experimental/nlmeans_2x.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_2X_DESC)" OPTS="$(NLM_2X)" nlmeans_template > $@

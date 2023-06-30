@@ -52,9 +52,9 @@ vec4 hook()
 
 // Denoising factor (level of blur, higher means more blur)
 #ifdef LUMA_raw
-#define S 14.124363412957784
+#define S 16.90809288548364
 #else
-#define S 14.124363412957784
+#define S 16.90809288548364
 #endif
 
 /* Adaptive sharpening
@@ -93,9 +93,9 @@ vec4 hook()
  * EPSILON should be used instead of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
-#define SW 0.8333664345187228
+#define SW 0.811199300207978
 #else
-#define SW 0.8333664345187228
+#define SW 0.811199300207978
 #endif
 
 /* Weight discard
@@ -303,14 +303,14 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.382683822518466
+#define SS 1.3870308622552656
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
 #else
 #define SST 1
-#define SS 1.382683822518466
+#define SS 1.3870308622552656
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
@@ -380,9 +380,9 @@ vec4 hook()
 
 // Scaling factor (should match WIDTH/HEIGHT)
 #ifdef LUMA_raw
-#define SF 2
+#define SF 3
 #else
-#define SF 2
+#define SF 3
 #endif
 
 // Use the guide image as the input image
