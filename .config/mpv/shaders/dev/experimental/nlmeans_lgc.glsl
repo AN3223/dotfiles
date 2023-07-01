@@ -113,13 +113,13 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 0
-#define WDT 0.11671341022864548
-#define WDP 5.381278367349288
+#define WDT 0.11832010376003192
+#define WDP 5.402102275251726
 #define WDS 1.0
 #else
 #define WD 0
 #define WDT 0.002713346103131793
-#define WDP 5.832936323930807
+#define WDP 5.692202343435388
 #define WDS 1.0
 #endif
 
@@ -301,14 +301,14 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.5296176863733414
+#define SS 0.5045657681048714
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
 #else
 #define SST 1
-#define SS 0.26295970436981203
+#define SS 0.2660216669677905
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
@@ -839,12 +839,11 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 			}
 #endif
 
-			vec4 diff = poi_patch_adj - transformer_adj;
+			vec4 diff_sq = POW2(poi_patch_adj - transformer_adj);
 #if PS == 0 || PS == 8
-			diff += poi_patch_diag - transformer_diag;
+			diff_sq += POW2(poi_patch_diag - transformer_diag);
 #endif
-			float diff_sq = dot(diff * diff, vec4(1));
-			min_rot = min(diff_sq, min_rot);
+			min_rot = min(dot(diff_sq, vec4(1)), min_rot);
 
 // un-reflect
 #if RFI

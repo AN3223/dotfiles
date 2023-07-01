@@ -68,9 +68,9 @@
 
 // Denoising factor (level of blur, higher means more blur)
 #ifdef LUMA_raw
-#define S 3.5968056672833097
+#define S 3.6280599151151334
 #else
-#define S 5.191526541606411
+#define S 5.100920322105462
 #endif
 
 /* Adaptive sharpening
@@ -109,9 +109,9 @@
  * EPSILON should be used instead of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
-#define SW 0.7392620481427672
+#define SW 0.717967659498257
 #else
-#define SW 0.6448288408806067
+#define SW 0.6429313578248627
 #endif
 
 /* Weight discard
@@ -131,13 +131,13 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.580415381682815
-#define WDP 5.381278367349288
+#define WDT 0.5509878334105431
+#define WDP 5.402102275251726
 #define WDS 1.0
 #else
 #define WD 1
-#define WDT 0.913447511792627
-#define WDP 5.832936323930807
+#define WDT 0.9385150042004405
+#define WDP 5.692202343435388
 #define WDS 1.0
 #endif
 
@@ -319,14 +319,14 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.49764743714339127
+#define SS 0.5072938692870894
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
 #else
 #define SST 1
-#define SS 0.32091162692066677
+#define SS 0.31580805565941705
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
@@ -857,12 +857,11 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 	 	 	 }
 #endif
 
-	 	 	 vec4 diff = poi_patch_adj - transformer_adj; 
+	 	 	 vec4 diff_sq = POW2(poi_patch_adj - transformer_adj); 
 #if PS == 0 || PS == 8
-	 	 	 diff += poi_patch_diag - transformer_diag; 
+	 	 	 diff_sq += POW2(poi_patch_diag - transformer_diag); 
 #endif
-	 	 	 float diff_sq = dot(diff * diff, vec4(1)); 
-	 	 	 min_rot = min(diff_sq, min_rot); 
+	 	 	 min_rot = min(dot(diff_sq, vec4(1)), min_rot); 
 
 // un-reflect
 #if RFI
@@ -1166,9 +1165,9 @@ vec4 hook()
 
 // Denoising factor (level of blur, higher means more blur)
 #ifdef LUMA_raw
-#define S 2.0522687499802097
+#define S 2.0262062762852167
 #else
-#define S 2.5168955531436197
+#define S 2.356425745363608
 #endif
 
 /* Adaptive sharpening
@@ -1207,9 +1206,9 @@ vec4 hook()
  * EPSILON should be used instead of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
-#define SW 1.3011446081346498
+#define SW 1.3322924870317203
 #else
-#define SW 1.2219854377433914
+#define SW 1.2033038941856653
 #endif
 
 /* Weight discard
@@ -1229,13 +1228,13 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.11671341022864548
-#define WDP 5.381278367349288
+#define WDT 0.11832010376003192
+#define WDP 5.402102275251726
 #define WDS 1.0
 #else
 #define WD 0
 #define WDT 0.002713346103131793
-#define WDP 5.832936323930807
+#define WDP 5.692202343435388
 #define WDS 1.0
 #endif
 
@@ -1417,14 +1416,14 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.5296176863733414
+#define SS 0.5045657681048714
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
 #else
 #define SST 1
-#define SS 0.26295970436981203
+#define SS 0.2660216669677905
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
@@ -1956,12 +1955,11 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 			}
 #endif
 
-			vec4 diff = poi_patch_adj - transformer_adj;
+			vec4 diff_sq = POW2(poi_patch_adj - transformer_adj);
 #if PS == 0 || PS == 8
-			diff += poi_patch_diag - transformer_diag;
+			diff_sq += POW2(poi_patch_diag - transformer_diag);
 #endif
-			float diff_sq = dot(diff * diff, vec4(1));
-			min_rot = min(diff_sq, min_rot);
+			min_rot = min(dot(diff_sq, vec4(1)), min_rot);
 
 // un-reflect
 #if RFI
