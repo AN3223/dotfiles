@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: nlmeans_temporal.glsl: Faster, but lower quality. Very experimental and buggy, limited to vo=gpu-next.
+// Description: LQ/nlmeans_temporal.glsl: Faster, but lower quality. Very experimental and buggy, limited to vo=gpu-next.
 
 /* This shader is highly configurable via user variables below. Although the 
  * default settings should offer good quality at a reasonable speed, you are 
@@ -31,7 +31,7 @@
 //!BIND HOOKED
 //!BIND PREV1
 //!BIND PREV2
-//!DESC Non-local means (nlmeans_temporal.glsl)
+//!DESC Non-local means (LQ/nlmeans_temporal.glsl)
 
 // User variables
 

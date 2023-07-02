@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: nlmeans_lgc.glsl: Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
+// Description: experimental/nlmeans_lgc.glsl: Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
 
 /* This shader is highly configurable via user variables below. Although the 
  * default settings should offer good quality at a reasonable speed, you are 
@@ -41,7 +41,7 @@ vec4 hook()
 //!HOOK CHROMA
 //!BIND HOOKED
 //!BIND RF
-//!DESC Non-local means (nlmeans_lgc.glsl)
+//!DESC Non-local means (experimental/nlmeans_lgc.glsl)
 
 // User variables
 

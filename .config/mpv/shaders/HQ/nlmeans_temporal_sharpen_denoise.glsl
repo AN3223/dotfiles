@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: nlmeans_temporal_sharpen_denoise.glsl: Slow, but higher quality. Very experimental and buggy, limited to vo=gpu-next. Sharpen and denoise.
+// Description: HQ/nlmeans_temporal_sharpen_denoise.glsl: Slow, but higher quality. Very experimental and buggy, limited to vo=gpu-next. Sharpen and denoise.
 
 /* This shader is highly configurable via user variables below. Although the 
  * default settings should offer good quality at a reasonable speed, you are 
@@ -77,7 +77,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: nlmeans.glsl: Faster, but lower quality.
+// Description: LQ/nlmeans.glsl: Faster, but lower quality.
 
 /* This shader is highly configurable via user variables below. Although the 
  * default settings should offer good quality at a reasonable speed, you are 
@@ -87,7 +87,7 @@
 //!HOOK LUMA
 //!HOOK CHROMA
 //!BIND HOOKED
-//!DESC Non-local means (nlmeans.glsl)
+//!DESC Non-local means (LQ/nlmeans.glsl)
 //!SAVE _INJ_RF_LUMA
 
 // User variables
@@ -2281,7 +2281,7 @@ vec4 hook()
 //!BIND RF
 //!BIND PREV1
 //!BIND PREV2
-//!DESC Non-local means (nlmeans_temporal_sharpen_denoise.glsl)
+//!DESC Non-local means (HQ/nlmeans_temporal_sharpen_denoise.glsl)
 
 // User variables
 

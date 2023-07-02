@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: nlmeans_2x.glsl: Experimental upscaler
+// Description: experimental/nlmeans_2x.glsl: Experimental upscaler
 
 /* This shader is highly configurable via user variables below. Although the 
  * default settings should offer good quality at a reasonable speed, you are 
@@ -41,7 +41,7 @@ vec4 hook()
 //!HOOK LUMA
 //!BIND HOOKED
 //!BIND RF_LUMA
-//!DESC Non-local means (nlmeans_2x.glsl)
+//!DESC Non-local means (experimental/nlmeans_2x.glsl)
 //!WIDTH HOOKED.w 2 *
 //!HEIGHT HOOKED.h 2 *
 

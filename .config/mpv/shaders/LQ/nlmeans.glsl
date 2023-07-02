@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: nlmeans.glsl: Faster, but lower quality.
+// Description: LQ/nlmeans.glsl: Faster, but lower quality.
 
 /* This shader is highly configurable via user variables below. Although the 
  * default settings should offer good quality at a reasonable speed, you are 
@@ -29,7 +29,7 @@
 //!HOOK LUMA
 //!HOOK CHROMA
 //!BIND HOOKED
-//!DESC Non-local means (nlmeans.glsl)
+//!DESC Non-local means (LQ/nlmeans.glsl)
 
 // User variables
 

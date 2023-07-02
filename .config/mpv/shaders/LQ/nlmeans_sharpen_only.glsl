@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: nlmeans_sharpen_only.glsl: Faster, but lower quality. Sharpen without denoising.
+// Description: LQ/nlmeans_sharpen_only.glsl: Faster, but lower quality. Sharpen without denoising.
 
 /* This shader is highly configurable via user variables below. Although the 
  * default settings should offer good quality at a reasonable speed, you are 
@@ -29,7 +29,7 @@
 //!HOOK LUMA
 //!HOOK CHROMA
 //!BIND HOOKED
-//!DESC Non-local means (nlmeans_sharpen_only.glsl)
+//!DESC Non-local means (LQ/nlmeans_sharpen_only.glsl)
 
 // User variables
 

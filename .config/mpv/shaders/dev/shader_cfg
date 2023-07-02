@@ -1,6 +1,5 @@
 #!/usr/bin/awk -f
 
-# XXX implement guided_cfg's featureset
 # XXX merge with inject_shader? lots of duplicate functionality
 
 function basename(s) {
@@ -185,7 +184,8 @@ $0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); 
 	else
 		$0 = $0 # re-split $0
 
-	$1 = basename($1)
+	$1 = trim($1)
+	gsub("^../", "", $1)
 	DESC = $0
 	print("// Description:", DESC)
 	next
