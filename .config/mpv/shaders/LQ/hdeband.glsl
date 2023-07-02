@@ -31,11 +31,14 @@
 
 // User variables
 
+// Higher numbers reduce blur over longer distances
+#define S 0.1875
+
 // Higher numbers blur more when intensity varies more between bands
 #define SI 0.005
 
 // Starting weight, lower values give less weight to the input image
-#define SW 0.25
+#define SW 0.1
 
 // Bigger numbers search further, but slower
 #define RADIUS 4
@@ -149,7 +152,7 @@ vec4 hook()
 
 			// consider skipped pixels as runs if their neighbors are both runs
 			float new_sparsity = sparsity - floor((i - 1) * SPARSITY);
-			weight += weight * new_sparsity;
+			weight = weight * gaussian(i * S) + weight * new_sparsity * gaussian((i - 1) * S);
 
 			// run's 2nd pixel has weight doubled to compensate for 1st pixel's weight of 0
 			weight += weight * NOT(prev_weight);
