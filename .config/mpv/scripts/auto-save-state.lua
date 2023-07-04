@@ -5,7 +5,7 @@ local o = { save_interval = 60 }
 options.read_options(o)
 
 local function save()
-	if mp.get_property_bool("save-position-on-quit") then
+	if mp.get_property_bool("resume-playback") then
 		mp.command("write-watch-later-config")
 	end
 end
