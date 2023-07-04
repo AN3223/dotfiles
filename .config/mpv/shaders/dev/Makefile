@@ -119,29 +119,29 @@ experimental/nlmeans_lgc.glsl: nlmeans_template ../LQ/nlmeans.glsl
 readme: result_images/clean.png result_images/noise10.png result_images/nlmeans_noise10.png result_images/nlmeans_sharpen_denoise_noise10.png result_images/nlmeans_sharpen_only_noise10.png result_images/fsr_noise10.png result_images/nlmeans_sharpen_only.png result_images/fsr.png 
 
 result_images/clean.png: ../nlmeans.glsl
-	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p' $@
+	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,scale=256:256:flags=neighbor' $@
 
 result_images/noise10.png: ../nlmeans.glsl
-	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10' $@
+	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,scale=256:256:flags=neighbor' $@
 
 result_images/nlmeans_noise10.png: ../nlmeans.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p' $@
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
 
 result_images/nlmeans_sharpen_denoise_noise10.png: ../nlmeans_sharpen_denoise.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p' $@
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
 
 result_images/nlmeans_sharpen_only_noise10.png: ../nlmeans_sharpen_only.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p' $@
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
 
 ../FSR.glsl:
 	curl -L 'https://gist.githubusercontent.com/agyild/82219c545228d70c5604f865ce0b0ce5/raw/2623d743b9c23f500ba086f05b385dcb1557e15d/FSR.glsl' > $@
 	sed -i '/^\/\/!WHEN/d' $@ # https://github.com/mpv-player/mpv/issues/10246#issuecomment-1303894445
 
 result_images/fsr_noise10.png: ../FSR.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p' $@
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
 
 result_images/nlmeans_sharpen_only.png: ../nlmeans_sharpen_only.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p' $@
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
 
 result_images/fsr.png: ../FSR.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p' $@
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,hwupload,libplacebo=128:128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
