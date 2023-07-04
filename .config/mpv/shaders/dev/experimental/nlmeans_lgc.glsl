@@ -470,6 +470,7 @@ vec4 hook()
 #define val_packed val
 #define val_pack(v) (v)
 #define val_unpack(v) (v)
+#define MAP(f,param) f(param)
 #elif defined(CHROMA_raw)
 #define val vec2
 #define val_swizz(v) (v.xy)
@@ -477,6 +478,7 @@ vec4 hook()
 #define val_packed uint
 #define val_pack(v) packUnorm2x16(v)
 #define val_unpack(v) unpackUnorm2x16(v)
+#define MAP(f,param) vec2(f(param.x), f(param.y))
 #else
 #define val vec3
 #define val_swizz(v) (v.xyz)
@@ -484,6 +486,7 @@ vec4 hook()
 #define val_packed val
 #define val_pack(v) (v)
 #define val_unpack(v) (v)
+#define MAP(f,param) vec3(f(param.x), f(param.y), f(param.z))
 #endif
 
 #if PS == 6
@@ -765,13 +768,7 @@ val range(val pdiff_sq)
 	const float h = max(S, 0.0) * 0.013;
 	const float pdiff_scale = 1.0/(h*h);
 	pdiff_sq = sqrt(pdiff_sq * pdiff_scale);
-#if defined(LUMA_raw)
-	return RK(pdiff_sq);
-#elif defined(CHROMA_raw)
-	return vec2(RK(pdiff_sq.x), RK(pdiff_sq.y));
-#else
-	return vec3(RK(pdiff_sq.x), RK(pdiff_sq.y), RK(pdiff_sq.z));
-#endif
+	return MAP(RK, pdiff_sq);
 }
 
 val patch_comparison(vec3 r, vec3 r2)
@@ -1009,14 +1006,10 @@ vec4 hook()
 		r_index++;
 #elif WD == 1 // weight discard (moving cumulative average)
 		val wd_scale = val(1.0/r_iter);
+
 		val below_threshold = WDS * abs(min(val(0.0), weight - (total_weight * wd_scale * WDT * WD1TK(sqrt(wd_scale*WDP)))));
-#if defined(LUMA_raw)
-		val wdkf = WDK(below_threshold);
-#elif defined(CHROMA_raw)
-		val wdkf = vec2(WDK(below_threshold.x), WDK(below_threshold.y));
-#else
-		val wdkf = vec3(WDK(below_threshold.x), WDK(below_threshold.y), WDK(below_threshold.y));
-#endif
+		val wdkf = MAP(WDK, below_threshold);
+
 		wd_sum += px * weight * wdkf;
 		wd_total_weight += weight * wdkf;
 		r_iter++;
@@ -1039,13 +1032,7 @@ vec4 hook()
 		val px = val_unpack(all_pixels[i]);
 
 		val below_threshold = WDS * abs(min(val(0.0), weight - (avg_weight * WDT)));
-#if defined(LUMA_raw)
-		weight *= WDK(below_threshold);
-#elif defined(CHROMA_raw)
-		weight *= vec2(WDK(below_threshold.x), WDK(below_threshold.y));
-#else
-		weight *= vec3(WDK(below_threshold.x), WDK(below_threshold.y), WDK(below_threshold.z));
-#endif
+		weight *= MAP(WDK, below_threshold);
 
 		sum += px * weight;
 		total_weight += weight;
