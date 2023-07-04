@@ -679,46 +679,46 @@ const float p_scale = 1.0/p_area;
 #define sample(tex, pos, size, pt, off) tex((pos) + (pt) * vec2(off))
 #endif
 
-#define load_(off) sample(HOOKED_tex, HOOKED_pos, HOOKED_size, HOOKED_pt, off)
+#define GET_(off) sample(HOOKED_tex, HOOKED_pos, HOOKED_size, HOOKED_pt, off)
 
 #if RF_ && defined(LUMA_raw)
-#define load2_(off) sample(RF_LUMA_tex, RF_LUMA_pos, RF_LUMA_size, RF_LUMA_pt, off)
+#define GET_RF_(off) sample(RF_LUMA_tex, RF_LUMA_pos, RF_LUMA_size, RF_LUMA_pt, off)
 #define gather_offs(off, off_arr) (RF_LUMA_mul * vec4(textureGatherOffsets(RF_LUMA_raw, RF_LUMA_pos + vec2(off) * RF_LUMA_pt, off_arr)))
 #define gather(off) RF_LUMA_gather(RF_LUMA_pos + (off) * RF_LUMA_pt, 0)
 #elif RF_ && D1W
-#define load2_(off) sample(RF_tex, RF_pos, RF_size, RF_pt, off)
+#define GET_RF_(off) sample(RF_tex, RF_pos, RF_size, RF_pt, off)
 #define gather_offs(off, off_arr) (RF_mul * vec4(textureGatherOffsets(RF_raw, RF_pos + vec2(off) * RF_pt, off_arr)))
 #define gather(off) RF_gather(RF_pos + (off) * RF_pt, 0)
 #elif RF_
-#define load2_(off) sample(RF_tex, RF_pos, RF_size, RF_pt, off)
+#define GET_RF_(off) sample(RF_tex, RF_pos, RF_size, RF_pt, off)
 #else
-#define load2_(off) load_(off)
+#define GET_RF_(off) GET_(off)
 #define gather_offs(off, off_arr) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, off_arr)))
 #define gather(off) HOOKED_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
 #endif
 
 #if T
-val load(vec3 off)
+val GET(vec3 off)
 {
 	switch (min(int(off.z), frame)) {
-	case 0: return val_swizz(load_(off));
+	case 0: return val_swizz(GET_(off));
 
 	}
 }
-val load2(vec3 off)
+val GET_RF(vec3 off)
 {
-	return off.z == 0 ? val_swizz(load2_(off)) : load(off);
+	return off.z == 0 ? val_swizz(GET_RF_(off)) : GET(off);
 }
 #else
-#define load(off) val_swizz(load_(off))
-#define load2(off) val_swizz(load2_(off))
+#define GET(off) val_swizz(GET_(off))
+#define GET_RF(off) val_swizz(GET_RF_(off))
 #endif
 
-val poi2 = load2(vec3(0)); // guide pixel-of-interest
+val poi2 = GET_RF(vec3(0)); // guide pixel-of-interest
 #if GUIDE_INPUT
 #define poi poi2
 #else
-vec4 poi_ = load_(vec3(0));
+vec4 poi_ = GET_(vec3(0));
 val poi = val_swizz(poi_); // pixel-of-interest
 #endif
 
@@ -780,7 +780,7 @@ val patch_comparison(vec3 r, vec3 r2)
 		val pdiff_sq = val(0);
 		FOR_PATCH(p) {
 			vec3 transformed_p = vec3(ref(rot(p.xy, ri), rfi), p.z);
-			val diff_sq = load2(p + r2) - load2((transformed_p + r) * SF);
+			val diff_sq = GET_RF(p + r2) - GET_RF((transformed_p + r) * SF);
 			diff_sq *= diff_sq;
 			diff_sq = 1 - (1 - diff_sq) * spatial_p(p.xy);
 			pdiff_sq += diff_sq;
@@ -877,7 +877,7 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 		transformer_diag = transformer_diag.zwxy;
 #endif
 	} // FOR_ROTATION
-	float center_diff = poi2.x - load2(r).x;
+	float center_diff = poi2.x - GET_RF(r).x;
 	return (center_diff * center_diff + min_rot) * p_scale;
 }
 #elif (defined(LUMA_gather) || D1W) && PS == 4 && P == 3 && RI == 0 && RFI == 0 && NO_GATHER
@@ -971,7 +971,7 @@ vec4 hook()
 		float spatial_weight = spatial_r(tr);
 		tr.xy += me.xy;
 
-		val px = load(tr);
+		val px = GET(tr);
 
 #if SKIP_PATCH
 		val weight = val(1);
