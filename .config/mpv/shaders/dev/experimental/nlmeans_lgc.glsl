@@ -794,10 +794,9 @@ val patch_comparison(vec3 r, vec3 r2)
 #define NO_GATHER (PD == 0 && NG == 0 && SAMPLE == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3 || RI == 7)
 
-#if (defined(LUMA_gather) || D1W) && ((PS == 0 || ((PS == 3 || PS == 7) && RI != 7) || PS == 8) && P == 3) && PST == 0 && REGULAR_ROTATIONS && NO_GATHER
+#if (defined(LUMA_gather) || D1W) && ((PS == 0 || ((PS == 3 || PS == 7) && RI != 7) || PS == 8) && P == 3) && REGULAR_ROTATIONS && NO_GATHER
 // 3x3 diamond/plus patch_comparison_gather
 // XXX extend to support arbitrary sizes (probably requires code generation)
-// XXX support PSS
 const ivec2 offsets_adj[4] = { ivec2(0,-1), ivec2(1,0), ivec2(0,1), ivec2(-1,0) };
 const ivec2 offsets_adj_sf[4] = { ivec2(0,-1) * SF, ivec2(1,0) * SF, ivec2(0,1) * SF, ivec2(-1,0) * SF };
 vec4 poi_patch_adj = gather_offs(0, offsets_adj);
@@ -837,8 +836,11 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 #endif
 
 			vec4 diff_sq = POW2(poi_patch_adj - transformer_adj);
+			diff_sq = 1 - (1 - diff_sq) * spatial_p(vec2(1,0));
 #if PS == 0 || PS == 8
-			diff_sq += POW2(poi_patch_diag - transformer_diag);
+			vec4 diag_diff_sq = POW2(poi_patch_diag - transformer_diag);
+			diag_diff_sq = 1 - (1 - diag_diff_sq) * spatial_p(vec2(1,1));
+			diff_sq += diag_diff_sq;
 #endif
 			min_rot = min(dot(diff_sq, vec4(1)), min_rot);
 
