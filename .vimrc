@@ -18,7 +18,7 @@ nnoremap J gt
 nnoremap K gT
 nnoremap <Space> <C-f>
 
-set encoding=utf-8 ttimeoutlen=0
+set encoding=utf-8
 set ignorecase smartcase
 
 " Save cursor positions for up to ten files and restore them on file load
