@@ -784,8 +784,8 @@ val patch_comparison(vec3 r)
 		val total_weight = val(0);
 
 		FOR_PATCH(p) {
-			vec3 transformed_p = vec3(ref(rot(p.xy, ri), rfi), p.z);
-			val diff_sq = GET_RF(p) - GET_RF((transformed_p + r) * SF);
+			vec3 transformed_p = SF * vec3(ref(rot(p.xy, ri), rfi), p.z);
+			val diff_sq = GET_RF(p) - GET_RF(transformed_p + r);
 			diff_sq *= diff_sq;
 
 			float weight = spatial_p(p.xy);
