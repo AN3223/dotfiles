@@ -176,8 +176,9 @@
 
 /* textureGather applicable configurations:
  *
- * - PS={0,3,7,8}:P=3:PST=0:RI={0,1,3,7}:RFI={0,1,2}
- * - PS={0,8}:P=3:PST=0:RI={0,1,3,7}:RFI={0,1,2}
+ * - PS={0,3,7,8}:P=3:RI={0,1,3,7}:RFI={0,1,2}
+ * - PS={0,8}:P=3:RI={0,1,3,7}:RFI={0,1,2}
+ * - PS=4:P=3:PST=0:RI=0:RFI=0
  * - PS=6:RI=0:RFI=0
  *   - Currently the only scalable variant
  *
@@ -796,17 +797,22 @@ val patch_comparison(vec3 r, vec3 r2)
 
 	 FOR_ROTATION FOR_REFLECTION {
 	 	 val pdiff_sq = val(0); 
+	 	 val total_weight = val(0); 
+
 	 	 FOR_PATCH(p) {
 	 	 	 vec3 transformed_p = vec3(ref(rot(p.xy, ri), rfi), p.z); 
 	 	 	 val diff_sq = GET_RF(p + r2) - GET_RF((transformed_p + r) * SF); 
 	 	 	 diff_sq *= diff_sq; 
-	 	 	 diff_sq = 1 - (1 - diff_sq) * spatial_p(p.xy); 
-	 	 	 pdiff_sq += diff_sq; 
+
+	 	 	 float weight = spatial_p(p.xy); 
+	 	 	 pdiff_sq += diff_sq * weight; 
+	 	 	 total_weight += weight; 
 	 	 }
-	 	 min_rot = min(min_rot, pdiff_sq); 
+
+	 	 min_rot = min(min_rot, pdiff_sq / total_weight); 
 	 }
 
-	 return min_rot * p_scale; 
+	 return min_rot; 
 }
 
 #define NO_GATHER (PD == 0 && NG == 0 && SAMPLE == 0) // never textureGather if any of these conditions are false
@@ -853,14 +859,11 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 	 	 	 }
 #endif
 
-	 	 	 vec4 diff_sq = POW2(poi_patch_adj - transformer_adj); 
-	 	 	 diff_sq = 1 - (1 - diff_sq) * spatial_p(vec2(1,0)); 
+	 	 	 vec4 pdiff_sq = POW2(poi_patch_adj - transformer_adj) * spatial_p(vec2(1,0)); 
 #if PS == 0 || PS == 8
-	 	 	 vec4 diag_diff_sq = POW2(poi_patch_diag - transformer_diag); 
-	 	 	 diag_diff_sq = 1 - (1 - diag_diff_sq) * spatial_p(vec2(1,1)); 
-	 	 	 diff_sq += diag_diff_sq; 
+	 	 	 pdiff_sq += POW2(poi_patch_diag - transformer_diag) * spatial_p(vec2(1,1)); 
 #endif
-	 	 	 min_rot = min(dot(diff_sq, vec4(1)), min_rot); 
+	 	 	 min_rot = min(dot(pdiff_sq, vec4(1)), min_rot); 
 
 // un-reflect
 #if RFI
@@ -897,41 +900,46 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 	 	 transformer_diag = transformer_diag.zwxy; 
 #endif
 	 } // FOR_ROTATION
+	 
+#if PS == 0 || PS == 8
+	 float total_weight = spatial_p(vec2(0,0)) + 4 * spatial_p(vec2(0,1)) + 4 * spatial_p(vec2(1,1)); 
+#else
+	 float total_weight = spatial_p(vec2(0,0)) + 4 * spatial_p(vec2(0,1)); 
+#endif
+
 	 float center_diff = poi2.x - GET_RF(r).x; 
-	 return (center_diff * center_diff + min_rot) * p_scale; 
+	 return (POW2(center_diff) + min_rot) / total_weight; 
 }
 #elif (defined(LUMA_gather) || D1W) && PS == 4 && P == 3 && RI == 0 && RFI == 0 && NO_GATHER
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) }; 
 const ivec2 offsets_sf[4] = { ivec2(0,-1) * SF, ivec2(-1,0) * SF, ivec2(0,0) * SF, ivec2(1,0) * SF }; 
 vec4 poi_patch = gather_offs(0, offsets); 
+vec4 spatial_p_weights = vec4(spatial_p(vec2(0,-1)), spatial_p(vec2(-1,0)), spatial_p(vec2(0,0)), spatial_p(vec2(1,0))); 
 float patch_comparison_gather(vec3 r, vec3 r2)
 {
 	 vec4 pdiff = poi_patch - gather_offs(r, offsets_sf); 
-	 return dot(pdiff * pdiff, vec4(1)) * p_scale; 
+	 return dot(POW2(pdiff) * spatial_p_weights, vec4(1)) / dot(spatial_p_weights, vec4(1)); 
 }
 #elif (defined(LUMA_gather) || D1W) && PS == 6 && RI == 0 && RFI == 0 && NO_GATHER
 // tiled even square patch_comparison_gather
 // XXX extend to support odd square?
 float patch_comparison_gather(vec3 r, vec3 r2)
 {
-	 vec2 tile; 
-	 float min_rot = p_area; 
-
 	 /* gather order:
 	  * w z
 	  * x y
 	  */
+	 vec2 tile; 
 	 float pdiff_sq = 0; 
+	 float total_weight = 0; 
 	 for (tile.x = -hp;  tile.x < hp;  tile.x+=2) for (tile.y = -hp;  tile.y < hp;  tile.y+=2) {
-	 	 vec4 diff_sq = gather(tile + r.xy) - gather(tile + r2.xy); 
-	 	 diff_sq *= diff_sq; 
-	 	 diff_sq = 1 - (1 - diff_sq) * vec4(spatial_p(tile+vec2(0,1)), spatial_p(tile+vec2(1,1)),
-	 	 	                                  spatial_p(tile+vec2(1,0)), spatial_p(tile+vec2(0,0))); 
-	 	 pdiff_sq += dot(diff_sq, vec4(1)); 
+	 	 vec4 diff = gather(tile + r.xy) - gather(tile + r2.xy); 
+	 	 vec4 weights = vec4(spatial_p(tile+vec2(0,1)), spatial_p(tile+vec2(1,1)), spatial_p(tile+vec2(1,0)), spatial_p(tile+vec2(0,0))); 
+	 	 pdiff_sq += dot(POW2(diff) * weights, vec4(1)); 
+	 	 total_weight += dot(weights, vec4(1)); 
 	 }
-	 min_rot = min(min_rot, pdiff_sq); 
 
-	 return min_rot * p_scale; 
+	 return pdiff_sq / total_weight; 
 }
 #else
 #define patch_comparison_gather patch_comparison
@@ -1262,8 +1270,9 @@ vec4 hook()
 
 /* textureGather applicable configurations:
  *
- * - PS={0,3,7,8}:P=3:PST=0:RI={0,1,3,7}:RFI={0,1,2}
- * - PS={0,8}:P=3:PST=0:RI={0,1,3,7}:RFI={0,1,2}
+ * - PS={0,3,7,8}:P=3:RI={0,1,3,7}:RFI={0,1,2}
+ * - PS={0,8}:P=3:RI={0,1,3,7}:RFI={0,1,2}
+ * - PS=4:P=3:PST=0:RI=0:RFI=0
  * - PS=6:RI=0:RFI=0
  *   - Currently the only scalable variant
  *
@@ -1883,17 +1892,22 @@ val patch_comparison(vec3 r, vec3 r2)
 
 	FOR_ROTATION FOR_REFLECTION {
 		val pdiff_sq = val(0);
+		val total_weight = val(0);
+
 		FOR_PATCH(p) {
 			vec3 transformed_p = vec3(ref(rot(p.xy, ri), rfi), p.z);
 			val diff_sq = GET_RF(p + r2) - GET_RF((transformed_p + r) * SF);
 			diff_sq *= diff_sq;
-			diff_sq = 1 - (1 - diff_sq) * spatial_p(p.xy);
-			pdiff_sq += diff_sq;
+
+			float weight = spatial_p(p.xy);
+			pdiff_sq += diff_sq * weight;
+			total_weight += weight;
 		}
-		min_rot = min(min_rot, pdiff_sq);
+
+		min_rot = min(min_rot, pdiff_sq / total_weight);
 	}
 
-	return min_rot * p_scale;
+	return min_rot;
 }
 
 #define NO_GATHER (PD == 0 && NG == 0 && SAMPLE == 0) // never textureGather if any of these conditions are false
@@ -1940,14 +1954,11 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 			}
 #endif
 
-			vec4 diff_sq = POW2(poi_patch_adj - transformer_adj);
-			diff_sq = 1 - (1 - diff_sq) * spatial_p(vec2(1,0));
+			vec4 pdiff_sq = POW2(poi_patch_adj - transformer_adj) * spatial_p(vec2(1,0));
 #if PS == 0 || PS == 8
-			vec4 diag_diff_sq = POW2(poi_patch_diag - transformer_diag);
-			diag_diff_sq = 1 - (1 - diag_diff_sq) * spatial_p(vec2(1,1));
-			diff_sq += diag_diff_sq;
+			pdiff_sq += POW2(poi_patch_diag - transformer_diag) * spatial_p(vec2(1,1));
 #endif
-			min_rot = min(dot(diff_sq, vec4(1)), min_rot);
+			min_rot = min(dot(pdiff_sq, vec4(1)), min_rot);
 
 // un-reflect
 #if RFI
@@ -1984,41 +1995,46 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 		transformer_diag = transformer_diag.zwxy;
 #endif
 	} // FOR_ROTATION
+	
+#if PS == 0 || PS == 8
+	float total_weight = spatial_p(vec2(0,0)) + 4 * spatial_p(vec2(0,1)) + 4 * spatial_p(vec2(1,1));
+#else
+	float total_weight = spatial_p(vec2(0,0)) + 4 * spatial_p(vec2(0,1));
+#endif
+
 	float center_diff = poi2.x - GET_RF(r).x;
-	return (center_diff * center_diff + min_rot) * p_scale;
+	return (POW2(center_diff) + min_rot) / total_weight;
 }
 #elif (defined(LUMA_gather) || D1W) && PS == 4 && P == 3 && RI == 0 && RFI == 0 && NO_GATHER
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
 const ivec2 offsets_sf[4] = { ivec2(0,-1) * SF, ivec2(-1,0) * SF, ivec2(0,0) * SF, ivec2(1,0) * SF };
 vec4 poi_patch = gather_offs(0, offsets);
+vec4 spatial_p_weights = vec4(spatial_p(vec2(0,-1)), spatial_p(vec2(-1,0)), spatial_p(vec2(0,0)), spatial_p(vec2(1,0)));
 float patch_comparison_gather(vec3 r, vec3 r2)
 {
 	vec4 pdiff = poi_patch - gather_offs(r, offsets_sf);
-	return dot(pdiff * pdiff, vec4(1)) * p_scale;
+	return dot(POW2(pdiff) * spatial_p_weights, vec4(1)) / dot(spatial_p_weights, vec4(1));
 }
 #elif (defined(LUMA_gather) || D1W) && PS == 6 && RI == 0 && RFI == 0 && NO_GATHER
 // tiled even square patch_comparison_gather
 // XXX extend to support odd square?
 float patch_comparison_gather(vec3 r, vec3 r2)
 {
-	vec2 tile;
-	float min_rot = p_area;
-
 	/* gather order:
 	 * w z
 	 * x y
 	 */
+	vec2 tile;
 	float pdiff_sq = 0;
+	float total_weight = 0;
 	for (tile.x = -hp; tile.x < hp; tile.x+=2) for (tile.y = -hp; tile.y < hp; tile.y+=2) {
-		vec4 diff_sq = gather(tile + r.xy) - gather(tile + r2.xy);
-		diff_sq *= diff_sq;
-		diff_sq = 1 - (1 - diff_sq) * vec4(spatial_p(tile+vec2(0,1)), spatial_p(tile+vec2(1,1)),
-			                                 spatial_p(tile+vec2(1,0)), spatial_p(tile+vec2(0,0)));
-		pdiff_sq += dot(diff_sq, vec4(1));
+		vec4 diff = gather(tile + r.xy) - gather(tile + r2.xy);
+		vec4 weights = vec4(spatial_p(tile+vec2(0,1)), spatial_p(tile+vec2(1,1)), spatial_p(tile+vec2(1,0)), spatial_p(tile+vec2(0,0)));
+		pdiff_sq += dot(POW2(diff) * weights, vec4(1));
+		total_weight += dot(weights, vec4(1));
 	}
-	min_rot = min(min_rot, pdiff_sq);
 
-	return min_rot * p_scale;
+	return pdiff_sq / total_weight;
 }
 #else
 #define patch_comparison_gather patch_comparison
