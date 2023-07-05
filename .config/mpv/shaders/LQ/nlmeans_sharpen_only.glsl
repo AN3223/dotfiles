@@ -760,7 +760,7 @@ val range(val pdiff_sq)
 	return MAP(RK, pdiff_sq);
 }
 
-val patch_comparison(vec3 r, vec3 r2)
+val patch_comparison(vec3 r)
 {
 	vec3 p;
 	val min_rot = val(p_area);
@@ -771,7 +771,7 @@ val patch_comparison(vec3 r, vec3 r2)
 
 		FOR_PATCH(p) {
 			vec3 transformed_p = vec3(ref(rot(p.xy, ri), rfi), p.z);
-			val diff_sq = GET_RF(p + r2) - GET_RF((transformed_p + r) * SF);
+			val diff_sq = GET_RF(p) - GET_RF((transformed_p + r) * SF);
 			diff_sq *= diff_sq;
 
 			float weight = spatial_p(p.xy);
@@ -799,7 +799,7 @@ const ivec2 offsets_diag[4] = { ivec2(-1,-1), ivec2(1,-1), ivec2(1,1), ivec2(-1,
 const ivec2 offsets_diag_sf[4] = { ivec2(-1,-1) * SF, ivec2(1,-1) * SF, ivec2(1,1) * SF, ivec2(-1,1) * SF };
 vec4 poi_patch_diag = gather_offs(0, offsets_diag);
 #endif
-float patch_comparison_gather(vec3 r, vec3 r2)
+float patch_comparison_gather(vec3 r)
 {
 	float min_rot = p_area - 1;
 	vec4 transformer_adj = gather_offs(r, offsets_adj_sf);
@@ -885,7 +885,7 @@ const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
 const ivec2 offsets_sf[4] = { ivec2(0,-1) * SF, ivec2(-1,0) * SF, ivec2(0,0) * SF, ivec2(1,0) * SF };
 vec4 poi_patch = gather_offs(0, offsets);
 vec4 spatial_p_weights = vec4(spatial_p(vec2(0,-1)), spatial_p(vec2(-1,0)), spatial_p(vec2(0,0)), spatial_p(vec2(1,0)));
-float patch_comparison_gather(vec3 r, vec3 r2)
+float patch_comparison_gather(vec3 r)
 {
 	vec4 pdiff = poi_patch - gather_offs(r, offsets_sf);
 	return dot(POW2(pdiff) * spatial_p_weights, vec4(1)) / dot(spatial_p_weights, vec4(1));
@@ -893,7 +893,7 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 #elif (defined(LUMA_gather) || D1W) && PS == 6 && RI == 0 && RFI == 0 && NO_GATHER
 // tiled even square patch_comparison_gather
 // XXX extend to support odd square?
-float patch_comparison_gather(vec3 r, vec3 r2)
+float patch_comparison_gather(vec3 r)
 {
 	/* gather order:
 	 * w z
@@ -903,7 +903,7 @@ float patch_comparison_gather(vec3 r, vec3 r2)
 	float pdiff_sq = 0;
 	float total_weight = 0;
 	for (tile.x = -hp; tile.x < hp; tile.x+=2) for (tile.y = -hp; tile.y < hp; tile.y+=2) {
-		vec4 diff = gather(tile + r.xy) - gather(tile + r2.xy);
+		vec4 diff = gather(tile + r.xy) - gather(tile);
 		vec4 weights = vec4(spatial_p(tile+vec2(0,1)), spatial_p(tile+vec2(1,1)), spatial_p(tile+vec2(1,0)), spatial_p(tile+vec2(0,0)));
 		pdiff_sq += dot(POW2(diff) * weights, vec4(1));
 		total_weight += dot(weights, vec4(1));
@@ -974,7 +974,7 @@ vec4 hook()
 #if SKIP_PATCH
 		val weight = val(1);
 #else
-		val pdiff_sq = (r.z == 0) ? val(patch_comparison_gather(tr, vec3(0))) : patch_comparison(tr, vec3(0));
+		val pdiff_sq = (r.z == 0) ? val(patch_comparison_gather(tr)) : patch_comparison(tr);
 		val weight = range(pdiff_sq);
 #endif
 
