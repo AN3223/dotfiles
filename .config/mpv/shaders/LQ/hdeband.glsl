@@ -38,7 +38,7 @@
 #define SI 0.005
 
 // Starting weight, lower values give less weight to the input image
-#define SW 0.1
+#define SW 0.15
 
 // Bigger numbers search further, but slower
 #define RADIUS 4
