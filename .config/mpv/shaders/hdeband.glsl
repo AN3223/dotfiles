@@ -31,8 +31,8 @@
 
 // User variables
 
-// Higher numbers reduce blur over longer distances
-#define S 0.1875
+// Higher numbers increase blur over longer distances
+#define S 5.333
 
 // Higher numbers blur more when intensity varies more between bands
 #define SI 0.005
@@ -114,6 +114,7 @@ val poi = val_swizz(poi_);
  *       - The difference is scaled with a user parameter (SI)
  *     - For steps 2 and 5, multiply the weight of any pixels with values identical to the POI value by a user-specified value (SW)
  *       - Decreasing SW increases the amount of blur
+ *     - For step 5, multiply the weight by the gaussian of the Euclidean norm of the pixel coordinates
  *   - For step 4, a parameter (SPARSITY) is taken which directs pixels to be skipped at a specified interval
  *     - If the pixel after a skipped pixel has the same value as the previous unskipped pixel then its weight is doubled
  *     - This works well in big flat banded areas but may result in artifacts elsewhere
@@ -129,13 +130,13 @@ vec4 hook()
 	for (int dir = 0; dir < DIRECTIONS; dir++) {
 		vec2 direction;
 		switch (dir) {
-		case 0: direction = vec2(1,  0); break;
+		case 0: direction = vec2( 1, 0); break;
 		case 1: direction = vec2(-1, 0); break;
-		case 2: direction = vec2(0,  1); break;
-		case 3: direction = vec2(0, -1); break;
-		case 4: direction = vec2(1,  1); break;
+		case 2: direction = vec2( 0, 1); break;
+		case 3: direction = vec2( 0,-1); break;
+		case 4: direction = vec2( 1, 1); break;
 		case 5: direction = vec2(-1,-1); break;
-		case 6: direction = vec2(1, -1); break;
+		case 6: direction = vec2( 1,-1); break;
 		case 7: direction = vec2(-1, 1); break;
 		}
 
@@ -152,7 +153,9 @@ vec4 hook()
 
 			// consider skipped pixels as runs if their neighbors are both runs
 			float new_sparsity = sparsity - floor((i - 1) * SPARSITY);
-			weight = weight * gaussian(i * S) + weight * new_sparsity * gaussian((i - 1) * S);
+			const float s_scale = 1.0 / S;
+			weight = weight * gaussian(length(i * direction) * s_scale)
+				+ weight * new_sparsity * gaussian(length((i - 1) * direction) * s_scale);
 
 			// run's 2nd pixel has weight doubled to compensate for 1st pixel's weight of 0
 			weight += weight * NOT(prev_weight);
