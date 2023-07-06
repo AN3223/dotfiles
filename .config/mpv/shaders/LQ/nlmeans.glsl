@@ -61,14 +61,14 @@
  */
 #ifdef LUMA_raw
 #define AS 0
-#define ASF 0.1625
-#define ASA 5.0
-#define ASP 0.5
+#define ASF 0.32285346195725034
+#define ASA 2.0793936417006034
+#define ASP 0.7663643239915433
 #else
 #define AS 0
-#define ASF 0.1625
-#define ASA 5.0
-#define ASP 0.5
+#define ASF 0.4354962904391772
+#define ASA 1.5030618930570498
+#define ASP 0.9221831656023989
 #endif
 
 /* Starting weight
