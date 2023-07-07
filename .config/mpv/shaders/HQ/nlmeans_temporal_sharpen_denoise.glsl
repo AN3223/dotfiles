@@ -120,14 +120,16 @@
  */
 #ifdef LUMA_raw
 #define AS 0
-#define ASF 0.32285346195725034
-#define ASA 2.0793936417006034
-#define ASP 0.7663643239915433
+#define ASF 0.33601621398748727
+#define ASA 1.5888035748874212
+#define ASP 0.774983233249299
+#define ASS 0.5719749795133183
 #else
 #define AS 0
-#define ASF 0.4354962904391772
-#define ASA 1.5030618930570498
-#define ASP 0.9221831656023989
+#define ASF 0.45029590697253385
+#define ASA 1.487819767673339
+#define ASP 0.9232979080638256
+#define ASS 0.2446652682977203
 #endif
 
 /* Starting weight
@@ -367,6 +369,7 @@
  *
  * SK: spatial kernel
  * RK: range kernel (takes patch differences)
+ * ASK: adaptive sharpening kernel
  * PSK: intra-patch spatial kernel
  * WDK: weight discard kernel
  * WD1TK (WD=1 only): weight discard tolerance kernel
@@ -389,12 +392,14 @@
 #ifdef LUMA_raw
 #define SK gaussian
 #define RK gaussian
+#define ASK gaussian
 #define PSK gaussian
 #define WDK is_zero
 #define WD1TK gaussian
 #else
 #define SK gaussian
 #define RK gaussian
+#define ASK gaussian
 #define PSK gaussian
 #define WDK is_zero
 #define WD1TK gaussian
@@ -805,6 +810,16 @@ float spatial_r(vec3 v)
 #define spatial_r(v) (1)
 #endif
 
+#if AS
+float spatial_as(vec3 v)
+{
+	  v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size);  
+	  return ASK(length(v*SD)*ASS);  
+}
+#else
+#define spatial_as(v) (1)
+#endif
+
 #if PST && P >= PST
 #define spatial_p(v) PSK(length(v*PSD)*PSS)
 #else
@@ -993,8 +1008,8 @@ vec4 hook()
 #endif
 
 #if AS
-	  val total_weight_s = val(0);  
-	  val sum_s = val(0);  
+	  val total_weight_as = val(0);  
+	  val sum_as = val(0);  
 #endif
 
 #if WD == 2 // weight discard (mean)
@@ -1052,9 +1067,10 @@ vec4 hook()
 	  	  weight *= spatial_weight;  
 
 #if AS
-	  	  spatial_weight *= int(r.z == 0);   // ignore temporal
-	  	  sum_s += px * spatial_weight;  
-	  	  total_weight_s += spatial_weight;  
+	  	  float spatial_as_weight = spatial_as(tr);  
+	  	  spatial_as_weight *= int(r.z == 0);   // ignore temporal
+	  	  sum_as += px * spatial_as_weight;  
+	  	  total_weight_as += spatial_as_weight;  
 #endif
 
 #if WD == 2 // weight discard (mean)
@@ -1122,7 +1138,7 @@ vec4 hook()
 #define AS_base poi
 #endif
 #if AS
-	  val usm = result - sum_s/total_weight_s;  
+	  val usm = result - sum_as/total_weight_as;  
 	  usm = exp(log(abs(usm))*ASP) * sign(usm);   // avoiding pow() since it's buggy on nvidia
 	  usm *= gaussian(abs((AS_base + usm - 0.5) / 1.5) * ASA);  
 	  usm *= ASF;  
@@ -1213,14 +1229,16 @@ return _INJ_RF_LUMA_texOff(0);
  */
 #ifdef LUMA_raw
 #define AS 0
-#define ASF 0.32285346195725034
-#define ASA 2.0793936417006034
-#define ASP 0.7663643239915433
+#define ASF 0.33601621398748727
+#define ASA 1.5888035748874212
+#define ASP 0.774983233249299
+#define ASS 0.5719749795133183
 #else
 #define AS 0
-#define ASF 0.4354962904391772
-#define ASA 1.5030618930570498
-#define ASP 0.9221831656023989
+#define ASF 0.45029590697253385
+#define ASA 1.487819767673339
+#define ASP 0.9232979080638256
+#define ASS 0.2446652682977203
 #endif
 
 /* Starting weight
@@ -1460,6 +1478,7 @@ return _INJ_RF_LUMA_texOff(0);
  *
  * SK: spatial kernel
  * RK: range kernel (takes patch differences)
+ * ASK: adaptive sharpening kernel
  * PSK: intra-patch spatial kernel
  * WDK: weight discard kernel
  * WD1TK (WD=1 only): weight discard tolerance kernel
@@ -1482,12 +1501,14 @@ return _INJ_RF_LUMA_texOff(0);
 #ifdef LUMA_raw
 #define SK gaussian
 #define RK gaussian
+#define ASK gaussian
 #define PSK gaussian
 #define WDK is_zero
 #define WD1TK gaussian
 #else
 #define SK gaussian
 #define RK gaussian
+#define ASK gaussian
 #define PSK gaussian
 #define WDK is_zero
 #define WD1TK gaussian
@@ -1898,6 +1919,16 @@ float spatial_r(vec3 v)
 #define spatial_r(v) (1)
 #endif
 
+#if AS
+float spatial_as(vec3 v)
+{
+	 v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size); 
+	 return ASK(length(v*SD)*ASS); 
+}
+#else
+#define spatial_as(v) (1)
+#endif
+
 #if PST && P >= PST
 #define spatial_p(v) PSK(length(v*PSD)*PSS)
 #else
@@ -2086,8 +2117,8 @@ vec4 hook()
 #endif
 
 #if AS
-	 val total_weight_s = val(0); 
-	 val sum_s = val(0); 
+	 val total_weight_as = val(0); 
+	 val sum_as = val(0); 
 #endif
 
 #if WD == 2 // weight discard (mean)
@@ -2145,9 +2176,10 @@ vec4 hook()
 	 	 weight *= spatial_weight; 
 
 #if AS
-	 	 spatial_weight *= int(r.z == 0);  // ignore temporal
-	 	 sum_s += px * spatial_weight; 
-	 	 total_weight_s += spatial_weight; 
+	 	 float spatial_as_weight = spatial_as(tr); 
+	 	 spatial_as_weight *= int(r.z == 0);  // ignore temporal
+	 	 sum_as += px * spatial_as_weight; 
+	 	 total_weight_as += spatial_as_weight; 
 #endif
 
 #if WD == 2 // weight discard (mean)
@@ -2215,7 +2247,7 @@ vec4 hook()
 #define AS_base poi
 #endif
 #if AS
-	 val usm = result - sum_s/total_weight_s; 
+	 val usm = result - sum_as/total_weight_as; 
 	 usm = exp(log(abs(usm))*ASP) * sign(usm);  // avoiding pow() since it's buggy on nvidia
 	 usm *= gaussian(abs((AS_base + usm - 0.5) / 1.5) * ASA); 
 	 usm *= ASF; 
@@ -2307,14 +2339,16 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.32285346195725034
-#define ASA 2.0793936417006034
-#define ASP 0.7663643239915433
+#define ASF 0.33601621398748727
+#define ASA 1.5888035748874212
+#define ASP 0.774983233249299
+#define ASS 0.5719749795133183
 #else
 #define AS 1
-#define ASF 0.4354962904391772
-#define ASA 1.5030618930570498
-#define ASP 0.9221831656023989
+#define ASF 0.45029590697253385
+#define ASA 1.487819767673339
+#define ASP 0.9232979080638256
+#define ASS 0.2446652682977203
 #endif
 
 /* Starting weight
@@ -2554,6 +2588,7 @@ vec4 hook()
  *
  * SK: spatial kernel
  * RK: range kernel (takes patch differences)
+ * ASK: adaptive sharpening kernel
  * PSK: intra-patch spatial kernel
  * WDK: weight discard kernel
  * WD1TK (WD=1 only): weight discard tolerance kernel
@@ -2576,12 +2611,14 @@ vec4 hook()
 #ifdef LUMA_raw
 #define SK gaussian
 #define RK gaussian
+#define ASK gaussian
 #define PSK gaussian
 #define WDK is_zero
 #define WD1TK gaussian
 #else
 #define SK gaussian
 #define RK gaussian
+#define ASK gaussian
 #define PSK gaussian
 #define WDK is_zero
 #define WD1TK gaussian
@@ -2993,6 +3030,16 @@ float spatial_r(vec3 v)
 #define spatial_r(v) (1)
 #endif
 
+#if AS
+float spatial_as(vec3 v)
+{
+	v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size);
+	return ASK(length(v*SD)*ASS);
+}
+#else
+#define spatial_as(v) (1)
+#endif
+
 #if PST && P >= PST
 #define spatial_p(v) PSK(length(v*PSD)*PSS)
 #else
@@ -3181,8 +3228,8 @@ vec4 hook()
 #endif
 
 #if AS
-	val total_weight_s = val(0);
-	val sum_s = val(0);
+	val total_weight_as = val(0);
+	val sum_as = val(0);
 #endif
 
 #if WD == 2 // weight discard (mean)
@@ -3240,9 +3287,10 @@ vec4 hook()
 		weight *= spatial_weight;
 
 #if AS
-		spatial_weight *= int(r.z == 0); // ignore temporal
-		sum_s += px * spatial_weight;
-		total_weight_s += spatial_weight;
+		float spatial_as_weight = spatial_as(tr);
+		spatial_as_weight *= int(r.z == 0); // ignore temporal
+		sum_as += px * spatial_as_weight;
+		total_weight_as += spatial_as_weight;
 #endif
 
 #if WD == 2 // weight discard (mean)
@@ -3310,7 +3358,7 @@ vec4 hook()
 #define AS_base poi
 #endif
 #if AS
-	val usm = result - sum_s/total_weight_s;
+	val usm = result - sum_as/total_weight_as;
 	usm = exp(log(abs(usm))*ASP) * sign(usm); // avoiding pow() since it's buggy on nvidia
 	usm *= gaussian(abs((AS_base + usm - 0.5) / 1.5) * ASA);
 	usm *= ASF;

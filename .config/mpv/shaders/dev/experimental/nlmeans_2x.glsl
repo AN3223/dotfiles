@@ -52,9 +52,9 @@ vec4 hook()
 
 // Denoising factor (level of blur, higher means more blur)
 #ifdef LUMA_raw
-#define S 16.790106011801686
+#define S 14.293463456562394
 #else
-#define S 16.790106011801686
+#define S 14.293463456562394
 #endif
 
 /* Adaptive sharpening
@@ -74,15 +74,17 @@ vec4 hook()
  * ASP: Power, lower numbers increase sharpening on lower frequency detail
  */
 #ifdef LUMA_raw
-#define AS 0
-#define ASF 0.32285346195725034
-#define ASA 2.0793936417006034
-#define ASP 0.7663643239915433
+#define AS 1
+#define ASF 0.27009947929683664
+#define ASA 2.878850016377589
+#define ASP 1.3270155277889872
+#define ASS 0.6313543541385903
 #else
-#define AS 0
-#define ASF 0.4354962904391772
-#define ASA 1.5030618930570498
-#define ASP 0.9221831656023989
+#define AS 1
+#define ASF 0.27009947929683664
+#define ASA 2.878850016377589
+#define ASP 1.3270155277889872
+#define ASS 0.6313543541385903
 #endif
 
 /* Starting weight
@@ -93,9 +95,9 @@ vec4 hook()
  * EPSILON should be used instead of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
-#define SW 0.8439779133680052
+#define SW 0.9499091882207018
 #else
-#define SW 0.8439779133680052
+#define SW 0.9499091882207018
 #endif
 
 /* Weight discard
@@ -304,14 +306,14 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.3845625416648042
+#define SS 1.3535341100203313
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
 #define PSD vec2(1,1)
 #else
 #define SST 1
-#define SS 1.3845625416648042
+#define SS 1.3535341100203313
 #define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
@@ -322,6 +324,7 @@ vec4 hook()
  *
  * SK: spatial kernel
  * RK: range kernel (takes patch differences)
+ * ASK: adaptive sharpening kernel
  * PSK: intra-patch spatial kernel
  * WDK: weight discard kernel
  * WD1TK (WD=1 only): weight discard tolerance kernel
@@ -344,12 +347,14 @@ vec4 hook()
 #ifdef LUMA_raw
 #define SK sphinx_
 #define RK gaussian
+#define ASK gaussian
 #define PSK gaussian
 #define WDK is_zero
 #define WD1TK gaussian
 #else
 #define SK sphinx_
 #define RK gaussian
+#define ASK gaussian
 #define PSK gaussian
 #define WDK is_zero
 #define WD1TK gaussian
@@ -760,6 +765,16 @@ float spatial_r(vec3 v)
 #define spatial_r(v) (1)
 #endif
 
+#if AS
+float spatial_as(vec3 v)
+{
+	v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size);
+	return ASK(length(v*SD)*ASS);
+}
+#else
+#define spatial_as(v) (1)
+#endif
+
 #if PST && P >= PST
 #define spatial_p(v) PSK(length(v*PSD)*PSS)
 #else
@@ -948,8 +963,8 @@ vec4 hook()
 #endif
 
 #if AS
-	val total_weight_s = val(0);
-	val sum_s = val(0);
+	val total_weight_as = val(0);
+	val sum_as = val(0);
 #endif
 
 #if WD == 2 // weight discard (mean)
@@ -1007,9 +1022,10 @@ vec4 hook()
 		weight *= spatial_weight;
 
 #if AS
-		spatial_weight *= int(r.z == 0); // ignore temporal
-		sum_s += px * spatial_weight;
-		total_weight_s += spatial_weight;
+		float spatial_as_weight = spatial_as(tr);
+		spatial_as_weight *= int(r.z == 0); // ignore temporal
+		sum_as += px * spatial_as_weight;
+		total_weight_as += spatial_as_weight;
 #endif
 
 #if WD == 2 // weight discard (mean)
@@ -1077,7 +1093,7 @@ vec4 hook()
 #define AS_base poi
 #endif
 #if AS
-	val usm = result - sum_s/total_weight_s;
+	val usm = result - sum_as/total_weight_as;
 	usm = exp(log(abs(usm))*ASP) * sign(usm); // avoiding pow() since it's buggy on nvidia
 	usm *= gaussian(abs((AS_base + usm - 0.5) / 1.5) * ASA);
 	usm *= ASF;
