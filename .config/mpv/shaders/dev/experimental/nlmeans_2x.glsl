@@ -335,6 +335,7 @@ vec4 hook()
  * cos
  * gaussian
  * lanczos
+ * quadratic
  * quadratic_ (unclamped)
  * sinc
  * sinc_ (unclamped)

@@ -380,6 +380,7 @@
  * cos
  * gaussian
  * lanczos
+ * quadratic
  * quadratic_ (unclamped)
  * sinc
  * sinc_ (unclamped)
@@ -1489,6 +1490,7 @@ return _INJ_RF_LUMA_texOff(0);
  * cos
  * gaussian
  * lanczos
+ * quadratic
  * quadratic_ (unclamped)
  * sinc
  * sinc_ (unclamped)
@@ -2597,6 +2599,7 @@ vec4 hook()
  * cos
  * gaussian
  * lanczos
+ * quadratic
  * quadratic_ (unclamped)
  * sinc
  * sinc_ (unclamped)

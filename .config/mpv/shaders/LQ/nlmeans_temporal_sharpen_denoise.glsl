@@ -323,6 +323,7 @@
  * cos
  * gaussian
  * lanczos
+ * quadratic
  * quadratic_ (unclamped)
  * sinc
  * sinc_ (unclamped)
