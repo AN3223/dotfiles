@@ -63,16 +63,16 @@
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.33601621398748727
-#define ASA 1.5888035748874212
-#define ASP 0.774983233249299
-#define ASS 0.5719749795133183
+#define ASF 0.3210768548589939
+#define ASA 0.9397860227779741
+#define ASP 0.7654083023321232
+#define ASS 0.4031301466402857
 #else
 #define AS 1
-#define ASF 0.45029590697253385
-#define ASA 1.487819767673339
-#define ASP 0.9232979080638256
-#define ASS 0.2446652682977203
+#define ASF 0.6267063361944475
+#define ASA 1.9701543289754333
+#define ASP 1.0024630095639717
+#define ASS 0.05977279329812535
 #endif
 
 /* Starting weight
@@ -336,14 +336,14 @@
 #ifdef LUMA_raw
 #define SK gaussian
 #define RK gaussian
-#define ASK gaussian
+#define ASK sinc
 #define PSK gaussian
 #define WDK is_zero
 #define WD1TK gaussian
 #else
 #define SK gaussian
 #define RK gaussian
-#define ASK gaussian
+#define ASK sphinx_
 #define PSK gaussian
 #define WDK is_zero
 #define WD1TK gaussian
