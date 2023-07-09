@@ -77,7 +77,6 @@ sub run_cfg(Str $cfgopts --> Str) {
 }
 
 # XXX should be able to handle multiple files at a time too
-# XXX SSIMS aren't quite the same when batching?
 sub shader_ssim($corrupt-media, @shaders) {
 	my Str $res = %gbl<resolution>.split(':')[0..1].join(':');
 	my Bool $batch = @shaders.elems > 1;
@@ -333,11 +332,26 @@ sub MAIN(
 
 	%gbl<tmpdir> = run(<<mktemp -d "$tmpdir/shader_test.XXXXXX">>, :out).out.slurp(:close).subst("\n");
 	%gbl<tmp> = %gbl<tmpdir> ~ '/shader_test.tmp';
-	
-	my $statsfile = "$stats-dir/"
-		~ @*ARGS.grep(/^\-/).map({ S:g/^\-\-?// }).join('_').trans('/' => '\\')
-		~ "_media=" ~ @test-media.map({ .IO.basename.split('.', :skip-empty)[0] }).join(',')
-		~ ".stats";
+
+	my @statsfile_base = @*ARGS.grep(/^\-/)
+			# strip less relevant options
+			.grep(none /^\-\-force/, /^\-\-no\-stats/, /^\-\-verbose/,
+			           /^\-\-tmpdir/, /^\-\-stats\-dir/, /^\-\-vk\-device/)
+			# strip - and --
+			.map({ S:g/^\-\-?// });
+	@statsfile_base.push("media=" ~ @test-media.map({ .IO.basename.split('.', :skip-empty)[0] }).join(','));
+
+	# shorten the stats filename if it's too long
+	my &statsfile_too_long = { (@statsfile_base.join("_") ~ ".stats.bz2").encode.bytes > 255 };
+	@statsfile_base .= grep(none /^cfgopts\=/) if &statsfile_too_long();
+	@statsfile_base .= grep(none /^max\=/) if &statsfile_too_long();
+	if &statsfile_too_long() {
+		my $proc = run("sha256sum", :in(@statsfile_base), :out);
+		my $hash = $proc.out.slurp.split(" ")[0];
+		@statsfile_base = $hash;
+	}
+
+	my $statsfile = "$stats-dir/" ~ @statsfile_base.join('_').trans('/' => '\\') ~ ".stats";
 
 	@test-media = @test-media.flatmap(&find).grep({ $_.path !~~ /\.txt$/ });
 	@test-media.map({ .f || die "$_ doesn't exist or is unreadable" });
@@ -352,6 +366,7 @@ sub MAIN(
 			die 'stats file exists' if $!;
 		}
 	}
+
 	note('Encoding test media...');
 	%tmp<media> = "{%gbl<tmp>}.concat.mkv";
 	run <<$ffmpeg>>, @test-media.map({ ('-i', $_) }).flat,
