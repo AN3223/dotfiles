@@ -416,13 +416,6 @@ vec4 hook()
 #define V 0
 #endif
 
-// Blur factor (0.0 returns the input image, 1.0 returns the output image)
-#ifdef LUMA_raw
-#define BF 1.0
-#else
-#define BF 1.0
-#endif
-
 // Force disable textureGather
 #ifdef LUMA_raw
 #define NG 0
@@ -1136,6 +1129,6 @@ vec4 hook()
 	return vec4(0.5);
 #endif
 
-	return unval(mix(poi, result, BF));
+	return unval(result);
 }
 
