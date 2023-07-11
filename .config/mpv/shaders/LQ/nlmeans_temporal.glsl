@@ -263,21 +263,26 @@
  *
  * Motion estimation (ME) should improve quality without impacting speed.
  *
+ * Increasing temporal distortion (TD) can reduce motion blur.
+ *
  * T: number of frames used
  * ME: motion estimation, 0 for none, 1 for max weight, 2 for weighted avg
  * MEF: estimate factor, compensates for ME being one frame behind
  * TRF: compare against the denoised frames
+ * TD: temporal distortion, higher numbers give less weight to previous frames
  */
 #ifdef LUMA_raw
 #define T 2
 #define ME 1
 #define MEF 2
 #define TRF 0
+#define TD 1.0
 #else
 #define T 0
 #define ME 0
 #define MEF 2
 #define TRF 0
+#define TD 1.0
 #endif
 
 /* Spatial kernel
@@ -285,33 +290,23 @@
  * Increasing the spatial denoising factor (SS) reduces the weight of further 
  * pixels.
  *
- * Spatial distortion instructs the spatial kernel to view that axis as 
- * closer/further, for instance SD=(1,1,0.5) would make the temporal axis 
- * appear closer and increase blur between frames.
- *
  * The intra-patch variants are supposed to help with larger patch sizes.
  *
  * SST: enables spatial kernel if R>=PST, 0 fully disables
  * SS: spatial sigma
- * SD: spatial distortion (X, Y, time)
  * PSS: intra-patch spatial sigma
  * PST: enables intra-patch spatial kernel if P>=PST, 0 fully disables
- * PSD: intra-patch spatial distortion (X, Y)
  */
 #ifdef LUMA_raw
 #define SST 1
 #define SS 0.5072938692870894
-#define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
-#define PSD vec2(1,1)
 #else
 #define SST 1
 #define SS 0.31580805565941705
-#define SD vec3(1,1,1)
 #define PST 0
 #define PSS 0.0
-#define PSD vec2(1,1)
 #endif
 
 /* Kernels
@@ -755,24 +750,24 @@ vec2 ref(vec2 p, int d)
 float spatial_r(vec3 v)
 {
 	v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size);
-	return SK(length(v*SD)*SS);
+	v.z *= TD;
+	return SK(length(v)*SS);
 }
 #else
 #define spatial_r(v) (1)
 #endif
 
+// 2D blur for sharpening
 #if AS
 float spatial_as(vec3 v)
 {
 	v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size);
-	return ASK(length(v*SD)*ASS);
+	return ASK(length(v)*ASS) * int(v.z == 0);
 }
-#else
-#define spatial_as(v) (1)
 #endif
 
 #if PST && P >= PST
-#define spatial_p(v) PSK(length(v*PSD)*PSS)
+#define spatial_p(v) PSK(length(v)*PSS)
 #else
 #define spatial_p(v) (1)
 #endif
@@ -1019,7 +1014,6 @@ vec4 hook()
 
 #if AS
 		float spatial_as_weight = spatial_as(tr);
-		spatial_as_weight *= int(r.z == 0); // ignore temporal
 		sum_as += px * spatial_as_weight;
 		total_weight_as += spatial_as_weight;
 #endif
