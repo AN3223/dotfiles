@@ -40,7 +40,7 @@ NLM_SHARPEN_DENOISE_DESC=Sharpen and denoise.
 NLM_SHARPEN_DENOISE=AS=1
 
 NLM_TEMPORAL_DESC=Very experimental and buggy, limited to vo=gpu-next.
-NLM_TEMPORAL=T_FRAME_LIMIT=2:T_RES=1920x1080
+NLM_TEMPORAL=T_FRAME_LIMIT=2:T_RES=3840x3840
 NLM_TEMPORAL_LUMA=T=2:WD=1:$(NLM_NO_ROTATE)
 
 # If RF=shader then that shader needs to be added to the prerequisites (i.e., alongside nlmeans_template)
