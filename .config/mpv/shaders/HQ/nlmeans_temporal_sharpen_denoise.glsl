@@ -1121,9 +1121,9 @@ vec4 hook()
 
 #endif
 #if T && TRF
-	  imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(result));  
+	  imageStore(PREV1, ivec2(HOOKED_pos*HOOKED_size), unval(result));  
 #elif T
-	  imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi2));  
+	  imageStore(PREV1, ivec2(HOOKED_pos*HOOKED_size), unval(poi2));  
 #endif
 
 #if AS == 1 // sharpen+denoise
@@ -2231,9 +2231,9 @@ vec4 hook()
 
 #endif
 #if T && TRF
-	 imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(result)); 
+	 imageStore(PREV1, ivec2(HOOKED_pos*HOOKED_size), unval(result)); 
 #elif T
-	 imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi2)); 
+	 imageStore(PREV1, ivec2(HOOKED_pos*HOOKED_size), unval(poi2)); 
 #endif
 
 #if AS == 1 // sharpen+denoise
@@ -2971,8 +2971,8 @@ val GET(vec3 off)
 {
 	switch (min(int(off.z), frame)) {
 	case 0: return val_swizz(GET_(off));
-	case 1: return val_swizz(imageLoad(PREV1, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV1))));
-	case 2: return val_swizz(imageLoad(PREV2, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * imageSize(PREV2))));
+	case 1: return val_swizz(imageLoad(PREV1, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * HOOKED_size)));
+	case 2: return val_swizz(imageLoad(PREV2, ivec2((HOOKED_pos + HOOKED_pt * vec2(off)) * HOOKED_size)));
 	}
 }
 val GET_RF(vec3 off)
@@ -3340,12 +3340,12 @@ vec4 hook()
 
 	// store frames for temporal
 #if T > 1
-	imageStore(PREV2, ivec2(HOOKED_pos*imageSize(PREV2)), unval(GET_RF(vec3(0,0,2-1))));
+	imageStore(PREV2, ivec2(HOOKED_pos*HOOKED_size), unval(GET_RF(vec3(0,0,2-1))));
 #endif
 #if T && TRF
-	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(result));
+	imageStore(PREV1, ivec2(HOOKED_pos*HOOKED_size), unval(result));
 #elif T
-	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi2));
+	imageStore(PREV1, ivec2(HOOKED_pos*HOOKED_size), unval(poi2));
 #endif
 
 #if AS == 1 // sharpen+denoise

@@ -1062,9 +1062,9 @@ vec4 hook()
 
 #endif
 #if T && TRF
-	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(result));
+	imageStore(PREV1, ivec2(HOOKED_pos*HOOKED_size), unval(result));
 #elif T
-	imageStore(PREV1, ivec2(HOOKED_pos*imageSize(PREV1)), unval(poi2));
+	imageStore(PREV1, ivec2(HOOKED_pos*HOOKED_size), unval(poi2));
 #endif
 
 #if AS == 1 // sharpen+denoise
