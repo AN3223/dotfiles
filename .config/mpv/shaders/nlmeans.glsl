@@ -394,6 +394,30 @@
 #define CK gaussian
 #endif
 
+/* Negative kernel parameter offsets
+ *
+ * Usually kernels go high -> low. These parameters allow for a kernel to go 
+ * low -> high -> low.
+ *
+ * Values of 0.0 mean no effect, higher values increase the effect.
+ *
+ * SO: spatial kernel
+ * RO: range kernel (takes patch differences)
+ * ASO: adaptive sharpening kernel
+ * PSO: intra-patch spatial kernel
+ */
+#ifdef LUMA_raw
+#define SO 0.0
+#define RO 0.0
+#define PSO 0.0
+#define ASO 0.0
+#else
+#define SO 0.0
+#define RO 0.0
+#define PSO 0.0
+#define ASO 0.0
+#endif
+
 /* Sampling method
  *
  * In most cases this shouldn't make any difference, only set to bilinear if 
@@ -788,7 +812,7 @@ float spatial_r(vec3 v)
 {
 	 v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size); 
 	 v.z *= TD; 
-	 return SK(length(v)*SS); 
+	 return SK(abs(length(v) - max(0.0, SO))*SS); 
 }
 #else
 #define spatial_r(v) (1)
@@ -799,12 +823,12 @@ float spatial_r(vec3 v)
 float spatial_as(vec3 v)
 {
 	 v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size); 
-	 return ASK(length(v)*ASS) * int(v.z == 0); 
+	 return ASK(abs(length(v) - max(0.0, ASO))*ASS) * int(v.z == 0); 
 }
 #endif
 
 #if PST && P >= PST
-#define spatial_p(v) PSK(length(v)*PSS)
+#define spatial_p(v) PSK(abs(length(v) - max(0.0, PSO))*PSS)
 #else
 #define spatial_p(v) (1)
 #endif
@@ -813,7 +837,7 @@ val range(val pdiff_sq)
 {
 	 const float h = max(EPSILON, S) * 0.013; 
 	 const float pdiff_scale = 1.0/(h*h); 
-	 pdiff_sq = sqrt(pdiff_sq * pdiff_scale); 
+	 pdiff_sq = sqrt(abs(pdiff_sq - max(0.0, RO)) * pdiff_scale); 
 	 return MAP(RK, pdiff_sq); 
 }
 
@@ -1584,6 +1608,30 @@ vec4 hook()
 #define CK gaussian
 #endif
 
+/* Negative kernel parameter offsets
+ *
+ * Usually kernels go high -> low. These parameters allow for a kernel to go 
+ * low -> high -> low.
+ *
+ * Values of 0.0 mean no effect, higher values increase the effect.
+ *
+ * SO: spatial kernel
+ * RO: range kernel (takes patch differences)
+ * ASO: adaptive sharpening kernel
+ * PSO: intra-patch spatial kernel
+ */
+#ifdef LUMA_raw
+#define SO 0.0
+#define RO 0.0
+#define PSO 0.0
+#define ASO 0.0
+#else
+#define SO 0.0
+#define RO 0.0
+#define PSO 0.0
+#define ASO 0.0
+#endif
+
 /* Sampling method
  *
  * In most cases this shouldn't make any difference, only set to bilinear if 
@@ -1978,7 +2026,7 @@ float spatial_r(vec3 v)
 {
 	v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size);
 	v.z *= TD;
-	return SK(length(v)*SS);
+	return SK(abs(length(v) - max(0.0, SO))*SS);
 }
 #else
 #define spatial_r(v) (1)
@@ -1989,12 +2037,12 @@ float spatial_r(vec3 v)
 float spatial_as(vec3 v)
 {
 	v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size);
-	return ASK(length(v)*ASS) * int(v.z == 0);
+	return ASK(abs(length(v) - max(0.0, ASO))*ASS) * int(v.z == 0);
 }
 #endif
 
 #if PST && P >= PST
-#define spatial_p(v) PSK(length(v)*PSS)
+#define spatial_p(v) PSK(abs(length(v) - max(0.0, PSO))*PSS)
 #else
 #define spatial_p(v) (1)
 #endif
@@ -2003,7 +2051,7 @@ val range(val pdiff_sq)
 {
 	const float h = max(EPSILON, S) * 0.013;
 	const float pdiff_scale = 1.0/(h*h);
-	pdiff_sq = sqrt(pdiff_sq * pdiff_scale);
+	pdiff_sq = sqrt(abs(pdiff_sq - max(0.0, RO)) * pdiff_scale);
 	return MAP(RK, pdiff_sq);
 }
 
