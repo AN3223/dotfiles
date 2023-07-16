@@ -52,9 +52,9 @@ vec4 hook()
 
 // Denoising factor (level of blur, higher means more blur)
 #ifdef LUMA_raw
-#define S 14.625674200642456
+#define S 17.017602237233955
 #else
-#define S 14.625674200642456
+#define S 17.017602237233955
 #endif
 
 /* Adaptive sharpening
@@ -79,17 +79,17 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.2860809718507155
-#define ASA 2.9603039961661994
-#define ASP 1.1626587678544977
-#define ASS 0.649879391277991
+#define ASF 0.2778039037257505
+#define ASA 3.0225604816404315
+#define ASP 1.1368782379823874
+#define ASS 0.5302822199949342
 #define ASI 0
 #else
 #define AS 1
-#define ASF 0.2860809718507155
-#define ASA 2.9603039961661994
-#define ASP 1.1626587678544977
-#define ASS 0.649879391277991
+#define ASF 0.2778039037257505
+#define ASA 3.0225604816404315
+#define ASP 1.1368782379823874
+#define ASS 0.5302822199949342
 #define ASI 0
 #endif
 
@@ -101,9 +101,9 @@ vec4 hook()
  * EPSILON should be used instead of zero to avoid divide-by-zero errors.
  */
 #ifdef LUMA_raw
-#define SW 0.9489798634344688
+#define SW 0.8827444208717642
 #else
-#define SW 0.9489798634344688
+#define SW 0.8827444208717642
 #endif
 
 /* Weight discard
@@ -329,12 +329,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.3395520508703291
+#define SS 1.3509665474695507
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 1.3395520508703291
+#define SS 1.3509665474695507
 #define PST 0
 #define PSS 0.0
 #endif
@@ -368,7 +368,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define SK sphinx_
 #define RK gaussian
-#define ASK sphinx_
+#define ASK sinc3
 #define PSK gaussian
 #define WDK is_zero
 #define WD1TK gaussian
@@ -376,7 +376,7 @@ vec4 hook()
 #else
 #define SK sphinx_
 #define RK gaussian
-#define ASK sphinx_
+#define ASK sinc3
 #define PSK gaussian
 #define WDK is_zero
 #define WD1TK gaussian
