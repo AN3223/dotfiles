@@ -241,10 +241,10 @@
  */
 #ifdef LUMA_raw
 #define C 0
-#define CS 0.11643442361134813
+#define CS 0.11029390001250727
 #else
 #define C 0
-#define CS 0.11643442361134813
+#define CS 0.11029390001250727
 #endif
 
 /* Robust filtering
@@ -383,7 +383,7 @@
 #define ASO 0.0
 #else
 #define SO 0.0
-#define RO 0.0
+#define RO 0.00015152392427859513
 #define PSO 0.0
 #define ASO 0.0
 #endif
