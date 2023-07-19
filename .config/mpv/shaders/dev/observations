@@ -1,5 +1,6 @@
 #!/bin/sh -e
 # vi: foldmethod=marker
+
 ### Here are some observations about the data gathered from shader_test. 
 ### Think of this kinda like a jupyter notebook. The format goes:
 #
@@ -9,13 +10,16 @@
 # OUTPUT:
 # the code's output
 #}}} Section end
+#
+### Relevant cfgopts are given for each applicable section. When an 
+### option is omitted, the default is assumed.
 
-### XXX optimize HQ sharpening
-### XXX test on different noise levels
-### XXX test on softened noise
-### XXX test temporal (including ME)
+### XXX test against lossy codecs
+### XXX test against different noise levels
+### XXX test against softened noise
+### XXX test temporal
 
-#{{{ Various upscalers
+#{{{ Various upscalers (2x)
 #
 ### FSR
 #
@@ -117,7 +121,20 @@
 #
 #}}}
 
-#{{{ Optimal non-local means (luma, P=3:R=5:PS=3:RS=3)
+#{{{ Optimal non-local means (luma, "LQ profile", P=3:R=5:PS=4:RS=3:WD=1:RI=0:RFI=0:RF_LUMA=0)
+#
+### Suprisingly the quality is almost as good as the default profile
+#
+#fn='max=S=3.5968056672833097:SS=0.49764743714339127:SW=0.7392620481427672:WDT=0.580415381682815:WDP=5.381278367349288_cfgopts=PS=4:WD=1:RF=0:RF_LUMA=0:RI=0:RFI=0_media=images.stats.bz2'
+#bzcat "stats/$fn" | sort -k 2 -n | tail
+#
+# OUTPUT:
+# BASELINE=NOISE=10:10 0.8704759
+# S=3.6280599151151334:SS=0.5072938692870894:SW=0.717967659498257:WDT=0.5509878334105431:WDP=5.402102275251726:PS=4:WD=1:RF=0:RF_LUMA=0:RI=0:RFI=0 0.9556407
+#
+#}}}
+
+#{{{ Optimal non-local means (luma, "default profile", P=3:R=5:PS=3:RS=3)
 #
 #fn='max=S=2.1195309092809933:SS=0.5136419089326144:SW=1.3279189126128106:WDT=0.3350669844054246:CS=0.11643442361134813_cfgopts=C=1:CK="gaussian","triangle","sphinx","sinc","lanczos","bicubic","cos"_media=images.stats.bz2'
 #bzcat "stats/$fn" | sort -k 2 -n | tail
@@ -134,20 +151,7 @@
 #
 #}}}
 
-#{{{ Optimal non-local means (luma, P=3:R=5:PS=4:RS=3:WD=1:RI=0:RFI=0:RF_LUMA=0)
-#
-### Suprisingly this performs almost as well as regular NLM
-#
-#fn='max=S=3.5968056672833097:SS=0.49764743714339127:SW=0.7392620481427672:WDT=0.580415381682815:WDP=5.381278367349288_cfgopts=PS=4:WD=1:RF=0:RF_LUMA=0:RI=0:RFI=0_media=images.stats.bz2'
-#bzcat "stats/$fn" | sort -k 2 -n | tail
-#
-# OUTPUT:
-# BASELINE=NOISE=10:10 0.8704759
-# S=3.6280599151151334:SS=0.5072938692870894:SW=0.717967659498257:WDT=0.5509878334105431:WDP=5.402102275251726:PS=4:WD=1:RF=0:RF_LUMA=0:RI=0:RFI=0 0.9556407
-#
-#}}}
-
-#{{{ Optimal non-local means (luma, P=3:R=9:PS=0,3)
+#{{{ Optimal non-local means (luma, "HQ profile", P=3:R=9:PS=0,3)
 #
 ### Old HQ setup (actually not even better than the default NLM config):
 #
@@ -204,7 +208,7 @@
 #
 #}}}
 
-#{{{ Optimal non-local means (chroma, P=3:R=5:PS=3:RS=3:WD=1:RF=0)
+#{{{ Optimal non-local means (chroma, "LQ profile", P=3:R=5:PS=3:RS=3:WD=1:RF=0)
 #
 #fn='max=S=5.191526541606411:SS=0.32091162692066677:SW=0.6448288408806067:WDT=0.913447511792627:WDP=5.832936323930807_cfgopts=WD=1:RF=0:RF_LUMA=0_plane=CHROMA_media=images.stats.bz2'
 #bzcat "stats/$fn" | sort -k 2 -n | tail
@@ -215,7 +219,7 @@
 #
 #}}}
 
-#{{{ Optimal non-local means (chroma, P=3:R=5:PS=3:RS=3)
+#{{{ Optimal non-local means (chroma, "default profile", P=3:R=5:PS=3:RS=3)
 #
 #fn='max=S=2.5168955531436197:SW=1.2219854377433914:SS=0.26295970436981203_plane=CHROMA_media=images.stats.bz2'
 #bzcat "stats/$fn" | sort -k 2 -n | tail
@@ -226,7 +230,7 @@
 #
 #}}}
 
-#{{{ Optimal non-local means (chroma, R=9:PS=3)
+#{{{ Optimal non-local means (chroma, "HQ profile", R=9:PS=3)
 #
 ### Pretty significant improvement over P=3:R=5:PS=3:RS=3
 #
@@ -249,7 +253,7 @@
 #
 #}}}
 
-#{{{ Optimal non-local means sharpening (luma, P=3:R=5:PS=3:RS=3)
+#{{{ Optimal non-local means sharpening (luma, "default profile", P=3:R=5:PS=3:RS=3)
 #
 #fn='max=ASF=0.32285346195725034:ASA=2.0793936417006034:ASP=0.7663643239915433:ASS=0.5045657681048714_cfgopts=AS=2_corruption=VF=gblur=0.625_media=images.stats.bz2'
 #bzcat "stats/$fn" | sort -k 2 -n | tail
@@ -287,7 +291,7 @@
 #
 #}}}
 
-#{{{ Optimal non-local means sharpening (luma, P=3:R=9:PS=0,3)
+#{{{ Optimal non-local means sharpening (luma, "HQ profile", P=3:R=9:PS=0,3)
 #
 #fn='max=ASF=0.3210768548589939:ASA=0.9397860227779741:ASP=0.7654083023321232:ASS=0.4031301466402857_corruption=VF=gblur=0.625_media=images.stats.bz2'
 #bzcat "stats/$fn" | sort -k 2 -n | tail
@@ -314,7 +318,7 @@
 #
 #}}}
 
-#{{{ Optimal non-local means sharpening (chroma, P=3:R=5:PS=3:RS=3)
+#{{{ Optimal non-local means sharpening (chroma, "default profile", P=3:R=5:PS=3:RS=3)
 #
 ### Very small improvement
 #
@@ -343,7 +347,7 @@
 #
 #}}}
 
-#{{{ Optimal non-local means sharpening (chroma, P=3:R=9:PS=0,3)
+#{{{ Optimal non-local means sharpening (chroma, "HQ profile", P=3:R=9:PS=0,3)
 #
 #fn='max=ASF=0.6267063361944475:ASA=1.9701543289754333:ASP=1.0024630095639717:ASS=0.05977279329812535_cfgopts=S=1.359261923810611:SW=1.4903543760666318:SS=0.17336705987012963:R=9:AS=2_corruption=VF=gblur=0.625_plane=CHROMA_media=images.stats.bz2'
 #bzcat "stats/$fn" | sort -k 2 -n | tail
@@ -352,37 +356,5 @@
 # ASF=0.4804227336582368:ASA=2.0325416266014185:ASP=1.2022557068138862:ASS=0.0682805004673164:S=1.359262:SW=1.490354:SS=0.173367:R=9:AS=2 0.99703
 # BASELINE=VF=gblur=0.625 0.997152
 #
-#}}}
-
-#{{{ Optimal NLM LGC
-#
-#fn="NLM:images:CHROMA:NOISE=10:10:1080x1080:yuv444p:CAT=1:MAX=S:10:3:1e-6:10:RF='SHARE_LUMA':D1W=1:RI=3:RFI=2:WDT=0.0,0.25...1.5:SW=1.0,0.875,0.75:R=3,5,7.stats.bz2"
-#bzcat "stats/$fn" | sort -k 2 -n | tail
-#
-# OUTPUT:
-# S=8.888889:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.750000:SW=0.750000:R=7 0.9465736909
-# S=8.333333:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.250000:SW=1.000000:R=7 0.94704555455
-# S=8.333333:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.000000:SW=1.000000:R=7 0.94706957273
-# S=8.333333:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.500000:SW=1.000000:R=7 0.9471524091
-# S=7.500000:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.250000:SW=0.875000:R=7 0.947231364
-# S=7.222222:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.000000:SW=0.875000:R=7 0.947245964
-# S=8.333333:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.500000:SW=0.875000:R=7 0.94735124545
-# S=7.222222:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.250000:SW=0.750000:R=7 0.9473976909
-# S=7.222222:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.000000:SW=0.750000:R=7 0.9474485909
-# S=8.333333:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.500000:SW=0.750000:R=7 0.9475138727
-#
-#bzcat "stats/$fn" | grep -F :R=5 | sort -k 2 -n | tail
-#
-# OUTPUT:
-# S=13.333333:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.250000:SW=1.000000:R=5 0.93730393636
-# S=13.333333:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.000000:SW=1.000000:R=5 0.93733117273
-# S=13.333333:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.500000:SW=0.875000:R=5 0.93767555455
-# S=15.000000:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.750000:SW=0.875000:R=5 0.9376983
-# S=12.222222:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.250000:SW=0.875000:R=5 0.93772519091
-# S=12.777778:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.000000:SW=0.875000:R=5 0.9377606545
-# S=12.500000:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.500000:SW=0.750000:R=5 0.9380457273
-# S=15.000000:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.750000:SW=0.750000:R=5 0.9380642727
-# S=11.666667:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.250000:SW=0.750000:R=5 0.93810337273
-# S=11.666667:RF=SHARE_LUMA:D1W=1:RI=3:RFI=2:WDT=0.000000:SW=0.750000:R=5 0.938148545
 #}}}
 
