@@ -77,7 +77,7 @@ sub run_cfg(Str $cfgopts --> Str) {
 
 # XXX should be able to handle multiple files at a time too
 sub shader_ssim($corrupt-media, @shaders) {
-	my Str $res = %gbl<resolution>.split(':')[0..1].join(':');
+	my Str $res = (<w= h=> Z~ %gbl<resolution>.split(':')[0..1]).join(':');
 	my Bool $batch = @shaders.elems > 1;
 
 	my (@crptpads, @inpads);
@@ -92,7 +92,7 @@ sub shader_ssim($corrupt-media, @shaders) {
 	my $vf = (
 		("hwupload,split={@shaders.elems}" ~ @crptpads.join() if $batch),
 		("split={@shaders.elems}" ~ @inpads.join() if $batch),
-		(do @crptpads[$_.key] ~ ("hwupload," if not $batch) ~ "libplacebo=$res\:{%gbl<pix-fmt>}:custom_shader_path={$_.value},hwdownload[out{$_.key}]" for @shaders.pairs).join(";\n"),
+		(do @crptpads[$_.key] ~ ("hwupload," if not $batch) ~ "libplacebo=$res\:format={%gbl<pix-fmt>}:custom_shader_path={$_.value},hwdownload[out{$_.key}]" for @shaders.pairs).join(";\n"),
 		(do "{@inpads[$_]}[out$_]ssim={%gbl<tmpdir>}/ssim$_" for ^@shaders.elems).join(";\n")
 	).join(";\n");
 
