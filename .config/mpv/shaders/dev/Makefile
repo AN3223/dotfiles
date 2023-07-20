@@ -137,7 +137,6 @@ OPT_2X=VF=scale=540:540
 OPT_STRIP=sed '/^$$/d ; /^\#/d'
 OPT_LAST=tail -n 1 | cut -f 1
 
-# XXX optimize sharpening for NLM_LQ_LUMA/NLM_LQ_CHROMA
 # XXX add FSR/FSRCNNX/etc.
 # XXX test against lossy codecs
 # XXX test against different noise levels
@@ -147,10 +146,14 @@ OPT_LAST=tail -n 1 | cut -f 1
 optimums/NLM_LQ_LUMA:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
 	./shader_test --max=S:SW:SS:WDT:WDP:RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	printf '%s\n' '# --corruption=$(OPT_BLUR)' >> $@
+	./shader_test --corruption=$(OPT_BLUR) --max=ASF:ASA:ASP:ASS --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`:AS=2" --no-baseline --no-stats images/ | sed s/:AS=2// >> $@
 	printf '\n' >> $@
 optimums/NLM_LQ_CHROMA:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
 	./shader_test --plane=CHROMA --max=S:SS:SW:WDT:WDP --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	printf '%s\n' '# --corruption=$(OPT_BLUR)' >> $@
+	./shader_test --corruption=$(OPT_BLUR) --plane=CHROMA --max=ASF:ASA:ASP:ASS --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`:AS=2" --no-baseline --no-stats images/ | sed s/:AS=2// >> $@
 	printf '\n' >> $@
 optimums/NLM_DEFAULT_LUMA: ../LQ/nlmeans.glsl
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
