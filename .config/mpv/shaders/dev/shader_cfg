@@ -265,9 +265,8 @@ function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, s
 		ensure_hooks()
 		ensure_cfg_opts()
 		for (i = 1; i < CFGOPTS_LEN; i++) {
-			if (CFGOPTS[i] ~ /^INJ_/) {
-				opt = CFGOPTS[i]
-				sub(/^INJ_/, "", opt)
+			if (index(CFGOPTS[i], "INJ_" save "_") == 1) {
+				opt = substr(CFGOPTS[i], length("INJ_" save "_")+1)
 				inject_opts = sprintf("%s:%s", inject_opts, opt)
 			}
 		}
