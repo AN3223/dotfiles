@@ -353,21 +353,22 @@ sub MAIN(
 	@statsfile_base.push("media=" ~ @test-media.map({ .IO.basename.split('.', :skip-empty)[0] }).join(','));
 
 	# shorten the stats filename if it's too long
-	my &statsfile_too_long = { (@statsfile_base.join("_") ~ ".stats.bz2").encode.bytes > 255 };
+	my &statsfile =          { @statsfile_base.join('_').trans('/' => '\\') ~ ".stats" };
+	my &statsfile_too_long = { (&statsfile() ~ ".bz2").encode.bytes > 255 };
+	@statsfile_base .= grep(none /^max\=/)     if &statsfile_too_long();
 	@statsfile_base .= grep(none /^cfgopts\=/) if &statsfile_too_long();
-	@statsfile_base .= grep(none /^max\=/) if &statsfile_too_long();
-	if &statsfile_too_long() {
-		my $proc = run("sha256sum", :in(@statsfile_base), :out);
+	if &statsfile_too_long() or ("$stats-dir/" ~ &statsfile()).IO.e
+	                         or ("$stats-dir/" ~ &statsfile() ~ ".bz2").IO.e {
+		my $proc = run("sha1sum", :in(@statsfile_base), :out);
 		my $hash = $proc.out.slurp.split(" ")[0];
 		@statsfile_base = $hash;
 	}
 
-	my $statsfile = "$stats-dir/" ~ @statsfile_base.join('_').trans('/' => '\\') ~ ".stats";
+	my $statsfile = "$stats-dir/" ~ &statsfile();
 
 	@test-media = @test-media.flatmap(&find).grep({ $_.path !~~ /\.txt$/ });
 	@test-media.map({ .f || die "$_ doesn't exist or is unreadable" });
 
-	run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
 	if not $no-stats {
 		if $force {
 			%gbl<statsfile> = open $statsfile, :w;
@@ -377,6 +378,8 @@ sub MAIN(
 			die 'stats file exists' if $!;
 		}
 	}
+
+	run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
 
 	note('Preparing clean images...');
 	%tmp<media> = "{%gbl<tmp>}.concat.mkv";
