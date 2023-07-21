@@ -1,6 +1,5 @@
 #!/usr/bin/env raku
 
-# XXX call this script from a Makefile and maintain a text file of SSIMs for each shader
 # XXX add option to test multiple planes at a time? (sounds like a pain)
 # XXX make a script for plotting stats files
 # XXX apparently "".split(char).elems == 1, make sure this doesn't break anything
@@ -261,7 +260,7 @@ sub test(Str $cfgopts = "") {
 
 # XXX add a "bring your own" corruption where you can specify your own corrupt test media
 # XXX maybe measure baseline here?
-sub corrupt(Str $corruptions, Bool $no-concat --> Int) {
+sub corrupt(Str $name, Str $corruptions, Bool $no-concat) {
 	my Int $realizations = 1;
 	my Str @pre-vf;
 	my Callable @vf;
@@ -291,18 +290,19 @@ sub corrupt(Str $corruptions, Bool $no-concat --> Int) {
 	).join(";\n");
 
 	my @outs;
+	my @outfiles;
 	if $no-concat {
-		%tmp<corrupt> = do "{%gbl<tmp>}.corrupt$_.mkv" for ^$realizations;
-		@outs = %tmp<corrupt>.pairs.map({ (|@outopts, "-map", "[o{$_.key}]", $_.value) }).flat;
+		@outfiles = do "{%gbl<tmp>}.{$name}{$_}.mkv" for ^$realizations;
+		@outs = @outfiles.pairs.map({ (|@outopts, "-map", "[o{$_.key}]", $_.value) }).flat;
 	} else {
-		%tmp<corrupt> = ("{%gbl<tmp>}.corrupt.mkv");
-		@outs = (|@outopts, %tmp<corrupt>[0]);
+		@outfiles = ("{%gbl<tmp>}.{$name}.mkv");
+		@outs = (|@outopts, @outfiles[0]);
 	}
 
 	spurt (%tmp<filter_script> = "{%gbl<tmp>}.filter_script"), $vf;
 	run <<$ffmpeg -i "%tmp<media>" -filter_complex_script "{%tmp<filter_script>}">>, |@outs;
 
-	return $realizations;
+	return { :realizations($realizations), :files(@outfiles) };
 }
 
 # recursive ls
@@ -314,7 +314,8 @@ sub MAIN(
 	Str :$cfgopts = "", #= Arguments passed to the dispatched _cfg script, if dispatched
 	Str :$shader where *.IO.r = "nlmeans_template", #= Shader used for testing
 	Str :$plane = "LUMA", #= Plane to test on
-	Str :$corruption = "NOISE=10:10", #= Corruption type, can be NOISE, JPEG, or SCALE
+	Str :$corruption = "NOISE=10:10", #= Corruption type, NOISE/OUTOPTS/VF
+	Str :$acorruption = "", #= Anti-corruption type (applied to clean image), NOISE/OUTOPTS/VF
 	Str :$vk-device = "vulkan", #= Device name passed to ffmpeg's -init_hw_device option
 	Str :$stats-dir where *.IO.d = "stats", #= Directory where stats will be stored
 	Str :$max = "", #= Optimizer settings: OPTION=START=STEP (all optional, multiple can be chained with colons)
@@ -377,23 +378,36 @@ sub MAIN(
 		}
 	}
 
-	note('Encoding test media...');
+	note('Preparing clean images...');
 	%tmp<media> = "{%gbl<tmp>}.concat.mkv";
 	run <<$ffmpeg>>, @test-media.map({ ('-i', $_) }).flat,
 		(<<-lavfi "concat={@test-media.elems},setpts=N/(FR*TB)">> if @test-media.elems > 1),
 		|%gbl<outopts>, %tmp<media>;
 
-	note('Corrupting test media...');
-	my $realizations = corrupt($corruption, $no-concat) - 1;
-	if not $no-concat && $realizations > 0 {
-		%gbl<media> = <<-stream_loop "$realizations" -i "%tmp<media>">>;
+	# XXX support --no-concat here?
+	my $acorr_realizations = 1;
+	if $acorruption {
+		my %corrupt = corrupt("acorrupt", $acorruption, False);
+		%tmp<media_> = %corrupt<files>[0];
+		$acorr_realizations = %corrupt<realizations>;
+	}
+
+	note('Preparing corrupt images...');
+	my %corrupt = corrupt("corrupt", $corruption, $no-concat);
+	my $realizations = %corrupt<realizations>;
+	%tmp<corrupt> = %corrupt<files>;
+	if $acorruption {
+		unlink %tmp<media>;
+		%tmp<media> = %tmp<media_>:delete;
+	}
+	if not $no-concat && $realizations > 1 {
+		%gbl<media> = <<-stream_loop "{$realizations / $acorr_realizations - 1}" -i "%tmp<media>">>;
 	} else {
-		%gbl<media> = <<-i %tmp<media>>>;
+		%gbl<media> = <<-i "%tmp<media>">>;
 	}
 
 	if not $no-baseline {
 		note('Measuring baseline...');
-		# XXX baseline should be generated from libplacebo upscaling
 		my $baseline = avgssim(%tmp<corrupt>.map({
 			run(<<$ffmpeg -i "$_">>, |%gbl<media>, <<-lavfi "scale={%gbl<resolution>},ssim=-">>, |%gbl<outopts>, <-f null ->, :out).out.slurp(:close)
 		}).join("\n"));
