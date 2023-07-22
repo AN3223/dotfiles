@@ -26,7 +26,7 @@
  * encouraged to tweak them to your preferences.
  */
 
-// The following is shader code injected from ../LQ/nlmeans.glsl
+// The following is shader code injected from ./nlmeans_template
 /* vi: ft=c
  *
  * Based on vf_nlmeans.c from FFmpeg.
@@ -48,7 +48,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: LQ/nlmeans.glsl: Faster, but lower quality.
+// Description: nlmeans.glsl: Default profile, general purpose, tuned for low noise
 
 /* This shader is highly configurable via user variables below. Although the 
  * default settings should offer good quality at a reasonable speed, you are 
@@ -58,7 +58,7 @@
 //!HOOK LUMA
 //!HOOK CHROMA
 //!BIND HOOKED
-//!DESC Non-local means (LQ/nlmeans.glsl)
+//!DESC Non-local means (nlmeans.glsl)
 //!SAVE RF_LUMA
 
 // User variables
@@ -68,9 +68,9 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 3.6168941519884963
+#define S 4.736131466623959
 #else
-#define S 5.228925068733646
+#define S 4.736131466623959
 #endif
 
 /* Adaptive sharpening
@@ -95,17 +95,17 @@
  */
 #ifdef LUMA_raw
 #define AS 0
-#define ASF 0.24159050282277234
-#define ASA 0.9705376614364192
-#define ASP 0.679345675735829
-#define ASS 0.3745673450834435
+#define ASF 0.3210768548589939
+#define ASA 0.9397860227779741
+#define ASP 0.7654083023321232
+#define ASS 0.4031301466402857
 #define ASI 0
 #else
 #define AS 0
-#define ASF 0.49435642075860164
-#define ASA 0.9239336966789411
-#define ASP 0.8844773136788092
-#define ASS 0.04221585861872303
+#define ASF 0.6267063361944475
+#define ASA 1.9701543289754333
+#define ASP 1.0024630095639717
+#define ASS 0.05977279329812535
 #define ASI 0
 #endif
 
@@ -115,9 +115,9 @@
  * pixel-of-interest. Lower numbers may help handle heavy noise.
  */
 #ifdef LUMA_raw
-#define SW 0.742862923455842
+#define SW 0.6578398083510304
 #else
-#define SW 0.6683395597722627
+#define SW 0.6578398083510304
 #endif
 
 /* Spatial kernel
@@ -134,12 +134,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.5209736219422769
+#define SS 0.6196123562698168
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.32444557191341866
+#define SS 0.6196123562698168
 #define PST 0
 #define PSS 0.0
 #endif
@@ -230,7 +230,7 @@
 #define PS 4
 #else
 #define RS 3
-#define PS 3
+#define PS 4
 #endif
 
 /* Weight discard
@@ -250,13 +250,13 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.5281028478124096
-#define WDP 4.730528086592124
+#define WDT 0.6367328611609977
+#define WDP 5.035204391181643
 #define WDS 1.0
 #else
 #define WD 1
-#define WDT 0.9417535892431848
-#define WDP 5.274888581134373
+#define WDT 0.6367328611609977
+#define WDP 5.035204391181643
 #define WDS 1.0
 #endif
 
@@ -415,7 +415,7 @@
 #define ASO 0.0
 #else
 #define SO 0.0
-#define RO 0.00015152392427859513
+#define RO 9.773746446023492e-05
 #define PSO 0.0
 #define ASO 0.0
 #endif
@@ -1255,7 +1255,7 @@ vec4 hook()
 	 return unval(result); 
 }
 
-// End of source code injected from ../LQ/nlmeans.glsl 
+// End of source code injected from ./nlmeans_template 
 
 //!HOOK LUMA
 //!HOOK CHROMA
@@ -1284,9 +1284,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 1.5100368270594222
+#define S 1.5719013144861136
 #else
-#define S 1.1938600037262965
+#define S 1.391483753112824
 #endif
 
 /* Adaptive sharpening
@@ -1311,17 +1311,17 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 2
-#define ASF 0.5073015913084239
-#define ASA 1.2507376773041337
-#define ASP 0.9779000193609839
-#define ASS 0.3536013978812405
+#define ASF 0.48528336282723383
+#define ASA 1.2574462635097028
+#define ASP 0.9624784059903165
+#define ASS 0.35389919211641463
 #define ASI 0
 #else
 #define AS 2
-#define ASF 0.691397862110103
-#define ASA 1.4038435993185387
-#define ASP 1.306480175292214
-#define ASS 0.057067447417175975
+#define ASF 0.7664553329156923
+#define ASA 1.9087742499950382
+#define ASP 1.315803715265423
+#define ASS 0.07940576748014126
 #define ASI 0
 #endif
 
@@ -1331,9 +1331,9 @@ vec4 hook()
  * pixel-of-interest. Lower numbers may help handle heavy noise.
  */
 #ifdef LUMA_raw
-#define SW 1.724986593611501
+#define SW 1.3252877994495105
 #else
-#define SW 1.3409924565119054
+#define SW 1.2568832172072233
 #endif
 
 /* Spatial kernel
@@ -1350,12 +1350,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.36284567215031627
+#define SS 0.23241452659228135
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.2627184507564747
+#define SS 0.2413348729980003
 #define PST 0
 #define PSS 0.0
 #endif
@@ -1466,7 +1466,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 2
-#define WDT 0.10614185911846982
+#define WDT 0.12176877970608593
 #define WDP 5.402102275251726
 #define WDS 1.0
 #else
@@ -1487,7 +1487,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define C 1
-#define CS 0.07265138933038029
+#define CS 0.11756913231776135
 #else
 #define C 0
 #define CS 0.11029390001250727
@@ -1626,12 +1626,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SO 0.0
-#define RO 3.660120938709089e-05
+#define RO 3.84170163024733e-05
 #define PSO 0.0
 #define ASO 0.0
 #else
 #define SO 0.0
-#define RO 9.243129782763913e-05
+#define RO 0.00011437445225608362
 #define PSO 0.0
 #define ASO 0.0
 #endif

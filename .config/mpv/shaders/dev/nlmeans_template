@@ -28,7 +28,7 @@
  * encouraged to tweak them to your preferences.
  */
 
-//cfg_tex SAVE=RF_LUMA DESC=RF SIZE=../LQ/nlmeans.glsl COPY=HOOKED
+//cfg_tex SAVE=RF_LUMA DESC=RF SIZE=./nlmeans_template COPY=HOOKED
 //cfg_tex SAVE=RF DESC=RF SIZE=SHARE_RF_LUMA COPY=HOOKED
 //cfg_tex SAVE=EP DESC=EP SIZE=0 COPY=LUMA
 //cfg_storage if T_FRAME_LIMIT; i=1...T_FRAME_LIMIT; TEXTURE=PREV${i} SIZE=T_RES=3840x3840 FORMAT=r16f

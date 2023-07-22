@@ -50,15 +50,15 @@ nlmeans_default: ../nlmeans.glsl ../nlmeans_temporal.glsl ../nlmeans_sharpen_den
 NLM_DEFAULT_LUMA=`$(OPT_STRIP) optimums/NLM_DEFAULT_LUMA | tail -n 1 | cut -f 1`
 NLM_DEFAULT=`$(OPT_STRIP) optimums/NLM_DEFAULT_CHROMA | tail -n 1 | cut -f 1`
 
-../nlmeans.glsl: nlmeans_template ../LQ/nlmeans.glsl
+../nlmeans.glsl: nlmeans_template
 	./shader_cfg nlmeans_template OPTS_LUMA="$(NLM_DEFAULT_LUMA)" OPTS="$(NLM_DEFAULT)" > $@
-../nlmeans_temporal.glsl: nlmeans_template ../LQ/nlmeans.glsl
+../nlmeans_temporal.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_TEMPORAL_DESC)" OPTS="$(NLM_TEMPORAL):$(NLM_DEFAULT)" OPTS_LUMA="$(NLM_TEMPORAL_LUMA):$(NLM_DEFAULT_LUMA)" nlmeans_template > $@
-../nlmeans_sharpen_denoise.glsl: nlmeans_template ../LQ/nlmeans.glsl
+../nlmeans_sharpen_denoise.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_SHARPEN_DENOISE_DESC)" OPTS_LUMA="$(NLM_DEFAULT_LUMA)" OPTS="$(NLM_SHARPEN_DENOISE):$(NLM_DEFAULT)" nlmeans_template > $@
-../nlmeans_sharpen_only.glsl: nlmeans_template ../LQ/nlmeans.glsl
+../nlmeans_sharpen_only.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_SHARPEN_ONLY_DESC)" OPTS_LUMA="$(NLM_DEFAULT_LUMA)" OPTS="$(NLM_SHARPEN_ONLY):$(NLM_DEFAULT)" nlmeans_template > $@
-../nlmeans_temporal_sharpen_denoise.glsl: nlmeans_template ../LQ/nlmeans.glsl
+../nlmeans_temporal_sharpen_denoise.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_TEMPORAL_DESC) $(NLM_SHARPEN_DENOISE_DESC)" OPTS="$(NLM_TEMPORAL):$(NLM_SHARPEN_DENOISE):$(NLM_DEFAULT)" OPTS_LUMA="$(NLM_TEMPORAL_LUMA):$(NLM_DEFAULT_LUMA)" nlmeans_template > $@
 
 nlmeans_lq: ../LQ/nlmeans.glsl ../LQ/nlmeans_temporal.glsl ../LQ/nlmeans_sharpen_denoise.glsl ../LQ/nlmeans_sharpen_only.glsl ../LQ/nlmeans_temporal_sharpen_denoise.glsl
@@ -155,27 +155,27 @@ optimums/NLM_LQ_CHROMA:
 	printf '%s\n' '# --corruption=$(OPT_BLUR)' >> $@
 	./shader_test --corruption=$(OPT_BLUR) --plane=CHROMA --max=ASF:ASA:ASP:ASS --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`:AS=2" --no-baseline --no-stats images/ | sed s/:AS=2// >> $@
 	printf '\n' >> $@
-optimums/NLM_DEFAULT_LUMA: ../LQ/nlmeans.glsl
+optimums/NLM_DEFAULT_LUMA:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
-	./shader_test --max=S:SW:SS:WDT:CS:RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --max=S:SW:SS:WDT:CS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
 	printf '%s\n' '# --corruption=$(OPT_BLUR)' >> $@
 	./shader_test --corruption=$(OPT_BLUR) --max=ASF:ASA:ASP:ASS --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`:AS=2" --no-baseline --no-stats images/ | sed s/:AS=2// >> $@
 	printf '\n' >> $@
-optimums/NLM_DEFAULT_CHROMA: ../LQ/nlmeans.glsl
+optimums/NLM_DEFAULT_CHROMA:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
-	./shader_test --plane=CHROMA --max=S:SW:SS:RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --plane=CHROMA --max=S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
 	printf '%s\n' '# --corruption=$(OPT_BLUR)' >> $@
 	./shader_test --corruption=$(OPT_BLUR) --plane=CHROMA --max=ASF:ASA:ASP:ASS --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`:AS=2" --no-baseline --no-stats images/ | sed s/:AS=2// >> $@
 	printf '\n' >> $@
-optimums/NLM_HQ_LUMA: ../LQ/nlmeans.glsl
+optimums/NLM_HQ_LUMA:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
-	./shader_test --max=S:SW:SS:WDT:CS:RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --max=S:SW:SS:WDT:CS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
 	printf '%s\n' '# --corruption=$(OPT_BLUR)' >> $@
 	./shader_test --corruption=$(OPT_BLUR) --max=ASF:ASA:ASP:ASS --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`:AS=2" --no-baseline --no-stats images/ | sed s/:AS=2// >> $@
 	printf '\n' >> $@
-optimums/NLM_HQ_CHROMA: ../LQ/nlmeans.glsl
+optimums/NLM_HQ_CHROMA:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
-	./shader_test --plane=CHROMA --max=S:SW:SS:RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --plane=CHROMA --max=S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
 	printf '%s\n' '# --corruption=$(OPT_BLUR)' >> $@
 	./shader_test --corruption=$(OPT_BLUR) --plane=CHROMA --max=ASF:ASA:ASP:ASS --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`:AS=2" --no-baseline --no-stats images/ | sed s/:AS=2// >> $@
 	printf '\n' >> $@
