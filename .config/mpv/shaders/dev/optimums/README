@@ -1,1 +1,1 @@
-Each file here, excluding this README file, contains optimal cfgopts for different shaders. The newest cfgopts are appended to the bottom of each file as they are added. git-blame(1) may be useful for retrieving information about the history of the settings.
+Each file here, excluding this README file, contains optimal cfgopts for different shaders. The newest cfgopts are appended to the bottom of each file as they are added.
