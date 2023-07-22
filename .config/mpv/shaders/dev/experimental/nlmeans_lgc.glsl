@@ -21,11 +21,6 @@
 
 // Description: experimental/nlmeans_lgc.glsl: Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
 
-/* This shader is highly configurable via user variables below. Although the 
- * default settings should offer good quality at a reasonable speed, you are 
- * encouraged to tweak them to your preferences.
- */
-
 //!HOOK CHROMA
 //!BIND LUMA
 //!WIDTH LUMA.w
@@ -55,13 +50,7 @@ vec4 hook()
 #define S 11.66
 #endif
 
-/* Adaptive sharpening
- *
- * Performs an unsharp mask by subtracting the spatial kernel's blur from the 
- * NLM blur. For sharpen+denoise the sharpening is limited to edge areas and 
- * denoising is done everywhere else.
- *
- * Use V=4 to visualize which areas are sharpened (black means sharpen).
+/* Noise resistant adaptive sharpening
  *
  * AS:
  * 	- 0: disable
@@ -93,8 +82,7 @@ vec4 hook()
 
 /* Starting weight
  *
- * Also known as the center weight. This represents the weight of the 
- * pixel-of-interest. Lower numbers may help handle heavy noise.
+ * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
 #define SW 0.75
@@ -107,7 +95,7 @@ vec4 hook()
  * Increasing the spatial sigma (SS) reduces the weight of further 
  * pixels.
  *
- * The intra-patch variants are supposed to help with larger patch sizes.
+ * The intra-patch variants might help with larger patch sizes.
  *
  * SST: enables spatial kernel if R>=PST, 0 fully disables
  * SS: spatial sigma
@@ -128,13 +116,13 @@ vec4 hook()
 
 /* Extremes preserve
  *
+ * This setting is dependent on code generation from shader_cfg, so this 
+ * setting can only be enabled via shader_cfg.
+ *
  * Reduce denoising in very bright/dark areas.
  *
- * Disabled by default now. If you want to reenable this, set EP=3/ in 
- * Makefile.nlm and rebuild.
- *
- * The downscaling factor of the EP shader stage affects what is considered a 
- * bright/dark area.
+ * The downscaling factor of the EP shader stage affects the size of the area 
+ * checked for luminance.
  *
  * This is incompatible with RGB. If you have RGB hooks enabled then you will 
  * have to delete the EP shader stage or specify EP=0 through shader_cfg.
@@ -180,7 +168,7 @@ vec4 hook()
  * P should be an odd number. Higher values are slower and not always better.
  *
  * R should be an odd number greater than or equal to 3. Higher values are 
- * generally better, but slower, blurrier, and gives diminishing returns.
+ * generally better, but slower.
  */
 #ifdef LUMA_raw
 #define P 3
