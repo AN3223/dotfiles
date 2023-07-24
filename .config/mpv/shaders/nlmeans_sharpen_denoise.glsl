@@ -1464,7 +1464,7 @@ vec4 hook()
  * CS: higher numbers reduce outlier weights
  */
 #ifdef LUMA_raw
-#define C 0
+#define C 1
 #define CS 0.017774728484958032
 #else
 #define C 0

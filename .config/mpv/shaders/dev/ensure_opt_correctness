@@ -1,0 +1,24 @@
+#!/bin/sh -e
+# Currently if an option appears in optimums/*chroma* it will be used in 
+# the corresponding luma settings unless otherwise overriden. This 
+# script acts as a workaround to check for affected options. If an 
+# option is flagged by this script, it should be set to its default 
+# value.
+
+opts() {
+	sed '/^$/d ; /^#/d' "$1" | tail -n 1 | cut -f 1 | tr := '\n\t' | cut -f 1 | sort -u
+}
+
+for l in optimums/*luma*; do
+	c="$(echo "$l" | sed 's/luma/chroma/g')"
+	test -f "$c" || continue
+	ltmp=$(mktemp)
+	opts "$l" > "$ltmp"
+	out=$(opts "$c" | comm -13 "$ltmp" -)
+	rm "$ltmp"
+
+	if [ "$out" ]; then
+		printf 'file: %s\nbad opts: %s\n\n' "$l" "$out"
+	fi
+done
+
