@@ -58,9 +58,9 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 12.900330135296242
+#define S 5.220628385442102
 #else
-#define S 12.900330135296242
+#define S 5.220628385442102
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -98,9 +98,9 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 2.69844929396431
+#define SW 0.7313198888811264
 #else
-#define SW 2.69844929396431
+#define SW 0.7313198888811264
 #endif
 
 /* Spatial kernel
@@ -117,12 +117,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.17406195129678678
+#define SS 0.15250369348566978
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.17406195129678678
+#define SS 0.15250369348566978
 #define PST 0
 #define PSS 0.0
 #endif
@@ -233,13 +233,13 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.8324047117197975
-#define WDP 6.002750602195578
+#define WDT 0.5798463035794492
+#define WDP -0.19471447714477633
 #define WDS 1.0
 #else
 #define WD 1
-#define WDT 0.8324047117197975
-#define WDP 6.002750602195578
+#define WDT 0.5798463035794492
+#define WDP -0.19471447714477633
 #define WDS 1.0
 #endif
 
@@ -436,9 +436,9 @@
 
 // Use the guide image as the input image
 #ifdef LUMA_raw
-#define GUIDE_INPUT 0
+#define GI 0
 #else
-#define GUIDE_INPUT 0
+#define GI 0
 #endif
 
 /* Visualization
@@ -724,7 +724,13 @@ const float hr_scale = 1.0/hr;
 #define sample(tex, pos, size, pt, off) tex((pos) + (pt) * vec2(off))
 #endif
 
+#if GI && defined(LUMA_raw)
+#define GET_(off) sample(RF_LUMA_tex, RF_LUMA_pos, RF_LUMA_size, RF_LUMA_pt, off)
+#elif GI
+#define GET_(off) sample(RF_tex, RF_pos, RF_size, RF_pt, off)
+#else
 #define GET_(off) sample(HOOKED_tex, HOOKED_pos, HOOKED_size, HOOKED_pt, off)
+#endif
 
 #if RF_ && defined(LUMA_raw)
 #define GET_RF_(off) sample(RF_LUMA_tex, RF_LUMA_pos, RF_LUMA_size, RF_LUMA_pt, off)
@@ -760,12 +766,8 @@ val GET_RF(vec3 off)
 #endif
 
 val poi2 = GET_RF(vec3(0));  // guide pixel-of-interest
-#if GUIDE_INPUT
-#define poi poi2
-#else
 vec4 poi_ = GET_(vec3(0)); 
 val poi = val_swizz(poi_);  // pixel-of-interest
-#endif
 
 #if RI // rotation
 vec2 rot(vec2 p, float d)
@@ -1269,9 +1271,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 1.6440584697357958
+#define S 1.2181155069723713
 #else
-#define S 1.0165676373857377
+#define S 0.74302961868147
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -1290,17 +1292,17 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 1.1179362636492611
-#define ASA 0.025867916453151573
-#define ASP 1.2885545185440164
-#define ASS 0.18497082644411833
+#define ASF 0.6731001355781188
+#define ASA 0.021149887142449864
+#define ASP 0.9779900760543141
+#define ASS 0.2247293542549104
 #define ASI 0
 #else
 #define AS 1
-#define ASF 1.7514618510254627
-#define ASA 2.051658467376722
-#define ASP 1.8118974972504764
-#define ASS 0.050029469901345276
+#define ASF 0.7088002921824044
+#define ASA 1.8093963162163806
+#define ASP 1.008451256219359
+#define ASS 0.06068714580217016
 #define ASI 0
 #endif
 
@@ -1309,9 +1311,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 1.1202644813348626
+#define SW 1.371184989600906
 #else
-#define SW 0.7327613934458941
+#define SW 0.4621618483386214
 #endif
 
 /* Spatial kernel
@@ -1328,12 +1330,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.3797634852709223
+#define SS 0.30304227747924994
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.2604649610891536
+#define SS 0.09991738534810286
 #define PST 0
 #define PSS 0.0
 #endif
@@ -1444,7 +1446,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT -0.0006700575779495519
+#define WDT -0.0006369387338808028
 #define WDP 5.402102275251726
 #define WDS 1.0
 #else
@@ -1465,7 +1467,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define C 0
-#define CS 0.030450586369789583
+#define CS 0.017774728484958032
 #else
 #define C 0
 #define CS 0.11029390001250727
@@ -1604,12 +1606,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SO 0.0
-#define RO 0.0001372242961737511
+#define RO 0.0001627097314338578
 #define PSO 0.0
 #define ASO 0.0
 #else
 #define SO 0.0
-#define RO 0.00016009836574758457
+#define RO 8.048069343529187e-05
 #define PSO 0.0
 #define ASO 0.0
 #endif
@@ -1647,9 +1649,9 @@ vec4 hook()
 
 // Use the guide image as the input image
 #ifdef LUMA_raw
-#define GUIDE_INPUT 0
+#define GI 1
 #else
-#define GUIDE_INPUT 0
+#define GI 1
 #endif
 
 /* Visualization
@@ -1935,7 +1937,13 @@ const float hr_scale = 1.0/hr;
 #define sample(tex, pos, size, pt, off) tex((pos) + (pt) * vec2(off))
 #endif
 
+#if GI && defined(LUMA_raw)
+#define GET_(off) sample(RF_LUMA_tex, RF_LUMA_pos, RF_LUMA_size, RF_LUMA_pt, off)
+#elif GI
+#define GET_(off) sample(RF_tex, RF_pos, RF_size, RF_pt, off)
+#else
 #define GET_(off) sample(HOOKED_tex, HOOKED_pos, HOOKED_size, HOOKED_pt, off)
+#endif
 
 #if RF_ && defined(LUMA_raw)
 #define GET_RF_(off) sample(RF_LUMA_tex, RF_LUMA_pos, RF_LUMA_size, RF_LUMA_pt, off)
@@ -1972,12 +1980,8 @@ val GET_RF(vec3 off)
 #endif
 
 val poi2 = GET_RF(vec3(0)); // guide pixel-of-interest
-#if GUIDE_INPUT
-#define poi poi2
-#else
 vec4 poi_ = GET_(vec3(0));
 val poi = val_swizz(poi_); // pixel-of-interest
-#endif
 
 #if RI // rotation
 vec2 rot(vec2 p, float d)
