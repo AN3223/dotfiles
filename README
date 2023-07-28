@@ -1,10 +1,10 @@
-My dotfiles are tightly intertwined with my scripts, you can find my scripts
-here: https://github.com/an3223/scripts/
+If you're looking for my shaders, e.g., non-local means:
+https://github.com/AN3223/dotfiles/tree/master/.config/mpv/shaders
 
-Some scripts live here (e.g., .config/mpv/scripts/) and many config files live
-here. Please don't blindly copy my config files onto your system. They are
-written for me and they probably don't behave the way you want. Use them as
-guidance instead.
+Don't blindly copy my config files onto your system. They likely don't work the 
+way you want or expect. Use them as reference instead.
+
+Relevant: https://github.com/an3223/scripts/
 
 Contributions are welcome.
 
