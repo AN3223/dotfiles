@@ -403,10 +403,11 @@
  * 0: off
  * 1: absolute difference between input/output to the power of 0.25
  * 2: difference between input/output centered on 0.5
- * 3: post-WD weight map
- * 4: pre-WD weight map
+ * 3: post-WD average weight map
+ * 4: pre-WD average weight map
  * 5: unsharp mask
  * 6: EP
+ * 7: celled weight map (incompatible with temporal)
  */
 #ifdef LUMA_raw
 #define V 0
@@ -963,15 +964,27 @@ vec4 hook()
 	val sum_as = val(0);
 #endif
 
-#if WD == 2 // weight discard (mean)
+#if WD == 2 || V == 7
+#define STORE_WEIGHTS 1
+#else
+#define STORE_WEIGHTS 0
+#endif
+
+#if STORE_WEIGHTS
 	int r_index = 0;
 	val_packed all_weights[r_area];
 	val_packed all_pixels[r_area];
 #endif
+	
 #if WD == 1 // weight discard (moving cumulative average)
 	int r_iter = 1;
 	val wd_total_weight = val(0);
 	val wd_sum = val(0);
+#endif
+
+#if V == 7
+	vec2 v7cell = floor(HOOKED_size/R * HOOKED_pos) * R + hr;
+	vec2 v7cell_off = floor(HOOKED_pos * HOOKED_size) - floor(v7cell);
 #endif
 
 	FOR_FRAME(r) {
@@ -990,6 +1003,10 @@ vec4 hook()
 	}
 #endif
 	FOR_RESEARCH(r) {
+#if V == 7
+		r.xy += v7cell_off;
+#endif
+
 		// r coords with appropriate transformations applied
 		vec3 tr = vec3(r.xy + floor(r.xy * RSF), r.z);
 		tr.xy += me.xy;
@@ -1023,11 +1040,7 @@ vec4 hook()
 		total_weight_as += spatial_as_weight;
 #endif
 
-#if WD == 2 // weight discard (mean)
-		all_weights[r_index] = val_pack(weight);
-		all_pixels[r_index] = val_pack(px);
-		r_index++;
-#elif WD == 1 // weight discard (moving cumulative average)
+#if WD == 1 // weight discard (moving cumulative average)
 		val wd_scale = val(1.0/r_iter);
 
 		val below_threshold = WDS * abs(min(val(0.0), weight - (total_weight * wd_scale * WDT * WD1TK(sqrt(wd_scale*WDP)))));
@@ -1036,6 +1049,19 @@ vec4 hook()
 		wd_sum += px * weight * wdkf;
 		wd_total_weight += weight * wdkf;
 		r_iter++;
+#if STORE_WEIGHTS
+		all_weights[r_index] = val_pack(weight * wdkf);
+		all_pixels[r_index] = val_pack(px);
+		r_index++;
+#endif
+#elif STORE_WEIGHTS
+		all_weights[r_index] = val_pack(weight);
+		all_pixels[r_index] = val_pack(px);
+		r_index++;
+#endif
+
+#if V == 7
+		r.xy -= v7cell_off;
 #endif
 
 		sum += px * weight;
@@ -1065,6 +1091,10 @@ vec4 hook()
 
 		sum += px * weight;
 		total_weight += weight;
+#if V == 7
+		all_pixels[r_index] = val_pack(px);
+		all_weights[r_index] = val_pack(weight);
+#endif
 		r_index++;
 	} // FOR_FRAME FOR_RESEARCH
 #endif
@@ -1131,10 +1161,21 @@ vec4 hook()
 	result = 0.5 + usm;
 #elif V == 6
 	result = val(1 - ep_weight);
+#elif V == 7
+	result = val(0);
+	r_index = 0;
+	FOR_FRAME(r) FOR_RESEARCH(r) {
+		if (v7cell_off == r.xy)
+			result = val_unpack(all_weights[r_index]);
+		r_index++;
+	}
+
+	if (v7cell_off == vec2(0,0))
+		result = val(SW * spatial_r(vec3(0)));
 #endif
 
 // XXX visualize chroma for these
-#if defined(CHROMA_raw) && (V == 3 || V == 4 || V == 6)
+#if defined(CHROMA_raw) && (V == 3 || V == 4 || V == 6 || V == 7)
 	return vec4(0.5);
 #endif
 
