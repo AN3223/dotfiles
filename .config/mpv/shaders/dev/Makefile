@@ -177,15 +177,15 @@ optimums/nlmeans_lq_chroma_sharpen_denoise:
 	printf '\n' >> $@
 optimums/nlmeans_luma:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
-	./shader_test --max=S:SW:SS:WDT:CS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --max=S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_luma_sharpen:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:CS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_luma_sharpen_denoise:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:CS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_chroma:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
@@ -201,15 +201,15 @@ optimums/nlmeans_chroma_sharpen_denoise:
 	printf '\n' >> $@
 optimums/nlmeans_hq_luma:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
-	./shader_test --max=S:SW:SS:WDT:CS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --max=S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_hq_luma_sharpen:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:CS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_hq_luma_sharpen_denoise:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:CS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_hq_chroma:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@

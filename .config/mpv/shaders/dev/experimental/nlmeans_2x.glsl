@@ -47,9 +47,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 17.93530661628843
+#define S 17.867666663089327
 #else
-#define S 17.93530661628843
+#define S 17.867666663089327
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -68,17 +68,17 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.26372474225184855
-#define ASA 3.1236299096664455
-#define ASP 1.0814845216124056
-#define ASS 0.5098768670025948
+#define ASF 0.26389081926845154
+#define ASA 3.1254411771459103
+#define ASP 1.0799777989611914
+#define ASS 0.511863046286959
 #define ASI 0
 #else
 #define AS 1
-#define ASF 0.26372474225184855
-#define ASA 3.1236299096664455
-#define ASP 1.0814845216124056
-#define ASS 0.5098768670025948
+#define ASF 0.26389081926845154
+#define ASA 3.1254411771459103
+#define ASP 1.0799777989611914
+#define ASS 0.511863046286959
 #define ASI 0
 #endif
 
@@ -87,9 +87,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.9247987009883002
+#define SW 0.9266982411699387
 #else
-#define SW 0.9247987009883002
+#define SW 0.9266982411699387
 #endif
 
 /* Spatial kernel
@@ -106,12 +106,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.3429352184893921
+#define SS 1.3427013224852287
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 1.3429352184893921
+#define SS 1.3427013224852287
 #define PST 0
 #define PSS 0.0
 #endif
@@ -461,16 +461,19 @@ vec4 hook()
 #define M_PI 3.14159265358979323846
 #define POW2(x) ((x)*(x))
 #define POW3(x) ((x)*(x)*(x))
+
+// kernels
+// XXX sinc & sphinx: 1e-3 was selected tentatively; not sure what the correct value should be (1e-8 is too low)
 #define bicubic_(x) ((1.0/6.0) * (POW3((x)+2) - 4 * POW3((x)+1) + 6 * POW3(x) - 4 * POW3(max((x)-1, 0))))
 #define bicubic(x) bicubic_(clamp((x), 0.0, 2.0))
 #define gaussian(x) exp(-1 * POW2(x))
 #define quadratic_(x) ((x) < 0.5 ? 0.75 - POW2(x) : 0.5 * POW2((x) - 1.5))
 #define quadratic(x) quadratic_(clamp((x), 0.0, 1.5))
-#define sinc_(x) ((x) < 1e-8 ? 1.0 : sin((x)*M_PI) / ((x)*M_PI))
+#define sinc_(x) ((x) < 1e-3 ? 1.0 : sin((x)*M_PI) / ((x)*M_PI))
 #define sinc(x) sinc_(clamp((x), 0.0, 1.0))
 #define sinc3(x) sinc_(clamp((x), 0.0, 3.0))
 #define lanczos(x) (sinc3(x) * sinc(x))
-#define sphinx_(x) ((x) < 1e-8 ? 1.0 : 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
+#define sphinx_(x) ((x) < 1e-3 ? 1.0 : 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
 #define sphinx(x) sphinx_(clamp((x), 0.0, 1.4302966531242027))
 #define triangle_(x) (1 - (x))
 #define triangle(x) triangle_(clamp((x), 0.0, 1.0))

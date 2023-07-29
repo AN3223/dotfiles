@@ -58,9 +58,9 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 3.8473904368984075
+#define S 3.98048226693771
 #else
-#define S 3.8473904368984075
+#define S 3.98048226693771
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -98,9 +98,9 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.5627357248813225
+#define SW 0.6173627441853731
 #else
-#define SW 0.5627357248813225
+#define SW 0.6173627441853731
 #endif
 
 /* Spatial kernel
@@ -117,12 +117,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.6182137482442042
+#define SS 0.639572818242663
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.6182137482442042
+#define SS 0.639572818242663
 #define PST 0
 #define PSS 0.0
 #endif
@@ -233,13 +233,13 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.4682805866636827
-#define WDP 3.3851102145153416
+#define WDT 0.4251897645538806
+#define WDP 3.1654801713113954
 #define WDS 1.0
 #else
 #define WD 1
-#define WDT 0.4682805866636827
-#define WDP 3.3851102145153416
+#define WDT 0.4251897645538806
+#define WDP 3.1654801713113954
 #define WDS 1.0
 #endif
 
@@ -472,16 +472,19 @@
 #define M_PI 3.14159265358979323846
 #define POW2(x) ((x)*(x))
 #define POW3(x) ((x)*(x)*(x))
+
+// kernels
+// XXX sinc & sphinx: 1e-3 was selected tentatively;  not sure what the correct value should be (1e-8 is too low)
 #define bicubic_(x) ((1.0/6.0) * (POW3((x)+2) - 4 * POW3((x)+1) + 6 * POW3(x) - 4 * POW3(max((x)-1, 0))))
 #define bicubic(x) bicubic_(clamp((x), 0.0, 2.0))
 #define gaussian(x) exp(-1 * POW2(x))
 #define quadratic_(x) ((x) < 0.5 ? 0.75 - POW2(x) : 0.5 * POW2((x) - 1.5))
 #define quadratic(x) quadratic_(clamp((x), 0.0, 1.5))
-#define sinc_(x) ((x) < 1e-8 ? 1.0 : sin((x)*M_PI) / ((x)*M_PI))
+#define sinc_(x) ((x) < 1e-3 ? 1.0 : sin((x)*M_PI) / ((x)*M_PI))
 #define sinc(x) sinc_(clamp((x), 0.0, 1.0))
 #define sinc3(x) sinc_(clamp((x), 0.0, 3.0))
 #define lanczos(x) (sinc3(x) * sinc(x))
-#define sphinx_(x) ((x) < 1e-8 ? 1.0 : 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
+#define sphinx_(x) ((x) < 1e-3 ? 1.0 : 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
 #define sphinx(x) sphinx_(clamp((x), 0.0, 1.4302966531242027))
 #define triangle_(x) (1 - (x))
 #define triangle(x) triangle_(clamp((x), 0.0, 1.0))
@@ -1235,9 +1238,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 1.4123628758613087
+#define S 1.3693258180919905
 #else
-#define S 0.9253892422450551
+#define S 0.9470164823935876
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -1275,9 +1278,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 1.479506293466543
+#define SW 1.4561624407628817
 #else
-#define SW 1.8378817803292125
+#define SW 2.6696813202342784
 #endif
 
 /* Spatial kernel
@@ -1294,12 +1297,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.15716533171344688
+#define SS 0.15870906155678316
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.06439372912711039
+#define SS 0.06225488264619769
 #define PST 0
 #define PSS 0.0
 #endif
@@ -1410,7 +1413,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.10137024910106543
+#define WDT 0.10440013525938178
 #define WDP 5.402102275251726
 #define WDS 1.0
 #else
@@ -1550,12 +1553,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SO 0.0
-#define RO 2.7028563788352117e-05
+#define RO 2.7732665607580593e-05
 #define PSO 0.0
 #define ASO 0.0
 #else
 #define SO 0.0
-#define RO 0.00010588039538821138
+#define RO 0.0001203051875037795
 #define PSO 0.0
 #define ASO 0.0
 #endif
@@ -1649,16 +1652,19 @@ vec4 hook()
 #define M_PI 3.14159265358979323846
 #define POW2(x) ((x)*(x))
 #define POW3(x) ((x)*(x)*(x))
+
+// kernels
+// XXX sinc & sphinx: 1e-3 was selected tentatively; not sure what the correct value should be (1e-8 is too low)
 #define bicubic_(x) ((1.0/6.0) * (POW3((x)+2) - 4 * POW3((x)+1) + 6 * POW3(x) - 4 * POW3(max((x)-1, 0))))
 #define bicubic(x) bicubic_(clamp((x), 0.0, 2.0))
 #define gaussian(x) exp(-1 * POW2(x))
 #define quadratic_(x) ((x) < 0.5 ? 0.75 - POW2(x) : 0.5 * POW2((x) - 1.5))
 #define quadratic(x) quadratic_(clamp((x), 0.0, 1.5))
-#define sinc_(x) ((x) < 1e-8 ? 1.0 : sin((x)*M_PI) / ((x)*M_PI))
+#define sinc_(x) ((x) < 1e-3 ? 1.0 : sin((x)*M_PI) / ((x)*M_PI))
 #define sinc(x) sinc_(clamp((x), 0.0, 1.0))
 #define sinc3(x) sinc_(clamp((x), 0.0, 3.0))
 #define lanczos(x) (sinc3(x) * sinc(x))
-#define sphinx_(x) ((x) < 1e-8 ? 1.0 : 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
+#define sphinx_(x) ((x) < 1e-3 ? 1.0 : 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
 #define sphinx(x) sphinx_(clamp((x), 0.0, 1.4302966531242027))
 #define triangle_(x) (1 - (x))
 #define triangle(x) triangle_(clamp((x), 0.0, 1.0))
