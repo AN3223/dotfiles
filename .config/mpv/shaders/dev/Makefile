@@ -96,15 +96,15 @@ NLM_HQ_SHARPEN=`$(OPT_STRIP) optimums/nlmeans_hq_chroma_sharpen | $(OPT_LAST)`
 NLM_HQ_LUMA_SHARPEN_DENOISE=`$(OPT_STRIP) optimums/nlmeans_hq_luma_sharpen_denoise | $(OPT_LAST)`
 NLM_HQ_SHARPEN_DENOISE=`$(OPT_STRIP) optimums/nlmeans_hq_chroma_sharpen_denoise | $(OPT_LAST)`
 
-../HQ/nlmeans.glsl: nlmeans_template ../nlmeans.glsl
+../HQ/nlmeans.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_HQ_DESC)" OPTS="$(NLM_HQ)" OPTS_LUMA="$(NLM_HQ_LUMA)" nlmeans_template > $@
-../HQ/nlmeans_temporal.glsl: nlmeans_template ../nlmeans.glsl
+../HQ/nlmeans_temporal.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_HQ_DESC) $(NLM_TEMPORAL_DESC)" OPTS="$(NLM_TEMPORAL):$(NLM_HQ)" OPTS_LUMA="$(NLM_TEMPORAL_LUMA):$(NLM_HQ_LUMA)" nlmeans_template > $@
-../HQ/nlmeans_sharpen_denoise.glsl: nlmeans_template ../nlmeans.glsl
+../HQ/nlmeans_sharpen_denoise.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_HQ_DESC) $(NLM_SHARPEN_DENOISE_DESC)" OPTS="$(NLM_HQ_SHARPEN_DENOISE)" OPTS_LUMA="$(NLM_HQ_LUMA_SHARPEN_DENOISE)" nlmeans_template > $@
-../HQ/nlmeans_sharpen_only.glsl: nlmeans_template ../nlmeans.glsl
+../HQ/nlmeans_sharpen_only.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_HQ_DESC) $(NLM_SHARPEN_ONLY_DESC)" OPTS="$(NLM_HQ_SHARPEN)" OPTS_LUMA="$(NLM_HQ_LUMA_SHARPEN)" nlmeans_template > $@
-../HQ/nlmeans_temporal_sharpen_denoise.glsl: nlmeans_template ../nlmeans.glsl
+../HQ/nlmeans_temporal_sharpen_denoise.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_HQ_DESC) $(NLM_TEMPORAL_DESC) $(NLM_SHARPEN_DENOISE_DESC)" OPTS="$(NLM_TEMPORAL):$(NLM_HQ_SHARPEN_DENOISE)" OPTS_LUMA="$(NLM_TEMPORAL_LUMA):$(NLM_HQ_LUMA_SHARPEN_DENOISE)" nlmeans_template > $@
 
 nlmeans_hqx: ../HQX/nlmeans.glsl
@@ -114,7 +114,7 @@ NLM_HQX_LUMA=P=5:$(NLM_HQ_LUMA)
 NLM_HQX=P=5:$(NLM_HQ)
 
 # XXX expand & optimize
-../HQX/nlmeans.glsl: nlmeans_template ../nlmeans.glsl
+../HQX/nlmeans.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_HQX_DESC)" OPTS="$(NLM_HQX)" OPTS_LUMA="$(NLM_HQX_LUMA)" nlmeans_template > $@
 
 nlmeans_experimental: experimental/nlmeans_2x.glsl experimental/nlmeans_lgc.glsl
