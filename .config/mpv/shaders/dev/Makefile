@@ -47,12 +47,12 @@ NLM_TEMPORAL_LUMA=T=2:WD=1:C=0:$(NLM_NO_ROTATE)
 
 nlmeans_default: ../nlmeans.glsl ../nlmeans_temporal.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl ../nlmeans_temporal_sharpen_denoise.glsl
 
-NLM_DEFAULT_LUMA=`$(OPT_STRIP) optimums/nlmeans_luma | $(OPT_LAST)`
-NLM_DEFAULT=`$(OPT_STRIP) optimums/nlmeans_chroma | $(OPT_LAST)`
-NLM_DEFAULT_LUMA_SHARPEN=`$(OPT_STRIP) optimums/nlmeans_luma_sharpen | $(OPT_LAST)`
-NLM_DEFAULT_SHARPEN=`$(OPT_STRIP) optimums/nlmeans_chroma_sharpen | $(OPT_LAST)`
-NLM_DEFAULT_LUMA_SHARPEN_DENOISE=`$(OPT_STRIP) optimums/nlmeans_luma_sharpen_denoise | $(OPT_LAST)`
-NLM_DEFAULT_SHARPEN_DENOISE=`$(OPT_STRIP) optimums/nlmeans_chroma_sharpen_denoise | $(OPT_LAST)`
+NLM_DEFAULT_LUMA=`./optimums/latest.sh optimums/nlmeans_luma`
+NLM_DEFAULT=`./optimums/latest.sh optimums/nlmeans_chroma`
+NLM_DEFAULT_LUMA_SHARPEN=`./optimums/latest.sh optimums/nlmeans_luma_sharpen`
+NLM_DEFAULT_SHARPEN=`./optimums/latest.sh optimums/nlmeans_chroma_sharpen`
+NLM_DEFAULT_LUMA_SHARPEN_DENOISE=`./optimums/latest.sh optimums/nlmeans_luma_sharpen_denoise`
+NLM_DEFAULT_SHARPEN_DENOISE=`./optimums/latest.sh optimums/nlmeans_chroma_sharpen_denoise`
 
 ../nlmeans.glsl: nlmeans_template
 	./shader_cfg nlmeans_template OPTS_LUMA="$(NLM_DEFAULT_LUMA)" OPTS="$(NLM_DEFAULT)" > $@
@@ -68,12 +68,12 @@ NLM_DEFAULT_SHARPEN_DENOISE=`$(OPT_STRIP) optimums/nlmeans_chroma_sharpen_denois
 nlmeans_lq: ../LQ/nlmeans.glsl ../LQ/nlmeans_temporal.glsl ../LQ/nlmeans_sharpen_denoise.glsl ../LQ/nlmeans_sharpen_only.glsl ../LQ/nlmeans_temporal_sharpen_denoise.glsl
 
 NLM_LQ_DESC=Faster, but lower quality.
-NLM_LQ_LUMA=`$(OPT_STRIP) optimums/nlmeans_lq_luma | $(OPT_LAST)`
-NLM_LQ=`$(OPT_STRIP) optimums/nlmeans_lq_chroma | $(OPT_LAST)`
-NLM_LQ_LUMA_SHARPEN=`$(OPT_STRIP) optimums/nlmeans_lq_luma_sharpen | $(OPT_LAST)`
-NLM_LQ_SHARPEN=`$(OPT_STRIP) optimums/nlmeans_lq_chroma_sharpen | $(OPT_LAST)`
-NLM_LQ_LUMA_SHARPEN_DENOISE=`$(OPT_STRIP) optimums/nlmeans_lq_luma_sharpen_denoise | $(OPT_LAST)`
-NLM_LQ_SHARPEN_DENOISE=`$(OPT_STRIP) optimums/nlmeans_lq_chroma_sharpen_denoise | $(OPT_LAST)`
+NLM_LQ_LUMA=`./optimums/latest.sh optimums/nlmeans_lq_luma`
+NLM_LQ=`./optimums/latest.sh optimums/nlmeans_lq_chroma`
+NLM_LQ_LUMA_SHARPEN=`./optimums/latest.sh optimums/nlmeans_lq_luma_sharpen`
+NLM_LQ_SHARPEN=`./optimums/latest.sh optimums/nlmeans_lq_chroma_sharpen`
+NLM_LQ_LUMA_SHARPEN_DENOISE=`./optimums/latest.sh optimums/nlmeans_lq_luma_sharpen_denoise`
+NLM_LQ_SHARPEN_DENOISE=`./optimums/latest.sh optimums/nlmeans_lq_chroma_sharpen_denoise`
 
 ../LQ/nlmeans.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_LQ_DESC)" OPTS="$(NLM_LQ)" OPTS_LUMA="$(NLM_LQ_LUMA)" nlmeans_template > $@
@@ -89,12 +89,12 @@ NLM_LQ_SHARPEN_DENOISE=`$(OPT_STRIP) optimums/nlmeans_lq_chroma_sharpen_denoise 
 nlmeans_hq: ../HQ/nlmeans.glsl ../HQ/nlmeans_temporal.glsl ../HQ/nlmeans_sharpen_denoise.glsl ../HQ/nlmeans_sharpen_only.glsl ../HQ/nlmeans_temporal_sharpen_denoise.glsl
 
 NLM_HQ_DESC=Slow, but higher quality.
-NLM_HQ_LUMA=`$(OPT_STRIP) optimums/nlmeans_hq_luma | $(OPT_LAST)`
-NLM_HQ=`$(OPT_STRIP) optimums/nlmeans_hq_chroma | $(OPT_LAST)`
-NLM_HQ_LUMA_SHARPEN=`$(OPT_STRIP) optimums/nlmeans_hq_luma_sharpen | $(OPT_LAST)`
-NLM_HQ_SHARPEN=`$(OPT_STRIP) optimums/nlmeans_hq_chroma_sharpen | $(OPT_LAST)`
-NLM_HQ_LUMA_SHARPEN_DENOISE=`$(OPT_STRIP) optimums/nlmeans_hq_luma_sharpen_denoise | $(OPT_LAST)`
-NLM_HQ_SHARPEN_DENOISE=`$(OPT_STRIP) optimums/nlmeans_hq_chroma_sharpen_denoise | $(OPT_LAST)`
+NLM_HQ_LUMA=`./optimums/latest.sh optimums/nlmeans_hq_luma`
+NLM_HQ=`./optimums/latest.sh optimums/nlmeans_hq_chroma`
+NLM_HQ_LUMA_SHARPEN=`./optimums/latest.sh optimums/nlmeans_hq_luma_sharpen`
+NLM_HQ_SHARPEN=`./optimums/latest.sh optimums/nlmeans_hq_chroma_sharpen`
+NLM_HQ_LUMA_SHARPEN_DENOISE=`./optimums/latest.sh optimums/nlmeans_hq_luma_sharpen_denoise`
+NLM_HQ_SHARPEN_DENOISE=`./optimums/latest.sh optimums/nlmeans_hq_chroma_sharpen_denoise`
 
 ../HQ/nlmeans.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_HQ_DESC)" OPTS="$(NLM_HQ)" OPTS_LUMA="$(NLM_HQ_LUMA)" nlmeans_template > $@
@@ -124,7 +124,7 @@ NLM_FFMPEG_EQV=S=0.5:P=7:R=15:SW=1.0:RS=0:PS=0:WD=0:RI=0:RFI=0:RO=0:SST=0:GI=0:R
 nlmeans_experimental: experimental/nlmeans_2x.glsl experimental/nlmeans_lgc.glsl experimental/nlmeans_light.glsl
 
 NLM_2X_DESC=Experimental upscaler
-NLM_2X_LUMA=`$(OPT_STRIP) optimums/nlmeans_2x_luma | $(OPT_LAST)`
+NLM_2X_LUMA=`./optimums/latest.sh optimums/nlmeans_2x_luma`
 
 experimental/nlmeans_2x.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_2X_DESC)" OPTS="$(NLM_2X_LUMA)" nlmeans_template > $@
@@ -136,8 +136,8 @@ experimental/nlmeans_lgc.glsl: nlmeans_template ../LQ/nlmeans.glsl
 	./shader_cfg DESC="$@: $(NLM_LGC_DESC)" OPTS="$(NLM_LGC)" nlmeans_template > $@
 
 NLM_LIGHT_DESC=Tuned for light noise.
-NLM_LIGHT_LUMA=`$(OPT_STRIP) optimums/nlmeans_light_luma | $(OPT_LAST)`
-NLM_LIGHT=`$(OPT_STRIP) optimums/nlmeans_light_chroma | $(OPT_LAST)`
+NLM_LIGHT_LUMA=`./optimums/latest.sh optimums/nlmeans_light_luma`
+NLM_LIGHT=`./optimums/latest.sh optimums/nlmeans_light_chroma`
 
 experimental/nlmeans_light.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_LIGHT_DESC)" OPTS="$(NLM_LIGHT)" OPTS_LUMA="$(NLM_LIGHT_LUMA)" nlmeans_template > $@
@@ -154,9 +154,6 @@ OPT_NOISE_LIGHT=NOISE=5:10
 OPT_BLUR=VF=gblur=0.625
 OPT_2X=VF=scale=540:540
 
-OPT_STRIP=sed '/^$$/d ; /^\#/d'
-OPT_LAST=tail -n 1 | cut -f 1
-
 # XXX add FSR/FSRCNNX/etc.
 # XXX test against lossy codecs
 # XXX test against different noise levels
@@ -165,87 +162,87 @@ OPT_LAST=tail -n 1 | cut -f 1
 
 optimums/nlmeans_lq_luma:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
-	./shader_test --max=S:SW:SS:WDT:WDP:RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --max=S:SW:SS:WDT:WDP:RO --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_lq_luma_sharpen:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:WDP:RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:WDP:RO --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_lq_luma_sharpen_denoise:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:WDP:RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:WDP:RO --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_lq_chroma:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
-	./shader_test --plane=CHROMA --max=S:SS:SW:WDT:WDP --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --plane=CHROMA --max=S:SS:SW:WDT:WDP --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_lq_chroma_sharpen:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --plane=CHROMA --max=ASF:ASA:ASP:ASS:S:SS:SW:WDT:WDP --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --plane=CHROMA --max=ASF:ASA:ASP:ASS:S:SS:SW:WDT:WDP --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_lq_chroma_sharpen_denoise:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --plane=CHROMA --max=ASF:ASA:ASP:ASS:S:SS:SW:WDT:WDP --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --plane=CHROMA --max=ASF:ASA:ASP:ASS:S:SS:SW:WDT:WDP --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_luma:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
-	./shader_test --max=S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --max=S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_light_luma:
 	printf '%s\n' '# --corruption=$(OPT_NOISE_LIGHT)' >> $@
-	./shader_test --corruption=$(OPT_NOISE_LIGHT) --max=S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_NOISE_LIGHT) --max=S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_luma_sharpen:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_luma_sharpen_denoise:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_chroma:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
-	./shader_test --plane=CHROMA --max=S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --plane=CHROMA --max=S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_light_chroma:
 	printf '%s\n' '# --corruption=$(OPT_NOISE_LIGHT)' >> $@
-	./shader_test --corruption=$(OPT_NOISE_LIGHT) --plane=CHROMA --max=S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_NOISE_LIGHT) --plane=CHROMA --max=S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_chroma_sharpen:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --plane=CHROMA --max=ASF:ASA:ASP:ASS:S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --plane=CHROMA --max=ASF:ASA:ASP:ASS:S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_chroma_sharpen_denoise:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --plane=CHROMA --max=ASF:ASA:ASP:ASS:S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --plane=CHROMA --max=ASF:ASA:ASP:ASS:S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_hq_luma:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
-	./shader_test --max=S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --max=S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_hq_luma_sharpen:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_hq_luma_sharpen_denoise:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --max=ASF:ASA:ASP:ASS:S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_hq_chroma:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
-	./shader_test --plane=CHROMA --max=S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --plane=CHROMA --max=S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_hq_chroma_sharpen:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --plane=CHROMA --max=ASF:ASA:ASP:ASS:S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --acorruption=$(OPT_NOISE) --plane=CHROMA --max=ASF:ASA:ASP:ASS:S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_hq_chroma_sharpen_denoise:
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --plane=CHROMA --max=ASF:ASA:ASP:ASS:S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --plane=CHROMA --max=ASF:ASA:ASP:ASS:S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/nlmeans_2x_luma:
 	printf '%s\n' '# --corruption=$(OPT_2X)' >> $@
-	./shader_test --corruption=$(OPT_2X) --max=ASF:ASA:ASP:ASS:S:SW:SS --cfgopts="`$(OPT_STRIP) $@ | $(OPT_LAST)`" --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_2X) --max=ASF:ASA:ASP:ASS:S:SW:SS --cfgopts="`./optimums/latest.sh $@`" --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 
 readme: result_images/clean.png result_images/noise10.png result_images/gblur0625.png result_images/gblur0625noise10.png result_images/nlmeans_noise10.png result_images/nlmeans_sharpen_denoise_gblur0625noise10.png result_images/nlmeans_sharpen_only_gblur0625noise10.png result_images/nlmeans_sharpen_only_gblur0625.png result_images/fsr_gblur0625noise10.png result_images/fsr_gblur0625.png 
@@ -256,21 +253,21 @@ readme: result_images/clean.png result_images/noise10.png result_images/gblur062
 result_images/clean.png: ../nlmeans.glsl
 	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,scale=256:256:flags=neighbor' $@
 result_images/noise10.png: ../nlmeans.glsl
-	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,scale=256:256:flags=neighbor' $@
+	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_NOISE),scale=256:256:flags=neighbor' $@
 result_images/gblur0625.png: ../nlmeans.glsl
-	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,gblur=0.625,scale=256:256:flags=neighbor' $@
+	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_BLUR),scale=256:256:flags=neighbor' $@
 result_images/gblur0625noise10.png: ../nlmeans.glsl
-	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,gblur=0.625,noise=alls=10,scale=256:256:flags=neighbor' $@
+	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_BLUR),$(OPT_NOISE),scale=256:256:flags=neighbor' $@
 result_images/nlmeans_noise10.png: ../nlmeans.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_NOISE),hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
 result_images/nlmeans_sharpen_denoise_gblur0625noise10.png: ../nlmeans_sharpen_denoise.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,gblur=0.625,noise=alls=10,hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_BLUR),$(OPT_NOISE),hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
 result_images/nlmeans_sharpen_only_gblur0625noise10.png: ../nlmeans_sharpen_only.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,gblur=0.625,noise=alls=10,hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_BLUR),$(OPT_NOISE),hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
 result_images/nlmeans_sharpen_only_gblur0625.png: ../nlmeans_sharpen_only.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,gblur=0.625,hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_BLUR),hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
 result_images/fsr_gblur0625noise10.png: ../FSR.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,gblur=0.625,noise=alls=10,hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_BLUR),$(OPT_NOISE),hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
 result_images/fsr_gblur0625.png: ../FSR.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,gblur=0.625,hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_BLUR),hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
 
