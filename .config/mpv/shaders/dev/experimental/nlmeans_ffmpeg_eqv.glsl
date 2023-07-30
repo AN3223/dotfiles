@@ -19,12 +19,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: HQX/nlmeans_ffmpeg_eqv.glsl: Should be roughly equivalent to ffmpeg's -vf=nlmeans
+// Description: experimental/nlmeans_ffmpeg_eqv.glsl: Should be roughly equivalent to ffmpeg's -vf=nlmeans
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!BIND HOOKED
-//!DESC Non-local means (HQX/nlmeans_ffmpeg_eqv.glsl)
+//!DESC Non-local means (experimental/nlmeans_ffmpeg_eqv.glsl)
 
 // User variables
 
