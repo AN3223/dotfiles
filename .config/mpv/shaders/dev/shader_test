@@ -312,6 +312,7 @@ sub MAIN(
 	#= script for testing the SSIM between corrupt->filtered image and the original image
 	*@test-media, #= Files/directories to test on
 	Str :$cfgopts = "", #= Arguments passed to the dispatched _cfg script, if dispatched
+	Str :$optimum = "", #= Same as --cfgopts but read from a file (first record of the last line of a tab delimited file, ignoring comments and blank lines)
 	Str :$shader where *.IO.r = "nlmeans_template", #= Shader used for testing
 	Str :$plane = "LUMA", #= Plane to test on
 	Str :$corruption = "NOISE=10:10", #= Corruption type, NOISE/OUTOPTS/VF
@@ -417,8 +418,14 @@ sub MAIN(
 		stats "BASELINE=$corruption", $baseline;
 	}
 
+	my $cfgopts_ = $cfgopts;
+	if $optimum {
+		die 'optimum file "$optimum" does not exist' if not $optimum.IO.e;
+		$cfgopts_ = $optimum.IO.slurp.split("\n").grep(none /^$/, /^\#/)[*-1].split("\t")[0];
+	}
+
 	my @cfgopts;
-	my @flatopts = $cfgopts.split(/<[=:]>/, :skip-empty); # parse k=v:k=v:k=v:...
+	my @flatopts = $cfgopts_.split(/<[=:]>/, :skip-empty); # parse k=v:k=v:k=v:...
 	die 'invalid cfgopts' if @flatopts.elems && not @flatopts.elems %% 2;
 	my @opts = @flatopts[0,2...*].unique(:with({ $^x === $^y && die 'duplicate opt' }));
 	if $eval && @opts.elems != 0 {
@@ -435,7 +442,7 @@ sub MAIN(
 	} elsif @opts.elems == 0 {
 		@cfgopts = ("");
 	} else {
-		@cfgopts = $cfgopts;
+		@cfgopts = $cfgopts_;
 	}
 
 	note("Trying {@cfgopts.elems || 1} permutations...");
