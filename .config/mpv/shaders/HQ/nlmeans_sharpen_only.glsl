@@ -58,7 +58,7 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 0.08816097695750301
+#define S 0.23358918041488613
 #else
 #define S 0.08816097695750301
 #endif
@@ -98,7 +98,7 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW -2.4666170770831233
+#define SW 0.20979952755108794
 #else
 #define SW -2.4666170770831233
 #endif
@@ -117,7 +117,7 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.07327780559326941
+#define SS 0.3163691837275843
 #define PST 0
 #define PSS 0.0
 #else
@@ -233,8 +233,8 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT -0.601463107094893
-#define WDP -0.006332359302912611
+#define WDT 0.6092030963533878
+#define WDP 0.8751921496616295
 #define WDS 1.0
 #else
 #define WD 1
@@ -271,7 +271,7 @@
  */
 #ifdef LUMA_raw
 #define RI 0
-#define RFI 0
+#define RFI 2
 #else
 #define RI 0
 #define RFI 0
@@ -373,7 +373,7 @@
  */
 #ifdef LUMA_raw
 #define SO 0.0
-#define RO 9.773746446023492e-05
+#define RO 0.0002036624886515814
 #define PSO 0.0
 #define ASO 0.0
 #else

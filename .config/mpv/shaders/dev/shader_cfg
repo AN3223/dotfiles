@@ -21,7 +21,7 @@ function is_num(x,    is_obviously_num, is_str_zero) {
 }
 
 # Retrieves key=value style options from ARGV
-# If given "val", sets key=val and return the old value
+# If given "val", sets key=val and returns the old value
 function argv(key, val,    i, kv) {
 	for (i = 1; i < ARGC; i++) {
 		if (ARGV[i] ~ "^" key "=") {
@@ -225,7 +225,7 @@ $0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); 
 	next
 }
 
-function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, shader, cmd, parsed_size) {
+function cfg_tex(save, desc, size, copy,    bind, op, scale, i, j, opt, opts, plane, inject_opts, inject_opts_planes, shader, cmd, parsed_size) {
 	size_ = get_opt(save)
 	if (size_ != "CFG_NULL")
 		size = size_
@@ -261,21 +261,39 @@ function cfg_tex(save, desc, size, copy,    bind, op, scale, opt, inject_opts, s
 		print("//!HEIGHT", bind ".h")
 		desc = desc ", share"
 	} else if (size ~ "/") {
-		inject_opts = ""
 		ensure_hooks()
-		ensure_cfg_opts()
-		for (i = 1; i < CFGOPTS_LEN; i++) {
-			if (index(CFGOPTS[i], "INJ_" save "_") == 1) {
-				opt = substr(CFGOPTS[i], length("INJ_" save "_")+1)
-				inject_opts = sprintf("%s:%s", inject_opts, opt)
+
+		split("", inject_opts_planes)
+		for (i = 1; i < ARGC; i++) {
+			if (ARGV[i] ~ /^OPTS[_[:alnum:]]*=/) {
+				kv = ARGV[i]
+
+				plane = kv
+				sub(/^OPTS/, "", plane)
+				sub(/=.*/, "", plane)
+				if (!plane)
+					plane = "_"
+
+				sub(/^[_[:alpha:]][_[:alnum:]]*=/, "", kv)
+				opts_len = split(kv, opts, ":")
+				for (j = 1; j < opts_len; j++)
+					if (index(opts[j], "INJ_" save "_") == 1)
+						inject_opts_planes[plane] = sprintf("%s:%s", inject_opts_planes[plane], substr(opts[j], length("INJ_" save "_")+1))
 			}
 		}
-		sub(/^:/, "", inject_opts)
+
+		inject_opts = ""
+		for (plane in inject_opts_planes) {
+			opts = (plane == "_") ? "OPTS" : "OPTS" plane
+			sub(/^:/, "", inject_opts_planes[plane])
+			inject_opts = sprintf("%s %s=%s", inject_opts, opts, inject_opts_planes[plane])
+		}
+		sub(/^ /, "", inject_opts)
 
 		shader = size
 		cmd = sprintf("./inject_shader -v OUT_TEX=%s -v HOOKS=%s", save, HOOKS)
 		if (inject_opts)
-			cmd = sprintf("./shader_cfg %s OPTS=%s | %s", shader, inject_opts, cmd)
+			cmd = sprintf("./shader_cfg %s %s | %s", shader, inject_opts, cmd)
 		else
 			cmd = sprintf("%s < %s", cmd, shader)
 
