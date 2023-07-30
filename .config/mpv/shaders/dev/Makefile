@@ -117,7 +117,7 @@ NLM_HQX=P=5:$(NLM_HQ)
 ../HQX/nlmeans.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_HQX_DESC)" OPTS="$(NLM_HQX)" OPTS_LUMA="$(NLM_HQX_LUMA)" nlmeans_template > $@
 
-nlmeans_experimental: experimental/nlmeans_2x.glsl experimental/nlmeans_lgc.glsl experimental/nlmeans_light.glsl
+nlmeans_experimental: experimental/nlmeans_2x.glsl experimental/nlmeans_lgc.glsl experimental/nlmeans_light.glsl experimental/nlmeans_ffmpeg_eqv.glsl
 
 NLM_2X_DESC=Experimental upscaler
 NLM_2X_LUMA=`$(OPT_STRIP) optimums/nlmeans_2x_luma | $(OPT_LAST)`
@@ -137,6 +137,12 @@ NLM_LIGHT=`$(OPT_STRIP) optimums/nlmeans_light_chroma | $(OPT_LAST)`
 
 experimental/nlmeans_light.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_LIGHT_DESC)" OPTS="$(NLM_LIGHT)" OPTS_LUMA="$(NLM_LIGHT_LUMA)" nlmeans_template > $@
+
+NLM_FFMPEG_EQV_DESC=Should be roughly equivalent to ffmpeg's -vf=nlmeans (for debugging)
+NLM_FFMPEG_EQV=S=0.5:P=7:R=15:SW=1.0:RS=0:PS=0:WD=0:RI=0:RFI=0:RO=0:SST=0:GI=0:RF=0:RF_LUMA=0
+
+experimental/nlmeans_ffmpeg_eqv.glsl: nlmeans_template
+	./shader_cfg DESC="$@: $(NLM_FFMPEG_EQV_DESC)" OPTS="$(NLM_FFMPEG_EQV)" OPTS_LUMA="$(NLM_FFMPEG_EQV)" nlmeans_template > $@
 
 hdeband: ../LQ/hdeband.glsl
 
