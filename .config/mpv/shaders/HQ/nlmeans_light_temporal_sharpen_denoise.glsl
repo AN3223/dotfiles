@@ -1412,7 +1412,7 @@ vec4 hook()
  * WDS (not for WDK=is_zero): Higher numbers are more eager to reduce weights
  */
 #ifdef LUMA_raw
-#define WD 1
+#define WD 2
 #define WDT 0.08580825335732192
 #define WDP 5.402102275251726
 #define WDS 1.0
