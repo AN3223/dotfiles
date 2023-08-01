@@ -58,7 +58,7 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 2.950980081082407
+#define S 3.3414293791794623
 #else
 #define S 2.7582254279162504
 #endif
@@ -98,7 +98,7 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.29705985961184866
+#define SW 0.322495824496001
 #else
 #define SW 0.829721057696643
 #endif
@@ -117,7 +117,7 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.7237361287290627
+#define SS 1.7287909749763721
 #define PST 0
 #define PSS 0.0
 #else
@@ -233,8 +233,8 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.4060694437968005
-#define WDP 5.942287222299136
+#define WDT 0.37541358514556056
+#define WDP 5.803885694575251
 #define WDS 1.0
 #else
 #define WD 1
@@ -373,7 +373,7 @@
  */
 #ifdef LUMA_raw
 #define SO 0.0
-#define RO 0.00012501456180296562
+#define RO 0.00011911204981066032
 #define PSO 0.0
 #define ASO 0.0
 #else
@@ -1236,7 +1236,7 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 0.6783550678689021
+#define S 0.6760759048194782
 #else
 #define S 0.5815499203176268
 #endif
@@ -1276,7 +1276,7 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 2.0460202722597383
+#define SW 2.072904783596684
 #else
 #define SW 2.96145504055636
 #endif
@@ -1295,7 +1295,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.1557606185485368
+#define SS 0.20289635200201955
 #define PST 0
 #define PSS 0.0
 #else
@@ -1388,7 +1388,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define RS 3
-#define PS 3
+#define PS 0
 #else
 #define RS 3
 #define PS 3
@@ -1411,7 +1411,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 2
-#define WDT 0.10458089331824628
+#define WDT 0.08043391894306047
 #define WDP 5.402102275251726
 #define WDS 1.0
 #else
@@ -1551,7 +1551,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SO 0.0
-#define RO 1.8512698599740934e-05
+#define RO 1.873862444181591e-05
 #define PSO 0.0
 #define ASO 0.0
 #else
