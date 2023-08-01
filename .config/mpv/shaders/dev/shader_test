@@ -356,11 +356,10 @@ sub MAIN(
 	# shorten the stats filename if it's too long
 	my &statsfile =          { @statsfile_base.join('_').trans('/' => '\\') ~ ".stats" };
 	my &statsfile_too_long = { (&statsfile() ~ ".bz2").encode.bytes > 255 };
-	@statsfile_base .= grep(none /^max\=/)     if &statsfile_too_long();
-	@statsfile_base .= grep(none /^cfgopts\=/) if &statsfile_too_long();
+	@statsfile_base .= grep(none /^max\=/) if &statsfile_too_long();
 	if &statsfile_too_long() or ("$stats-dir/" ~ &statsfile()).IO.e
 	                         or ("$stats-dir/" ~ &statsfile() ~ ".bz2").IO.e {
-		my $proc = run("sha1sum", :in(@statsfile_base), :out);
+		my $proc = run("sha1sum", :in(&statsfile(@statsfile_base)), :out);
 		my $hash = $proc.out.slurp.split(" ")[0];
 		@statsfile_base = $hash;
 	}
