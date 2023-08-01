@@ -154,7 +154,7 @@ hdeband: ../LQ/hdeband.glsl
 ../LQ/hdeband.glsl: ../hdeband.glsl
 	./shader_cfg OPTS="RADIUS=4:SPARSITY=0.5:DIRECTIONS=3" $? > $@
 
-optimize: optimize_lq optimize_default optimize_hq
+optimize: optimums/LQ optimums/DEFAULT optimums/HQ
 
 optimums/LQ: optimums/LQ/nlmeans/luma optimums/LQ/nlmeans/chroma optimums/LQ/nlmeans_light/luma optimums/LQ/nlmeans_light/chroma optimums/LQ/nlmeans_sharpen_only/luma optimums/LQ/nlmeans_sharpen_only/chroma optimums/LQ/nlmeans_light_sharpen_only/luma optimums/LQ/nlmeans_light_sharpen_only/chroma optimums/LQ/nlmeans_sharpen_denoise/luma optimums/LQ/nlmeans_sharpen_denoise/chroma optimums/LQ/nlmeans_light_sharpen_denoise/luma optimums/LQ/nlmeans_light_sharpen_denoise/chroma
 
