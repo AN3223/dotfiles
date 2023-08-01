@@ -276,7 +276,7 @@ function cfg_tex(save, desc, size, copy,    bind, op, scale, i, j, opt, opts, pl
 
 				sub(/^[_[:alpha:]][_[:alnum:]]*=/, "", kv)
 				opts_len = split(kv, opts, ":")
-				for (j = 1; j < opts_len; j++)
+				for (j = 1; j <= opts_len; j++)
 					if (index(opts[j], "INJ_" save "_") == 1)
 						inject_opts_planes[plane] = sprintf("%s:%s", inject_opts_planes[plane], substr(opts[j], length("INJ_" save "_")+1))
 			}
