@@ -790,37 +790,11 @@ val range(val pdiff_sq)
 	return MAP(RK, pdiff_sq);
 }
 
-val patch_comparison(vec3 r)
-{
-	vec3 p;
-	val min_rot = val(p_area);
-
-	FOR_ROTATION FOR_REFLECTION {
-		val pdiff_sq = val(0);
-		val total_weight = val(0);
-
-		FOR_PATCH(p) {
-			vec3 transformed_p = SF * vec3(ref(rot(p.xy, ri), rfi), p.z);
-			val diff_sq = GET_RF(p) - GET_RF(transformed_p + r);
-			diff_sq *= diff_sq;
-
-			float weight = spatial_p(p.xy);
-			pdiff_sq += diff_sq * weight;
-			total_weight += weight;
-		}
-
-		min_rot = min(min_rot, pdiff_sq / max(val(EPSILON),total_weight));
-	}
-
-	return min_rot;
-}
-
-#define NO_GATHER (PD == 0 && NG == 0 && SAMPLE == 0) // never textureGather if any of these conditions are false
+#define GATHER (PD == 0 && NG == 0 && SAMPLE == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3 || RI == 7)
 
-#if (defined(LUMA_gather) || D1W) && ((PS == 0 || ((PS == 3 || PS == 7) && RI != 7) || PS == 8) && P == 3) && REGULAR_ROTATIONS && NO_GATHER
-// 3x3 diamond/plus patch_comparison_gather
-// XXX extend to support arbitrary sizes (probably requires code generation)
+#if (defined(LUMA_gather) || D1W) && ((PS == 0 || ((PS == 3 || PS == 7) && RI != 7) || PS == 8) && P == 3) && REGULAR_ROTATIONS && GATHER
+// 3x3 diamond/plus or square patch_comparison_gather
 const ivec2 offsets_adj[4] = { ivec2(0,-1), ivec2(1,0), ivec2(0,1), ivec2(-1,0) };
 const ivec2 offsets_adj_sf[4] = { ivec2(0,-1) * SF, ivec2(1,0) * SF, ivec2(0,1) * SF, ivec2(-1,0) * SF };
 vec4 poi_patch_adj = gather_offs(0, offsets_adj);
@@ -910,7 +884,7 @@ float patch_comparison_gather(vec3 r)
 	float center_diff = poi2.x - GET_RF(r).x;
 	return (POW2(center_diff) + min_rot) / max(EPSILON,total_weight);
 }
-#elif (defined(LUMA_gather) || D1W) && PS == 4 && P == 3 && RI == 0 && RFI == 0 && NO_GATHER
+#elif (defined(LUMA_gather) || D1W) && PS == 4 && P == 3 && RI == 0 && RFI == 0 && GATHER
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
 const ivec2 offsets_sf[4] = { ivec2(0,-1) * SF, ivec2(-1,0) * SF, ivec2(0,0) * SF, ivec2(1,0) * SF };
 vec4 poi_patch = gather_offs(0, offsets);
@@ -920,7 +894,7 @@ float patch_comparison_gather(vec3 r)
 	vec4 pdiff = poi_patch - gather_offs(r, offsets_sf);
 	return dot(POW2(pdiff) * spatial_p_weights, vec4(1)) / dot(spatial_p_weights, vec4(1));
 }
-#elif (defined(LUMA_gather) || D1W) && PS == 6 && RI == 0 && RFI == 0 && NO_GATHER
+#elif (defined(LUMA_gather) || D1W) && PS == 6 && RI == 0 && RFI == 0 && GATHER
 // tiled even square patch_comparison_gather
 // XXX extend to support odd square?
 float patch_comparison_gather(vec3 r)
@@ -943,7 +917,40 @@ float patch_comparison_gather(vec3 r)
 }
 #else
 #define patch_comparison_gather patch_comparison
+#define STORE_POI_PATCH 1
+val poi_patch[p_area];
 #endif
+
+val patch_comparison(vec3 r)
+{
+	vec3 p;
+	val min_rot = val(p_area);
+
+	FOR_ROTATION FOR_REFLECTION {
+		val pdiff_sq = val(0);
+		val total_weight = val(0);
+
+		int p_index = 0;
+		FOR_PATCH(p) {
+#ifdef STORE_POI_PATCH
+			val poi_p = poi_patch[p_index++];
+#else
+			val poi_p = GET_RF(p);
+#endif
+			vec3 transformed_p = SF * vec3(ref(rot(p.xy, ri), rfi), p.z);
+			val diff_sq = poi_p - GET_RF(transformed_p + r);
+			diff_sq *= diff_sq;
+
+			float weight = spatial_p(p.xy);
+			pdiff_sq += diff_sq * weight;
+			total_weight += weight;
+		}
+
+		min_rot = min(min_rot, pdiff_sq / max(val(EPSILON),total_weight));
+	}
+
+	return min_rot;
+}
 
 vec4 hook()
 {
@@ -977,6 +984,13 @@ vec4 hook()
 	int r_index = 0;
 	val_packed all_weights[r_area];
 	val_packed all_pixels[r_area];
+#endif
+
+#ifdef STORE_POI_PATCH
+	vec3 p;
+	int p_index = 0;
+	FOR_PATCH(p)
+		poi_patch[p_index++] = GET_RF(p);
 #endif
 	
 #if WD == 1 // weight discard (moving cumulative average)
