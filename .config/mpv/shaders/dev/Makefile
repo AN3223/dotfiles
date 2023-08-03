@@ -29,7 +29,7 @@ GUIDED_FAST_S=IP=2/:MEANIP=1.5/:E=0.001
 experimental/guided_lgc.glsl: guided_template
 	./shader_cfg DESC="$@: $(GUIDED_LGC_DESC)" OPTS="$(GUIDED_LGC)" $? > $@
 
-nlmeans: nlmeans_default nlmeans_lq nlmeans_hq nlmeans_hqx nlmeans_experimental
+nlmeans: nlmeans_default nlmeans_lq nlmeans_hq nlmeans_experimental
 
 # If RF=shader then that shader needs to be added to the prerequisites (i.e., alongside nlmeans_template)
 
@@ -118,16 +118,6 @@ NLM_HQ_DESC=Slow, but higher quality.
 	./shader_cfg DESC="$@: $(NLM_HQ_DESC) $(NLM_TEMPORAL_DESC) $(NLM_SHARPEN_DENOISE_DESC)" OPTS="$(NLM_TEMPORAL):`./optimums/latest.sh ../HQ/nlmeans_sharpen_denoise.glsl chroma`" OPTS_LUMA="$(NLM_TEMPORAL_LUMA):`./optimums/latest.sh ../HQ/nlmeans_sharpen_denoise.glsl luma`" nlmeans_template > $@
 ../HQ/nlmeans_light_temporal_sharpen_denoise.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_HQ_DESC) $(NLM_TEMPORAL_DESC) $(NLM_SHARPEN_DENOISE_DESC) $(NLM_LIGHT_DESC)" OPTS="$(NLM_TEMPORAL):`./optimums/latest.sh ../HQ/nlmeans_light_sharpen_denoise.glsl chroma`" OPTS_LUMA="$(NLM_TEMPORAL_LUMA):`./optimums/latest.sh ../HQ/nlmeans_light_sharpen_denoise.glsl luma`" nlmeans_template > $@
-
-nlmeans_hqx: ../HQX/nlmeans.glsl
-
-NLM_HQX_DESC=Very slow, should offer the best quality.
-NLM_HQX_LUMA=P=5:`./optimums/latest.sh optimums/HQ/nlmeans/luma`
-NLM_HQX=P=5:`./optimums/latest.sh optimums/HQ/nlmeans/chroma`
-
-# XXX expand & optimize
-../HQX/nlmeans.glsl: nlmeans_template
-	./shader_cfg DESC="$@: $(NLM_HQX_DESC)" OPTS="$(NLM_HQX)" OPTS_LUMA="$(NLM_HQX_LUMA)" nlmeans_template > $@
 
 nlmeans_experimental: experimental/nlmeans_2x.glsl experimental/nlmeans_lgc.glsl experimental/nlmeans_ffmpeg_eqv.glsl
 
