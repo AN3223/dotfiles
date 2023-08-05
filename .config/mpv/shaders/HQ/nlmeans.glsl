@@ -49,7 +49,7 @@
 //!HOOK CHROMA
 //!BIND HOOKED
 //!DESC Non-local means (nlmeans.glsl)
-//!SAVE RF_LUMA
+//!SAVE G
 
 // User variables
 
@@ -243,7 +243,7 @@
 #define WDS 1.0
 #endif
 
-/* Robust filtering
+/* Guide image
  *
  * This setting is dependent on code generation from shader_cfg, so this 
  * setting can only be enabled via shader_cfg.
@@ -251,8 +251,8 @@
  * Computes weights on a guide, which could be a downscaled image or the output 
  * of another shader, and applies the weights to the original image
  */
-#define RF_LUMA 0
-#define RF 0
+#define G 0
+#define GC 0
 
 /* Rotational/reflectional invariance
  *
@@ -597,9 +597,9 @@ const float hr = int(R/2) - 0.5*(1-(R%2));  // sample between pixels for even re
 #define FOR_FRAME(r) for (r.z = 0;  r.z < T1;  r.z++)
 
 #ifdef LUMA_raw
-#define RF_ RF_LUMA
+#define G_ G
 #else
-#define RF_ RF
+#define G_ GC
 #endif
 
 // donut increment, increments without landing on (0,0,0)
@@ -709,25 +709,25 @@ const float hr_scale = 1.0/hr;
 #endif
 
 #if GI && defined(LUMA_raw)
-#define GET_(off) sample(RF_LUMA_tex, RF_LUMA_pos, RF_LUMA_size, RF_LUMA_pt, off)
+#define GET_(off) sample(G_tex, G_pos, G_size, G_pt, off)
 #elif GI
-#define GET_(off) sample(RF_tex, RF_pos, RF_size, RF_pt, off)
+#define GET_(off) sample(GC_tex, GC_pos, GC_size, GC_pt, off)
 #else
 #define GET_(off) sample(HOOKED_tex, HOOKED_pos, HOOKED_size, HOOKED_pt, off)
 #endif
 
-#if RF_ && defined(LUMA_raw)
-#define GET_RF_(off) sample(RF_LUMA_tex, RF_LUMA_pos, RF_LUMA_size, RF_LUMA_pt, off)
-#define gather_offs(off, off_arr) (RF_LUMA_mul * vec4(textureGatherOffsets(RF_LUMA_raw, RF_LUMA_pos + vec2(off) * RF_LUMA_pt, off_arr)))
-#define gather(off) RF_LUMA_gather(RF_LUMA_pos + (off) * RF_LUMA_pt, 0)
-#elif RF_ && D1W
-#define GET_RF_(off) sample(RF_tex, RF_pos, RF_size, RF_pt, off)
-#define gather_offs(off, off_arr) (RF_mul * vec4(textureGatherOffsets(RF_raw, RF_pos + vec2(off) * RF_pt, off_arr)))
-#define gather(off) RF_gather(RF_pos + (off) * RF_pt, 0)
-#elif RF_
-#define GET_RF_(off) sample(RF_tex, RF_pos, RF_size, RF_pt, off)
+#if G_ && defined(LUMA_raw)
+#define GET_GUIDE_(off) sample(G_tex, G_pos, G_size, G_pt, off)
+#define gather_offs(off, off_arr) (G_mul * vec4(textureGatherOffsets(G_raw, G_pos + vec2(off) * G_pt, off_arr)))
+#define gather(off) G_gather(G_pos + (off) * G_pt, 0)
+#elif G_ && D1W
+#define GET_GUIDE_(off) sample(GC_tex, GC_pos, GC_size, GC_pt, off)
+#define gather_offs(off, off_arr) (GC_mul * vec4(textureGatherOffsets(GC_raw, GC_pos + vec2(off) * GC_pt, off_arr)))
+#define gather(off) GC_gather(GC_pos + (off) * GC_pt, 0)
+#elif G_
+#define GET_GUIDE_(off) sample(GC_tex, GC_pos, GC_size, GC_pt, off)
 #else
-#define GET_RF_(off) GET_(off)
+#define GET_GUIDE_(off) GET_(off)
 #define gather_offs(off, off_arr) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, off_arr)))
 #define gather(off) HOOKED_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
 #endif
@@ -740,16 +740,16 @@ val GET(vec3 off)
 
 	 }
 }
-val GET_RF(vec3 off)
+val GET_GUIDE(vec3 off)
 {
-	 return off.z == 0 ? val_swizz(GET_RF_(off)) : GET(off); 
+	 return off.z == 0 ? val_swizz(GET_GUIDE_(off)) : GET(off); 
 }
 #else
 #define GET(off) val_swizz(GET_(off))
-#define GET_RF(off) val_swizz(GET_RF_(off))
+#define GET_GUIDE(off) val_swizz(GET_GUIDE_(off))
 #endif
 
-val poi2 = GET_RF(vec3(0));  // guide pixel-of-interest
+val poi2 = GET_GUIDE(vec3(0));  // guide pixel-of-interest
 vec4 poi_ = GET_(vec3(0)); 
 val poi = val_swizz(poi_);  // pixel-of-interest
 
@@ -903,7 +903,7 @@ float patch_comparison_gather(vec3 r)
 	 float total_weight = spatial_p(vec2(0,0)) + 4 * spatial_p(vec2(0,1)); 
 #endif
 
-	 float center_diff = poi2.x - GET_RF(r).x; 
+	 float center_diff = poi2.x - GET_GUIDE(r).x; 
 	 return (POW2(center_diff) + min_rot) / max(EPSILON,total_weight); 
 }
 #elif (defined(LUMA_gather) || D1W) && PS == 4 && P == 3 && RI == 0 && RFI == 0 && GATHER
@@ -957,10 +957,10 @@ val patch_comparison(vec3 r)
 #ifdef STORE_POI_PATCH
 	 	 	 val poi_p = poi_patch[p_index++]; 
 #else
-	 	 	 val poi_p = GET_RF(p); 
+	 	 	 val poi_p = GET_GUIDE(p); 
 #endif
 	 	 	 vec3 transformed_p = SF * vec3(ref(rot(p.xy, ri), rfi), p.z); 
-	 	 	 val diff_sq = poi_p - GET_RF(transformed_p + r); 
+	 	 	 val diff_sq = poi_p - GET_GUIDE(transformed_p + r); 
 	 	 	 diff_sq *= diff_sq; 
 
 	 	 	 float weight = spatial_p(p.xy); 
@@ -1012,7 +1012,7 @@ vec4 hook()
 	 vec3 p; 
 	 int p_index = 0; 
 	 FOR_PATCH(p)
-	 	 poi_patch[p_index++] = GET_RF(p); 
+	 	 poi_patch[p_index++] = GET_GUIDE(p); 
 #endif
 	 
 #if WD == 1 // weight discard (moving cumulative average)
@@ -1225,22 +1225,22 @@ vec4 hook()
 
 //!HOOK LUMA
 //!HOOK CHROMA
-//!BIND RF_LUMA
-//!WIDTH RF_LUMA.w
-//!HEIGHT RF_LUMA.h
-//!DESC Non-local means (RF, share)
-//!SAVE RF
+//!BIND G
+//!WIDTH G.w
+//!HEIGHT G.h
+//!DESC Non-local means (Guide, share)
+//!SAVE GC
 
 vec4 hook()
 {
-	return RF_LUMA_texOff(0);
+	return G_texOff(0);
 }
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!BIND HOOKED
-//!BIND RF_LUMA
-//!BIND RF
+//!BIND G
+//!BIND GC
 //!DESC Non-local means (HQ/nlmeans.glsl)
 
 // User variables
@@ -1435,7 +1435,7 @@ vec4 hook()
 #define WDS 1.0
 #endif
 
-/* Robust filtering
+/* Guide image
  *
  * This setting is dependent on code generation from shader_cfg, so this 
  * setting can only be enabled via shader_cfg.
@@ -1443,8 +1443,8 @@ vec4 hook()
  * Computes weights on a guide, which could be a downscaled image or the output 
  * of another shader, and applies the weights to the original image
  */
-#define RF_LUMA 1
-#define RF 1
+#define G 1
+#define GC 1
 
 /* Rotational/reflectional invariance
  *
@@ -1789,9 +1789,9 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 #define FOR_FRAME(r) for (r.z = 0; r.z < T1; r.z++)
 
 #ifdef LUMA_raw
-#define RF_ RF_LUMA
+#define G_ G
 #else
-#define RF_ RF
+#define G_ GC
 #endif
 
 // donut increment, increments without landing on (0,0,0)
@@ -1901,25 +1901,25 @@ const float hr_scale = 1.0/hr;
 #endif
 
 #if GI && defined(LUMA_raw)
-#define GET_(off) sample(RF_LUMA_tex, RF_LUMA_pos, RF_LUMA_size, RF_LUMA_pt, off)
+#define GET_(off) sample(G_tex, G_pos, G_size, G_pt, off)
 #elif GI
-#define GET_(off) sample(RF_tex, RF_pos, RF_size, RF_pt, off)
+#define GET_(off) sample(GC_tex, GC_pos, GC_size, GC_pt, off)
 #else
 #define GET_(off) sample(HOOKED_tex, HOOKED_pos, HOOKED_size, HOOKED_pt, off)
 #endif
 
-#if RF_ && defined(LUMA_raw)
-#define GET_RF_(off) sample(RF_LUMA_tex, RF_LUMA_pos, RF_LUMA_size, RF_LUMA_pt, off)
-#define gather_offs(off, off_arr) (RF_LUMA_mul * vec4(textureGatherOffsets(RF_LUMA_raw, RF_LUMA_pos + vec2(off) * RF_LUMA_pt, off_arr)))
-#define gather(off) RF_LUMA_gather(RF_LUMA_pos + (off) * RF_LUMA_pt, 0)
-#elif RF_ && D1W
-#define GET_RF_(off) sample(RF_tex, RF_pos, RF_size, RF_pt, off)
-#define gather_offs(off, off_arr) (RF_mul * vec4(textureGatherOffsets(RF_raw, RF_pos + vec2(off) * RF_pt, off_arr)))
-#define gather(off) RF_gather(RF_pos + (off) * RF_pt, 0)
-#elif RF_
-#define GET_RF_(off) sample(RF_tex, RF_pos, RF_size, RF_pt, off)
+#if G_ && defined(LUMA_raw)
+#define GET_GUIDE_(off) sample(G_tex, G_pos, G_size, G_pt, off)
+#define gather_offs(off, off_arr) (G_mul * vec4(textureGatherOffsets(G_raw, G_pos + vec2(off) * G_pt, off_arr)))
+#define gather(off) G_gather(G_pos + (off) * G_pt, 0)
+#elif G_ && D1W
+#define GET_GUIDE_(off) sample(GC_tex, GC_pos, GC_size, GC_pt, off)
+#define gather_offs(off, off_arr) (GC_mul * vec4(textureGatherOffsets(GC_raw, GC_pos + vec2(off) * GC_pt, off_arr)))
+#define gather(off) GC_gather(GC_pos + (off) * GC_pt, 0)
+#elif G_
+#define GET_GUIDE_(off) sample(GC_tex, GC_pos, GC_size, GC_pt, off)
 #else
-#define GET_RF_(off) GET_(off)
+#define GET_GUIDE_(off) GET_(off)
 #define gather_offs(off, off_arr) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, off_arr)))
 #define gather(off) HOOKED_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
 #endif
@@ -1932,16 +1932,16 @@ val GET(vec3 off)
 
 	}
 }
-val GET_RF(vec3 off)
+val GET_GUIDE(vec3 off)
 {
-	return off.z == 0 ? val_swizz(GET_RF_(off)) : GET(off);
+	return off.z == 0 ? val_swizz(GET_GUIDE_(off)) : GET(off);
 }
 #else
 #define GET(off) val_swizz(GET_(off))
-#define GET_RF(off) val_swizz(GET_RF_(off))
+#define GET_GUIDE(off) val_swizz(GET_GUIDE_(off))
 #endif
 
-val poi2 = GET_RF(vec3(0)); // guide pixel-of-interest
+val poi2 = GET_GUIDE(vec3(0)); // guide pixel-of-interest
 vec4 poi_ = GET_(vec3(0));
 val poi = val_swizz(poi_); // pixel-of-interest
 
@@ -2095,7 +2095,7 @@ float patch_comparison_gather(vec3 r)
 	float total_weight = spatial_p(vec2(0,0)) + 4 * spatial_p(vec2(0,1));
 #endif
 
-	float center_diff = poi2.x - GET_RF(r).x;
+	float center_diff = poi2.x - GET_GUIDE(r).x;
 	return (POW2(center_diff) + min_rot) / max(EPSILON,total_weight);
 }
 #elif (defined(LUMA_gather) || D1W) && PS == 4 && P == 3 && RI == 0 && RFI == 0 && GATHER
@@ -2149,10 +2149,10 @@ val patch_comparison(vec3 r)
 #ifdef STORE_POI_PATCH
 			val poi_p = poi_patch[p_index++];
 #else
-			val poi_p = GET_RF(p);
+			val poi_p = GET_GUIDE(p);
 #endif
 			vec3 transformed_p = SF * vec3(ref(rot(p.xy, ri), rfi), p.z);
-			val diff_sq = poi_p - GET_RF(transformed_p + r);
+			val diff_sq = poi_p - GET_GUIDE(transformed_p + r);
 			diff_sq *= diff_sq;
 
 			float weight = spatial_p(p.xy);
@@ -2204,7 +2204,7 @@ vec4 hook()
 	vec3 p;
 	int p_index = 0;
 	FOR_PATCH(p)
-		poi_patch[p_index++] = GET_RF(p);
+		poi_patch[p_index++] = GET_GUIDE(p);
 #endif
 	
 #if WD == 1 // weight discard (moving cumulative average)

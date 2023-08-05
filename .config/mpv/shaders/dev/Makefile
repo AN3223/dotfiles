@@ -31,7 +31,7 @@ experimental/guided_lgc.glsl: guided_template
 
 nlmeans: nlmeans_default nlmeans_lq nlmeans_hq nlmeans_experimental
 
-# If RF=shader then that shader needs to be added to the prerequisites (i.e., alongside nlmeans_template)
+# If G=shader then that shader needs to be added to the prerequisites (i.e., alongside nlmeans_template)
 
 NLM_NO_ROTATE=RI=0:RFI=0
 
@@ -128,13 +128,13 @@ experimental/nlmeans_2x.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_2X_DESC)" OPTS="$(NLM_2X_LUMA)" nlmeans_template > $@
 
 NLM_LGC_DESC=Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
-NLM_LGC=CFG_HOOKS=CHROMA:RF=SHARE_LUMA:RF_LUMA=0:D1W=1:S=11.66:WD=0:SW=0.75:RI=3:RFI=2
+NLM_LGC=CFG_HOOKS=CHROMA:GC=SHARE_LUMA:G=0:D1W=1:S=11.66:WD=0:SW=0.75:RI=3:RFI=2
 
 experimental/nlmeans_lgc.glsl: nlmeans_template ../LQ/nlmeans.glsl
 	./shader_cfg DESC="$@: $(NLM_LGC_DESC)" OPTS="$(NLM_LGC)" nlmeans_template > $@
 
 NLM_FFMPEG_EQV_DESC=Should be roughly equivalent to ffmpeg's -vf=nlmeans
-NLM_FFMPEG_EQV=S=0.5:P=7:R=15:SW=1.0:RS=0:PS=0:WD=0:RI=0:RFI=0:RO=0:SST=0:GI=0:RF=0:RF_LUMA=0
+NLM_FFMPEG_EQV=S=0.5:P=7:R=15:SW=1.0:RS=0:PS=0:WD=0:RI=0:RFI=0:RO=0:SST=0:GI=0:GC=0:G=0
 
 experimental/nlmeans_ffmpeg_eqv.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_FFMPEG_EQV_DESC)" OPTS="$(NLM_FFMPEG_EQV)" OPTS_LUMA="$(NLM_FFMPEG_EQV)" nlmeans_template > $@
@@ -166,8 +166,8 @@ OPT_2X=VF=scale=540:540
 OPT_SHARP_MAX=ASF:ASA:ASP:ASS
 OPT_LQ_LUMA_MAX=S:SW:SS:WDT:WDP:RO
 OPT_LQ_CHROMA_MAX=S:SS:SW:WDT:WDP
-OPT_DEFAULT_LUMA_MAX=S:SW:SS:WDT:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SW:INJ_RF_LUMA_SS:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP:INJ_RF_LUMA_RO
-OPT_DEFAULT_CHROMA_MAX=S:SW:SS:RO:INJ_RF_LUMA_S:INJ_RF_LUMA_SS:INJ_RF_LUMA_SW:INJ_RF_LUMA_WDT:INJ_RF_LUMA_WDP
+OPT_DEFAULT_LUMA_MAX=S:SW:SS:WDT:RO:INJ_G_S:INJ_G_SW:INJ_G_SS:INJ_G_WDT:INJ_G_WDP:INJ_G_RO
+OPT_DEFAULT_CHROMA_MAX=S:SW:SS:RO:INJ_G_S:INJ_G_SS:INJ_G_SW:INJ_G_WDT:INJ_G_WDP
 OPT_2X_LUMA_MAX=S:SW:SS
 
 optimums/LQ/nlmeans/luma:
