@@ -35,7 +35,7 @@
 #ifdef LUMA_raw
 #define S 1.8684856656934656
 #else
-#define S 1.8645699966653106
+#define S 1.8106436458693154
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -75,7 +75,7 @@
 #ifdef LUMA_raw
 #define SW 1.239661390094304
 #else
-#define SW 0.9101079846431951
+#define SW 0.9299299588297842
 #endif
 
 /* Spatial kernel
@@ -97,7 +97,7 @@
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.43568103064352126
+#define SS 0.43991448704708935
 #define PST 0
 #define PSS 0.0
 #endif
@@ -212,9 +212,9 @@
 #define WDP 2.7736545761312836
 #define WDS 1.0
 #else
-#define WD 1
-#define WDT 0.5345138121944237
-#define WDP 2.6121009828070245
+#define WD 0
+#define WDT 0.002713346103131793
+#define WDP 5.692202343435388
 #define WDS 1.0
 #endif
 

@@ -37,7 +37,7 @@
 #ifdef LUMA_raw
 #define S 3.8269623402485986
 #else
-#define S 6.004796560066703
+#define S 5.892684515221463
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -63,10 +63,10 @@
 #define ASI 0
 #else
 #define AS 1
-#define ASF 1.1053214680793184
-#define ASA 0.3356833348486381
-#define ASP 1.2323873800363105
-#define ASS 0.061936488567600784
+#define ASF 1.0858055690787463
+#define ASA 0.3374957128242957
+#define ASP 1.2005615843584518
+#define ASS 0.06205890530442699
 #define ASI 0
 #endif
 
@@ -77,7 +77,7 @@
 #ifdef LUMA_raw
 #define SW 0.48337246992727473
 #else
-#define SW 0.5142538998675305
+#define SW 0.4961902190975799
 #endif
 
 /* Spatial kernel
@@ -99,7 +99,7 @@
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.2951785205334274
+#define SS 0.2884787007936514
 #define PST 0
 #define PSS 0.0
 #endif
@@ -214,9 +214,9 @@
 #define WDP 3.5246076736020466
 #define WDS 1.0
 #else
-#define WD 1
-#define WDT 1.0878362818613716
-#define WDP 5.811426539492843
+#define WD 0
+#define WDT 0.002713346103131793
+#define WDP 5.692202343435388
 #define WDS 1.0
 #endif
 

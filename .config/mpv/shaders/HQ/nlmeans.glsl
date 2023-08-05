@@ -60,7 +60,7 @@
 #ifdef LUMA_raw
 #define S 5.222641502023587
 #else
-#define S 3.9534977097035666
+#define S 3.8917723921326073
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -100,7 +100,7 @@
 #ifdef LUMA_raw
 #define SW 0.47250035123519435
 #else
-#define SW 0.5931818344723794
+#define SW 0.6313116508097885
 #endif
 
 /* Spatial kernel
@@ -122,7 +122,7 @@
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.6312583627349746
+#define SS 0.6420923904094135
 #define PST 0
 #define PSS 0.0
 #endif
@@ -237,9 +237,9 @@
 #define WDP 6.322720180463923
 #define WDS 1.0
 #else
-#define WD 1
-#define WDT 0.4208801678830611
-#define WDP 3.1184815787752633
+#define WD 0
+#define WDT 0.002713346103131793
+#define WDP 5.692202343435388
 #define WDS 1.0
 #endif
 
@@ -1252,7 +1252,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define S 1.2460858139468287
 #else
-#define S 0.9289990153587643
+#define S 0.9430753482325787
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -1292,7 +1292,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define SW 1.5239684975111787
 #else
-#define SW 2.582418826087477
+#define SW 2.755318015133923
 #endif
 
 /* Spatial kernel
@@ -1314,7 +1314,7 @@ vec4 hook()
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.05864160661465411
+#define SS 0.05621810412048742
 #define PST 0
 #define PSS 0.0
 #endif
@@ -1570,7 +1570,7 @@ vec4 hook()
 #define ASO 0.0
 #else
 #define SO 0.0
-#define RO 0.00011552115158598914
+#define RO 0.00012044680958502313
 #define PSO 0.0
 #define ASO 0.0
 #endif
