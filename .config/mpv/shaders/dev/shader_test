@@ -312,7 +312,8 @@ sub MAIN(
 	#= script for testing the SSIM between corrupt->filtered image and the original image
 	*@test-media, #= Files/directories to test on
 	Str :$cfgopts = "", #= Arguments passed to the dispatched _cfg script, if dispatched
-	Str :$optimum = "", #= Same as --cfgopts but read from a file (first record of the last line of a tab delimited file, ignoring comments and blank lines)
+	Str :$optimum = "", #= Prepend cfgopts with the first record of the last line of a tab delimited file (ignoring comments and blank lines)
+	Bool :$optimum-parent = True, #= Use dirname(dirname(--optimum))/basename(--optimum) if it exists
 	Str :$shader where *.IO.r = "nlmeans_template", #= Shader used for testing
 	Str :$plane = "LUMA", #= Plane to test on
 	Str :$corruption = "NOISE=10:10", #= Corruption type, NOISE/OUTOPTS/VF
@@ -420,7 +421,9 @@ sub MAIN(
 	my $cfgopts_ = $cfgopts;
 	if $optimum {
 		die 'optimum file "$optimum" does not exist' if not $optimum.IO.e;
-		$cfgopts_ = $optimum.IO.slurp.split("\n").grep(none /^$/, /^\#/)[*-1].split("\t")[0];
+		my $f = $optimum.IO;
+		$f = $_ if $_.e && $optimum-parent given $f.parent.parent.child($f.basename);
+		$cfgopts_ ~= ":" ~ $f.slurp.split("\n").grep(none /^$/, /^\#/)[*-1].split("\t")[0];
 	}
 
 	my @cfgopts;
