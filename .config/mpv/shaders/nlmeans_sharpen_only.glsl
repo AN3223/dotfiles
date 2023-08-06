@@ -58,7 +58,7 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 0.06890569351643297
+#define S 0.3515318444798957
 #else
 #define S -0.008687661704444228
 #endif
@@ -98,7 +98,7 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.29765763888827695
+#define SW 2.0857816094382398
 #else
 #define SW 16.469182083075744
 #endif
@@ -117,7 +117,7 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.32933019939912456
+#define SS 0.23739790747931352
 #define PST 0
 #define PSS 0.0
 #else
@@ -210,7 +210,7 @@
  */
 #ifdef LUMA_raw
 #define RS 3
-#define PS 4
+#define PS 0
 #else
 #define RS 3
 #define PS 3
@@ -233,8 +233,8 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.7028554075927236
-#define WDP 15.954072979925787
+#define WDT 0.2056147985356345
+#define WDP 0.8827971531637453
 #define WDS 1.0
 #else
 #define WD 0
@@ -373,7 +373,7 @@
  */
 #ifdef LUMA_raw
 #define SO 0.0
-#define RO 5.634549711897555e-07
+#define RO 3.850740538678376e-05
 #define PSO 0.0
 #define ASO 0.0
 #else
@@ -1250,7 +1250,7 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 3.729107355365732
+#define S 4.0929359931268765
 #else
 #define S -0.8269188728441862
 #endif
@@ -1271,10 +1271,10 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 2
-#define ASF 0.8972384557771782
-#define ASA 0.16560469892133284
-#define ASP 1.09935824026847
-#define ASS 0.1583579033384476
+#define ASF 1.602219820554501
+#define ASA 1.1498172804911353
+#define ASP 1.264322225146263
+#define ASS 0.42039043919206615
 #define ASI 0
 #else
 #define AS 2
@@ -1290,7 +1290,7 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.18971285068064248
+#define SW 0.2521721629824794
 #else
 #define SW 0.07846995864338238
 #endif
@@ -1309,7 +1309,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.2784425287552565
+#define SS 0.601975599237467
 #define PST 0
 #define PSS 0.0
 #else
@@ -1425,7 +1425,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 2
-#define WDT -0.4095976419053605
+#define WDT 0.35454340466730333
 #define WDP 5.402102275251726
 #define WDS 1.0
 #else
@@ -1565,7 +1565,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SO 0.0
-#define RO 5.0212690567311355e-05
+#define RO 4.720502743873135e-05
 #define PSO 0.0
 #define ASO 0.0
 #else
