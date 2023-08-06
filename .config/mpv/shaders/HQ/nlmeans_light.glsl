@@ -58,7 +58,7 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 4.126191305027437
+#define S 2.3580424190007303
 #else
 #define S 2.4100584579707616
 #endif
@@ -98,7 +98,7 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.3519086230054841
+#define SW 0.3328882257097851
 #else
 #define SW 0.7590160886909864
 #endif
@@ -117,7 +117,7 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.7715035787989077
+#define SS 1.527440254059758
 #define PST 0
 #define PSS 0.0
 #else
@@ -210,7 +210,7 @@
  */
 #ifdef LUMA_raw
 #define RS 3
-#define PS 4
+#define PS 0
 #else
 #define RS 3
 #define PS 4
@@ -233,8 +233,8 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.5108159305426606
-#define WDP 4.511212684837026
+#define WDT 0.6438479575565849
+#define WDP 4.05486556904213
 #define WDS 1.0
 #else
 #define WD 0
@@ -373,7 +373,7 @@
  */
 #ifdef LUMA_raw
 #define SO 0.0
-#define RO 0.0001460509420278015
+#define RO 8.49356288710675e-05
 #define PSO 0.0
 #define ASO 0.0
 #else
@@ -1250,7 +1250,7 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 0.6872881480520366
+#define S 0.5033558036225406
 #else
 #define S 0.6051106279657003
 #endif
@@ -1290,7 +1290,7 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 1.8368153073631441
+#define SW 2.089512287825287
 #else
 #define SW 2.7580328880458036
 #endif
@@ -1309,7 +1309,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.21766114928355643
+#define SS 0.15271387796677946
 #define PST 0
 #define PSS 0.0
 #else
@@ -1425,7 +1425,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 2
-#define WDT 0.09060497453198815
+#define WDT 0.07501778200884986
 #define WDP 5.402102275251726
 #define WDS 1.0
 #else
@@ -1565,7 +1565,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SO 0.0
-#define RO 2.3058277111402457e-05
+#define RO 1.6866539069506262e-05
 #define PSO 0.0
 #define ASO 0.0
 #else

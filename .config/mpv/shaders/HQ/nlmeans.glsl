@@ -58,7 +58,7 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 5.340793445745317
+#define S 4.593660254883196
 #else
 #define S 3.8441794590203786
 #endif
@@ -98,7 +98,7 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.46486626176336293
+#define SW 0.3964750481842902
 #else
 #define SW 0.6361219930234926
 #endif
@@ -117,7 +117,7 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.4495719119846038
+#define SS 1.4587785754741125
 #define PST 0
 #define PSS 0.0
 #else
@@ -210,7 +210,7 @@
  */
 #ifdef LUMA_raw
 #define RS 3
-#define PS 4
+#define PS 0
 #else
 #define RS 3
 #define PS 4
@@ -233,8 +233,8 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.6009509220633347
-#define WDP 6.328598556998583
+#define WDT 0.5497916640179802
+#define WDP 6.444822571130129
 #define WDS 1.0
 #else
 #define WD 0
@@ -373,7 +373,7 @@
  */
 #ifdef LUMA_raw
 #define SO 0.0
-#define RO 0.00017181826582406262
+#define RO 0.00015712694478428677
 #define PSO 0.0
 #define ASO 0.0
 #else
@@ -1250,7 +1250,7 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 1.2792563828450831
+#define S 1.176759833661106
 #else
 #define S 0.9446979606199893
 #endif
@@ -1290,7 +1290,7 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 1.5371593065886744
+#define SW 1.3445162203419914
 #else
 #define SW 2.7321222119375816
 #endif
@@ -1309,7 +1309,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.16529053709974606
+#define SS 0.1507379765585897
 #define PST 0
 #define PSS 0.0
 #else
@@ -1425,7 +1425,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 2
-#define WDT 0.11017233027683157
+#define WDT 0.09951745134917687
 #define WDP 5.402102275251726
 #define WDS 1.0
 #else
@@ -1565,7 +1565,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SO 0.0
-#define RO 2.7155247456013373e-05
+#define RO 2.603846182420303e-05
 #define PSO 0.0
 #define ASO 0.0
 #else
