@@ -145,13 +145,15 @@ hdeband: ../LQ/hdeband.glsl
 ../LQ/hdeband.glsl: ../hdeband.glsl
 	./shader_cfg OPTS="RADIUS=4:SPARSITY=0.5:DIRECTIONS=3" $? > $@
 
-optimize: optimums/LQ optimums/DEFAULT optimums/HQ
+optimize: optimums/LQ optimums/DEFAULT optimums/HQ optimums/experimental
 
 optimums/LQ: optimums/LQ/nlmeans/luma optimums/LQ/nlmeans/chroma optimums/LQ/nlmeans/light/luma optimums/LQ/nlmeans/light/chroma optimums/LQ/nlmeans/sharpen_only/luma optimums/LQ/nlmeans/sharpen_only/chroma optimums/LQ/nlmeans/light/sharpen_only/luma optimums/LQ/nlmeans/light/sharpen_only/chroma optimums/LQ/nlmeans/sharpen_denoise/luma optimums/LQ/nlmeans/sharpen_denoise/chroma optimums/LQ/nlmeans/light/sharpen_denoise/luma optimums/LQ/nlmeans/light/sharpen_denoise/chroma 
 
-optimums/DEFAULT: optimums/DEFAULT/nlmeans/luma optimums/DEFAULT/nlmeans/chroma optimums/DEFAULT/nlmeans/light/luma optimums/DEFAULT/nlmeans/light/chroma optimums/DEFAULT/nlmeans/sharpen_only/luma optimums/DEFAULT/nlmeans/sharpen_only/chroma optimums/DEFAULT/nlmeans/light/sharpen_only/luma optimums/DEFAULT/nlmeans/light/sharpen_only/chroma optimums/DEFAULT/nlmeans/sharpen_denoise/luma optimums/DEFAULT/nlmeans/sharpen_denoise/chroma optimums/DEFAULT/nlmeans/light/sharpen_denoise/luma optimums/DEFAULT/nlmeans/light/sharpen_denoise/chroma optimums/experimental/nlmeans_2x/luma 
+optimums/DEFAULT: optimums/DEFAULT/nlmeans/luma optimums/DEFAULT/nlmeans/chroma optimums/DEFAULT/nlmeans/light/luma optimums/DEFAULT/nlmeans/light/chroma optimums/DEFAULT/nlmeans/sharpen_only/luma optimums/DEFAULT/nlmeans/sharpen_only/chroma optimums/DEFAULT/nlmeans/light/sharpen_only/luma optimums/DEFAULT/nlmeans/light/sharpen_only/chroma optimums/DEFAULT/nlmeans/sharpen_denoise/luma optimums/DEFAULT/nlmeans/sharpen_denoise/chroma optimums/DEFAULT/nlmeans/light/sharpen_denoise/luma optimums/DEFAULT/nlmeans/light/sharpen_denoise/chroma 
 
 optimums/HQ: optimums/HQ/nlmeans/luma optimums/HQ/nlmeans/chroma optimums/HQ/nlmeans/light/luma optimums/HQ/nlmeans/light/chroma optimums/HQ/nlmeans/sharpen_only/luma optimums/HQ/nlmeans/sharpen_only/chroma optimums/HQ/nlmeans/light/sharpen_only/luma optimums/HQ/nlmeans/light/sharpen_only/chroma optimums/HQ/nlmeans/sharpen_denoise/luma optimums/HQ/nlmeans/sharpen_denoise/chroma optimums/HQ/nlmeans/light/sharpen_denoise/luma optimums/HQ/nlmeans/light/sharpen_denoise/chroma 
+
+optimums/experimental: optimums/experimental/nlmeans_2x/luma 
 
 # XXX add FSR/FSRCNNX/etc.
 # XXX test against lossy codecs
