@@ -170,7 +170,7 @@ sub optimize(
 	&f, #= function to optimize, takes a list of parameter lists and returns a list of scores
 	:@starts = (Nil,), #= starting points for the values passed to &f
 	:@steps = (Nil,), #= scales the offsets, ideally 0.0 or above
-	:$decay = 0.1, #= ideally 0.0-1.0
+	:$decay = 0.05, #= ideally 0.0-1.0
 	:$rev-decay = 1.5, #= ideally 1.0-2.0
 	:$min-decay = 1e-4, #= exit if decay is lower than this (may be zero)
 	:$max-decay = 10000, #= exit with an error if decay is higher than this
