@@ -173,6 +173,7 @@ sub optimize(
 	:$decay = 0.1, #= ideally 0.0-1.0
 	:$rev-decay = 1.5, #= ideally 1.0-2.0
 	:$min-decay = 1e-4, #= exit if decay is lower than this (may be zero)
+	:$max-decay = 10000, #= exit with an error if decay is higher than this
 	:$samples = 15, #= samples per iteration
 	:$iter = 50 #= exit after this many iterations (may be Inf)
 ) {
@@ -212,6 +213,7 @@ sub optimize(
 		note("Decay: {$decay_factor}");
 
 		last if $decay_factor <= $min-decay;
+		die 'decay exploded' if $decay_factor >= $max-decay;
 	}
 
 	return $optimal;
@@ -421,9 +423,9 @@ sub MAIN(
 
 	my $cfgopts_ = $cfgopts;
 	if $optimum {
-		die 'optimum file "$optimum" does not exist' if not $optimum.IO.e;
 		my $f = $optimum.IO;
 		$f = $_ if $_.e && $optimum-parent given $f.parent.parent.child($f.basename);
+		die 'optimum file "$f" does not exist' if not $f.e;
 		$cfgopts_ ~= ":" ~ $f.slurp.split("\n").grep(none /^$/, /^\#/)[*-1].split("\t")[0];
 	}
 
