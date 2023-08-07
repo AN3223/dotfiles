@@ -175,7 +175,7 @@ sub optimize(
 	:$min-decay = 1e-4, #= exit if decay is lower than this (may be zero)
 	:$max-decay = 10000, #= exit with an error if decay is higher than this
 	:$samples = 15, #= samples per iteration
-	:$iter = 50 #= exit after this many iterations (may be Inf)
+	:$iter = 35 #= exit after this many iterations (may be Inf)
 ) {
 	# replace Nil with defaults
 	my @starts_ = List(@starts.map({ with $_ { $_ } else { 1 } }));
