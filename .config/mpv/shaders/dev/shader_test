@@ -311,31 +311,32 @@ sub find(IO::Path() $f --> Array()) { $f.d ?? dir($f).flatmap(&find) !! ($f) }
 sub MAIN(
 	#= script for testing the SSIM between corrupt->filtered image and the original image
 	*@test-media, #= Files/directories to test on
+	Str :$acorruption = "", #= Anti-corruption type (applied to clean image), NOISE/OUTOPTS/VF
 	Str :$cfgopts = "", #= Arguments passed to the dispatched _cfg script, if dispatched
+	Str :$colorspace = "bt709", #= Colorspace used for everything
+	Str :$corruption = "NOISE=10:10", #= Corruption type, NOISE/OUTOPTS/VF
+	Bool :$eval = False, #= Run eval on --cfgopts, tests every permutation of each list
+	Bool :$force = False, #= Force overwrite the stats file
+	Str :$max = "", #= Optimizer settings: OPTION=START=STEP (all optional, multiple can be chained with colons)
+	Bool :$auto-max = False, #= Pass all floating point --cfgopts to --max
+	Rat() :$max-decay, #= Optimizer decay
+	Int :$max-iter, #= Optimizer iterations
+	Rat() :$max-min-decay, #= Optimizer minimum decay, exits early when the decay falls below this
+	Rat() :$max-rev-decay, #= Optimizer reverse decay
+	Int :$max-samples, #= Optimizer samples per iteration
+	Bool :$no-baseline = False, #= Skip baseline
+	Bool :$no-concat = False, #= Skip concatenation step, very slow but may be necessary for temporal testing
+	Bool :$no-stats = False, #= Skip writing to a stats file (still requires a real --stats-dir)
 	Str :$optimum = "", #= Prepend cfgopts with the first record of the last line of a tab delimited file (ignoring comments and blank lines)
 	Bool :$optimum-parent = True, #= Use dirname(dirname(--optimum))/basename(--optimum) if it exists
-	Str :$shader where *.IO.r = "nlmeans_template", #= Shader used for testing
-	Str :$plane = "LUMA", #= Plane to test on
-	Str :$corruption = "NOISE=10:10", #= Corruption type, NOISE/OUTOPTS/VF
-	Str :$acorruption = "", #= Anti-corruption type (applied to clean image), NOISE/OUTOPTS/VF
-	Str :$vk-device = "vulkan", #= Device name passed to ffmpeg's -init_hw_device option
-	Str :$stats-dir where *.IO.d = "stats", #= Directory where stats will be stored
-	Str :$max = "", #= Optimizer settings: OPTION=START=STEP (all optional, multiple can be chained with colons)
-	Int :$max-iter, #= Optimizer iterations
-	Int :$max-samples, #= Optimizer samples per iteration
-	Rat() :$max-decay, #= Optimizer decay
-	Rat() :$max-rev-decay, #= Optimizer reverse decay
-	Rat() :$max-min-decay, #= Optimizer minimum decay, exits early when the decay falls below this
 	Str :$pix-fmt = "yuv444p", #= Pixel format used for everything
-	Str :$colorspace = "bt709", #= Colorspace used for everything
+	Str :$plane = "LUMA", #= Plane to test on
 	Str :$resolution where /^\d+ ':' \d+$/ = "1080:1080", #= Resolution used for everything
+	Str :$shader where *.IO.r = "nlmeans_template", #= Shader used for testing
+	Str :$stats-dir where *.IO.d = "stats", #= Directory where stats will be stored
 	Str :$tmpdir where *.IO.d = '/dev/shm', #= Directory for temporary files
-	Bool :$no-stats = False, #= Skip writing to a stats file (still requires a real --stats-dir)
 	Bool :$verbose = False, Bool :$v = False, #= Verbose output for debugging
-	Bool :$no-concat = False, #= Skip concatenation step, very slow but may be necessary for temporal testing
-	Bool :$force = False, #= Force overwrite the stats file
-	Bool :$eval = False, #= Run eval on --cfgopts, tests every permutation of each list
-	Bool :$no-baseline = False #= Skip baseline
+	Str :$vk-device = "vulkan" #= Device name passed to ffmpeg's -init_hw_device option
 ) {
 	%gbl<shader verbose vk plane resolution pix-fmt> = $shader, ($verbose || $v), $vk-device, $plane, $resolution, $pix-fmt;
 	%gbl<outopts> = <<-c\:v ffv1 -colorspace "$colorspace" -pix_fmt "$pix-fmt">>;
@@ -430,10 +431,11 @@ sub MAIN(
 	my @flatopts = $cfgopts_.split(/<[=:]>/, :skip-empty); # parse k=v:k=v:k=v:...
 	die 'invalid cfgopts' if @flatopts.elems && not @flatopts.elems %% 2;
 	my @opts = @flatopts[0,2...*].unique(:with({ $^x === $^y && die 'duplicate opt' }));
+	my @values = @flatopts[1,3...*];
 	if $eval && @opts.elems != 0 {
 		use MONKEY-SEE-NO-EVAL;
+		@values .= map(&EVAL);
 
-		my @values = @flatopts[1,3...*].map(&EVAL);
 		@cfgopts = do given @opts.elems {
 			when 1 { @values[0].map({ "@opts[0]=$_" }) }
 			default {
@@ -445,6 +447,12 @@ sub MAIN(
 		@cfgopts = ("");
 	} else {
 		@cfgopts = $cfgopts_;
+	}
+	if $auto-max {
+		for zip(@opts, @values) -> ($opt, $val) {
+			%gbl<max> ~= ":$opt" if +$val ~~ Rat;
+		}
+		%gbl<max> ~~ s/^\://;
 	}
 
 	note("Trying {@cfgopts.elems || 1} permutations...");
