@@ -121,8 +121,8 @@
  */
 #ifdef LUMA_raw
 #define EP 0
-#define BP 0.75
-#define DP 0.25
+#define BP 0.0
+#define DP 0.0
 #else
 #define EP 0
 #define BP 0.0
@@ -213,8 +213,8 @@
 #define WDS 1.0
 #else
 #define WD 0
-#define WDT 0.002713346103131793
-#define WDP 5.692202343435388
+#define WDT 0.0
+#define WDP 0.0
 #define WDS 1.0
 #endif
 
@@ -354,7 +354,7 @@
 #define ASO 0.0
 #else
 #define SO 0.0
-#define RO 0.00015152392427859513
+#define RO 0.0
 #define PSO 0.0
 #define ASO 0.0
 #endif

@@ -56,17 +56,17 @@
  */
 #ifdef LUMA_raw
 #define AS 0
-#define ASF 0.3210768548589939
-#define ASA 0.9397860227779741
-#define ASP 0.7654083023321232
-#define ASS 0.4031301466402857
+#define ASF 0.0
+#define ASA 0.0
+#define ASP 0.0
+#define ASS 0.0
 #define ASI 0
 #else
 #define AS 0
-#define ASF 0.6267063361944475
-#define ASA 1.9701543289754333
-#define ASP 1.0024630095639717
-#define ASS 0.05977279329812535
+#define ASF 0.0
+#define ASA 0.0
+#define ASP 0.0
+#define ASS 0.0
 #define ASI 0
 #endif
 
@@ -123,8 +123,8 @@
  */
 #ifdef LUMA_raw
 #define EP 0
-#define BP 0.75
-#define DP 0.25
+#define BP 0.0
+#define DP 0.0
 #else
 #define EP 0
 #define BP 0.0
@@ -215,8 +215,8 @@
 #define WDS 1.0
 #else
 #define WD 0
-#define WDT 0.002713346103131793
-#define WDP 5.692202343435388
+#define WDT 0.0
+#define WDP 0.0
 #define WDS 1.0
 #endif
 
@@ -356,7 +356,7 @@
 #define ASO 0.0
 #else
 #define SO 0.0
-#define RO 0.00015152392427859513
+#define RO 0.0
 #define PSO 0.0
 #define ASO 0.0
 #endif
