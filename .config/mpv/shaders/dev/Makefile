@@ -202,19 +202,19 @@ optimums/LQ/nlmeans/light/sharpen_only/chroma: optimums/LQ/nlmeans/light/chroma
 	printf '\n' >> $@
 optimums/LQ/nlmeans/sharpen_denoise/luma: optimums/LQ/nlmeans/luma
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --auto-max --max=$(OPT_SHARP_MAX) --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/LQ/nlmeans/sharpen_denoise/chroma: optimums/LQ/nlmeans/chroma
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE)' >> $@
-	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR),$(OPT_NOISE) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
+	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR),$(OPT_NOISE) --auto-max --max=$(OPT_SHARP_MAX) --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/LQ/nlmeans/light/sharpen_denoise/luma: optimums/LQ/nlmeans/light/luma
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT) --auto-max --max=$(OPT_SHARP_MAX) --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/LQ/nlmeans/light/sharpen_denoise/chroma: optimums/LQ/nlmeans/light/chroma
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT)' >> $@
-	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
+	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT) --max=$(OPT_SHARP_MAX) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/DEFAULT/nlmeans/luma:
 	printf '%s\n' '# --corruption=$(OPT_NOISE)' >> $@
@@ -250,19 +250,19 @@ optimums/DEFAULT/nlmeans/light/sharpen_only/chroma: optimums/DEFAULT/nlmeans/lig
 	printf '\n' >> $@
 optimums/DEFAULT/nlmeans/sharpen_denoise/luma: optimums/DEFAULT/nlmeans/luma
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --auto-max --max=$(OPT_SHARP_MAX) --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/DEFAULT/nlmeans/sharpen_denoise/chroma: optimums/DEFAULT/nlmeans/chroma
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE)' >> $@
-	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR),$(OPT_NOISE) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
+	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR),$(OPT_NOISE) --max=$(OPT_SHARP_MAX) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/DEFAULT/nlmeans/light/sharpen_denoise/luma: optimums/DEFAULT/nlmeans/light/luma
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT) --max=$(OPT_SHARP_MAX) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/DEFAULT/nlmeans/light/sharpen_denoise/chroma: optimums/DEFAULT/nlmeans/light/chroma
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT)' >> $@
-	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
+	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT) --max=$(OPT_SHARP_MAX) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/experimental/nlmeans_2x/luma:
 	printf '%s\n' '# --corruption=$(OPT_2X)' >> $@
@@ -302,19 +302,19 @@ optimums/HQ/nlmeans/light/sharpen_only/chroma: optimums/HQ/nlmeans/light/chroma
 	printf '\n' >> $@
 optimums/HQ/nlmeans/sharpen_denoise/luma: optimums/HQ/nlmeans/luma
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE) --max=$(OPT_SHARP_MAX) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/HQ/nlmeans/sharpen_denoise/chroma: optimums/HQ/nlmeans/chroma
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE)' >> $@
-	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR),$(OPT_NOISE) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
+	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR),$(OPT_NOISE) --max=$(OPT_SHARP_MAX) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/HQ/nlmeans/light/sharpen_denoise/luma: optimums/HQ/nlmeans/light/luma
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT)' >> $@
-	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
+	./shader_test --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT) --max=$(OPT_SHARP_MAX) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 optimums/HQ/nlmeans/light/sharpen_denoise/chroma: optimums/HQ/nlmeans/light/chroma
 	printf '%s\n' '# --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT)' >> $@
-	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
+	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT) --max=$(OPT_SHARP_MAX) --auto-max --cfgopts=AS=1 --optimum=$@ --no-baseline --no-stats images/ >> $@
 	printf '\n' >> $@
 
 readme: result_images/clean.png result_images/noise10.png result_images/gblur0625.png result_images/gblur0625noise10.png result_images/nlmeans_noise10.png result_images/nlmeans_sharpen_denoise_gblur0625noise10.png result_images/nlmeans_sharpen_only_gblur0625noise10.png result_images/nlmeans_sharpen_only_gblur0625.png result_images/fsr_gblur0625noise10.png result_images/fsr_gblur0625.png 
