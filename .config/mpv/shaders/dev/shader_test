@@ -452,7 +452,10 @@ sub MAIN(
 	}
 	if $auto-max {
 		for zip(@opts, @values) -> ($opt, $val) {
-			%gbl<max> ~= ":$opt" if +$val ~~ Rat;
+			try {
+				my $num = +$val;
+				%gbl<max> ~= ":$opt" if $num ~~ Rat;
+			}
 		}
 		%gbl<max> ~~ s/^\://;
 	}
