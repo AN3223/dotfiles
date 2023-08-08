@@ -58,9 +58,9 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 2.388149043649354
+#define S 2.256823142114533
 #else
-#define S 3.429313383273088
+#define S 3.4651014497296604
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -98,9 +98,9 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 1.094069218191688
+#define SW 0.9293523385336264
 #else
-#define SW 0.39542772230225753
+#define SW 0.37771294033462954
 #endif
 
 /* Spatial kernel
@@ -117,12 +117,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.2734864573047779
+#define SS 0.24647875197096952
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.256622378915194
+#define SS 0.2640653803822683
 #define PST 0
 #define PSS 0.0
 #endif
@@ -233,8 +233,8 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.2056156513459921
-#define WDP 1.7334801422549924
+#define WDT 0.22765800117786558
+#define WDP 1.467103784813098
 #define WDS 1.0
 #else
 #define WD 0
@@ -1260,9 +1260,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 2.6595798967726805
+#define S 3.0050888013675934
 #else
-#define S 0.6364256594317811
+#define S 0.6623870976219048
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -1300,9 +1300,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.8385307242201727
+#define SW 0.6769869156640409
 #else
-#define SW 0.4142040784228221
+#define SW 0.3991636398251298
 #endif
 
 /* Spatial kernel
@@ -1319,12 +1319,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.1676609589539597
+#define SS 1.2554973264946998
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.10760532016810886
+#define SS 0.1097208326884282
 #define PST 0
 #define PSS 0.0
 #endif
@@ -1435,7 +1435,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 2
-#define WDT 0.41203597031423234
+#define WDT 0.502042050326508
 #define WDP 0.0
 #define WDS 1.0
 #else

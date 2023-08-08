@@ -33,9 +33,9 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 1.9784059002034782
+#define S 1.872561669137945
 #else
-#define S 1.7526946927201028
+#define S 2.5926019903400785
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -54,17 +54,17 @@
  */
 #ifdef LUMA_raw
 #define AS 2
-#define ASF 0.6136748461866945
-#define ASA 0.392907506861101
-#define ASP 1.053599756533596
-#define ASS 0.26307693673929483
+#define ASF 0.47570806611249505
+#define ASA 0.5460997045681817
+#define ASP 0.8825288705870723
+#define ASS 0.25960322737255886
 #define ASI 0
 #else
 #define AS 2
-#define ASF 1.3809938225899596
-#define ASA 0.3449629908227724
-#define ASP 1.319230847115601
-#define ASS 0.18152345153434157
+#define ASF 0.7378822528474643
+#define ASA 0.3992499968020165
+#define ASP 1.0545415537314418
+#define ASS 0.17013074808668358
 #define ASI 0
 #endif
 
@@ -73,9 +73,9 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.8928278804945051
+#define SW 0.8763500337749812
 #else
-#define SW 0.3085462965744602
+#define SW 0.3510234214088439
 #endif
 
 /* Spatial kernel
@@ -92,12 +92,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.6240424084920283
+#define SS 0.6058820526580819
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.18390587118603352
+#define SS 0.06607484662139165
 #define PST 0
 #define PSS 0.0
 #endif
@@ -208,8 +208,8 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.3320175719567657
-#define WDP 6.227182412670078
+#define WDT 0.3718639331879626
+#define WDP 3.8371029358277458
 #define WDS 1.0
 #else
 #define WD 0
@@ -349,7 +349,7 @@
  */
 #ifdef LUMA_raw
 #define SO 0.0
-#define RO 3.801260188599571e-05
+#define RO 8.975619722099806e-05
 #define PSO 0.0
 #define ASO 0.0
 #else
