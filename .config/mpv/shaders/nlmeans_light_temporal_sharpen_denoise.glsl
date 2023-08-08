@@ -58,9 +58,9 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 1.0401287301144733
+#define S 0.9704011289550887
 #else
-#define S 1.115466340253439
+#define S 1.284802413412768
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -98,9 +98,9 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.797138954448541
+#define SW 1.1829692918889838
 #else
-#define SW 0.5597097537988504
+#define SW 0.9830055323241805
 #endif
 
 /* Spatial kernel
@@ -117,12 +117,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.22500471470540293
+#define SS 0.15111674283088156
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.3205401044220334
+#define SS 0.2651705654571043
 #define PST 0
 #define PSS 0.0
 #endif
@@ -233,8 +233,8 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.15079940518070764
-#define WDP 2.6511874073263892
+#define WDT 0.37192907612684123
+#define WDP 1.1710245656468081
 #define WDS 1.0
 #else
 #define WD 0
@@ -1175,7 +1175,7 @@ vec4 hook()
 
 #if AS // sharpening
 	 val usm = AS_input - sum_as/max(val(EPSILON),total_weight_as); 
-	 usm = POW(max(val(EPSILON), usm), ASP); 
+	 usm = POW(usm, ASP); 
 	 usm *= ASAK(abs((AS_base + usm - 0.5) / 1.5) * ASA); 
 	 usm *= ASF; 
 	 result = AS_base + usm; 
@@ -1251,9 +1251,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 3.796273740699963
+#define S 2.3209671265929095
 #else
-#define S 0.8747972077640868
+#define S 0.9202617944443028
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -1272,17 +1272,17 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.5137351939767913
-#define ASA 0.5076419716148564
-#define ASP 0.8536689868512536
-#define ASS 0.27596804598832075
+#define ASF 0.5086739255492942
+#define ASA 0.31275152511601906
+#define ASP 0.8967716872689236
+#define ASS 0.18095933281462365
 #define ASI 0
 #else
 #define AS 1
-#define ASF 0.5500774705849915
-#define ASA 0.35824536722122413
-#define ASP 1.0941824671693872
-#define ASS 0.21515727314050448
+#define ASF 0.25145572259112947
+#define ASA 0.6193779567609332
+#define ASP 0.9488861029908471
+#define ASS 0.2883199005018489
 #define ASI 0
 #endif
 
@@ -1291,9 +1291,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.9133366599234516
+#define SW 0.4032826484705145
 #else
-#define SW 2.5858187680239895
+#define SW 2.8790668517067086
 #endif
 
 /* Spatial kernel
@@ -1310,12 +1310,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.3859596068712816
+#define SS 1.359221886288635
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.06000310943932529
+#define SS 0.07381568396936644
 #define PST 0
 #define PSS 0.0
 #endif
@@ -1426,7 +1426,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 2
-#define WDT 0.9816431360496345
+#define WDT 0.6046858593096207
 #define WDP 0.0
 #define WDS 1.0
 #else
@@ -2369,7 +2369,7 @@ vec4 hook()
 
 #if AS // sharpening
 	val usm = AS_input - sum_as/max(val(EPSILON),total_weight_as);
-	usm = POW(max(val(EPSILON), usm), ASP);
+	usm = POW(usm, ASP);
 	usm *= ASAK(abs((AS_base + usm - 0.5) / 1.5) * ASA);
 	usm *= ASF;
 	result = AS_base + usm;

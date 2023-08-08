@@ -35,9 +35,9 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 3.4991037209161173
+#define S 3.985389905112585
 #else
-#define S 5.263544097643308
+#define S 5.9774849042414475
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -56,17 +56,17 @@
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.6216697134586835
-#define ASA 0.49102562050483095
-#define ASP 1.049123776540549
-#define ASS 0.18635346121855847
+#define ASF 0.5618865383186779
+#define ASA 0.37543991052917125
+#define ASP 1.0346477564807406
+#define ASS 0.14623987017801923
 #define ASI 0
 #else
 #define AS 1
-#define ASF 0.14738620663837443
-#define ASA 0.6377399018656973
-#define ASP 0.9543024968835275
-#define ASS 0.16356844604637952
+#define ASF 0.5160843087760428
+#define ASA 0.8795111677917861
+#define ASP 0.999602948902985
+#define ASS 0.19059479532494678
 #define ASI 0
 #endif
 
@@ -75,9 +75,9 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.532877430593227
+#define SW 0.6156079480784572
 #else
-#define SW 0.5569005171353256
+#define SW 0.4033871153137032
 #endif
 
 /* Spatial kernel
@@ -94,12 +94,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.5097356493676055
+#define SS 0.4588371775482765
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.32000266718762815
+#define SS 0.2967414571238719
 #define PST 0
 #define PSS 0.0
 #endif
@@ -210,8 +210,8 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.5770508944651658
-#define WDP 5.044087912591963
+#define WDT 0.6247165694357121
+#define WDP 4.878158121839962
 #define WDS 1.0
 #else
 #define WD 0
@@ -347,7 +347,7 @@
  * RO: range kernel (takes patch differences)
  */
 #ifdef LUMA_raw
-#define RO 0.00010685048620921775
+#define RO 0.0001241405964158546
 #else
 #define RO 0.0
 #endif
@@ -1153,7 +1153,7 @@ vec4 hook()
 
 #if AS // sharpening
 	val usm = AS_input - sum_as/max(val(EPSILON),total_weight_as);
-	usm = POW(max(val(EPSILON), usm), ASP);
+	usm = POW(usm, ASP);
 	usm *= ASAK(abs((AS_base + usm - 0.5) / 1.5) * ASA);
 	usm *= ASF;
 	result = AS_base + usm;
