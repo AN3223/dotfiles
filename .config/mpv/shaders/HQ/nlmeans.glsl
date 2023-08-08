@@ -367,21 +367,12 @@
  *
  * Values of 0.0 mean no effect, higher values increase the effect.
  *
- * SO: spatial kernel
  * RO: range kernel (takes patch differences)
- * ASO: adaptive sharpening kernel
- * PSO: intra-patch spatial kernel
  */
 #ifdef LUMA_raw
-#define SO 0.0
 #define RO 0.00016621676891290888
-#define PSO 0.0
-#define ASO 0.0
 #else
-#define SO 0.0
 #define RO 9.773746446023492e-05
-#define PSO 0.0
-#define ASO 0.0
 #endif
 
 /* Sampling method
@@ -792,7 +783,7 @@ float spatial_r(vec3 v)
 {
 	 v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size); 
 	 v.z *= TD; 
-	 return SK(abs(length(v) - max(EPSILON, SO))*SS); 
+	 return SK(length(v)*SS); 
 }
 #else
 #define spatial_r(v) (1)
@@ -803,12 +794,12 @@ float spatial_r(vec3 v)
 float spatial_as(vec3 v)
 {
 	 v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size); 
-	 return ASK(abs(length(v) - max(EPSILON, ASO))*ASS) * int(v.z == 0); 
+	 return ASK(length(v)*ASS) * int(v.z == 0); 
 }
 #endif
 
 #if PST && P >= PST
-#define spatial_p(v) PSK(abs(length(v) - max(EPSILON, PSO))*PSS)
+#define spatial_p(v) PSK(length(v)*PSS)
 #else
 #define spatial_p(v) (1)
 #endif
@@ -1567,21 +1558,12 @@ vec4 hook()
  *
  * Values of 0.0 mean no effect, higher values increase the effect.
  *
- * SO: spatial kernel
  * RO: range kernel (takes patch differences)
- * ASO: adaptive sharpening kernel
- * PSO: intra-patch spatial kernel
  */
 #ifdef LUMA_raw
-#define SO 0.0
 #define RO 2.603846182420303e-05
-#define PSO 0.0
-#define ASO 0.0
 #else
-#define SO 0.0
 #define RO 0.0001185513854530406
-#define PSO 0.0
-#define ASO 0.0
 #endif
 
 /* Sampling method
@@ -1992,7 +1974,7 @@ float spatial_r(vec3 v)
 {
 	v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size);
 	v.z *= TD;
-	return SK(abs(length(v) - max(EPSILON, SO))*SS);
+	return SK(length(v)*SS);
 }
 #else
 #define spatial_r(v) (1)
@@ -2003,12 +1985,12 @@ float spatial_r(vec3 v)
 float spatial_as(vec3 v)
 {
 	v.xy += 0.5 - fract(HOOKED_pos*HOOKED_size);
-	return ASK(abs(length(v) - max(EPSILON, ASO))*ASS) * int(v.z == 0);
+	return ASK(length(v)*ASS) * int(v.z == 0);
 }
 #endif
 
 #if PST && P >= PST
-#define spatial_p(v) PSK(abs(length(v) - max(EPSILON, PSO))*PSS)
+#define spatial_p(v) PSK(length(v)*PSS)
 #else
 #define spatial_p(v) (1)
 #endif
