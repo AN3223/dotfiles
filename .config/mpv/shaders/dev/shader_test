@@ -267,7 +267,7 @@ sub corrupt(Str $name, Str $corruptions, Bool $no-concat) {
 	my Str @pre-vf;
 	my Callable @vf;
 	my @outopts = |%gbl<outopts>;
-	for $corruptions.split(',') -> $corruption {
+	for $corruptions.split(/<!after '\\'> ',' /) -> $corruption {
 		given $corruption.split('=') {
 		when $_[0] eq "NOISE" { # NOISE=NOISE_LEVEL:REALIZATIONS
 			my ($noise, $realizations_) = $_[1].split(':');
@@ -418,7 +418,7 @@ sub MAIN(
 		my $baseline = avgssim(%tmp<corrupt>.map({
 			run(<<$ffmpeg -i "$_">>, |%gbl<media>, <<-lavfi "scale={%gbl<resolution>},ssim=-">>, |%gbl<outopts>, <-f null ->, :out).out.slurp(:close)
 		}).join("\n"));
-		stats "BASELINE=$corruption", $baseline;
+		stats "# BASELINE=$corruption", $baseline;
 	}
 
 	my $cfgopts_ = $cfgopts;
