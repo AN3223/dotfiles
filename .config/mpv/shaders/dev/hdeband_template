@@ -45,6 +45,13 @@
 #define SI 200.0
 #endif
 
+// Higher numbers reduce blur for shorter runs
+#ifdef LUMA_raw
+#define SR 1.0
+#else
+#define SR 1.0
+#endif
+
 // Starting weight, lower values give less weight to the input image
 #ifdef LUMA_raw
 #define SW 0.15
@@ -103,6 +110,7 @@
 #define val_packed val
 #define val_pack(v) (v)
 #define val_unpack(v) (v)
+#define MAP(f,param) f(param)
 #elif defined(CHROMA_raw)
 #define val vec2
 #define val_swizz(v) (v.xy)
@@ -110,6 +118,7 @@
 #define val_packed uint
 #define val_pack(v) packUnorm2x16(v)
 #define val_unpack(v) unpackUnorm2x16(v)
+#define MAP(f,param) vec2(f(param.x), f(param.y))
 #else
 #define val vec3
 #define val_swizz(v) (v.xyz)
@@ -117,6 +126,7 @@
 #define val_packed val
 #define val_pack(v) (v)
 #define val_unpack(v) (v)
+#define MAP(f,param) vec3(f(param.x), f(param.y), f(param.z))
 #endif
 
 vec4 poi_ = HOOKED_texOff(0);
@@ -170,6 +180,7 @@ vec4 hook()
 		val prev_was_run = val(0);
 		val prev_si_weight = val(1);
 		val not_done = val(1);
+		val run = val(1);
 		for (int i = 1; i <= RADIUS; i++) {
 			float sparsity = floor(i * SPARSITY);
 			val px = val_swizz(HOOKED_texOff((i + sparsity) * direction));
@@ -190,12 +201,13 @@ vec4 hook()
 
 			weight *= prev_si_weight = gaussian(abs(poi - px) * max(0.0, SI));
 
+			weight *= gaussian((run += is_run) * SR);
+
 			sum += prev_px * weight * not_done;
 			total_weight += weight * not_done;
 
-			weight = ceil(min(weight, val(1)));
-			prev_px = TERNARY(weight, prev_px, px);
-			prev_was_run = weight;
+			prev_px = TERNARY(is_run, prev_px, px);
+			prev_was_run = is_run;
 		}
 	}
 
