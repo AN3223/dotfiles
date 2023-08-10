@@ -179,10 +179,11 @@ vec4 hook()
 			not_done *= step(val(1), prev_was_run + is_run);
 
 			// consider skipped pixels as runs if their neighbors are both runs
-			float prev_sparsity = sparsity - floor((i - 1) * SPARSITY);
-			float prev_weight = gaussian(length((i - 1) * direction) * max(0.0, S));
-			val weight = val(gaussian(length(i * direction) * max(0.0, S)));
-			weight = is_run * weight + is_run * prev_weight * prev_sparsity;
+			float sparsity_delta = sparsity - floor((i - 1) * SPARSITY);
+			float prev_sparsity = floor((i - 1) * SPARSITY);
+			float prev_weight = gaussian(length((i - 1 + prev_sparsity) * direction) * max(0.0, S));
+			val weight = val(gaussian(length((i + sparsity) * direction) * max(0.0, S)));
+			weight = is_run * weight + is_run * prev_weight * sparsity_delta;
 
 			// run's 2nd pixel has weight increased to compensate for 1st pixel's weight of 0
 			weight += prev_weight * prev_si_weight * NOT(prev_was_run);
