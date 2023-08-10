@@ -173,7 +173,6 @@ sub optimize(
 	:$decay = 0.05, #= ideally 0.0-1.0
 	:$rev-decay = 1.5, #= ideally 1.0-2.0
 	:$min-decay = 1e-4, #= exit if decay is lower than this (may be zero)
-	:$max-decay = 10000, #= exit with an error if decay is higher than this
 	:$samples = 15, #= samples per iteration
 	:$iter = 35 #= exit after this many iterations (may be Inf)
 ) {
@@ -197,7 +196,7 @@ sub optimize(
 		@params = @params >>+<< (@params >>*<< @steps_m >>*<< @off_factor);
 
 		my @results = &f(@params).sort(*.value);
-		if @results[*-1].value < $optimal.value {
+		if @results[*-1].value <= $optimal.value {
 			$decay_factor *= $decay;
 		} else {
 			$decay_factor *= $rev-decay;
@@ -213,7 +212,6 @@ sub optimize(
 		note("Decay: {$decay_factor}");
 
 		last if $decay_factor <= $min-decay;
-		die 'decay exploded' if $decay_factor >= $max-decay;
 	}
 
 	return $optimal;
