@@ -167,32 +167,34 @@ vec4 hook()
 		}
 
 		val prev_px = poi;
-		val prev_weight = val(0);
+		val prev_was_run = val(0);
+		val prev_si_weight = val(1);
 		val not_done = val(1);
 		for (int i = 1; i <= RADIUS; i++) {
 			float sparsity = floor(i * SPARSITY);
 			val px = val_swizz(HOOKED_texOff((i + sparsity) * direction));
-			val weight = step(abs(prev_px - px), val(TOLERANCE));
+			val is_run = step(abs(prev_px - px), val(TOLERANCE));
 
 			// stop blurring after discovering a 1px run
-			not_done *= step(val(1), prev_weight + weight);
+			not_done *= step(val(1), prev_was_run + is_run);
 
 			// consider skipped pixels as runs if their neighbors are both runs
-			float new_sparsity = sparsity - floor((i - 1) * SPARSITY);
-			weight = weight * gaussian(length(i * direction) * max(0.0, S))
-				+ weight * new_sparsity * gaussian(length((i - 1) * direction) * max(0.0, S));
+			float prev_sparsity = sparsity - floor((i - 1) * SPARSITY);
+			float prev_weight = gaussian(length((i - 1) * direction) * max(0.0, S));
+			val weight = val(gaussian(length(i * direction) * max(0.0, S)));
+			weight = is_run * weight + is_run * prev_weight * prev_sparsity;
 
 			// run's 2nd pixel has weight increased to compensate for 1st pixel's weight of 0
-			weight += gaussian(length((i - 1) * direction) * max(0.0, S)) * NOT(prev_weight);
+			weight += prev_weight * prev_si_weight * NOT(prev_was_run);
 
-			weight *= gaussian(abs(poi - px) * max(0.0, SI));
+			weight *= prev_si_weight = gaussian(abs(poi - px) * max(0.0, SI));
 
 			sum += prev_px * weight * not_done;
 			total_weight += weight * not_done;
 
 			weight = ceil(min(weight, val(1)));
 			prev_px = TERNARY(weight, prev_px, px);
-			prev_weight = weight;
+			prev_was_run = weight;
 		}
 	}
 
