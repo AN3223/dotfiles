@@ -182,8 +182,8 @@ vec4 hook()
 			weight = weight * gaussian(length(i * direction) * max(0.0, S))
 				+ weight * new_sparsity * gaussian(length((i - 1) * direction) * max(0.0, S));
 
-			// run's 2nd pixel has weight doubled to compensate for 1st pixel's weight of 0
-			weight += weight * NOT(prev_weight);
+			// run's 2nd pixel has weight increased to compensate for 1st pixel's weight of 0
+			weight += gaussian(length((i - 1) * direction) * max(0.0, S)) * NOT(prev_weight);
 
 			weight *= gaussian(abs(poi - px) * max(0.0, SI));
 
