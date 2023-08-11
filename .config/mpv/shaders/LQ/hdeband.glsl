@@ -88,6 +88,13 @@
 #define TOLERANCE 0.001
 #endif
 
+// 0 for avg, 1 for min, 2 for max
+#ifdef LUMA_raw
+#define M 0
+#else
+#define M 0
+#endif
+
 // Shader code
 
 #define gaussian(x) exp(-1 * (x) * (x))
@@ -160,8 +167,14 @@ val poi = val_swizz(poi_);
 
 vec4 hook()
 {
-	val sum = poi * SW;
+	val sum = val(poi * SW);
+#if M == 1 // min
+	val total_weight = val(RADIUS);
+#elif M == 2 // max
+	val total_weight = val(0);
+#else // avg
 	val total_weight = val(SW);
+#endif
 
 	for (int dir = 0; dir < DIRECTIONS; dir++) {
 		vec2 direction;
@@ -181,6 +194,8 @@ vec4 hook()
 		val prev_weight = val(1);
 		val not_done = val(1);
 		val run = val(1);
+		val dir_sum = poi * SW;
+		val dir_total_weight = val(SW);
 		for (int i = 1; i <= RADIUS; i++) {
 			float sparsity = floor(i * SPARSITY);
 			val px = val_swizz(HOOKED_texOff((i + sparsity) * direction));
@@ -203,13 +218,23 @@ vec4 hook()
 
 			weight *= gaussian((run += is_run) * SR);
 
-			sum += prev_px * weight * not_done;
-			total_weight += weight * not_done;
+			dir_sum += prev_px * weight * not_done;
+			dir_total_weight += weight * not_done;
 
 			prev_px = TERNARY(is_run, prev_px, px);
 			prev_was_run = is_run;
 			prev_weight = weight;
 		}
+#if M == 1
+		sum = TERNARY(step(dir_total_weight, total_weight), dir_sum, sum);
+		total_weight = min(dir_total_weight, total_weight);
+#elif M == 2
+		sum = TERNARY(step(total_weight, dir_total_weight), dir_sum, sum);
+		total_weight = max(dir_total_weight, total_weight);
+#else
+		sum += dir_sum;
+		total_weight += dir_total_weight;
+#endif
 	}
 
 	val result = sum / total_weight;
