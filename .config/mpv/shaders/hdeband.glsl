@@ -33,30 +33,30 @@
 
 // Lower numbers increase blur over longer distances
 #ifdef LUMA_raw
-#define S 0.10158558614528407
+#define S 0.10330196740494152
 #else
-#define S 0.013580071253928426
+#define S 0.013737257215426677
 #endif
 
 // Lower numbers blur more when intensity varies more between bands
 #ifdef LUMA_raw
-#define SI 16.52122892457625
+#define SI 15.844708009784839
 #else
-#define SI 12.671519886855398
+#define SI 12.674681201819807
 #endif
 
 // Higher numbers reduce blur for shorter runs
 #ifdef LUMA_raw
-#define SR 0.006661158613779903
+#define SR 0.006936107773303968
 #else
-#define SR 0.0431079473967431
+#define SR 0.039861318290854694
 #endif
 
 // Starting weight, lower values give less weight to the input image
 #ifdef LUMA_raw
-#define SW 1.1179571495156628
+#define SW 1.1092254840622187
 #else
-#define SW 0.07241915915244866
+#define SW 0.07555629344766751
 #endif
 
 // Bigger numbers search further, but slower
@@ -178,7 +178,7 @@ vec4 hook()
 
 		val prev_px = poi;
 		val prev_was_run = val(0);
-		val prev_si_weight = val(1);
+		val prev_weight = val(1);
 		val not_done = val(1);
 		val run = val(1);
 		for (int i = 1; i <= RADIUS; i++) {
@@ -192,14 +192,14 @@ vec4 hook()
 			// consider skipped pixels as runs if their neighbors are both runs
 			float sparsity_delta = sparsity - floor((i - 1) * SPARSITY);
 			float prev_sparsity = floor((i - 1) * SPARSITY);
-			float prev_weight = gaussian(length((i - 1 + prev_sparsity) * direction) * max(0.0, S));
 			val weight = val(gaussian(length((i + sparsity) * direction) * max(0.0, S)));
 			weight = is_run * weight + is_run * prev_weight * sparsity_delta;
 
 			// run's 2nd pixel has weight increased to compensate for 1st pixel's weight of 0
-			weight += prev_weight * prev_si_weight * NOT(prev_was_run);
+			// XXX doesn't account for sparsity
+			weight += prev_weight * NOT(prev_was_run);
 
-			weight *= prev_si_weight = gaussian(abs(poi - px) * max(0.0, SI));
+			weight *= gaussian(abs(poi - px) * max(0.0, SI));
 
 			weight *= gaussian((run += is_run) * SR);
 
@@ -208,6 +208,7 @@ vec4 hook()
 
 			prev_px = TERNARY(is_run, prev_px, px);
 			prev_was_run = is_run;
+			prev_weight = weight;
 		}
 	}
 
