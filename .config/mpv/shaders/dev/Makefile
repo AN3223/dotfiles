@@ -45,9 +45,11 @@ NLM_TEMPORAL_DESC=Very experimental and buggy, limited to vo=gpu-next.
 NLM_TEMPORAL=T_FRAME_LIMIT=2:T_RES=3840x3840
 NLM_TEMPORAL_LUMA=T=2:$(NLM_NO_ROTATE)
 
+NLM_LGC_DESC=Luma-guided chroma upscaling
+
 NLM_LIGHT_DESC=Tuned for light noise.
 
-nlmeans_default: ../nlmeans.glsl ../nlmeans_light.glsl ../nlmeans_temporal.glsl ../nlmeans_light_temporal.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_light_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl ../nlmeans_light_sharpen_only.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../nlmeans_light_temporal_sharpen_denoise.glsl 
+nlmeans_default: ../nlmeans.glsl ../nlmeans_light.glsl ../nlmeans_temporal.glsl ../nlmeans_light_temporal.glsl ../nlmeans_sharpen_denoise.glsl ../nlmeans_light_sharpen_denoise.glsl ../nlmeans_sharpen_only.glsl ../nlmeans_light_sharpen_only.glsl ../nlmeans_temporal_sharpen_denoise.glsl ../nlmeans_light_temporal_sharpen_denoise.glsl ../nlmeans_lgc.glsl 
 
 ../nlmeans.glsl: nlmeans_template
 	./shader_cfg nlmeans_template OPTS="`./optimums/latest.sh optimums/DEFAULT/nlmeans/chroma`" OPTS_LUMA="`./optimums/latest.sh optimums/DEFAULT/nlmeans/luma`" > $@
@@ -69,6 +71,8 @@ nlmeans_default: ../nlmeans.glsl ../nlmeans_light.glsl ../nlmeans_temporal.glsl 
 	./shader_cfg DESC="$@: $(NLM_SHARPEN_ONLY_DESC)" OPTS="`./optimums/latest.sh optimums/DEFAULT/nlmeans/sharpen_only/chroma`" OPTS_LUMA="`./optimums/latest.sh optimums/DEFAULT/nlmeans/sharpen_only/luma`" nlmeans_template > $@
 ../nlmeans_light_sharpen_only.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_SHARPEN_ONLY_DESC) $(NLM_LIGHT_DESC)" OPTS="`./optimums/latest.sh optimums/DEFAULT/nlmeans/light/sharpen_only/chroma`" OPTS_LUMA="`./optimums/latest.sh optimums/DEFAULT/nlmeans/light/sharpen_only/luma`" nlmeans_template > $@
+../nlmeans_lgc.glsl: nlmeans_template
+	./shader_cfg DESC="$@: $(NLM_LGC_DESC)" OPTS="`./optimums/latest.sh optimums/DEFAULT/nlmeans/lgc`" nlmeans_template > $@
 
 nlmeans_lq: ../LQ/nlmeans.glsl ../LQ/nlmeans_light.glsl ../LQ/nlmeans_temporal.glsl ../LQ/nlmeans_light_temporal.glsl ../LQ/nlmeans_sharpen_denoise.glsl ../LQ/nlmeans_light_sharpen_denoise.glsl ../LQ/nlmeans_sharpen_only.glsl ../LQ/nlmeans_light_sharpen_only.glsl ../LQ/nlmeans_temporal_sharpen_denoise.glsl ../LQ/nlmeans_light_temporal_sharpen_denoise.glsl 
 
@@ -120,19 +124,13 @@ NLM_HQ_DESC=Slow, but higher quality.
 ../HQ/nlmeans_light_temporal_sharpen_denoise.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_HQ_DESC) $(NLM_TEMPORAL_DESC) $(NLM_SHARPEN_DENOISE_DESC) $(NLM_LIGHT_DESC)" OPTS="$(NLM_TEMPORAL):`./optimums/latest.sh optimums/HQ/nlmeans/light/sharpen_denoise/chroma`" OPTS_LUMA="$(NLM_TEMPORAL_LUMA):`./optimums/latest.sh optimums/HQ/nlmeans/light/sharpen_denoise/luma`" nlmeans_template > $@
 
-nlmeans_experimental: experimental/nlmeans_2x.glsl experimental/nlmeans_lgc.glsl experimental/nlmeans_ffmpeg_eqv.glsl
+nlmeans_experimental: experimental/nlmeans_2x.glsl experimental/nlmeans_ffmpeg_eqv.glsl
 
 NLM_2X_DESC=Experimental upscaler
 NLM_2X_LUMA=`./optimums/latest.sh optimums/experimental/nlmeans_2x/luma`
 
 experimental/nlmeans_2x.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_2X_DESC)" OPTS="$(NLM_2X_LUMA)" nlmeans_template > $@
-
-NLM_LGC_DESC=Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
-NLM_LGC=`./optimums/latest.sh optimums/experimental/nlmeans_lgc/chroma`
-
-experimental/nlmeans_lgc.glsl: nlmeans_template ../LQ/nlmeans.glsl
-	./shader_cfg DESC="$@: $(NLM_LGC_DESC)" OPTS="$(NLM_LGC)" nlmeans_template > $@
 
 NLM_FFMPEG_EQV_DESC=Should be roughly equivalent to ffmpeg's -vf=nlmeans
 NLM_FFMPEG_EQV=S=0.5:P=7:R=15:SW=1.0:RS=0:PS=0:WD=0:RI=0:RFI=0:RO=0:SST=0:GI=0:GC=0:G=0
@@ -280,7 +278,7 @@ optimums/HQ/nlmeans/light/sharpen_denoise/chroma: optimums/HQ/nlmeans/light/chro
 optimums/experimental/nlmeans_2x/luma:
 	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats images/ >> $@
 	@printf '\n' >> $@
-optimums/experimental/nlmeans_lgc/chroma:
+optimums/DEFAULT/nlmeans/lgc:
 	./shader_test --plane=CHROMA --corruption=$(OPT_YUV420) --auto-max --optimum=$@ --no-stats images/ >> $@
 	@printf '\n' >> $@
 
