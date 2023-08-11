@@ -31,25 +31,32 @@
 
 // User variables
 
-// Higher numbers increase blur over longer distances
+// Lower numbers increase blur over longer distances
 #ifdef LUMA_raw
-#define S 5.333
+#define S 0.1410861459983024
 #else
-#define S 5.333
+#define S -0.11592549932625312
 #endif
 
-// Higher numbers blur more when intensity varies more between bands
+// Lower numbers blur more when intensity varies more between bands
 #ifdef LUMA_raw
-#define SI 0.005
+#define SI 15.3643721519193
 #else
-#define SI 0.005
+#define SI 8.400290465366002
+#endif
+
+// Higher numbers reduce blur for shorter runs
+#ifdef LUMA_raw
+#define SR 0.002859247457646738
+#else
+#define SR 0.010709409251562968
 #endif
 
 // Starting weight, lower values give less weight to the input image
 #ifdef LUMA_raw
-#define SW 0.15
+#define SW 0.00484304297133711
 #else
-#define SW 0.15
+#define SW 0.05184080933792042
 #endif
 
 // Bigger numbers search further, but slower
@@ -61,9 +68,9 @@
 
 // Bigger numbers search further, but less accurate
 #ifdef LUMA_raw
-#define SPARSITY 0.5
+#define SPARSITY 0.0
 #else
-#define SPARSITY 0.5
+#define SPARSITY 0.0
 #endif
 
 // Bigger numbers search in more directions, slower (max 8)
@@ -103,6 +110,7 @@
 #define val_packed val
 #define val_pack(v) (v)
 #define val_unpack(v) (v)
+#define MAP(f,param) f(param)
 #elif defined(CHROMA_raw)
 #define val vec2
 #define val_swizz(v) (v.xy)
@@ -110,6 +118,7 @@
 #define val_packed uint
 #define val_pack(v) packUnorm2x16(v)
 #define val_unpack(v) unpackUnorm2x16(v)
+#define MAP(f,param) vec2(f(param.x), f(param.y))
 #else
 #define val vec3
 #define val_swizz(v) (v.xyz)
@@ -117,9 +126,8 @@
 #define val_packed val
 #define val_pack(v) (v)
 #define val_unpack(v) (v)
+#define MAP(f,param) vec3(f(param.x), f(param.y), f(param.z))
 #endif
-
-const float si_scale = 1.0/float(SI);
 
 vec4 poi_ = HOOKED_texOff(0);
 val poi = val_swizz(poi_);
@@ -169,35 +177,37 @@ vec4 hook()
 		}
 
 		val prev_px = poi;
-		val prev_weight = val(0);
+		val prev_was_run = val(0);
+		val prev_si_weight = val(1);
 		val not_done = val(1);
+		val run = val(1);
 		for (int i = 1; i <= RADIUS; i++) {
 			float sparsity = floor(i * SPARSITY);
 			val px = val_swizz(HOOKED_texOff((i + sparsity) * direction));
-			val weight = step(abs(prev_px - px), val(TOLERANCE));
+			val is_run = step(abs(prev_px - px), val(TOLERANCE));
 
 			// stop blurring after discovering a 1px run
-			not_done *= step(val(1), prev_weight + weight);
+			not_done *= step(val(1), prev_was_run + is_run);
 
 			// consider skipped pixels as runs if their neighbors are both runs
-			float new_sparsity = sparsity - floor((i - 1) * SPARSITY);
-			const float s_scale = 1.0 / S;
-			weight = weight * gaussian(length(i * direction) * s_scale)
-				+ weight * new_sparsity * gaussian(length((i - 1) * direction) * s_scale);
+			float sparsity_delta = sparsity - floor((i - 1) * SPARSITY);
+			float prev_sparsity = floor((i - 1) * SPARSITY);
+			float prev_weight = gaussian(length((i - 1 + prev_sparsity) * direction) * max(0.0, S));
+			val weight = val(gaussian(length((i + sparsity) * direction) * max(0.0, S)));
+			weight = is_run * weight + is_run * prev_weight * sparsity_delta;
 
-			// run's 2nd pixel has weight doubled to compensate for 1st pixel's weight of 0
-			weight += weight * NOT(prev_weight);
+			// run's 2nd pixel has weight increased to compensate for 1st pixel's weight of 0
+			weight += prev_weight * prev_si_weight * NOT(prev_was_run);
 
-			weight *= gaussian(abs(poi - px) * si_scale);
+			weight *= prev_si_weight = gaussian(abs(poi - px) * max(0.0, SI));
 
-			weight *= 1 - step(abs(poi - px), val(TOLERANCE)) * (1 - SW);
+			weight *= gaussian((run += is_run) * SR);
 
 			sum += prev_px * weight * not_done;
 			total_weight += weight * not_done;
 
-			weight = ceil(min(weight, val(1)));
-			prev_px = TERNARY(weight, prev_px, px);
-			prev_weight = weight;
+			prev_px = TERNARY(is_run, prev_px, px);
+			prev_was_run = is_run;
 		}
 	}
 
