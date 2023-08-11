@@ -45,9 +45,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 11.66
+#define S 2.4537705008944264
 #else
-#define S 11.66
+#define S 2.4537705008944264
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -85,9 +85,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.75
+#define SW 1.5962518380786634
 #else
-#define SW 0.75
+#define SW 1.5962518380786634
 #endif
 
 /* Spatial kernel
@@ -104,12 +104,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.0
+#define SS 0.41797155228906285
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.0
+#define SS 0.41797155228906285
 #define PST 0
 #define PSS 0.0
 #endif
@@ -172,10 +172,10 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define P 3
-#define R 5
+#define R 3
 #else
 #define P 3
-#define R 5
+#define R 3
 #endif
 
 /* Patch and research shapes
@@ -196,11 +196,11 @@ vec4 hook()
  * 8: plus X (symmetrical)
  */
 #ifdef LUMA_raw
-#define RS 3
-#define PS 3
+#define RS 0
+#define PS 0
 #else
-#define RS 3
-#define PS 3
+#define RS 0
+#define PS 0
 #endif
 
 /* Weight discard
@@ -219,13 +219,13 @@ vec4 hook()
  * WDS (not for WDK=is_zero): Higher numbers are more eager to reduce weights
  */
 #ifdef LUMA_raw
-#define WD 0
-#define WDT 0.0
+#define WD 2
+#define WDT 1.6306525342588285
 #define WDP 0.0
 #define WDS 1.0
 #else
-#define WD 0
-#define WDT 0.0
+#define WD 2
+#define WDT 1.6306525342588285
 #define WDP 0.0
 #define WDS 1.0
 #endif
@@ -257,11 +257,11 @@ vec4 hook()
  * RFI (0 to 2): Reflectional invariance
  */
 #ifdef LUMA_raw
-#define RI 3
+#define RI 0
 #define RFI 2
 #else
-#define RI 3
-#define RFI 2
+#define RI 0
+#define RFI 0
 #endif
 
 /* Temporal denoising
@@ -330,7 +330,7 @@ vec4 hook()
  * triangle_ (unclamped)
  */
 #ifdef LUMA_raw
-#define SK gaussian
+#define SK sphinx
 #define RK gaussian
 #define ASK sinc
 #define ASAK gaussian
@@ -338,7 +338,7 @@ vec4 hook()
 #define WDK is_zero
 #define WD1TK gaussian
 #else
-#define SK gaussian
+#define SK sphinx
 #define RK gaussian
 #define ASK sphinx_
 #define ASAK gaussian
@@ -388,9 +388,9 @@ vec4 hook()
 
 // Scaling factor (should match WIDTH/HEIGHT)
 #ifdef LUMA_raw
-#define SF 1
+#define SF 2
 #else
-#define SF 1
+#define SF 2
 #endif
 
 // Use the guide image as the input image

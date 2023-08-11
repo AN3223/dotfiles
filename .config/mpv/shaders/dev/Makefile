@@ -129,7 +129,7 @@ experimental/nlmeans_2x.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_2X_DESC)" OPTS="$(NLM_2X_LUMA)" nlmeans_template > $@
 
 NLM_LGC_DESC=Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
-NLM_LGC=CFG_HOOKS=CHROMA:GC=SHARE_LUMA:G=0:D1W=1:S=11.66:WD=0:SW=0.75:RI=3:RFI=2
+NLM_LGC=`./optimums/latest.sh optimums/experimental/nlmeans_lgc/chroma`
 
 experimental/nlmeans_lgc.glsl: nlmeans_template ../LQ/nlmeans.glsl
 	./shader_cfg DESC="$@: $(NLM_LGC_DESC)" OPTS="$(NLM_LGC)" nlmeans_template > $@
@@ -165,6 +165,7 @@ OPT_NOISE=NOISE=10:10
 OPT_NOISE_LIGHT=NOISE=5:10
 OPT_BLUR=VF=gblur=0.625
 OPT_2X=VF=scale=540:540
+OPT_YUV420=VF=format=yuv420p
 
 OPT_SHARP_MAX=ASF=0.5:ASA=0.5:ASP=1.0:ASS=0.25
 
@@ -240,9 +241,6 @@ optimums/DEFAULT/nlmeans/light/sharpen_denoise/luma: optimums/DEFAULT/nlmeans/li
 optimums/DEFAULT/nlmeans/light/sharpen_denoise/chroma: optimums/DEFAULT/nlmeans/light/chroma
 	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT) --max=$(OPT_SHARP_MAX) --auto-max --cfgopts=AS=1 --optimum=$@ --no-stats images/ >> $@
 	@printf '\n' >> $@
-optimums/experimental/nlmeans_2x/luma:
-	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats images/ >> $@
-	@printf '\n' >> $@
 optimums/HQ/nlmeans/luma:
 	./shader_test --corruption=$(OPT_NOISE) --auto-max --optimum=$@ --no-stats images/ >> $@
 	@printf '\n' >> $@
@@ -278,6 +276,12 @@ optimums/HQ/nlmeans/light/sharpen_denoise/luma: optimums/HQ/nlmeans/light/luma
 	@printf '\n' >> $@
 optimums/HQ/nlmeans/light/sharpen_denoise/chroma: optimums/HQ/nlmeans/light/chroma
 	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR),$(OPT_NOISE_LIGHT) --max=$(OPT_SHARP_MAX) --auto-max --cfgopts=AS=1 --optimum=$@ --no-stats images/ >> $@
+	@printf '\n' >> $@
+optimums/experimental/nlmeans_2x/luma:
+	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats images/ >> $@
+	@printf '\n' >> $@
+optimums/experimental/nlmeans_lgc/chroma:
+	./shader_test --plane=CHROMA --corruption=$(OPT_YUV420) --auto-max --optimum=$@ --no-stats images/ >> $@
 	@printf '\n' >> $@
 
 optimize_hdeband: optimums/LQ/hdeband/luma optimums/LQ/hdeband/chroma optimums/DEFAULT/hdeband/luma optimums/DEFAULT/hdeband/chroma
