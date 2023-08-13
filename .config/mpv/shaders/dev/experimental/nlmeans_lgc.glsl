@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: nlmeans_lgc.glsl: Luma-guided chroma upscaling
+// Description: experimental/nlmeans_lgc.glsl: Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
 
 //!HOOK CHROMA
 //!BIND LUMA
@@ -36,7 +36,7 @@ vec4 hook()
 //!HOOK CHROMA
 //!BIND HOOKED
 //!BIND GC
-//!DESC Non-local means (nlmeans_lgc.glsl)
+//!DESC Non-local means (experimental/nlmeans_lgc.glsl)
 
 // User variables
 
