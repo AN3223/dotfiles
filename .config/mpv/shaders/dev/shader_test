@@ -79,20 +79,20 @@ sub shader_ssim($corrupt-media, @shaders) {
 	my Str $res = (<w= h=> Z~ %gbl<resolution>.split(':')[0..1]).join(':');
 	my Bool $batch = @shaders.elems > 1;
 
-	my (@crptpads, @inpads);
+	my (@crptpads, @cleanpads);
 	if $batch {
 		@crptpads = do "[crpt$_]" for ^@shaders.elems;
-		@inpads = do "[in$_]" for ^@shaders.elems;
+		@cleanpads = do "[clean$_]" for ^@shaders.elems;
 	} else {
 		@crptpads = "[0:v]";
-		@inpads = "[1:v]";
+		@cleanpads = "[1:v]";
 	}
 
 	my $vf = (
 		("hwupload,split={@shaders.elems}" ~ @crptpads.join() if $batch),
-		("split={@shaders.elems}" ~ @inpads.join() if $batch),
-		(do @crptpads[$_.key] ~ ("hwupload," if not $batch) ~ "libplacebo=$res\:format={%gbl<pix-fmt>}:custom_shader_path={$_.value},hwdownload[out{$_.key}]" for @shaders.pairs).join(";\n"),
-		(do "{@inpads[$_]}[out$_]ssim={%gbl<tmpdir>}/ssim$_" for ^@shaders.elems).join(";\n")
+		("split={@shaders.elems}" ~ @cleanpads.join() if $batch),
+		(do @crptpads[$_.key] ~ ("hwupload," if not $batch) ~ "libplacebo={$res}:format={%gbl<pix-fmt>}:custom_shader_path={$_.value}:dithering=none[out{$_.key}]" for @shaders.pairs).join(";\n"),
+		(do "{@cleanpads[$_]}[out$_]ssim={%gbl<tmpdir>}/ssim$_" for ^@shaders).join(";\n")
 	).join(";\n");
 
 	spurt (%tmp<filter_script> = "{%gbl<tmp>}.filter_script"), $vf;
@@ -142,7 +142,7 @@ sub run_tests(*@cfgopts --> List) {
 	return eager @outs.map(&avgssim);
 }
 
-sub correlation(@x, $x_avg, @y, $y_avg) { covariance(@x, $x_avg, @y, $y_avg) / (sqrt(variance(@x, $x_avg)) * sqrt(variance(@y, $y_avg))) }
+sub correlation(@x, $x_avg, @y, $y_avg) { covariance(@x, $x_avg, @y, $y_avg) / max(1e-38, sqrt(variance(@x, $x_avg)) * sqrt(variance(@y, $y_avg))) }
 sub covariance(@x, $x_avg, @y, $y_avg) { sum((@x >>->> $x_avg) >>*<< (@y >>->> $y_avg)) / @x }
 sub variance(@x, $avg) { sum((@x >>->> $avg) >>**>> 2) / @x }
 sub standard(@x, $avg) { (@x >>->> $avg) >>/>> sqrt(variance(@x, $avg)) }
