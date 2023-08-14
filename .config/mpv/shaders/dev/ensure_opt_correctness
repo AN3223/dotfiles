@@ -9,12 +9,12 @@ opts() {
 	sed '/^$/d ; /^#/d' "$1" | tail -n 1 | cut -f 1 | tr := '\n\t' | cut -f 1 | sort -u
 }
 
-for l in optimums/*luma*; do
-	c="$(echo "$l" | sed 's/luma/chroma/g')"
+for l in $(find optimums/ -name luma); do
+	c="$(dirname "$l")/chroma"
 	test -f "$c" || continue
 	ltmp=$(mktemp)
 	opts "$l" > "$ltmp"
-	out=$(opts "$c" | comm -13 "$ltmp" -)
+	out=$(opts "$c" | comm -13 "$ltmp" - | tr '\n' ' ')
 	rm "$ltmp"
 
 	if [ "$out" ]; then

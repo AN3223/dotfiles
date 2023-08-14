@@ -58,9 +58,9 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 0.9502099898702093
+#define S 0.939070460165571
 #else
-#define S 0.9560937209326306
+#define S 0.7492092502746283
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -98,9 +98,9 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 1.252675467156625
+#define SW 1.5706315488483729
 #else
-#define SW 0.8194356272340186
+#define SW 0.33983475551026254
 #endif
 
 /* Spatial kernel
@@ -117,12 +117,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.1764164666560606
+#define SS 0.05681726744874852
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.22563571238072752
+#define SS 0.09635832519001386
 #define PST 0
 #define PSS 0.0
 #endif
@@ -233,8 +233,8 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.23152096075338857
-#define WDP 2.1121925617442403
+#define WDT 0.1567917621999669
+#define WDP 1.174785342754133
 #define WDS 1.0
 #else
 #define WD 0
@@ -271,7 +271,7 @@
  */
 #ifdef LUMA_raw
 #define RI 0
-#define RFI 0
+#define RFI 2
 #else
 #define RI 0
 #define RFI 0
@@ -1249,9 +1249,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 3.0785253702839683
+#define S 2.647757547951821
 #else
-#define S 1.3363317282280895
+#define S 1.3603414931280708
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -1289,9 +1289,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.7901743646143748
+#define SW 0.45584441446786556
 #else
-#define SW 2.3335567542917417
+#define SW 1.513042717728443
 #endif
 
 /* Spatial kernel
@@ -1308,12 +1308,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.426471182554604
+#define SS 1.5486994052089007
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.05930769190481533
+#define SS 0.06966191023406797
 #define PST 0
 #define PSS 0.0
 #endif
@@ -1424,7 +1424,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 2
-#define WDT 0.6890443140317932
+#define WDT 0.2869452954739915
 #define WDP 0.0
 #define WDS 1.0
 #else
