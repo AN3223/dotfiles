@@ -10,7 +10,13 @@ my %gbl;
 my %tmp;
 END { %tmp.values.flat.map(&unlink); rmdir %gbl<tmpdir> with %gbl<tmpdir>; };
 
-my $ffmpeg = "ffmpeg -nostdin -y";
+sub ffmpeg(*@i, :@out = <-f null ->, *%opts --> List) {
+	|<ffmpeg -nostdin -y>,
+		|@i.map({ $_ ~~ Iterable ?? $_.flat !! <<-i "$_">> }).flat,
+		|%opts.map({ "-{$_.key}", "{$_.value}" }).flat,
+		|@out.flat
+}
+
 # drop stderr and/or stdout if they aren't requested
 # die and print stdout & stderr if command fails
 &run.wrap(sub (*@args, *%opts --> Proc) {
@@ -102,7 +108,7 @@ sub shader_ssim($corrupt-media, @shaders) {
 	).join(";\n");
 
 	spurt (%tmp<filter_script> = "{%gbl<tmp>}.filter_script"), $vf;
-	run(<<$ffmpeg -i "$corrupt-media">>, |%gbl<media>, <<-init_hw_device "%gbl<vk>" -filter_complex_script "{%tmp<filter_script>}" -f null ->>);
+	run ffmpeg($corrupt-media, %gbl<media>, :init_hw_device(%gbl<vk>), :filter_complex_script(%tmp<filter_script>));
 
 	my @ssims;
 	for ^@shaders.elems {
@@ -270,7 +276,7 @@ sub corrupt(Str $name, Str $corruptions, Bool $no-concat) {
 	my Int $realizations = 1;
 	my Str @pre-vf;
 	my Callable @vf;
-	my @outopts = |%gbl<outopts>;
+	my %outopts = %gbl<outopts>;
 	for $corruptions.split(/<!after '\\'> ',' /) -> $corruption {
 		given $corruption.split('=') {
 		when $_[0] eq "NOISE" { # NOISE=NOISE_LEVEL:REALIZATIONS
@@ -279,7 +285,7 @@ sub corrupt(Str $name, Str $corruptions, Bool $no-concat) {
 			@vf.push({ "noise=alls=$noise\:all_seed=$^i\:allf=t" });
 		}
 		when $_[0] eq "OUTOPTS" { # OUTOPTS=OPTS
-			@outopts = Array($_[1..*].join("=").split(" "));
+			%outopts{$_.keys.map({ .subst(/^\-/) })} = $_.values given Hash($_[1..*].join("=").split(" "));
 		}
 		when $_[0] eq "VF" { # VF=VF
 			@pre-vf.push($_[1..*].join("="));
@@ -299,14 +305,14 @@ sub corrupt(Str $name, Str $corruptions, Bool $no-concat) {
 	my @outfiles;
 	if $no-concat {
 		@outfiles = do "{%gbl<tmp>}.{$name}{$_}.mkv" for ^$realizations;
-		@outs = @outfiles.pairs.map({ (|@outopts, "-map", "[o{$_.key}]", $_.value) }).flat;
+		@outs = @outfiles.pairs.map({ ("-map", "[o{$_.key}]", $_.value) }).flat;
 	} else {
 		@outfiles = ("{%gbl<tmp>}.{$name}.mkv");
-		@outs = (|@outopts, @outfiles[0]);
+		@outs = (@outfiles[0]);
 	}
 
 	spurt (%tmp<filter_script> = "{%gbl<tmp>}.filter_script"), $vf;
-	run <<$ffmpeg -i "%tmp<media>" -filter_complex_script "{%tmp<filter_script>}">>, |@outs;
+	run ffmpeg(%tmp<media>, :filter_complex_script(%tmp<filter_script>), |%outopts, :out(@outs));
 
 	return { :realizations($realizations), :files(@outfiles) };
 }
@@ -345,7 +351,7 @@ sub MAIN(
 	Str :$vk-device = "vulkan" #= Device name passed to ffmpeg's -init_hw_device option
 ) {
 	%gbl<shader verbose vk plane resolution pix-fmt> = $shader, ($verbose || $v), $vk-device, $plane, $resolution, $pix-fmt;
-	%gbl<outopts> = <<-c\:v ffv1 -colorspace "$colorspace" -pix_fmt "$pix-fmt">>;
+	%gbl<outopts> = { "c:v" => "ffv1", "colorspace" => $colorspace, "pix_fmt" => $pix-fmt };
 	%gbl<max max-iter max-samples max-decay max-min-decay> = $max, $max-iter, $max-samples, $max-decay, $max-min-decay;
 
 	die 'no test media specified' if not @test-media;
@@ -390,10 +396,9 @@ sub MAIN(
 	run <<renice -n 19 "$*PID">>; run <<ionice -c 3 -p "$*PID">>;
 
 	note('Preparing clean images...');
-	%tmp<media> = "{%gbl<tmp>}.concat.mkv";
-	run <<$ffmpeg>>, @test-media.map({ ('-i', $_) }).flat,
-		(<<-lavfi "concat={@test-media.elems},setpts=N/(FR*TB)">> if @test-media.elems > 1),
-		|%gbl<outopts>, %tmp<media>;
+	my $clean-lavfi = :lavfi("concat={@test-media.elems},setpts=N/(FR*TB)" if @test-media > 1);
+	$clean-lavfi = Nil without $clean-lavfi.value;
+	run ffmpeg(|@test-media.flat, |$clean-lavfi, |%gbl<outopts>, :out(%tmp<media> = "{%gbl<tmp>}.concat.mkv"));
 
 	# XXX support --no-concat here?
 	my $acorr_realizations = 1;
@@ -420,7 +425,7 @@ sub MAIN(
 	if not $no-baseline {
 		note('Measuring baseline...');
 		my $baseline = avgssim(%tmp<corrupt>.map({
-			run(<<$ffmpeg -i "$_">>, |%gbl<media>, <<-lavfi "scale={%gbl<resolution>},ssim=-">>, |%gbl<outopts>, <-f null ->, :out).out.slurp(:close)
+			run(ffmpeg($_, %gbl<media>, :lavfi("scale={%gbl<resolution>},ssim=-"), |%gbl<outopts>, :out(|<-f null ->))).out.slurp(:close)
 		}).join("\n"));
 		stats "# BASELINE=$corruption", $baseline;
 	}
