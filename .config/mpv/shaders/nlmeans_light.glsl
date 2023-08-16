@@ -58,9 +58,9 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 0.939070460165571
+#define S 0.8441740123225484
 #else
-#define S 0.7492092502746283
+#define S 2.485633420541969
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -98,9 +98,9 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 1.5706315488483729
+#define SW 0.9446785350177541
 #else
-#define SW 0.33983475551026254
+#define SW 0.9717797208525336
 #endif
 
 /* Spatial kernel
@@ -117,12 +117,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.05681726744874852
+#define SS 0.22083173777840281
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.09635832519001386
+#define SS 1.0867298185513652
 #define PST 0
 #define PSS 0.0
 #endif
@@ -233,8 +233,8 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.1567917621999669
-#define WDP 1.174785342754133
+#define WDT 0.20137273809891876
+#define WDP 1.5443947886384288
 #define WDS 1.0
 #else
 #define WD 0
@@ -1249,9 +1249,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 2.647757547951821
+#define S 2.6786596417246438
 #else
-#define S 1.3603414931280708
+#define S 0.7025509275141297
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -1289,9 +1289,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.45584441446786556
+#define SW 0.5407592940212451
 #else
-#define SW 1.513042717728443
+#define SW 2.5422933893818445
 #endif
 
 /* Spatial kernel
@@ -1308,12 +1308,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.5486994052089007
+#define SS 1.4811631287410594
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.06966191023406797
+#define SS 0.013497712267340008
 #define PST 0
 #define PSS 0.0
 #endif
@@ -1424,7 +1424,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 2
-#define WDT 0.2869452954739915
+#define WDT 0.41822381798318636
 #define WDP 0.0
 #define WDS 1.0
 #else

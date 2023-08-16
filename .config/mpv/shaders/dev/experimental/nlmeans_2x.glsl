@@ -47,9 +47,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 18.1344669870742
+#define S 19.503007000098894
 #else
-#define S 18.1344669870742
+#define S 19.503007000098894
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -68,17 +68,17 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.2923184607612605
-#define ASA 0.2736956928125294
-#define ASP 1.158600184100991
-#define ASS 0.5164950237605863
+#define ASF 0.2879321272130547
+#define ASA 0.2834071071292629
+#define ASP 1.0460534768557768
+#define ASS 0.40605246366769226
 #define ASI 0
 #else
 #define AS 1
-#define ASF 0.2923184607612605
-#define ASA 0.2736956928125294
-#define ASP 1.158600184100991
-#define ASS 0.5164950237605863
+#define ASF 0.2879321272130547
+#define ASA 0.2834071071292629
+#define ASP 1.0460534768557768
+#define ASS 0.40605246366769226
 #define ASI 0
 #endif
 
@@ -87,9 +87,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.9273155348274023
+#define SW 0.8324424598192146
 #else
-#define SW 0.9273155348274023
+#define SW 0.8324424598192146
 #endif
 
 /* Spatial kernel
@@ -106,12 +106,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.343498726048547
+#define SS 1.368475907593309
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 1.343498726048547
+#define SS 1.368475907593309
 #define PST 0
 #define PSS 0.0
 #endif

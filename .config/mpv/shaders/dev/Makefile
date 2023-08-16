@@ -147,6 +147,8 @@ hdeband: ../hdeband.glsl ../LQ/hdeband.glsl
 ../LQ/hdeband.glsl: hdeband_template
 	./shader_cfg OPTS="`./optimums/latest.sh optimums/LQ/hdeband/chroma`" OPTS_LUMA="`./optimums/latest.sh optimums/LQ/hdeband/luma`" $? > $@
 
+optimize: optimize_nlmeans optimize_hdeband
+
 optimize_nlmeans: optimums/LQ/nlmeans optimums/DEFAULT/nlmeans optimums/HQ/nlmeans optimums/experimental/nlmeans_2x/luma
 
 optimums/LQ/nlmeans: optimums/LQ/nlmeans/luma optimums/LQ/nlmeans/chroma optimums/LQ/nlmeans/light/luma optimums/LQ/nlmeans/light/chroma optimums/LQ/nlmeans/sharpen_only/luma optimums/LQ/nlmeans/sharpen_only/chroma optimums/LQ/nlmeans/light/sharpen_only/luma optimums/LQ/nlmeans/light/sharpen_only/chroma optimums/LQ/nlmeans/sharpen_denoise/luma optimums/LQ/nlmeans/sharpen_denoise/chroma optimums/LQ/nlmeans/light/sharpen_denoise/luma optimums/LQ/nlmeans/light/sharpen_denoise/chroma 

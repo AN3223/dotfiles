@@ -58,9 +58,9 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 2.1682471923934403
+#define S 2.1131358650713628
 #else
-#define S 3.4898423086425656
+#define S 3.5079302131947547
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -98,9 +98,9 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.8926171363032697
+#define SW 0.9045344368543775
 #else
-#define SW 0.3711997990545342
+#define SW 0.3532820422872951
 #endif
 
 /* Spatial kernel
@@ -117,12 +117,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.20836260712530516
+#define SS 0.18847106270293895
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.30670982588948037
+#define SS 0.2741056665655036
 #define PST 0
 #define PSS 0.0
 #endif
@@ -233,8 +233,8 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.2434133119784301
-#define WDP 1.3044088130374651
+#define WDT 0.2663342446228746
+#define WDP 1.3148248981192128
 #define WDS 1.0
 #else
 #define WD 0
@@ -1249,9 +1249,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 3.4985584904858857
+#define S 3.8880707393174196
 #else
-#define S 0.6460466585058767
+#define S 0.619842203672409
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -1289,9 +1289,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.6253358329237747
+#define SW 0.5466726593769865
 #else
-#define SW 0.3459909521686717
+#define SW 0.3164388076757135
 #endif
 
 /* Spatial kernel
@@ -1308,12 +1308,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.290814413520394
+#define SS 1.3545275680615019
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.08344895683493163
+#define SS 0.07983518663173111
 #define PST 0
 #define PSS 0.0
 #endif
@@ -1424,7 +1424,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 2
-#define WDT 0.5643027824186665
+#define WDT 0.5578602068333152
 #define WDP 0.0
 #define WDS 1.0
 #else
