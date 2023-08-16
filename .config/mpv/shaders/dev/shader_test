@@ -224,6 +224,7 @@ sub optimize(
 		note("Decay: {$decay_factor}");
 
 		last if $decay_factor <= $min-decay;
+		last if @scores.unique().elems == 1;
 	}
 
 	return $optimal;
