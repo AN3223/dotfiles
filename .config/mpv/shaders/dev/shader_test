@@ -425,7 +425,8 @@ sub MAIN(
 	if not $no-baseline {
 		note('Measuring baseline...');
 		my $baseline = avgssim(%tmp<corrupt>.map({
-			run(ffmpeg($_, %gbl<media>, :lavfi("scale={%gbl<resolution>},ssim=-"), |%gbl<outopts>, :out(|<-f null ->))).out.slurp(:close)
+			run(ffmpeg($_, %gbl<media>, :init_hw_device(%gbl<vk>), :lavfi("[0:v]hwupload,{libplacebo()},hwdownload[crpt]; [crpt][1:v]ssim=-"), |%gbl<outopts>))
+				.out.slurp(:close)
 		}).join("\n"));
 		stats "# BASELINE=$corruption", $baseline;
 	}
