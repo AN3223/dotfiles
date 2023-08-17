@@ -84,7 +84,7 @@ sub run_cfg(Str $cfgopts --> Str) {
 sub libplacebo(*@opts --> Str) {
 	my Str $res = (["w=","h="] Z~ %gbl<resolution>.split(':')[0..1]).join(':');
 	my Str $opts = @opts ?? (':' ~ @opts.join(':')) !! "";
-	"libplacebo={$res}:format={%gbl<pix-fmt>}:dithering=none" ~ $opts
+	"libplacebo={$res}:format={%gbl<pix-fmt>}:dithering=none:upscaler=nearest:downscaler=nearest:peak_detect=false" ~ $opts
 }
 
 # XXX should be able to handle multiple files at a time too

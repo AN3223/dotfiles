@@ -58,9 +58,9 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 0.3237611161265971
+#define S 0.367385431804009
 #else
-#define S -0.02072715980127926
+#define S 0.15198456014500902
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -98,9 +98,9 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 1.5011681154506635
+#define SW 1.0579871478469507
 #else
-#define SW 0.27477458268861765
+#define SW 0.07969974709143281
 #endif
 
 /* Spatial kernel
@@ -117,12 +117,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.5017265862299706
+#define SS 0.16956550599651835
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.3157248763917458
+#define SS 0.9207789358566358
 #define PST 0
 #define PSS 0.0
 #endif
@@ -233,8 +233,8 @@
  */
 #ifdef LUMA_raw
 #define WD 1
-#define WDT 0.21561174304072234
-#define WDP 2.142826907436335
+#define WDT 0.9941000336259351
+#define WDP 1.3782877832720026
 #define WDS 1.0
 #else
 #define WD 0
@@ -1249,9 +1249,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 4.57920693101321
+#define S 4.221426079179293
 #else
-#define S 0.9718531096892762
+#define S 0.49936896855878304
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -1270,17 +1270,17 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 2
-#define ASF 0.9162553296335436
-#define ASA 0.806159369481794
-#define ASP 1.1116221949734848
-#define ASS 0.20931902380544337
+#define ASF 0.707754084426351
+#define ASA 0.11381571816664002
+#define ASP 1.025111215152993
+#define ASS 0.5742709849753387
 #define ASI 0
 #else
 #define AS 2
-#define ASF 0.009246556276922419
-#define ASA 0.24869038306306002
-#define ASP 2.0224720341245845
-#define ASS 0.2126577680890853
+#define ASF 0.5229955418770629
+#define ASA 0.147719954069348
+#define ASP 2.1000216221892307
+#define ASS 0.18685051443197007
 #define ASI 0
 #endif
 
@@ -1289,9 +1289,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.25307596113052855
+#define SW 0.17549152778127383
 #else
-#define SW 0.20526509950945487
+#define SW 0.046770533818092326
 #endif
 
 /* Spatial kernel
@@ -1308,12 +1308,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.46150305456478813
+#define SS 0.5520903532456017
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.009766056493307433
+#define SS 0.01869301848476399
 #define PST 0
 #define PSS 0.0
 #endif
@@ -1424,7 +1424,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 2
-#define WDT 0.5533928254894405
+#define WDT 0.4439161987510237
 #define WDP 0.0
 #define WDS 1.0
 #else
