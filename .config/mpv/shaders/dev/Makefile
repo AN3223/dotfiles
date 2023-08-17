@@ -163,11 +163,16 @@ optimums/HQ/nlmeans: optimums/HQ/nlmeans/luma optimums/HQ/nlmeans/chroma optimum
 # XXX test against softened noise
 # XXX test temporal
 
+OPT_NOISE_VF=noise=alls=10
 OPT_NOISE=NOISE=10:10
+OPT_NOISE_LIGHT_VF=noise=alls=5
 OPT_NOISE_LIGHT=NOISE=5:10
-OPT_BLUR=VF=gblur=0.75
-OPT_2X=VF=scale=540:540
-OPT_YUV420=VF=format=yuv420p
+OPT_BLUR_VF=gblur=0.75
+OPT_BLUR=VF=$(OPT_BLUR_VF)
+OPT_2X_VF=scale=540:540
+OPT_2X=VF=$(OPT_2X_VF)
+OPT_YUV420_VF=format=yuv420p
+OPT_YUV420=VF=$(OPT_YUV420_VF)
 
 OPT_SHARP_MAX=ASF=0.5:ASA=0.5:ASP=1.0:ASS=0.25
 
@@ -292,7 +297,8 @@ optimize_hdeband: optimums/LQ/hdeband/luma optimums/LQ/hdeband/chroma optimums/D
 OPT_BAND_PARAM=15.0
 # parenthesis are only escaped for make
 OPT_BAND_EXPR=round\(p\(X\,Y\)/$(OPT_BAND_PARAM)\)*$(OPT_BAND_PARAM)
-OPT_BAND=VF=geq='$(OPT_BAND_EXPR):$(OPT_BAND_EXPR):$(OPT_BAND_EXPR)'
+OPT_BAND_VF=geq='$(OPT_BAND_EXPR):$(OPT_BAND_EXPR):$(OPT_BAND_EXPR)'
+OPT_BAND=VF=$(OPT_BAND_VF)
 
 optimums/LQ/hdeband/luma:
 	./shader_test --corruption=$(OPT_BAND) --auto-max --optimum=$@ --shader=hdeband_template --no-stats images/ >> $@
@@ -307,29 +313,29 @@ optimums/DEFAULT/hdeband/chroma:
 	./shader_test --plane=CHROMA --corruption=$(OPT_BAND) --auto-max --optimum=$@ --shader=hdeband_template --no-stats images/ >> $@
 	@printf '\n' >> $@
 
-readme: result_images/clean.png result_images/noise10.png result_images/gblur0625.png result_images/gblur0625noise10.png result_images/nlmeans_noise10.png result_images/nlmeans_sharpen_denoise_gblur0625noise10.png result_images/nlmeans_sharpen_only_gblur0625noise10.png result_images/nlmeans_sharpen_only_gblur0625.png result_images/fsr_gblur0625noise10.png result_images/fsr_gblur0625.png 
+readme: result_images/clean.png result_images/opt_noise.png result_images/opt_blur.png result_images/opt_blur_opt_noise.png result_images/nlmeans_opt_noise.png result_images/nlmeans_sharpen_denoise_opt_blur_opt_noise.png result_images/nlmeans_sharpen_only_opt_blur_opt_noise.png result_images/nlmeans_sharpen_only_opt_blur.png result_images/fsr_opt_blur_opt_noise.png result_images/fsr_opt_blur.png 
 
 ../FSR.glsl:
 	curl -L 'https://gist.githubusercontent.com/agyild/82219c545228d70c5604f865ce0b0ce5/raw/2623d743b9c23f500ba086f05b385dcb1557e15d/FSR.glsl' > $@
 	sed -i '/^\/\/!WHEN/d' $@ # https://github.com/mpv-player/mpv/issues/10246#issuecomment-1303894445
 result_images/clean.png: ../nlmeans.glsl
 	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,scale=256:256:flags=neighbor' $@
-result_images/noise10.png: ../nlmeans.glsl
-	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,scale=256:256:flags=neighbor' $@
-result_images/gblur0625.png: ../nlmeans.glsl
-	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,gblur=0.625,scale=256:256:flags=neighbor' $@
-result_images/gblur0625noise10.png: ../nlmeans.glsl
-	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,gblur=0.625,noise=alls=10,scale=256:256:flags=neighbor' $@
-result_images/nlmeans_noise10.png: ../nlmeans.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,noise=alls=10,hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
-result_images/nlmeans_sharpen_denoise_gblur0625noise10.png: ../nlmeans_sharpen_denoise.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,gblur=0.625,noise=alls=10,hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
-result_images/nlmeans_sharpen_only_gblur0625noise10.png: ../nlmeans_sharpen_only.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,gblur=0.625,noise=alls=10,hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
-result_images/nlmeans_sharpen_only_gblur0625.png: ../nlmeans_sharpen_only.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,gblur=0.625,hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
-result_images/fsr_gblur0625noise10.png: ../FSR.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,gblur=0.625,noise=alls=10,hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
-result_images/fsr_gblur0625.png: ../FSR.glsl
-	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,gblur=0.625,hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
+result_images/opt_noise.png: ../nlmeans.glsl
+	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_NOISE_VF),scale=256:256:flags=neighbor' $@
+result_images/opt_blur.png: ../nlmeans.glsl
+	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_BLUR_VF),scale=256:256:flags=neighbor' $@
+result_images/opt_blur_opt_noise.png: ../nlmeans.glsl
+	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_BLUR_VF),$(OPT_NOISE_VF),scale=256:256:flags=neighbor' $@
+result_images/nlmeans_opt_noise.png: ../nlmeans.glsl
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_NOISE_VF),hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
+result_images/nlmeans_sharpen_denoise_opt_blur_opt_noise.png: ../nlmeans_sharpen_denoise.glsl
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_BLUR_VF),$(OPT_NOISE_VF),hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
+result_images/nlmeans_sharpen_only_opt_blur_opt_noise.png: ../nlmeans_sharpen_only.glsl
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_BLUR_VF),$(OPT_NOISE_VF),hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
+result_images/nlmeans_sharpen_only_opt_blur.png: ../nlmeans_sharpen_only.glsl
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_BLUR_VF),hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
+result_images/fsr_opt_blur_opt_noise.png: ../FSR.glsl
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_BLUR_VF),$(OPT_NOISE_VF),hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
+result_images/fsr_opt_blur.png: ../FSR.glsl
+	ffmpeg -y -init_hw_device vulkan -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,$(OPT_BLUR_VF),hwupload,libplacebo=w=128:h=128:custom_shader_path=$?,hwdownload,format=yuv420p,scale=256:256:flags=neighbor' $@
 

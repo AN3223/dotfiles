@@ -75,41 +75,41 @@ These shaders are denoisers and/or adaptive sharpeners. They have documentation 
 
 Some examples of shader output are pictured below. They follow the form of `clean/corrupt/reconstructed`, where `reconstructed` is the shader output when `corrupt` is given as input, so the goal is for `reconstructed` to resemble `clean` as much as possible.
 
-nlmeans.glsl example (clean/noisy/denoised):
+nlmeans.glsl (clean/noisy/denoised):
 
 ![Clean image](dev/result_images/clean.png)
-![Noisy image](dev/result_images/noise10.png)
-![Denoised image](dev/result_images/nlmeans_noise10.png)
+![Noisy image](dev/result_images/opt_noise.png)
+![Denoised image](dev/result_images/nlmeans_opt_noise.png)
 
-nlmeans\_sharpen\_denoise.glsl example (clean/blurry+noisy/sharpened+denoised):
-
-![Clean image](dev/result_images/clean.png)
-![Blurry/noisy image](dev/result_images/gblur0625noise10.png)
-![Sharpened and denoised image](dev/result_images/nlmeans_sharpen_denoise_gblur0625noise10.png)
-
-nlmeans\_sharpen\_only.glsl example (clean/blurry/sharpened):
+nlmeans\_sharpen\_denoise.glsl (clean/blurry+noisy/sharpened+denoised):
 
 ![Clean image](dev/result_images/clean.png)
-![Blurry image](dev/result_images/gblur0625.png)
-![Sharpened image](dev/result_images/nlmeans_sharpen_only_gblur0625.png)
+![Blurry/noisy image](dev/result_images/opt_blur_opt_noise.png)
+![Sharpened and denoised image](dev/result_images/nlmeans_sharpen_denoise_opt_blur_opt_noise.png)
+
+nlmeans\_sharpen\_only.glsl (clean/blurry/sharpened):
+
+![Clean image](dev/result_images/clean.png)
+![Blurry image](dev/result_images/opt_blur.png)
+![Sharpened image](dev/result_images/nlmeans_sharpen_only_opt_blur.png)
 
 FSR for reference (clean/blurry/sharpened):
 
 ![Clean image](dev/result_images/clean.png)
-![Blurry image](dev/result_images/gblur0625.png)
-![Sharpened image](dev/result_images/fsr_gblur0625.png)
+![Blurry image](dev/result_images/opt_blur.png)
+![Sharpened image](dev/result_images/fsr_opt_blur.png)
 
-nlmeans\_sharpen\_only.glsl example (noisy/blurry+noisy/sharpened):
+nlmeans\_sharpen\_only.glsl (noisy/blurry+noisy/sharpened):
 
-![Noisy image](dev/result_images/noise10.png)
-![Blurry/noisy image](dev/result_images/gblur0625noise10.png)
-![Sharpened image](dev/result_images/nlmeans_sharpen_only_gblur0625noise10.png)
+![Noisy image](dev/result_images/opt_noise.png)
+![Blurry/noisy image](dev/result_images/opt_blur_opt_noise.png)
+![Sharpened image](dev/result_images/nlmeans_sharpen_only_opt_blur_opt_noise.png)
 
 FSR for reference (noisy/blurry+noisy/sharpened):
 
-![Noisy image](dev/result_images/noise10.png)
-![Blurry/noisy image](dev/result_images/gblur0625noise10.png)
-![Sharpened image](dev/result_images/fsr_gblur0625noise10.png)
+![Noisy image](dev/result_images/opt_noise.png)
+![Blurry/noisy image](dev/result_images/opt_blur_opt_noise.png)
+![Sharpened image](dev/result_images/fsr_opt_blur_opt_noise.png)
 
 ## hdeband
 
