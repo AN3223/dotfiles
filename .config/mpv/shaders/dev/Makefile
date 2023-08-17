@@ -165,7 +165,7 @@ optimums/HQ/nlmeans: optimums/HQ/nlmeans/luma optimums/HQ/nlmeans/chroma optimum
 
 OPT_NOISE=NOISE=10:10
 OPT_NOISE_LIGHT=NOISE=5:10
-OPT_BLUR=VF=gblur=0.625
+OPT_BLUR=VF=gblur=0.75
 OPT_2X=VF=scale=540:540
 OPT_YUV420=VF=format=yuv420p
 
