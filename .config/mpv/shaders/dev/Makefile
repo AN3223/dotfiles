@@ -120,13 +120,14 @@ NLM_HQ_DESC=Slow, but higher quality.
 ../HQ/nlmeans_light_temporal_sharpen_denoise.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_HQ_DESC) $(NLM_TEMPORAL_DESC) $(NLM_SHARPEN_DENOISE_DESC) $(NLM_LIGHT_DESC)" OPTS="$(NLM_TEMPORAL):`./optimums/latest.sh optimums/HQ/nlmeans/light/sharpen_denoise/chroma`" OPTS_LUMA="$(NLM_TEMPORAL_LUMA):`./optimums/latest.sh optimums/HQ/nlmeans/light/sharpen_denoise/luma`" nlmeans_template > $@
 
-nlmeans_experimental: experimental/nlmeans_2x.glsl experimental/nlmeans_lgc.glsl experimental/nlmeans_ffmpeg_eqv.glsl
+nlmeans_experimental: experimental/nlmeans_2x.glsl experimental/nlmeans_lgc.glsl experimental/nlmeans_ffmpeg_eqv.glsl experimental/nlmeans_2x_chroma.glsl
 
 NLM_2X_DESC=Experimental upscaler
-NLM_2X_LUMA=`./optimums/latest.sh optimums/experimental/nlmeans_2x/luma`
 
 experimental/nlmeans_2x.glsl: nlmeans_template
-	./shader_cfg DESC="$@: $(NLM_2X_DESC)" OPTS="$(NLM_2X_LUMA)" nlmeans_template > $@
+	./shader_cfg DESC="$@: $(NLM_2X_DESC)" OPTS="`./optimums/latest.sh optimums/experimental/nlmeans_2x/luma`" nlmeans_template > $@
+experimental/nlmeans_2x_chroma.glsl: nlmeans_template
+	./shader_cfg DESC="$@: $(NLM_2X_DESC)" OPTS="`./optimums/latest.sh optimums/experimental/nlmeans_2x/chroma`" nlmeans_template > $@
 
 NLM_LGC_DESC=Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
 NLM_LGC=`./optimums/latest.sh optimums/experimental/nlmeans_lgc/chroma`
@@ -286,6 +287,9 @@ optimums/HQ/nlmeans/light/sharpen_denoise/chroma: optimums/HQ/nlmeans/light/chro
 	@printf '\n' >> $@
 optimums/experimental/nlmeans_2x/luma:
 	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats images/ >> $@
+	@printf '\n' >> $@
+optimums/experimental/nlmeans_2x/chroma:
+	./shader_test --plane=CHROMA --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats images/ >> $@
 	@printf '\n' >> $@
 optimums/experimental/nlmeans_lgc/chroma:
 	./shader_test --plane=CHROMA --corruption=$(OPT_YUV420) --auto-max --optimum=$@ --no-stats images/ >> $@

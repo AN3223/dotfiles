@@ -19,24 +19,24 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: experimental/nlmeans_2x.glsl: Experimental upscaler
+// Description: experimental/nlmeans_2x_chroma.glsl: Experimental upscaler
 
-//!HOOK LUMA
+//!HOOK CHROMA
 //!BIND HOOKED
 //!WIDTH HOOKED.w 2 *
 //!HEIGHT HOOKED.h 2 *
 //!DESC Non-local means (Guide)
-//!SAVE G
+//!SAVE GC
 
 vec4 hook()
 {
 	return HOOKED_texOff(0);
 }
 
-//!HOOK LUMA
+//!HOOK CHROMA
 //!BIND HOOKED
-//!BIND G
-//!DESC Non-local means (experimental/nlmeans_2x.glsl)
+//!BIND GC
+//!DESC Non-local means (experimental/nlmeans_2x_chroma.glsl)
 //!WIDTH HOOKED.w 2 *
 //!HEIGHT HOOKED.h 2 *
 
@@ -47,9 +47,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 18.483190169900592
+#define S 19.379554790480604
 #else
-#define S 18.483190169900592
+#define S 19.379554790480604
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -68,17 +68,17 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.2992382635031017
-#define ASA 0.2792207668553098
-#define ASP 1.0673157892505347
-#define ASS 0.368565173095523
+#define ASF 0.28636597957856785
+#define ASA 0.2604403742575205
+#define ASP 1.0121424951500522
+#define ASS 0.44830558397241665
 #define ASI 0
 #else
 #define AS 1
-#define ASF 0.2992382635031017
-#define ASA 0.2792207668553098
-#define ASP 1.0673157892505347
-#define ASS 0.368565173095523
+#define ASF 0.28636597957856785
+#define ASA 0.2604403742575205
+#define ASP 1.0121424951500522
+#define ASS 0.44830558397241665
 #define ASI 0
 #endif
 
@@ -87,9 +87,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.8531927062412302
+#define SW 0.9949496018947361
 #else
-#define SW 0.8531927062412302
+#define SW 0.9949496018947361
 #endif
 
 /* Spatial kernel
@@ -106,12 +106,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.3632721118705626
+#define SS 1.3262573163528741
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 1.3632721118705626
+#define SS 1.3262573163528741
 #define PST 0
 #define PSS 0.0
 #endif
@@ -174,10 +174,10 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define P 3
-#define R 7
+#define R 5
 #else
 #define P 3
-#define R 7
+#define R 5
 #endif
 
 /* Patch and research shapes
@@ -240,8 +240,8 @@ vec4 hook()
  * Computes weights on a guide, which could be a downscaled image or the output 
  * of another shader, and applies the weights to the original image
  */
-#define G 1
-#define GC 0
+#define G 0
+#define GC 1
 
 /* Rotational/reflectional invariance
  *
@@ -259,10 +259,10 @@ vec4 hook()
  * RFI (0 to 2): Reflectional invariance
  */
 #ifdef LUMA_raw
-#define RI 7
-#define RFI 2
+#define RI 0
+#define RFI 0
 #else
-#define RI 7
+#define RI 0
 #define RFI 0
 #endif
 
@@ -390,9 +390,9 @@ vec4 hook()
 
 // Scaling factor (should match WIDTH/HEIGHT)
 #ifdef LUMA_raw
-#define SF 3
+#define SF 2
 #else
-#define SF 3
+#define SF 2
 #endif
 
 // Use the guide image as the input image
