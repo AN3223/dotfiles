@@ -40,6 +40,7 @@ vec4 hook()
 //!WIDTH HOOKED.w 2 *
 //!HEIGHT HOOKED.h 2 *
 
+
 // User variables
 
 // It is generally preferable to denoise luma and chroma differently, so the 

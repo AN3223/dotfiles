@@ -26,6 +26,7 @@
 //!BIND HOOKED
 //!DESC Non-local means (LQ/nlmeans.glsl)
 
+
 // User variables
 
 // It is generally preferable to denoise luma and chroma differently, so the 

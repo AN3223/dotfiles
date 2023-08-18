@@ -37,6 +37,9 @@ vec4 hook()
 //!BIND HOOKED
 //!BIND GC
 //!DESC Non-local means (experimental/nlmeans_lgc.glsl)
+//!WIDTH LUMA.w
+//!HEIGHT LUMA.h
+//!OFFSET ALIGN
 
 // User variables
 
@@ -45,9 +48,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 2.463194928861912
+#define S 5.321680273391348
 #else
-#define S 2.463194928861912
+#define S 5.321680273391348
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -65,18 +68,18 @@ vec4 hook()
  *  - 1: sharpen noise
  */
 #ifdef LUMA_raw
-#define AS 0
-#define ASF 0.0
-#define ASA 0.0
-#define ASP 0.0
-#define ASS 0.0
+#define AS 1
+#define ASF 0.65237742937973
+#define ASA 0.16017631073176183
+#define ASP 0.8964353480227203
+#define ASS 0.25823569018243847
 #define ASI 0
 #else
-#define AS 0
-#define ASF 0.0
-#define ASA 0.0
-#define ASP 0.0
-#define ASS 0.0
+#define AS 1
+#define ASF 0.65237742937973
+#define ASA 0.16017631073176183
+#define ASP 0.8964353480227203
+#define ASS 0.25823569018243847
 #define ASI 0
 #endif
 
@@ -85,9 +88,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 1.556811734776464
+#define SW 1.088649331169083
 #else
-#define SW 1.556811734776464
+#define SW 1.088649331169083
 #endif
 
 /* Spatial kernel
@@ -104,12 +107,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.41431987956141636
+#define SS 0.7772517325217921
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.41431987956141636
+#define SS 0.7772517325217921
 #define PST 0
 #define PSS 0.0
 #endif
@@ -172,10 +175,10 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define P 3
-#define R 3
+#define R 7
 #else
 #define P 3
-#define R 3
+#define R 7
 #endif
 
 /* Patch and research shapes
@@ -196,11 +199,11 @@ vec4 hook()
  * 8: plus X (symmetrical)
  */
 #ifdef LUMA_raw
-#define RS 0
-#define PS 0
+#define RS 8
+#define PS 3
 #else
-#define RS 0
-#define PS 0
+#define RS 8
+#define PS 3
 #endif
 
 /* Weight discard
@@ -220,14 +223,14 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define WD 2
-#define WDT 1.5844118192164571
+#define WDT 0.10158971375957476
 #define WDP 0.0
-#define WDS 1.0
+#define WDS 0.9836625688987732
 #else
 #define WD 2
-#define WDT 1.5844118192164571
+#define WDT 0.10158971375957476
 #define WDP 0.0
-#define WDS 1.0
+#define WDS 0.9836625688987732
 #endif
 
 /* Guide image
@@ -261,7 +264,7 @@ vec4 hook()
 #define RFI 2
 #else
 #define RI 0
-#define RFI 0
+#define RFI 2
 #endif
 
 /* Temporal denoising
@@ -330,20 +333,20 @@ vec4 hook()
  * triangle_ (unclamped)
  */
 #ifdef LUMA_raw
-#define SK sphinx
+#define SK sphinx_
 #define RK gaussian
-#define ASK sinc
+#define ASK sinc3
 #define ASAK gaussian
 #define PSK gaussian
-#define WDK is_zero
+#define WDK gaussian
 #define WD1TK gaussian
 #else
-#define SK sphinx
+#define SK sphinx_
 #define RK gaussian
-#define ASK sphinx_
+#define ASK sinc3
 #define ASAK gaussian
 #define PSK gaussian
-#define WDK is_zero
+#define WDK gaussian
 #define WD1TK gaussian
 #endif
 
@@ -388,9 +391,9 @@ vec4 hook()
 
 // Scaling factor (should match WIDTH/HEIGHT)
 #ifdef LUMA_raw
-#define SF 2
+#define SF 1
 #else
-#define SF 2
+#define SF 1
 #endif
 
 // Use the guide image as the input image

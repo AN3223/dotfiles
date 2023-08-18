@@ -132,7 +132,7 @@ experimental/nlmeans_2x_chroma.glsl: nlmeans_template
 NLM_LGC_DESC=Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
 NLM_LGC=`./optimums/latest.sh optimums/experimental/nlmeans_lgc/chroma`
 
-experimental/nlmeans_lgc.glsl: nlmeans_template ../LQ/nlmeans.glsl
+experimental/nlmeans_lgc.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_LGC_DESC)" OPTS="$(NLM_LGC)" nlmeans_template > $@
 
 NLM_FFMPEG_EQV_DESC=Should be roughly equivalent to ffmpeg's -vf=nlmeans
