@@ -172,10 +172,10 @@ $0 !~ "^//!" && HOOK_LEN {
 		print("//!WIDTH", size ".w")
 		print("//!HEIGHT", size ".h")
 	}
-}
 
-# not a hook block, reset any hook block related stuff
-$0 !~ "^//!" { HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES); }
+	# reset hook block state
+	HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES);
+}
 
 /^\/\/cfg_desc/ {
 	$1 = ""; params = trim($0);
