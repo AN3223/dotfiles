@@ -1466,7 +1466,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define RI 0
-#define RFI 0
+#define RFI 2
 #else
 #define RI 0
 #define RFI 0
