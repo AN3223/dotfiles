@@ -819,8 +819,7 @@ float spatial_as(vec3 v)
 
 val_guide range(val_guide pdiff_sq)
 {
-	 const float h = max(EPSILON, S) * 0.013; 
-	 const float pdiff_scale = 1.0/(h*h);  // XXX move h's clamp here
+	 const float pdiff_scale = 1.0/max(EPSILON,POW2(S*0.013)); 
 	 pdiff_sq = sqrt(abs(pdiff_sq - max(EPSILON, RO)) * pdiff_scale); 
 	 return MAP_GUIDE(RK, pdiff_sq); 
 }
@@ -2021,8 +2020,7 @@ float spatial_as(vec3 v)
 
 val_guide range(val_guide pdiff_sq)
 {
-	const float h = max(EPSILON, S) * 0.013;
-	const float pdiff_scale = 1.0/(h*h); // XXX move h's clamp here
+	const float pdiff_scale = 1.0/max(EPSILON,POW2(S*0.013));
 	pdiff_sq = sqrt(abs(pdiff_sq - max(EPSILON, RO)) * pdiff_scale);
 	return MAP_GUIDE(RK, pdiff_sq);
 }
