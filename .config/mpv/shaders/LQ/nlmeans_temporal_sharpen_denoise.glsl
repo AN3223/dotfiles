@@ -468,15 +468,18 @@
 #define triangle(x) triangle_(clamp((x), 0.0, 1.0))
 #define triangle_(x) (1 - (x))
 
-// XXX could maybe be better optimized on LGC
+#define MAP1(f,param) f(param)
+#define MAP2(f,param) vec2(f(param.x), f(param.y))
+#define MAP3(f,param) vec3(f(param.x), f(param.y), f(param.z))
+
 #if defined(LUMA_raw)
 #define val float
 #define val_swizz(v) (v.x)
-#define unval(v) vec4(v.x, 0, 0, poi_.a)
+#define unval(v) vec4(v, 0, 0, poi_.a)
 #define val_packed val
 #define val_pack(v) (v)
 #define val_unpack(v) (v)
-#define MAP(f,param) f(param)
+#define MAP MAP1
 #elif defined(CHROMA_raw)
 #define val vec2
 #define val_swizz(v) (v.xy)
@@ -484,7 +487,7 @@
 #define val_packed uint
 #define val_pack(v) packUnorm2x16(v)
 #define val_unpack(v) unpackUnorm2x16(v)
-#define MAP(f,param) vec2(f(param.x), f(param.y))
+#define MAP MAP2
 #else
 #define val vec3
 #define val_swizz(v) (v.xyz)
@@ -492,7 +495,31 @@
 #define val_packed val
 #define val_pack(v) (v)
 #define val_unpack(v) (v)
-#define MAP(f,param) vec3(f(param.x), f(param.y), f(param.z))
+#define MAP MAP3
+#endif
+
+#if D1W // float guide
+#define val_guide float
+#define val_guide_swizz(v) (v.x)
+#define val_guide_packed float
+#define val_guide_pack(v) (v)
+#define val_guide_unpack(v) (v)
+#define MAP_GUIDE MAP1
+#define unval_guide(v) vec4(v, 0, 0, poi2_.a)
+#else // val guide
+#define val_guide val
+#define val_guide_swizz val_swizz
+#define val_guide_packed val_packed
+#define val_guide_pack val_pack
+#define val_guide_unpack val_unpack
+#define MAP_GUIDE MAP
+#if defined(LUMA_raw)
+#define unval_guide(v) vec4(v, 0, 0, poi2_.a)
+#elif defined(CHROMA_raw)
+#define unval_guide(v) vec4(v.x, v.y, 0, poi2_.a)
+#else
+#define unval_guide(v) vec4(v.x, v.y, v.z, poi2_.a)
+#endif
 #endif
 
 #if PS == 6
@@ -574,6 +601,7 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 #define T1 (T+1)
 #define FOR_FRAME(r) for (r.z = 0; r.z < T1; r.z++)
 
+// XXX remove the G/GC opts and use the definedness of their textures instead
 #ifdef LUMA_raw
 #define G_ G
 #else
@@ -721,16 +749,17 @@ val GET(vec3 off)
 }
 val GET_GUIDE(vec3 off)
 {
-	return off.z == 0 ? val_swizz(GET_GUIDE_(off)) : GET(off);
+	return off.z == 0 ? val_guide_swizz(GET_GUIDE_(off)) : GET(off);
 }
 #else
 #define GET(off) val_swizz(GET_(off))
-#define GET_GUIDE(off) val_swizz(GET_GUIDE_(off))
+#define GET_GUIDE(off) val_guide_swizz(GET_GUIDE_(off))
 #endif
 
-val poi2 = GET_GUIDE(vec3(0)); // guide pixel-of-interest
 vec4 poi_ = GET_(vec3(0));
+vec4 poi2_ = GET_GUIDE_(vec3(0));
 val poi = val_swizz(poi_); // pixel-of-interest
+val_guide poi2 = val_guide_swizz(poi2_); // guide pixel-of-interest
 
 #if RI // rotation
 vec2 rot(vec2 p, float d)
@@ -783,16 +812,18 @@ float spatial_as(vec3 v)
 #define spatial_p(v) (1)
 #endif
 
-val range(val pdiff_sq)
+val_guide range(val_guide pdiff_sq)
 {
 	const float h = max(EPSILON, S) * 0.013;
-	const float pdiff_scale = 1.0/(h*h);
+	const float pdiff_scale = 1.0/(h*h); // XXX move h's clamp here
 	pdiff_sq = sqrt(abs(pdiff_sq - max(EPSILON, RO)) * pdiff_scale);
-	return MAP(RK, pdiff_sq);
+	return MAP_GUIDE(RK, pdiff_sq);
 }
 
 #define GATHER (PD == 0 && NG == 0 && SAMPLE == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3 || RI == 7)
+
+// XXX normalize w/ p_scale when PST=0
 
 #if (defined(LUMA_gather) || D1W) && ((PS == 0 || ((PS == 3 || PS == 7) && RI != 7) || PS == 8) && P == 3) && REGULAR_ROTATIONS && GATHER
 // 3x3 diamond/plus or square patch_comparison_gather
@@ -919,27 +950,27 @@ float patch_comparison_gather(vec3 r)
 #else
 #define patch_comparison_gather patch_comparison
 #define STORE_POI_PATCH 1
-val poi_patch[p_area];
+val_guide poi_patch[p_area];
 #endif
 
-val patch_comparison(vec3 r)
+val_guide patch_comparison(vec3 r)
 {
 	vec3 p;
-	val min_rot = val(p_area);
+	val_guide min_rot = val_guide(p_area);
 
 	FOR_ROTATION FOR_REFLECTION {
-		val pdiff_sq = val(0);
-		val total_weight = val(0);
+		val_guide pdiff_sq = val_guide(0);
+		float total_weight = 0;
 
 		int p_index = 0;
 		FOR_PATCH(p) {
 #ifdef STORE_POI_PATCH
-			val poi_p = poi_patch[p_index++];
+			val_guide poi_p = poi_patch[p_index++];
 #else
-			val poi_p = GET_GUIDE(p);
+			val_guide poi_p = GET_GUIDE(p);
 #endif
 			vec3 transformed_p = SF * vec3(ref(rot(p.xy, ri), rfi), p.z);
-			val diff_sq = poi_p - GET_GUIDE(transformed_p + r);
+			val_guide diff_sq = poi_p - GET_GUIDE(transformed_p + r);
 			diff_sq *= diff_sq;
 
 			float weight = spatial_p(p.xy);
@@ -947,7 +978,7 @@ val patch_comparison(vec3 r)
 			total_weight += weight;
 		}
 
-		min_rot = min(min_rot, pdiff_sq / max(val(EPSILON),total_weight));
+		min_rot = min(min_rot, pdiff_sq / max(EPSILON,total_weight));
 	}
 
 	return min_rot;
@@ -955,7 +986,7 @@ val patch_comparison(vec3 r)
 
 vec4 hook()
 {
-	val total_weight = val(0);
+	val_guide total_weight = val_guide(0);
 	val sum = val(0);
 	val result = val(0);
 
@@ -971,7 +1002,7 @@ vec4 hook()
 #endif
 
 #if AS
-	val total_weight_as = val(0);
+	float total_weight_as = 0;
 	val sum_as = val(0);
 #endif
 
@@ -983,7 +1014,7 @@ vec4 hook()
 
 #if STORE_WEIGHTS
 	int r_index = 0;
-	val_packed all_weights[r_area];
+	val_guide_packed all_weights[r_area];
 	val_packed all_pixels[r_area];
 #endif
 
@@ -996,7 +1027,7 @@ vec4 hook()
 	
 #if WD == 1 // weight discard (moving cumulative average)
 	int r_iter = 1;
-	val wd_total_weight = val(0);
+	val_guide wd_total_weight = val_guide(0);
 	val wd_sum = val(0);
 #endif
 
@@ -1034,8 +1065,8 @@ vec4 hook()
 #if SKIP_PATCH
 		val weight = val(1);
 #else
-		val pdiff_sq = (r.z == 0) ? val(patch_comparison_gather(tr)) : patch_comparison(tr);
-		val weight = range(pdiff_sq);
+		val_guide pdiff_sq = (r.z == 0) ? patch_comparison_gather(tr) : patch_comparison(tr);
+		val_guide weight = range(pdiff_sq);
 #endif
 
 #if T && ME == 1 // temporal & motion estimation max weight
@@ -1044,10 +1075,6 @@ vec4 hook()
 #elif T && ME == 2 // temporal & motion estimation weighted average
 		me_sum += vec3(tr.xy,0) * weight.x;
 		me_weight += weight.x;
-#endif
-
-#if D1W
-		weight = val(weight.x);
 #endif
 
 		weight *= spatial_r(r);
@@ -1059,21 +1086,21 @@ vec4 hook()
 #endif
 
 #if WD == 1 // weight discard (moving cumulative average)
-		val wd_scale = val(1.0/r_iter);
+		float wd_scale = 1.0/r_iter;
 
-		val below_threshold = WDS * abs(min(val(0.0), weight - (total_weight * wd_scale * WDT * WD1TK(sqrt(wd_scale*WDP)))));
-		val wdkf = MAP(WDK, below_threshold);
+		val_guide below_threshold = WDS * abs(min(val_guide(0.0), weight - (total_weight * wd_scale * WDT * WD1TK(sqrt(wd_scale*WDP)))));
+		val_guide wdkf = MAP_GUIDE(WDK, below_threshold);
 
 		wd_sum += px * weight * wdkf;
 		wd_total_weight += weight * wdkf;
 		r_iter++;
 #if STORE_WEIGHTS
-		all_weights[r_index] = val_pack(weight * wdkf);
+		all_weights[r_index] = val_guide_pack(weight * wdkf);
 		all_pixels[r_index] = val_pack(px);
 		r_index++;
 #endif
 #elif STORE_WEIGHTS
-		all_weights[r_index] = val_pack(weight);
+		all_weights[r_index] = val_guide_pack(weight);
 		all_pixels[r_index] = val_pack(px);
 		r_index++;
 #endif
@@ -1087,31 +1114,31 @@ vec4 hook()
 	} // FOR_RESEARCH
 	} // FOR_FRAME
 
-	val avg_weight = total_weight * r_scale;
+	val_guide avg_weight = total_weight * r_scale;
 
 #if defined(LUMA_raw) && V == 4
-	return unval(avg_weight);
+	return unval_guide(avg_weight);
 #elif defined(CHROMA_raw) && V == 4
 	return vec4(0.5); // XXX visualize for chroma
 #endif
 
 #if WD == 2 // weight discard (mean)
-	total_weight = val(0);
+	total_weight = val_guide(0);
 	sum = val(0);
 
 	r_index = 0;
 	FOR_FRAME(r) FOR_RESEARCH(r) {
 		val px = val_unpack(all_pixels[r_index]);
-		val weight = val_unpack(all_weights[r_index]);
+		val_guide weight = val_guide_unpack(all_weights[r_index]);
 
-		val below_threshold = WDS * abs(min(val(0.0), weight - (avg_weight * WDT)));
-		weight *= MAP(WDK, below_threshold);
+		val_guide below_threshold = WDS * abs(min(val_guide(0.0), weight - (avg_weight * WDT)));
+		weight *= MAP_GUIDE(WDK, below_threshold);
 
 		sum += px * weight;
 		total_weight += weight;
 #if V == 7
 		all_pixels[r_index] = val_pack(px);
-		all_weights[r_index] = val_pack(weight);
+		all_weights[r_index] = val_guide_pack(weight);
 #endif
 		r_index++;
 	} // FOR_FRAME FOR_RESEARCH
@@ -1128,16 +1155,16 @@ vec4 hook()
 
 	total_weight += SW * spatial_r(vec3(0));
 	sum += poi * SW * spatial_r(vec3(0));
-	result = val(sum / max(val(EPSILON),total_weight));
+	result = sum / max(val(EPSILON),val(total_weight));
 
 	// store frames for temporal
 #if T > 1
-	imageStore(PREV2, ivec2(HOOKED_pos*HOOKED_size), unval(GET_GUIDE(vec3(0,0,2-1))));
+	imageStore(PREV2, ivec2(HOOKED_pos*HOOKED_size), unval_guide(GET_GUIDE(vec3(0,0,2-1))));
 #endif
 #if T && TRF
 	imageStore(PREV1, ivec2(HOOKED_pos*HOOKED_size), unval(result));
 #elif T
-	imageStore(PREV1, ivec2(HOOKED_pos*HOOKED_size), unval(poi2));
+	imageStore(PREV1, ivec2(HOOKED_pos*HOOKED_size), unval_guide(poi2));
 #endif
 
 #if AS == 1 // sharpen+denoise
@@ -1153,7 +1180,7 @@ vec4 hook()
 #endif
 
 #if AS // sharpening
-	val usm = AS_input - sum_as/max(val(EPSILON),total_weight_as);
+	val usm = AS_input - sum_as/max(EPSILON,total_weight_as);
 	usm = POW(usm, ASP);
 	usm *= ASAK(abs((AS_base + usm - 0.5) / 1.5) * ASA);
 	usm *= ASF;
@@ -1173,7 +1200,7 @@ vec4 hook()
 #elif V == 2
 	result = (poi - result) * 0.5 + 0.5;
 #elif V == 3
-	result = avg_weight;
+	result = val(avg_weight);
 #elif V == 5
 	result = 0.5 + usm;
 #elif V == 6
@@ -1183,7 +1210,7 @@ vec4 hook()
 	r_index = 0;
 	FOR_FRAME(r) FOR_RESEARCH(r) {
 		if (v7cell_off == r.xy)
-			result = val_unpack(all_weights[r_index]);
+			result = val_guide_unpack(all_weights[r_index]);
 		r_index++;
 	}
 
