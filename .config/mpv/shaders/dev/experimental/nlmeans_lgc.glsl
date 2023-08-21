@@ -26,7 +26,7 @@
 //!WIDTH LUMA.w
 //!HEIGHT LUMA.h
 //!DESC Non-local means (Guide, share)
-//!SAVE GC
+//!SAVE G
 
 vec4 hook()
 {
@@ -35,7 +35,7 @@ vec4 hook()
 
 //!HOOK CHROMA
 //!BIND HOOKED
-//!BIND GC
+//!BIND G
 //!DESC Non-local means (experimental/nlmeans_lgc.glsl)
 //!WIDTH LUMA.w
 //!HEIGHT LUMA.h
@@ -48,9 +48,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 5.134797028048205
+#define S 5.263721154467543
 #else
-#define S 5.134797028048205
+#define S 5.263721154467543
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -69,17 +69,17 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.6566889483806091
-#define ASA 0.1634051761187409
-#define ASP 0.9043351268313563
-#define ASS 0.25960879579561547
+#define ASF 0.6970708942804477
+#define ASA 0.16845795477929615
+#define ASP 0.9023066793437277
+#define ASS 0.26966044806242867
 #define ASI 0
 #else
 #define AS 1
-#define ASF 0.6566889483806091
-#define ASA 0.1634051761187409
-#define ASP 0.9043351268313563
-#define ASS 0.25960879579561547
+#define ASF 0.6970708942804477
+#define ASA 0.16845795477929615
+#define ASP 0.9023066793437277
+#define ASS 0.26966044806242867
 #define ASI 0
 #endif
 
@@ -88,9 +88,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 1.199332042678675
+#define SW 1.296015865059474
 #else
-#define SW 1.199332042678675
+#define SW 1.296015865059474
 #endif
 
 /* Spatial kernel
@@ -107,12 +107,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.6277209687424011
+#define SS 0.6275483036532524
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.6277209687424011
+#define SS 0.6275483036532524
 #define PST 0
 #define PSS 0.0
 #endif
@@ -232,17 +232,6 @@ vec4 hook()
 #define WDP 0.0
 #define WDS 1.0
 #endif
-
-/* Guide image
- *
- * This setting is dependent on code generation from shader_cfg, so this 
- * setting can only be enabled via shader_cfg.
- *
- * Computes weights on a guide, which could be a downscaled image or the output 
- * of another shader, and applies the weights to the original image
- */
-#define G 0
-#define GC 1
 
 /* Rotational/reflectional invariance
  *
@@ -613,13 +602,6 @@ const float hr = int(R/2) - 0.5*(1-(R%2)); // sample between pixels for even res
 #define T1 (T+1)
 #define FOR_FRAME(r) for (r.z = 0; r.z < T1; r.z++)
 
-// XXX remove the G/GC opts and use the definedness of their textures instead
-#ifdef LUMA_raw
-#define G_ G
-#else
-#define G_ GC
-#endif
-
 // donut increment, increments without landing on (0,0,0)
 // much faster than a continue statement
 #define DINCR(z,c,a) ((z.c += a),(z.c += int(z == vec3(0))))
@@ -726,6 +708,11 @@ const float hr_scale = 1.0/hr;
 #define sample(tex, pos, size, pt, off) tex((pos) + (pt) * vec2(off))
 #endif
 
+/* Guide images are bound through the G (luma) GC (chroma, or non-luma) 
+ * textures. When bound, these are where the weights are computed. Otherwise 
+ * the weights are computed on the hooked texture.
+ */
+
 #if GI && defined(LUMA_raw)
 #define GET_(off) sample(G_tex, G_pos, G_size, G_pt, off)
 #elif GI
@@ -734,15 +721,11 @@ const float hr_scale = 1.0/hr;
 #define GET_(off) sample(HOOKED_tex, HOOKED_pos, HOOKED_size, HOOKED_pt, off)
 #endif
 
-#if G_ && defined(LUMA_raw)
+#if defined(G_raw) && (defined(LUMA_raw) || D1W)
 #define GET_GUIDE_(off) sample(G_tex, G_pos, G_size, G_pt, off)
 #define gather_offs(off, off_arr) (G_mul * vec4(textureGatherOffsets(G_raw, G_pos + vec2(off) * G_pt, off_arr)))
 #define gather(off) G_gather(G_pos + (off) * G_pt, 0)
-#elif G_ && D1W
-#define GET_GUIDE_(off) sample(GC_tex, GC_pos, GC_size, GC_pt, off)
-#define gather_offs(off, off_arr) (GC_mul * vec4(textureGatherOffsets(GC_raw, GC_pos + vec2(off) * GC_pt, off_arr)))
-#define gather(off) GC_gather(GC_pos + (off) * GC_pt, 0)
-#elif G_
+#elif defined(GC_raw)
 #define GET_GUIDE_(off) sample(GC_tex, GC_pos, GC_size, GC_pt, off)
 #else
 #define GET_GUIDE_(off) GET_(off)
