@@ -791,8 +791,10 @@ float spatial_as(vec3 v)
 
 #if PST && P >= PST
 #define spatial_p(v) PSK(length(v)*PSS)
+#define normalize_p(x,expr) ((x) / (expr))
 #else
 #define spatial_p(v) (1)
+#define normalize_p(x,expr) ((x) * p_scale)
 #endif
 
 val_guide range(val_guide pdiff_sq)
@@ -804,8 +806,6 @@ val_guide range(val_guide pdiff_sq)
 
 #define GATHER (PD == 0 && NG == 0 && SAMPLE == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3 || RI == 7)
-
-// XXX normalize w/ p_scale when PST=0
 
 #if (defined(LUMA_gather) || D1W) && ((PS == 0 || ((PS == 3 || PS == 7) && RI != 7) || PS == 8) && P == 3) && REGULAR_ROTATIONS && GATHER
 // 3x3 diamond/plus or square patch_comparison_gather
@@ -896,7 +896,7 @@ float patch_comparison_gather(vec3 r)
 #endif
 
 	float center_diff = poi2.x - GET_GUIDE(r).x;
-	return (POW2(center_diff) + min_rot) / max(EPSILON,total_weight);
+	return normalize_p(POW2(center_diff) + min_rot, max(EPSILON,total_weight));
 }
 #elif (defined(LUMA_gather) || D1W) && PS == 4 && P == 3 && RI == 0 && RFI == 0 && GATHER
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
@@ -906,7 +906,10 @@ vec4 spatial_p_weights = vec4(spatial_p(vec2(0,-1)), spatial_p(vec2(-1,0)), spat
 float patch_comparison_gather(vec3 r)
 {
 	vec4 pdiff = poi_patch - gather_offs(r, offsets_sf);
-	return dot(POW2(pdiff) * spatial_p_weights, vec4(1)) / dot(spatial_p_weights, vec4(1));
+	return normalize_p(
+		dot(POW2(pdiff) * spatial_p_weights, vec4(1)),
+		dot(spatial_p_weights, vec4(1))
+	);
 }
 #elif (defined(LUMA_gather) || D1W) && PS == 6 && RI == 0 && RFI == 0 && GATHER
 // tiled even square patch_comparison_gather
@@ -927,7 +930,7 @@ float patch_comparison_gather(vec3 r)
 		total_weight += dot(weights, vec4(1));
 	}
 
-	return pdiff_sq / max(EPSILON,total_weight);
+	return normalize_p(pdiff_sq, max(EPSILON,total_weight));
 }
 #else
 #define patch_comparison_gather patch_comparison
@@ -960,7 +963,7 @@ val_guide patch_comparison(vec3 r)
 			total_weight += weight;
 		}
 
-		min_rot = min(min_rot, pdiff_sq / max(EPSILON,total_weight));
+		min_rot = min(min_rot, normalize_p(pdiff_sq, max(EPSILON,total_weight)));
 	}
 
 	return min_rot;
