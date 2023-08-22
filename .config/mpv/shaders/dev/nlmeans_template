@@ -28,7 +28,6 @@
 //cfg_tex SAVE=EP DESC=EP SIZE=0 COPY=LUMA
 //cfg_storage if T_FRAME_LIMIT; i=1...T_FRAME_LIMIT; TEXTURE=PREV${i} SIZE=T_RES=3840x3840 FORMAT=r16f
 //cfg_hook
-//cfg_range if D1W; //!OFFSET ALIGN
 
 // User variables
 

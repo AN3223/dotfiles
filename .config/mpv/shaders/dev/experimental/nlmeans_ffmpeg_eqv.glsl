@@ -26,7 +26,6 @@
 //!BIND HOOKED
 //!DESC Non-local means (experimental/nlmeans_ffmpeg_eqv.glsl)
 
-
 // User variables
 
 // It is generally preferable to denoise luma and chroma differently, so the 

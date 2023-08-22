@@ -51,7 +51,6 @@
 //!DESC Non-local means (nlmeans.glsl)
 //!SAVE G
 
-
 // User variables
 
 // It is generally preferable to denoise luma and chroma differently, so the 
@@ -1254,7 +1253,6 @@ vec4 hook()
 //!BIND G
 //!BIND GC
 //!DESC Non-local means (HQ/nlmeans_light_sharpen_only.glsl)
-
 
 // User variables
 
