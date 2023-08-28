@@ -62,9 +62,13 @@ sub avgssim(Str $out --> FatRat) {
 
 # dispatches the appropriate cfg script (if any) w/ $cfgopts
 # returns the path to the new shader
-# XXX allow custom cfg scripts to be dispatched?
+# if --vf is used then $cfgopts is just returned back
 sub run_cfg(Str $cfgopts --> Str) {
-	return %gbl<shader> if !$cfgopts && %gbl<shader>.IO.basename !~~ /_template$/;
+	if %gbl<vf> {
+		return $cfgopts;
+	} elsif !$cfgopts && %gbl<shader>.IO.basename !~~ /_template$/ {
+		return %gbl<shader>;
+	}
 
 	my $out-shader;
 	loop { # ensure a unique filename
@@ -89,21 +93,15 @@ sub libplacebo(*@opts --> Str) {
 
 # XXX should be able to handle multiple files at a time too
 sub shader_ssim($corrupt-media, @shaders) {
-	my Bool $batch = @shaders.elems > 1;
+	my @crptpads = do "[crpt$_]" for ^@shaders.elems;
+	my @cleanpads = do "[clean$_]" for ^@shaders.elems;
 
-	my (@crptpads, @cleanpads);
-	if $batch {
-		@crptpads = do "[crpt$_]" for ^@shaders.elems;
-		@cleanpads = do "[clean$_]" for ^@shaders.elems;
-	} else {
-		@crptpads = "[0:v]";
-		@cleanpads = "[1:v]";
-	}
+	my &corruptor = %gbl<shader> ?? { libplacebo("custom_shader_path=$_") } !! { "{%gbl<vf>}=$_" };
 
 	my $vf = (
-		("hwupload,split={@shaders.elems}" ~ @crptpads.join() if $batch),
-		("split={@shaders.elems}" ~ @cleanpads.join() if $batch),
-		(do @crptpads[$_.key] ~ ("hwupload," if not $batch) ~ libplacebo("custom_shader_path={$_.value}") ~ "[out{$_.key}]" for @shaders.pairs).join(";\n"),
+		(("hwupload," if %gbl<shader>) ~ "split={@shaders.elems}" ~ @crptpads.join()),
+		("split={@shaders.elems}" ~ @cleanpads.join()),
+		(do @crptpads[$_.key] ~ &corruptor($_.value) ~ "[out{$_.key}]" for @shaders.pairs).join(";\n"),
 		(do "{@cleanpads[$_]}[out$_]ssim={%gbl<tmpdir>}/ssim$_" for ^@shaders).join(";\n")
 	).join(";\n");
 
@@ -349,11 +347,13 @@ sub MAIN(
 	Str :$stats-dir where *.IO.d = "stats", #= Directory where stats will be stored
 	Str :$tmpdir where *.IO.d = '/dev/shm', #= Directory for temporary files
 	Bool :$verbose = False, Bool :$v = False, #= Verbose output for debugging
+	Str :$vf = "", #= Test an ffmpeg filter instead of a shader, accepts --cfgopts and overrides --shader
 	Str :$vk-device = "vulkan" #= Device name passed to ffmpeg's -init_hw_device option
 ) {
-	%gbl<shader verbose vk plane resolution pix-fmt> = $shader, ($verbose || $v), $vk-device, $plane, $resolution, $pix-fmt;
+	%gbl<shader vf verbose vk plane resolution pix-fmt> = $shader, $vf, ($verbose || $v), $vk-device, $plane, $resolution, $pix-fmt;
 	%gbl<outopts> = { "c:v" => "ffv1", "colorspace" => $colorspace, "pix_fmt" => $pix-fmt };
 	%gbl<max max-iter max-samples max-decay max-min-decay> = $max, $max-iter, $max-samples, $max-decay, $max-min-decay;
+	%gbl<shader> = "" if %gbl<vf>;
 
 	die 'no test media specified' if not @test-media;
 
