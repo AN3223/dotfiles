@@ -87,8 +87,12 @@ sub run_cfg(Str $cfgopts --> Str) {
 # libplacebo filter string with resolution, format, etc. set
 sub libplacebo(*@opts --> Str) {
 	my Str $res = (["w=","h="] Z~ %gbl<resolution>.split(':')[0..1]).join(':');
-	my Str $opts = @opts ?? (':' ~ @opts.join(':')) !! "";
-	"libplacebo={$res}:format={%gbl<pix-fmt>}:dithering=none:upscaler=none:downscaler=none:peak_detect=false" ~ $opts
+	("libplacebo={$res}:format={%gbl<pix-fmt>}",
+		|@opts,
+		"dithering=none",
+		"upscaler=none",
+		"downscaler=none",
+		"peak_detect=false").join(':')
 }
 
 # XXX should be able to handle multiple files at a time too
@@ -426,8 +430,10 @@ sub MAIN(
 	if not $no-baseline {
 		note('Measuring baseline...');
 		my $baseline = avgssim(%tmp<corrupt>.map({
-			run(ffmpeg($_, %gbl<media>, :init_hw_device(%gbl<vk>), :lavfi("[0:v]hwupload,{libplacebo()},hwdownload[crpt]; [crpt][1:v]ssim=-"), |%gbl<outopts>))
-				.out.slurp(:close)
+			run(ffmpeg($_, %gbl<media>, :init_hw_device(%gbl<vk>),
+				:lavfi("[0:v]hwupload,{libplacebo()},hwdownload[crpt]; [crpt][1:v]ssim=-"),
+				|%gbl<outopts>)
+			).out.slurp(:close)
 		}).join("\n"));
 		stats "# BASELINE=$corruption", $baseline;
 	}
