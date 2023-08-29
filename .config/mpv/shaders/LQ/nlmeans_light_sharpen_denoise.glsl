@@ -433,6 +433,11 @@
 // avoids actually calling pow() since apparently it's buggy on nvidia
 #define POW(x,y) (exp(log(abs(x)) * y) * sign(x))
 
+// boolean logic w/ vectors
+#define NOT(x) (1 - (x))
+#define AND *
+#define TERNARY(cond, x, y) ((x)*(cond) + (y)*NOT(cond))
+
 // XXX make this capable of being set per-kernel, e.g., RK0, SK0...
 #define K0 1.0
 
@@ -445,12 +450,12 @@
 #define is_zero(x) int(x == 0)
 #define lanczos(x) (sinc3(x) * sinc(x))
 #define quadratic(x) quadratic_(clamp((x), 0.0, 1.5))
-#define quadratic_(x) ((x) < 0.5 ? 0.75 - POW2(x) : 0.5 * POW2((x) - 1.5))
+#define quadratic_(x) TERNARY(step(x, 0.5), 0.75 - POW2(x), 0.5 * POW2((x) - 1.5))
 #define sinc(x) sinc_(clamp((x), 0.0, 1.0))
 #define sinc3(x) sinc_(clamp((x), 0.0, 3.0))
-#define sinc_(x) ((x) < 1e-3 ? 1.0 : sin((x)*M_PI) / ((x)*M_PI))
+#define sinc_(x) TERNARY(step(x, 1e-3), 1.0, sin((x)*M_PI) / ((x)*M_PI))
 #define sphinx(x) sphinx_(clamp((x), 0.0, 1.4302966531242027))
-#define sphinx_(x) ((x) < 1e-3 ? 1.0 : 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
+#define sphinx_(x) TERNARY(step(x, 1e-3), 1.0, 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
 #define triangle(x) triangle_(clamp((x), 0.0, 1.0))
 #define triangle_(x) (1 - (x))
 
@@ -797,7 +802,7 @@ val_guide range(val_guide pdiff_sq)
 {
 	const float pdiff_scale = 1.0/max(EPSILON,POW2(S*0.013));
 	pdiff_sq = sqrt(abs(pdiff_sq - max(EPSILON, RO)) * pdiff_scale);
-	return MAP_GUIDE(RK, pdiff_sq);
+	return RK(pdiff_sq);
 }
 
 #define GATHER (PD == 0 && NG == 0 && SAMPLE == 0) // never textureGather if any of these conditions are false
