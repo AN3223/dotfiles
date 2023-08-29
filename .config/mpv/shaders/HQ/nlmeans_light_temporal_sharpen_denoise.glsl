@@ -419,6 +419,13 @@
 #define V 0
 #endif
 
+// Fast approximate division
+#ifdef LUMA_raw
+#define FAST_DIV 0
+#else
+#define FAST_DIV 0
+#endif
+
 // Force disable textureGather
 #ifdef LUMA_raw
 #define NG 0
@@ -459,9 +466,24 @@
 #define POW(x,y) (exp(log(abs(x)) * y) * sign(x))
 
 // boolean logic w/ vectors
+// from hdeband
 #define NOT(x) (1 - (x))
 #define AND *
 #define TERNARY(cond, x, y) ((x)*(cond) + (y)*NOT(cond))
+
+// from FSR
+#if FAST_DIV
+#define RECIPROCAL(x) uintBitsToFloat(uint(0x7ef07ebb) - floatBitsToUint(x))
+#define DIV(x,y) ((x) * RECIPROCAL(y))
+#define MED_RCP_B(x) uintBitsToFloat(uint(0x7ef19fff) - floatBitsToUint(x))
+#define MED_RECIPROCAL(x) (MED_RCP_B(x) * (-MED_RCP_B(x) * x + 2))
+#define MED_DIV(x,y) ((x) * MED_RECIPROCAL(y))
+#else
+#define RECIPROCAL(x) (1.0/(x))
+#define MED_RECIPROCAL(x) (1.0/(x))
+#define DIV(x,y) ((x)/(y))
+#define MED_DIV(x,y) ((x)/(y))
+#endif
 
 // XXX make this capable of being set per-kernel, e.g., RK0, SK0...
 #define K0 1.0
@@ -478,9 +500,9 @@
 #define quadratic_(x) TERNARY(step(x, 0.5), 0.75 - POW2(x), 0.5 * POW2((x) - 1.5))
 #define sinc(x) sinc_(clamp((x), 0.0, 1.0))
 #define sinc3(x) sinc_(clamp((x), 0.0, 3.0))
-#define sinc_(x) TERNARY(step(x, 1e-3), 1.0, sin((x)*M_PI) / ((x)*M_PI))
+#define sinc_(x) TERNARY(step(x, 1e-3), 1.0, DIV(sin((x)*M_PI), ((x)*M_PI)))
 #define sphinx(x) sphinx_(clamp((x), 0.0, 1.4302966531242027))
-#define sphinx_(x) TERNARY(step(x, 1e-3), 1.0, 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
+#define sphinx_(x) TERNARY(step(x, 1e-3), 1.0, DIV(3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)), POW3((x)*M_PI)))
 #define triangle(x) triangle_(clamp((x), 0.0, 1.0))
 #define triangle_(x) (1 - (x))
 
@@ -661,7 +683,7 @@ const int r_area = R_AREA(R*R);
 #define RFI1 (RFI+1)
 
 #if RI
-#define FOR_ROTATION for (float ri = 0;  ri < 360;  ri+=360.0/RI1)
+#define FOR_ROTATION for (float ri = 0;  ri < 360;  ri += DIV(360.0, RI1))
 #else
 #define FOR_ROTATION
 #endif
@@ -817,15 +839,15 @@ float spatial_as(vec3 v)
 
 #if PST && P >= PST
 #define spatial_p(v) PSK(length(v)*PSS)
-#define normalize_p(x,expr) ((x) / (expr))
+#define normalize_p(x,expr) DIV((x), (expr))
 #else
 #define spatial_p(v) (1)
 #define normalize_p(x,expr) ((x) * p_scale)
 #endif
 
+const float pdiff_scale = 1.0/max(EPSILON,POW2(S*0.013)); 
 val_guide range(val_guide pdiff_sq)
 {
-	 const float pdiff_scale = 1.0/max(EPSILON,POW2(S*0.013)); 
 	 pdiff_sq = sqrt(abs(pdiff_sq - max(EPSILON, RO)) * pdiff_scale); 
 	 return RK(pdiff_sq); 
 }
@@ -1057,7 +1079,7 @@ vec4 hook()
 	 }
 #elif T && ME == 2 // temporal & motion estimation weighted average
 	 if (r.z > 0) {
-	 	 me += round(me_sum / me_weight * MEF); 
+	 	 me += round(DIV(me_sum, me_weight) * MEF); 
 	 	 me_sum = vec3(0); 
 	 	 me_weight = 0; 
 	 }
@@ -1097,7 +1119,7 @@ vec4 hook()
 #endif
 
 #if WD == 1 // weight discard (moving cumulative average)
-	 	 float wd_scale = 1.0/r_iter; 
+	 	 float wd_scale = RECIPROCAL(r_iter); 
 
 	 	 val_guide below_threshold = WDS * abs(min(val_guide(0.0), weight - (total_weight * wd_scale * WDT * WD1TK(sqrt(wd_scale*WDP))))); 
 	 	 val_guide wdkf = MAP_GUIDE(WDK, below_threshold); 
@@ -1166,7 +1188,7 @@ vec4 hook()
 
 	 total_weight += SW * spatial_r(vec3(0)); 
 	 sum += poi * SW * spatial_r(vec3(0)); 
-	 result = sum / max(val(EPSILON),val(total_weight)); 
+	 result = MED_DIV(sum, max(val(EPSILON),val(total_weight))); 
 
 	 // store frames for temporal
 #if T > 1
@@ -1191,9 +1213,10 @@ vec4 hook()
 #endif
 
 #if AS // sharpening
-	 val usm = AS_input - sum_as/max(EPSILON,total_weight_as); 
+	 val usm = AS_input - MED_DIV(sum_as, max(EPSILON,total_weight_as)); 
 	 usm = POW(usm, ASP); 
-	 usm *= ASAK(abs((AS_base + usm - 0.5) / 1.5) * ASA); 
+	 const float as_scale_15 = 1.0/1.5; 
+	 usm *= ASAK(abs((AS_base + usm - 0.5) * as_scale_15) * ASA); 
 	 usm *= ASF; 
 	 result = AS_base + usm; 
 #endif
@@ -1629,6 +1652,13 @@ vec4 hook()
 #define V 0
 #endif
 
+// Fast approximate division
+#ifdef LUMA_raw
+#define FAST_DIV 0
+#else
+#define FAST_DIV 0
+#endif
+
 // Force disable textureGather
 #ifdef LUMA_raw
 #define NG 0
@@ -1669,9 +1699,24 @@ vec4 hook()
 #define POW(x,y) (exp(log(abs(x)) * y) * sign(x))
 
 // boolean logic w/ vectors
+// from hdeband
 #define NOT(x) (1 - (x))
 #define AND *
 #define TERNARY(cond, x, y) ((x)*(cond) + (y)*NOT(cond))
+
+// from FSR
+#if FAST_DIV
+#define RECIPROCAL(x) uintBitsToFloat(uint(0x7ef07ebb) - floatBitsToUint(x))
+#define DIV(x,y) ((x) * RECIPROCAL(y))
+#define MED_RCP_B(x) uintBitsToFloat(uint(0x7ef19fff) - floatBitsToUint(x))
+#define MED_RECIPROCAL(x) (MED_RCP_B(x) * (-MED_RCP_B(x) * x + 2))
+#define MED_DIV(x,y) ((x) * MED_RECIPROCAL(y))
+#else
+#define RECIPROCAL(x) (1.0/(x))
+#define MED_RECIPROCAL(x) (1.0/(x))
+#define DIV(x,y) ((x)/(y))
+#define MED_DIV(x,y) ((x)/(y))
+#endif
 
 // XXX make this capable of being set per-kernel, e.g., RK0, SK0...
 #define K0 1.0
@@ -1688,9 +1733,9 @@ vec4 hook()
 #define quadratic_(x) TERNARY(step(x, 0.5), 0.75 - POW2(x), 0.5 * POW2((x) - 1.5))
 #define sinc(x) sinc_(clamp((x), 0.0, 1.0))
 #define sinc3(x) sinc_(clamp((x), 0.0, 3.0))
-#define sinc_(x) TERNARY(step(x, 1e-3), 1.0, sin((x)*M_PI) / ((x)*M_PI))
+#define sinc_(x) TERNARY(step(x, 1e-3), 1.0, DIV(sin((x)*M_PI), ((x)*M_PI)))
 #define sphinx(x) sphinx_(clamp((x), 0.0, 1.4302966531242027))
-#define sphinx_(x) TERNARY(step(x, 1e-3), 1.0, 3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)) / POW3((x)*M_PI))
+#define sphinx_(x) TERNARY(step(x, 1e-3), 1.0, DIV(3.0 * (sin((x)*M_PI) - (x)*M_PI * cos((x)*M_PI)), POW3((x)*M_PI)))
 #define triangle(x) triangle_(clamp((x), 0.0, 1.0))
 #define triangle_(x) (1 - (x))
 
@@ -1871,7 +1916,7 @@ const int r_area = R_AREA(R*R);
 #define RFI1 (RFI+1)
 
 #if RI
-#define FOR_ROTATION for (float ri = 0; ri < 360; ri+=360.0/RI1)
+#define FOR_ROTATION for (float ri = 0; ri < 360; ri += DIV(360.0, RI1))
 #else
 #define FOR_ROTATION
 #endif
@@ -2028,15 +2073,15 @@ float spatial_as(vec3 v)
 
 #if PST && P >= PST
 #define spatial_p(v) PSK(length(v)*PSS)
-#define normalize_p(x,expr) ((x) / (expr))
+#define normalize_p(x,expr) DIV((x), (expr))
 #else
 #define spatial_p(v) (1)
 #define normalize_p(x,expr) ((x) * p_scale)
 #endif
 
+const float pdiff_scale = 1.0/max(EPSILON,POW2(S*0.013));
 val_guide range(val_guide pdiff_sq)
 {
-	const float pdiff_scale = 1.0/max(EPSILON,POW2(S*0.013));
 	pdiff_sq = sqrt(abs(pdiff_sq - max(EPSILON, RO)) * pdiff_scale);
 	return RK(pdiff_sq);
 }
@@ -2268,7 +2313,7 @@ vec4 hook()
 	}
 #elif T && ME == 2 // temporal & motion estimation weighted average
 	if (r.z > 0) {
-		me += round(me_sum / me_weight * MEF);
+		me += round(DIV(me_sum, me_weight) * MEF);
 		me_sum = vec3(0);
 		me_weight = 0;
 	}
@@ -2308,7 +2353,7 @@ vec4 hook()
 #endif
 
 #if WD == 1 // weight discard (moving cumulative average)
-		float wd_scale = 1.0/r_iter;
+		float wd_scale = RECIPROCAL(r_iter);
 
 		val_guide below_threshold = WDS * abs(min(val_guide(0.0), weight - (total_weight * wd_scale * WDT * WD1TK(sqrt(wd_scale*WDP)))));
 		val_guide wdkf = MAP_GUIDE(WDK, below_threshold);
@@ -2377,7 +2422,7 @@ vec4 hook()
 
 	total_weight += SW * spatial_r(vec3(0));
 	sum += poi * SW * spatial_r(vec3(0));
-	result = sum / max(val(EPSILON),val(total_weight));
+	result = MED_DIV(sum, max(val(EPSILON),val(total_weight)));
 
 	// store frames for temporal
 #if T > 1
@@ -2402,9 +2447,10 @@ vec4 hook()
 #endif
 
 #if AS // sharpening
-	val usm = AS_input - sum_as/max(EPSILON,total_weight_as);
+	val usm = AS_input - MED_DIV(sum_as, max(EPSILON,total_weight_as));
 	usm = POW(usm, ASP);
-	usm *= ASAK(abs((AS_base + usm - 0.5) / 1.5) * ASA);
+	const float as_scale_15 = 1.0/1.5;
+	usm *= ASAK(abs((AS_base + usm - 0.5) * as_scale_15) * ASA);
 	usm *= ASF;
 	result = AS_base + usm;
 #endif
