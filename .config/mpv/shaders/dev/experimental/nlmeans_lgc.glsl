@@ -40,7 +40,7 @@ vec4 hook()
 //!WIDTH LUMA.w
 //!HEIGHT LUMA.h
 //!OFFSET ALIGN
-//!OFFSET ALIGN
+//!WHEN CHROMA.w LUMA.w <
 
 // User variables
 
