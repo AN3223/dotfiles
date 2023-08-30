@@ -289,7 +289,7 @@ optimums/experimental/nlmeans_2x/luma:
 	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats images/ >> $@
 	@printf '\n' >> $@
 optimums/experimental/nlmeans_2x/chroma:
-	./shader_test --plane=CHROMA --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats images/ >> $@
+	./shader_test --plane=CHROMA --corruption=$(OPT_YUV420) --auto-max --optimum=$@ --no-stats images/ >> $@
 	@printf '\n' >> $@
 optimums/experimental/nlmeans_lgc/chroma:
 	./shader_test --plane=CHROMA --corruption=$(OPT_YUV420) --auto-max --optimum=$@ --no-stats images/ >> $@
