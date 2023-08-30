@@ -100,12 +100,12 @@ sub shader_ssim($corrupt-media, @shaders) {
 	my @crptpads = do "[crpt$_]" for ^@shaders.elems;
 	my @cleanpads = do "[clean$_]" for ^@shaders.elems;
 
-	my &corruptor = %gbl<shader> ?? { libplacebo("custom_shader_path=$_") } !! { "{%gbl<vf>}=$_" };
+	my &uncorruptor = %gbl<shader> ?? { libplacebo("custom_shader_path=$_") } !! { "{%gbl<vf>}=$_" };
 
 	my $vf = (
 		(("hwupload," if %gbl<shader>) ~ "split={@shaders.elems}" ~ @crptpads.join()),
-		("split={@shaders.elems}" ~ @cleanpads.join()),
-		(do @crptpads[$_.key] ~ &corruptor($_.value) ~ "[out{$_.key}]" for @shaders.pairs).join(";\n"),
+		("scale={%gbl<resolution>},split={@shaders.elems}" ~ @cleanpads.join()),
+		(do @crptpads[$_.key] ~ &uncorruptor($_.value) ~ "[out{$_.key}]" for @shaders.pairs).join(";\n"),
 		(do "{@cleanpads[$_]}[out$_]ssim={%gbl<tmpdir>}/ssim$_" for ^@shaders).join(";\n")
 	).join(";\n");
 
@@ -402,7 +402,6 @@ sub MAIN(
 
 	note('Preparing clean images...');
 	my $clean-lavfi = :lavfi("concat={@test-media.elems},setpts=N/(FR*TB)" if @test-media > 1);
-	$clean-lavfi = :lavfi(($clean-lavfi.value, "hwupload,{libplacebo()},hwdownload").join(','));
 	run ffmpeg(|@test-media.flat, |$clean-lavfi, :init_hw_device(%gbl<vk>), |%gbl<outopts>, :out(%tmp<media> = "{%gbl<tmp>}.concat.mkv"));
 
 	# XXX support --no-concat here?
@@ -430,9 +429,7 @@ sub MAIN(
 	if not $no-baseline {
 		note('Measuring baseline...');
 		my $baseline = avgssim(%tmp<corrupt>.map({
-			run(ffmpeg($_, %gbl<media>, :init_hw_device(%gbl<vk>),
-				:lavfi("[0:v]hwupload,{libplacebo()},hwdownload[crpt]; [crpt][1:v]ssim=-"),
-				|%gbl<outopts>)
+			run(ffmpeg($_, %gbl<media>, :init_hw_device(%gbl<vk>), :lavfi("scale={%gbl<resolution>},ssim=-"), |%gbl<outopts>)
 			).out.slurp(:close)
 		}).join("\n"));
 		stats "# BASELINE=$corruption", $baseline;
