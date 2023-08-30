@@ -49,9 +49,9 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 25.128738340050916
+#define S 16.75133388503094
 #else
-#define S 25.128738340050916
+#define S 16.75133388503094
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -70,17 +70,17 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.5567195516567242
-#define ASA 0.12350660141416078
-#define ASP 1.1699833775632626
-#define ASS 0.3360627850356381
+#define ASF 0.3847434259033854
+#define ASA 0.09233194044290467
+#define ASP 1.1284530994561286
+#define ASS 0.5686283281580635
 #define ASI 0
 #else
 #define AS 1
-#define ASF 0.5567195516567242
-#define ASA 0.12350660141416078
-#define ASP 1.1699833775632626
-#define ASS 0.3360627850356381
+#define ASF 0.3847434259033854
+#define ASA 0.09233194044290467
+#define ASP 1.1284530994561286
+#define ASS 0.5686283281580635
 #define ASI 0
 #endif
 
@@ -89,9 +89,9 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 1.7183174881824825
+#define SW 0.9933706571676131
 #else
-#define SW 1.7183174881824825
+#define SW 0.9933706571676131
 #endif
 
 /* Spatial kernel
@@ -108,12 +108,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.1250186954926116
+#define SS 1.2543130244826615
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 1.1250186954926116
+#define SS 1.2543130244826615
 #define PST 0
 #define PSS 0.0
 #endif
@@ -200,10 +200,10 @@ vec4 hook()
  * 8: plus X (symmetrical)
  */
 #ifdef LUMA_raw
-#define RS 8
+#define RS 3
 #define PS 3
 #else
-#define RS 8
+#define RS 3
 #define PS 3
 #endif
 
@@ -325,7 +325,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define SK sphinx_
 #define RK gaussian
-#define ASK sinc3
+#define ASK sphinx
 #define ASAK gaussian
 #define PSK gaussian
 #define WDK is_zero
@@ -333,7 +333,7 @@ vec4 hook()
 #else
 #define SK sphinx_
 #define RK gaussian
-#define ASK sinc3
+#define ASK sphinx
 #define ASAK gaussian
 #define PSK gaussian
 #define WDK is_zero
@@ -381,9 +381,9 @@ vec4 hook()
 
 // Scaling factor (should match WIDTH/HEIGHT)
 #ifdef LUMA_raw
-#define SF 1
+#define SF 2
 #else
-#define SF 1
+#define SF 2
 #endif
 
 // Use the guide image as the input image
