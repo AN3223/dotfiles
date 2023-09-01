@@ -28,6 +28,8 @@
 //!BIND PREV2
 //!DESC Non-local means (LQ/nlmeans_light_temporal_sharpen_denoise.glsl)
 
+
+
 // User variables
 
 // It is generally preferable to denoise luma and chroma differently, so the 
@@ -218,6 +220,25 @@
 #define WDT 0.0
 #define WDP 0.0
 #define WDS 1.0
+#endif
+
+/* Connectivity
+ *
+ * Increases weights that are near high weights, decreases weights that are 
+ * near low weights.
+ *
+ * C: Number of passes to do, more increases the effect, 0 does nothing
+ * CD: Distance between each pixel and its furthest neighbor
+ * CS: Strength of effect, higher is more
+ */
+#ifdef LUMA_raw
+#define C 0
+#define CD 1.0
+#define CS 1.0
+#else
+#define C 0
+#define CD 1.0
+#define CS 1.0
 #endif
 
 /* Rotational/reflectional invariance
@@ -434,6 +455,7 @@
 // Shader code
 
 #define EPSILON 1.2e-38
+#define FLT_EPSILON 1.19209290E-07
 #define M_PI 3.14159265358979323846
 #define POW2(x) ((x)*(x))
 #define POW3(x) ((x)*(x)*(x))
@@ -713,6 +735,7 @@ const int p_area = P_AREA(P*P);
 #endif
 
 const float r_scale = 1.0/r_area;
+const float r1_scale = 1.0/(r_area+1);
 const float p_scale = 1.0/p_area;
 const float hr_scale = 1.0/hr;
 
@@ -1004,6 +1027,8 @@ vec4 hook()
 	vec3 r = vec3(0);
 	vec3 me = vec3(0);
 
+	float sw = SW * spatial_r(vec3(0));
+
 #if T && ME == 1 // temporal & motion estimation
 	vec3 me_tmp = vec3(0);
 	float maxweight = 0;
@@ -1017,7 +1042,7 @@ vec4 hook()
 	val sum_as = val(0);
 #endif
 
-#if WD == 2 || V == 7
+#if WD == 2 || V == 7 || C
 #define STORE_WEIGHTS 1
 #else
 #define STORE_WEIGHTS 0
@@ -1133,6 +1158,44 @@ vec4 hook()
 	return vec4(0.5); // XXX visualize for chroma
 #endif
 
+#if C
+	total_weight = val_guide(0);
+	sum = val(0);
+
+	for (int c = 0; c <= C; c++) {
+		val_guide_packed all_weights_update[r_area];
+
+		r_index = 0;
+		FOR_FRAME(r) FOR_RESEARCH(r) {
+			val_guide c_sum = val_guide(0);
+			vec3 r2 = vec3(0);
+			int r2_index = 0;
+			FOR_FRAME(r2) FOR_RESEARCH(r2)
+				if (distance(r, r2) - sqrt(CD) <= FLT_EPSILON)
+					c_sum += val_guide_unpack(all_weights[r2_index++]);
+			if (length(r) - sqrt(CD) <= FLT_EPSILON)
+				c_sum += sw;
+			all_weights_update[r_index++] = val_guide_pack(c_sum);
+		}
+
+		r_index = 0;
+		FOR_FRAME(r) FOR_RESEARCH(r) {
+			val_guide old_weight = val_guide_unpack(all_weights[r_index]);
+			val_guide update = val_guide_unpack(all_weights_update[r_index]);
+			val_guide weight = old_weight * RECIPROCAL(max(EPSILON,CS))
+			                 + old_weight * update * r1_scale * CS;
+			all_weights[r_index] = val_guide_pack(weight);
+			if (c == C) { // only need to update this stuff on the final C iteration
+				val px = val_unpack(all_pixels[r_index]);
+				sum += px * weight;
+				total_weight += weight;
+				all_pixels[r_index] = val_pack(px);
+			}
+			r_index++;
+		}
+	} // for C
+#endif
+
 #if WD == 2 // weight discard (mean)
 	total_weight = val_guide(0);
 	sum = val(0);
@@ -1164,8 +1227,8 @@ vec4 hook()
 	avg_weight = total_weight * r_scale;
 #endif
 
-	total_weight += SW * spatial_r(vec3(0));
-	sum += poi * SW * spatial_r(vec3(0));
+	total_weight += sw;
+	sum += poi * sw;
 	result = MED_DIV(sum, max(val(EPSILON),val(total_weight)));
 
 	// store frames for temporal
