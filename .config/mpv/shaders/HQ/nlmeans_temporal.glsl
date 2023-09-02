@@ -60,7 +60,7 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 4.2501502977713015
+#define S 3.8070155534513885
 #else
 #define S 3.8391080491674847
 #endif
@@ -100,7 +100,7 @@
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 0.32281442328643817
+#define SW 0.31161702146553555
 #else
 #define SW 0.5455997832190327
 #endif
@@ -119,7 +119,7 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.4564269156898553
+#define SS 1.3426595626243674
 #define PST 0
 #define PSS 0.0
 #else
@@ -234,9 +234,9 @@
  * WDS (not for WDK=is_zero): Higher numbers are more eager to reduce weights
  */
 #ifdef LUMA_raw
-#define WD 1
-#define WDT 0.542341449578401
-#define WDP 6.280234243059207
+#define WD 2
+#define WDT 0.4893345936928189
+#define WDP 0.0
 #define WDS 1.0
 #else
 #define WD 0
@@ -380,7 +380,7 @@
  * RO: range kernel (takes patch differences)
  */
 #ifdef LUMA_raw
-#define RO 0.00015844923566583089
+#define RO 0.00014746957936752556
 #else
 #define RO 9.773746446023492e-05
 #endif
@@ -1356,7 +1356,7 @@ vec4 hook()
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 1.1118537189295936
+#define S 1.0891793821856746
 #else
 #define S 0.9261970284633889
 #endif
@@ -1396,7 +1396,7 @@ vec4 hook()
  * AKA the center weight, the weight of the pixel-of-interest.
  */
 #ifdef LUMA_raw
-#define SW 1.4293365399623705
+#define SW 1.4918935240131503
 #else
 #define SW 3.3672059070451072
 #endif
@@ -1415,7 +1415,7 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.12937445379258133
+#define SS 0.12303243413917926
 #define PST 0
 #define PSS 0.0
 #else
@@ -1530,9 +1530,9 @@ vec4 hook()
  * WDS (not for WDK=is_zero): Higher numbers are more eager to reduce weights
  */
 #ifdef LUMA_raw
-#define WD 2
-#define WDT 0.09635729734384033
-#define WDP 0.0
+#define WD 1
+#define WDT 0.0882286053470455
+#define WDP 1.060997583415308
 #define WDS 1.0
 #else
 #define WD 0
