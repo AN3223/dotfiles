@@ -489,5 +489,7 @@ sub MAIN(
 
 		run <bzip2 -9>, ('-f' if $force), %gbl<statsfile>.IO.path;
 	}
+
+	put "";
 }
 
