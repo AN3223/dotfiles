@@ -1,4 +1,6 @@
+optimums/third_party/LumaSharpenHook/luma.optim: sharp_strength=2.061738044455094:sharp_clamp=0.10835327696656454:offset_bias=0.5970778439597755:	0.996776
 optimums/experimental/nlmeans_simple_sharpen_only/luma.optim: ASF=2.22544973977981:ASA=0.2822308701363628:ASP=0.8365566534822378:ASS=0.16856524861657743:SST=0:AS=2:R=3:G=0:GC=0:WD=0:SKIP_PATCH=1	0.9962424
 optimums/third_party/CAS/luma.optim: SHARPENING=0.5278784400376922:	0.994462
+optimums/third_party/adaptive-sharpen/luma.optim: curve_height=0.4757266664688282:curveslope=0.258185199711284:L_compr_low=0.5901121877250196:L_compr_high=0.6384204718387059:D_compr_low=0.3269272267208515:D_compr_high=0.02107769884012256:scale_lim=0.005131114314782724:scale_cs=0.057036442219517786:pm_p=4.461863646265396:	0.9935356
 optimums/third_party/FSR_sharpen/luma.optim: SHARPNESS=0.2656132542457771:	0.9914208
 optimums/third_party/NVSharpen/luma.optim: SHARPNESS=0.25424444568748467:	0.9877488

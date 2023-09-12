@@ -293,7 +293,7 @@ optimums/DEFAULT/hdeband/chroma.optim:
 
 optimize_third_party: optimums/third_party/FSRCNNX_8/luma.optim optimums/third_party/FSRCNNX_16/luma.optim optimums/third_party/FSR_sharpen/luma.optim optimums/third_party/FSR_2x/luma.optim 
 
-# Sources:
+# Shader sources:
 ../FSR.glsl:
 	curl -L 'https://gist.githubusercontent.com/agyild/82219c545228d70c5604f865ce0b0ce5/raw/2623d743b9c23f500ba086f05b385dcb1557e15d/FSR.glsl' > $@
 	sed -i '/^\/\/!WHEN/d' $@ # https://github.com/mpv-player/mpv/issues/10246#issuecomment-1303894445
@@ -305,6 +305,8 @@ optimize_third_party: optimums/third_party/FSRCNNX_8/luma.optim optimums/third_p
 	sed -i '/^\/\/!WHEN/d' $@ # maybe unnecessary
 # FSRCNNX_8 & FSRCNNX_16: https://github.com/igv/FSRCNN-TensorFlow/releases
 # NVScaler & NVSharpen: https://gist.github.com/agyild/7e8951915b2bf24526a9343d951db214
+# LumaSharpenHook: https://gist.github.com/voltmtr/8b4404b4e23129b226b9e64863d3e28b
+# adaptive-sharpen: https://gist.github.com/igv/8a77e4eb8276753b54bb94c1c50c317e
 
 optimums/third_party/FSRCNNX_8/luma.optim:
 	./shader_test --corruption=$(OPT_2X) --optimum=$@ --no-stats --shader=../FSRCNNX_x2_8-0-4-1.glsl images/ >> $@
@@ -322,11 +324,15 @@ optimums/third_party/NVSharpen/luma.optim:
 	./shader_test --corruption=$(OPT_BLUR) --auto-max --optimum=$@ --no-stats --shader=../NVSharpen.glsl images/ >> $@
 optimums/third_party/NVScaler/luma.optim:
 	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats --shader=../NVScaler.glsl images/ >> $@
+optimums/third_party/LumaSharpenHook/luma.optim:
+	./shader_test --corruption=$(OPT_BLUR) --auto-max --optimum=$@ --no-stats --shader=../LumaSharpenHook.glsl images/ >> $@
+optimums/third_party/adaptive-sharpen/luma.optim:
+	./shader_test --corruption=$(OPT_BLUR) --auto-max --optimum=$@ --no-stats --shader=../adaptive-sharpen.glsl images/ >> $@
 
 upscalers=optimums/third_party/FSR_2x/luma.optim optimums/third_party/FSRCNNX_16/luma.optim optimums/third_party/FSRCNNX_8/luma.optim optimums/experimental/nlmeans_simple_2x/luma.optim optimums/experimental/nlmeans_2x/luma.optim optimums/third_party/CAS_2x/luma.optim optimums/third_party/NVScaler/luma.optim
 optimums/2x.comparisons: $(upscalers)
 	./optimums/latest.sh $(upscalers) | sort -n -r -k 3 > $@
-sharpeners=optimums/third_party/FSR_sharpen/luma.optim optimums/third_party/CAS/luma.optim optimums/experimental/nlmeans_simple_sharpen_only/luma.optim optimums/third_party/NVSharpen/luma.optim
+sharpeners=optimums/third_party/FSR_sharpen/luma.optim optimums/third_party/CAS/luma.optim optimums/experimental/nlmeans_simple_sharpen_only/luma.optim optimums/third_party/NVSharpen/luma.optim optimums/third_party/LumaSharpenHook/luma.optim optimums/third_party/adaptive-sharpen/luma.optim
 optimums/sharpen.comparisons: $(sharpeners)
 	./optimums/latest.sh $(sharpeners) | sort -n -r -k 3 > $@
 
