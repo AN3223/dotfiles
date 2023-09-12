@@ -1,1 +1,1 @@
-Each file here, excluding this README file, contains optimal cfgopts for different shaders. The newest cfgopts are appended to the bottom of each file as they are added.
+Subdirectories of this directory contain optimal cfgopts for different shaders. The newest cfgopts are appended to the bottom of each file as they are added. The numerical scores are SSIM. Sorted comparisons between shaders can be found here too.

@@ -1,9 +1,19 @@
 #!/bin/sh -e
 #
-# ./latest.sh file
+# ./latest.sh [FILE]...
 #
-# Returns the latest cfgopts from an optimum file
+# Returns the latest cfgopts from optimum files
+# 
+# Also returns the scores when multiple files are passed, for 
+# comparisons.
 #
 
-sed '/^$/d ; /^\#/d' "$1" | tail -n 1 | cut -f 1
+for file; do
+	if [ "$#" -gt 1 ]; then
+		printf '%s: ' "$file"
+		sed '/^$/d ; /^\#/d' "$file" | tail -n 1
+	else
+		sed '/^$/d ; /^\#/d' "$file" | tail -n 1 | cut -f 1
+	fi
+done
 

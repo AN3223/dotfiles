@@ -156,9 +156,9 @@ hdeband: ../hdeband.glsl ../LQ/hdeband.glsl
 ../LQ/hdeband.glsl: hdeband_template
 	./shader_cfg OPTS="`./optimums/latest.sh optimums/LQ/hdeband/chroma`" OPTS_LUMA="`./optimums/latest.sh optimums/LQ/hdeband/luma`" $? > $@
 
-optimize: optimize_nlmeans optimize_hdeband
+optimize: optimize_nlmeans optimize_hdeband optimize_third_party
 
-optimize_nlmeans: optimums/LQ/nlmeans optimums/DEFAULT/nlmeans optimums/HQ/nlmeans optimums/experimental/nlmeans_2x/luma optimums/experimental/nlmeans_2x/chroma optimums/experimental/nlmeans_lgc/chroma optimums/experimental/nlmeans_simple_sharpen_only/luma optimums/experimental/nlmeans_simple_sharpen_only/chroma optimums/experimental/nlmeans_simple_2x/luma optimums/experimental/nlmeans_2x/chroma
+optimize_nlmeans: optimums/LQ/nlmeans optimums/DEFAULT/nlmeans optimums/HQ/nlmeans optimums/experimental/nlmeans_2x/luma optimums/experimental/nlmeans_2x/chroma optimize_nlmeans_experimental
 
 optimums/LQ/nlmeans: optimums/LQ/nlmeans/luma optimums/LQ/nlmeans/chroma optimums/LQ/nlmeans/light/luma optimums/LQ/nlmeans/light/chroma optimums/LQ/nlmeans/sharpen_only/luma optimums/LQ/nlmeans/sharpen_only/chroma optimums/LQ/nlmeans/light/sharpen_only/luma optimums/LQ/nlmeans/light/sharpen_only/chroma optimums/LQ/nlmeans/sharpen_denoise/luma optimums/LQ/nlmeans/sharpen_denoise/chroma optimums/LQ/nlmeans/light/sharpen_denoise/luma optimums/LQ/nlmeans/light/sharpen_denoise/chroma 
 
@@ -166,7 +166,8 @@ optimums/DEFAULT/nlmeans: optimums/DEFAULT/nlmeans/luma optimums/DEFAULT/nlmeans
 
 optimums/HQ/nlmeans: optimums/HQ/nlmeans/luma optimums/HQ/nlmeans/chroma optimums/HQ/nlmeans/light/luma optimums/HQ/nlmeans/light/chroma optimums/HQ/nlmeans/sharpen_only/luma optimums/HQ/nlmeans/sharpen_only/chroma optimums/HQ/nlmeans/light/sharpen_only/luma optimums/HQ/nlmeans/light/sharpen_only/chroma optimums/HQ/nlmeans/sharpen_denoise/luma optimums/HQ/nlmeans/sharpen_denoise/chroma optimums/HQ/nlmeans/light/sharpen_denoise/luma optimums/HQ/nlmeans/light/sharpen_denoise/chroma 
 
-# XXX add FSR/FSRCNNX/etc.
+optimize_nlmeans_experimental: optimums/experimental/nlmeans_lgc/chroma optimums/experimental/nlmeans_simple_sharpen_only/luma optimums/experimental/nlmeans_simple_sharpen_only/chroma optimums/experimental/nlmeans_simple_2x/luma optimums/experimental/nlmeans_2x/chroma
+
 # XXX test against lossy codecs
 # XXX test against different noise levels
 # XXX test against softened noise
@@ -289,6 +290,21 @@ optimums/DEFAULT/hdeband/luma:
 	./shader_test --corruption=$(OPT_BAND) --auto-max --optimum=$@ --shader=hdeband_template --no-stats images/ >> $@
 optimums/DEFAULT/hdeband/chroma:
 	./shader_test --plane=CHROMA --corruption=$(OPT_BAND) --auto-max --optimum=$@ --shader=hdeband_template --no-stats images/ >> $@
+
+optimize_third_party: optimums/third_party/FSRCNNX_8/luma optimums/third_party/FSRCNNX_16/luma optimums/third_party/FSR_sharpen/luma optimums/third_party/FSR_2x/luma 
+
+optimums/third_party/FSRCNNX_8/luma:
+	./shader_test --corruption=$(OPT_2X) --optimum=$@ --no-stats --shader=../FSRCNNX_x2_8-0-4-1.glsl images/ >> $@
+optimums/third_party/FSRCNNX_16/luma:
+	./shader_test --corruption=$(OPT_2X) --optimum=$@ --no-stats --shader=../FSRCNNX_x2_16-0-4-1.glsl images/ >> $@
+optimums/third_party/FSR_sharpen/luma:
+	./shader_test --corruption=$(OPT_BLUR) --auto-max --optimum=$@ --no-stats --shader=../FSR.glsl images/ >> $@
+optimums/third_party/FSR_2x/luma:
+	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats --shader=../FSR.glsl images/ >> $@
+
+upscalers=optimums/third_party/FSR_2x/luma optimums/third_party/FSRCNNX_16/luma optimums/third_party/FSRCNNX_8/luma optimums/experimental/nlmeans_simple_2x/luma optimums/experimental/nlmeans_2x/luma
+optimums/comparisons_2x: $(upscalers)
+	./optimums/latest.sh $(upscalers) | sort -n -r -k 3 > $@
 
 readme: result_images/clean.png result_images/opt_noise.png result_images/opt_blur.png result_images/opt_blur_opt_noise.png result_images/nlmeans_opt_noise.png result_images/nlmeans_sharpen_denoise_opt_blur_opt_noise.png result_images/nlmeans_sharpen_only_opt_blur_opt_noise.png result_images/nlmeans_sharpen_only_opt_blur.png result_images/fsr_opt_blur_opt_noise.png result_images/fsr_opt_blur.png 
 

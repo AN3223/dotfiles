@@ -440,11 +440,18 @@ sub MAIN(
 		my $f = $optimum.IO;
 		$f = $_ if $_.e && $optimum-parent given $f.parent.parent.child($f.basename);
 		die 'optimum file "$f" does not exist' if not $f.e;
-		$cfgopts_ ~= ":" ~ $f.slurp.split("\n").grep(none /^$/, /^\#/)[*-1].split("\t")[0];
+		my @lines = $f.slurp.split("\n");
+		@lines .= grep(none /^$/, /^\#/);
+		if @lines {
+			$cfgopts_ ~= ":" ~ @lines[*-1].split("\t")[0];
+		} else {
+			$cfgopts_ = "NO_CFGOPTS";
+		}
 	}
 
 	my @cfgopts;
 	my @flatopts = $cfgopts_.split(/<[=:]>/, :skip-empty); # parse k=v:k=v:k=v:...
+	@flatopts = () if @flatopts.elems == 1 && @flatopts[0] eq "NO_CFGOPTS";
 	die 'invalid cfgopts' if @flatopts.elems && not @flatopts.elems %% 2;
 	my @opts = @flatopts[0,2...*].unique(:with({ $^x === $^y && die 'duplicate opt' }));
 	my @values = @flatopts[1,3...*];
