@@ -113,7 +113,7 @@ FSR for reference (noisy/blurry+noisy/sharpened):
 
 ## hdeband
 
-This is a debanding algorithm that blurs homogeneous regions together. It should be higher quality than mpv's built-in debanding, but slower.
+This is a debanding algorithm that blurs homogeneous regions together.
 
 It should be ran prior to any other shaders and mpv's built-in debanding should be disabled by setting `deband=no` in `mpv.conf`.
 
