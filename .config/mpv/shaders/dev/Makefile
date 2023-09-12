@@ -293,6 +293,12 @@ optimums/DEFAULT/hdeband/chroma.optim:
 
 optimize_third_party: optimums/third_party/FSRCNNX_8/luma.optim optimums/third_party/FSRCNNX_16/luma.optim optimums/third_party/FSR_sharpen/luma.optim optimums/third_party/FSR_2x/luma.optim 
 
+# Sources:
+../FSR.glsl:
+	curl -L 'https://gist.githubusercontent.com/agyild/82219c545228d70c5604f865ce0b0ce5/raw/2623d743b9c23f500ba086f05b385dcb1557e15d/FSR.glsl' > $@
+	sed -i '/^\/\/!WHEN/d' $@ # https://github.com/mpv-player/mpv/issues/10246#issuecomment-1303894445
+# FSRCNNX_8 & FSRCNNX_16: https://github.com/igv/FSRCNN-TensorFlow/releases
+
 optimums/third_party/FSRCNNX_8/luma.optim:
 	./shader_test --corruption=$(OPT_2X) --optimum=$@ --no-stats --shader=../FSRCNNX_x2_8-0-4-1.glsl images/ >> $@
 optimums/third_party/FSRCNNX_16/luma.optim:
@@ -308,9 +314,6 @@ optimums/2x.comparisons: $(upscalers)
 
 readme: result_images/clean.png result_images/opt_noise.png result_images/opt_blur.png result_images/opt_blur_opt_noise.png result_images/nlmeans_opt_noise.png result_images/nlmeans_sharpen_denoise_opt_blur_opt_noise.png result_images/nlmeans_sharpen_only_opt_blur_opt_noise.png result_images/nlmeans_sharpen_only_opt_blur.png result_images/fsr_opt_blur_opt_noise.png result_images/fsr_opt_blur.png 
 
-../FSR.glsl:
-	curl -L 'https://gist.githubusercontent.com/agyild/82219c545228d70c5604f865ce0b0ce5/raw/2623d743b9c23f500ba086f05b385dcb1557e15d/FSR.glsl' > $@
-	sed -i '/^\/\/!WHEN/d' $@ # https://github.com/mpv-player/mpv/issues/10246#issuecomment-1303894445
 result_images/clean.png: ../nlmeans.glsl
 	ffmpeg -y -i images/anime/mountain_adventurer.webp -vf 'crop=128:128:y=128,format=yuv420p,scale=256:256:flags=neighbor' $@
 result_images/opt_noise.png: ../nlmeans.glsl
