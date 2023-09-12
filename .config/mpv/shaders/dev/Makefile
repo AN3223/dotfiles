@@ -297,7 +297,14 @@ optimize_third_party: optimums/third_party/FSRCNNX_8/luma.optim optimums/third_p
 ../FSR.glsl:
 	curl -L 'https://gist.githubusercontent.com/agyild/82219c545228d70c5604f865ce0b0ce5/raw/2623d743b9c23f500ba086f05b385dcb1557e15d/FSR.glsl' > $@
 	sed -i '/^\/\/!WHEN/d' $@ # https://github.com/mpv-player/mpv/issues/10246#issuecomment-1303894445
+../CAS.glsl:
+	curl -L 'https://gist.githubusercontent.com/agyild/bbb4e58298b2f86aa24da3032a0d2ee6/raw/10e4ca1b6ef173b64391ce2c81b9a95fcd095931/CAS.glsl' > $@
+	sed -i '/^\/\/!WHEN/d' $@ # maybe unnecessary
+../CAS-scaled.glsl:
+	curl -L 'https://gist.githubusercontent.com/agyild/bbb4e58298b2f86aa24da3032a0d2ee6/raw/10e4ca1b6ef173b64391ce2c81b9a95fcd095931/CAS-scaled.glsl' > $@
+	sed -i '/^\/\/!WHEN/d' $@ # maybe unnecessary
 # FSRCNNX_8 & FSRCNNX_16: https://github.com/igv/FSRCNN-TensorFlow/releases
+# NVScaler & NVSharpen: https://gist.github.com/agyild/7e8951915b2bf24526a9343d951db214
 
 optimums/third_party/FSRCNNX_8/luma.optim:
 	./shader_test --corruption=$(OPT_2X) --optimum=$@ --no-stats --shader=../FSRCNNX_x2_8-0-4-1.glsl images/ >> $@
@@ -307,10 +314,21 @@ optimums/third_party/FSR_sharpen/luma.optim:
 	./shader_test --corruption=$(OPT_BLUR) --auto-max --optimum=$@ --no-stats --shader=../FSR.glsl images/ >> $@
 optimums/third_party/FSR_2x/luma.optim:
 	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats --shader=../FSR.glsl images/ >> $@
+optimums/third_party/CAS/luma.optim:
+	./shader_test --corruption=$(OPT_BLUR) --auto-max --optimum=$@ --no-stats --shader=../CAS.glsl images/ >> $@
+optimums/third_party/CAS_2x/luma.optim:
+	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats --shader=../CAS-scaled.glsl images/ >> $@
+optimums/third_party/NVSharpen/luma.optim:
+	./shader_test --corruption=$(OPT_BLUR) --auto-max --optimum=$@ --no-stats --shader=../NVSharpen.glsl images/ >> $@
+optimums/third_party/NVScaler/luma.optim:
+	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats --shader=../NVScaler.glsl images/ >> $@
 
-upscalers=optimums/third_party/FSR_2x/luma.optim optimums/third_party/FSRCNNX_16/luma.optim optimums/third_party/FSRCNNX_8/luma.optim optimums/experimental/nlmeans_simple_2x/luma.optim optimums/experimental/nlmeans_2x/luma.optim
+upscalers=optimums/third_party/FSR_2x/luma.optim optimums/third_party/FSRCNNX_16/luma.optim optimums/third_party/FSRCNNX_8/luma.optim optimums/experimental/nlmeans_simple_2x/luma.optim optimums/experimental/nlmeans_2x/luma.optim optimums/third_party/CAS_2x/luma.optim optimums/third_party/NVScaler/luma.optim
 optimums/2x.comparisons: $(upscalers)
 	./optimums/latest.sh $(upscalers) | sort -n -r -k 3 > $@
+sharpeners=optimums/third_party/FSR_sharpen/luma.optim optimums/third_party/CAS/luma.optim optimums/experimental/nlmeans_simple_sharpen_only/luma.optim optimums/third_party/NVSharpen/luma.optim
+optimums/sharpen.comparisons: $(sharpeners)
+	./optimums/latest.sh $(sharpeners) | sort -n -r -k 3 > $@
 
 readme: result_images/clean.png result_images/opt_noise.png result_images/opt_blur.png result_images/opt_blur_opt_noise.png result_images/nlmeans_opt_noise.png result_images/nlmeans_sharpen_denoise_opt_blur_opt_noise.png result_images/nlmeans_sharpen_only_opt_blur_opt_noise.png result_images/nlmeans_sharpen_only_opt_blur.png result_images/fsr_opt_blur_opt_noise.png result_images/fsr_opt_blur.png 
 

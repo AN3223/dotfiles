@@ -1,0 +1,4 @@
+optimums/experimental/nlmeans_simple_sharpen_only/luma.optim: ASF=2.22544973977981:ASA=0.2822308701363628:ASP=0.8365566534822378:ASS=0.16856524861657743:SST=0:AS=2:R=3:G=0:GC=0:WD=0:SKIP_PATCH=1	0.9962424
+optimums/third_party/CAS/luma.optim: SHARPENING=0.5278784400376922:	0.994462
+optimums/third_party/FSR_sharpen/luma.optim: SHARPNESS=0.2656132542457771:	0.9914208
+optimums/third_party/NVSharpen/luma.optim: SHARPNESS=0.25424444568748467:	0.9877488

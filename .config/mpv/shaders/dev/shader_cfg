@@ -126,8 +126,13 @@ BEGIN {
 	TEXTURES_LEN = split("HOOKED", TEXTURES)
 }
 
+# record is the start of a HOOK block
+$0 ~ "^//!HOOK " {
+	HOOK_BLOCK = 1
+}
+
 # record is part of a HOOK block
-$0 ~ "^//!" {
+$0 ~ "^//!" && HOOK_BLOCK {
 	SHADER_CODE = 0
 	HOOK_LINES[++HOOK_LEN] = $0
 	sub("^//!", "")
@@ -137,7 +142,7 @@ $0 ~ "^//!" {
 }
 
 # end of HOOK block
-$0 !~ "^//!" && HOOK_LEN {
+$0 !~ "^//!" && HOOK_BLOCK {
 	size = ""
 	save = HOOK_DIRECTIVES["SAVE"]
 	if (save) {
@@ -174,7 +179,7 @@ $0 !~ "^//!" && HOOK_LEN {
 	}
 
 	# reset hook block state
-	HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES);
+	HOOK_BLOCK = 0; HOOK_LEN = 0; split("", HOOK_DIRECTIVES); split("", HOOK_LINES);
 }
 
 /^\/\/cfg_desc/ {
