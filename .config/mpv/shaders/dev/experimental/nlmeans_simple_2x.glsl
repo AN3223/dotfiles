@@ -57,17 +57,17 @@
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.2665045145106965
-#define ASA 0.24572656526029046
-#define ASP 0.8287800116411882
-#define ASS 0.5251290518435524
+#define ASF 0.4015164483621047
+#define ASA 0.10746652018262025
+#define ASP 0.7824017735010128
+#define ASS 0.4434369135017116
 #define ASI 0
 #else
 #define AS 1
-#define ASF 0.2665045145106965
-#define ASA 0.24572656526029046
-#define ASP 0.8287800116411882
-#define ASS 0.5251290518435524
+#define ASF 0.4015164483621047
+#define ASA 0.10746652018262025
+#define ASP 0.7824017735010128
+#define ASS 0.4434369135017116
 #define ASI 0
 #endif
 
@@ -95,12 +95,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.2987191882990734
+#define SS 0.7443179352156546
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 1.2987191882990734
+#define SS 0.7443179352156546
 #define PST 0
 #define PSS 0.0
 #endif
@@ -329,17 +329,17 @@
  * triangle_ (unclamped)
  */
 #ifdef LUMA_raw
-#define SK sphinx_
+#define SK ffexp
 #define RK gaussian
-#define ASK sinc
+#define ASK ffexp
 #define ASAK gaussian
 #define PSK gaussian
 #define WDK is_zero
 #define WD1TK gaussian
 #else
-#define SK sphinx_
+#define SK ffexp
 #define RK gaussian
-#define ASK sphinx_
+#define ASK ffexp
 #define ASAK gaussian
 #define PSK gaussian
 #define WDK is_zero
