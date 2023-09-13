@@ -2,9 +2,9 @@ optimums/third_party/avisynth_2x/luma.optim: NO_CFGOPTS	0.956767
 optimums/third_party/FSRCNNX_16/luma.optim: NO_CFGOPTS	0.953037
 optimums/third_party/FSRCNNX_8/luma.optim: NO_CFGOPTS	0.9503912
 optimums/experimental/nlmeans_2x/luma.optim: ASF=0.3670880400380193:ASA=0.2641057345009124:ASP=1.2550386249911893:ASS=0.5210369938319819:S=17.02965927957138:SW=0.9003753355705424:SS=1.3471565355052786:CFG_HOOKS=LUMA:CFG_SIZE=2*:G=2*:GC=0:SF=3:PS=0:RI=7:R=7:RS=8:SK=sphinx_:AS=1:ASK=sinc3:WD=0	0.9384506
+optimums/experimental/nlmeans_simple_2x/luma.optim: ASF=0.5337754660449276:ASA=0.11069473873496634:ASP=0.826341028285739:ASS=0.48341414877081923:SS=0.7632890016707328:K0=1.2643251187409057:AS=1:R=7:SK=ffexp:ASK=ffexp:CFG_SIZE=2*:G=0:GC=0:WD=0:SKIP_PATCH=1	0.9355148
 optimums/third_party/CAS_2x/luma.optim: SHARPENING=0.5867124753964242:	0.9347452
 optimums/third_party/NVScaler/luma.optim: SHARPNESS=0.11824570140790935:	0.9342088
 optimums/third_party/libplacebo/luma.optim: w=1080:h=1080:dithering=none:peak_detect=false:upscaler=lanczos	0.9341692
-optimums/experimental/nlmeans_simple_2x/luma.optim: ASF=0.4015164483621047:ASA=0.10746652018262025:ASP=0.7824017735010128:ASS=0.4434369135017116:SS=0.7443179352156546:AS=1:R=7:SK=ffexp:ASK=ffexp:CFG_SIZE=2*:G=0:GC=0:WD=0:SKIP_PATCH=1	0.9340438
 optimums/third_party/ffmpeg_lanczos/luma.optim: w=1080:h=1080:flags=lanczos	0.9334616
 optimums/third_party/FSR_2x/luma.optim: SHARPNESS=0.40430686263527343:	0.931756

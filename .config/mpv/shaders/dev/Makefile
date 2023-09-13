@@ -336,6 +336,8 @@ optimums/third_party/libplacebo/luma.optim:
 optimums/third_party/avisynth_2x/luma.optim:
 	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats --shader=../AiUpscale_HQ_2x_Photo.glsl images/ >> $@
 
+comparisons: optimums/2x.comparisons optimums/sharpen.comparisons
+
 upscalers=optimums/third_party/FSR_2x/luma.optim optimums/third_party/FSRCNNX_16/luma.optim optimums/third_party/FSRCNNX_8/luma.optim optimums/experimental/nlmeans_simple_2x/luma.optim optimums/experimental/nlmeans_2x/luma.optim optimums/third_party/CAS_2x/luma.optim optimums/third_party/NVScaler/luma.optim optimums/third_party/ffmpeg_lanczos/luma.optim optimums/third_party/libplacebo/luma.optim optimums/third_party/avisynth_2x/luma.optim
 optimums/2x.comparisons: $(upscalers)
 	./optimums/latest.sh $(upscalers) | sort -n -r -k 3 > $@

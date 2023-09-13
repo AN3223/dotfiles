@@ -57,17 +57,17 @@
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.4015164483621047
-#define ASA 0.10746652018262025
-#define ASP 0.7824017735010128
-#define ASS 0.4434369135017116
+#define ASF 0.5337754660449276
+#define ASA 0.11069473873496634
+#define ASP 0.826341028285739
+#define ASS 0.48341414877081923
 #define ASI 0
 #else
 #define AS 1
-#define ASF 0.4015164483621047
-#define ASA 0.10746652018262025
-#define ASP 0.7824017735010128
-#define ASS 0.4434369135017116
+#define ASF 0.5337754660449276
+#define ASA 0.11069473873496634
+#define ASP 0.826341028285739
+#define ASS 0.48341414877081923
 #define ASI 0
 #endif
 
@@ -95,12 +95,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.7443179352156546
+#define SS 0.7632890016707328
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 0.7443179352156546
+#define SS 0.7632890016707328
 #define PST 0
 #define PSS 0.0
 #endif
@@ -346,6 +346,20 @@
 #define WD1TK gaussian
 #endif
 
+/* Kernel parameters
+ *
+ * The following kernels take parameters:
+ *
+ * ffexp: K0
+ */
+#ifdef LUMA_raw
+#define K0 1.2643251187409057
+#define K1 1.0
+#else
+#define K0 1.2643251187409057
+#define K1 1.0
+#endif
+
 /* Negative kernel parameter offsets
  *
  * Usually kernels go high -> low. These parameters allow for a kernel to go 
@@ -483,8 +497,7 @@
 #define MED_DIV(x,y) ((x)/(y))
 #endif
 
-// XXX make this capable of being set per-kernel, e.g., RK0, SK0...
-#define K0 1.0
+// XXX make kernel params capable of being set per-kernel, e.g., RK0, SK0...
 
 // kernels
 // XXX sinc & sphinx: 1e-3 was selected tentatively; not sure what the correct value should be (1e-8 is too low)
