@@ -1,0 +1,51 @@
+# BASELINE=VF=scale=540:540	0.927599
+w=1080:h=1080:dithering=none:peak_detect=false:upscaler=ewa_lanczos	0.9272254
+
+# BASELINE=VF=scale=540:540	0.927599
+#w=1080:h=1080:dithering=none:peak_detect=false:upscaler=bicubic	0.8719482
+
+# BASELINE=VF=scale=540:540	0.927599
+w=1080:h=1080:dithering=none:peak_detect=false:upscaler=ewa_ginseng	0.9275582
+
+# BASELINE=VF=scale=540:540	0.927599
+w=1080:h=1080:dithering=none:peak_detect=false:upscaler=ginseng	0.933811
+
+# BASELINE=VF=scale=540:540	0.927599
+w=1080:h=1080:dithering=none:peak_detect=false:upscaler=lanczos	0.9341692
+
+# BASELINE=VF=scale=540:540	0.927599
+#w=1080:h=1080:dithering=none:peak_detect=false:upscaler=gaussian	0.8913848
+
+# BASELINE=VF=scale=540:540	0.927599
+#w=1080:h=1080:dithering=none:peak_detect=false:upscaler=spline36	0.9322414
+
+# BASELINE=VF=scale=540:540	0.927599
+#w=1080:h=1080:dithering=none:peak_detect=false:upscaler=mitchell	0.912364
+
+# BASELINE=VF=scale=540:540	0.927599
+#w=1080:h=1080:dithering=none:peak_detect=false:upscaler=sinc	0.9235516
+
+# BASELINE=VF=scale=540:540	0.927599
+#w=1080:h=1080:dithering=none:peak_detect=false:upscaler=ewa_jinc	0.9040662
+
+# BASELINE=VF=scale=540:540	0.927599
+#w=1080:h=1080:dithering=none:peak_detect=false:upscaler=ewa_hann	0.9259836
+
+# BASELINE=VF=scale=540:540	0.927599
+#w=1080:h=1080:dithering=none:peak_detect=false:upscaler=catmull_rom	0.9261792
+
+# BASELINE=VF=scale=540:540	0.927599
+#w=1080:h=1080:dithering=none:peak_detect=false:upscaler=robidoux	0.9101258
+
+# BASELINE=VF=scale=540:540	0.927599
+#w=1080:h=1080:dithering=none:peak_detect=false:upscaler=robidouxsharp	0.9157176
+
+# BASELINE=VF=scale=540:540	0.927599
+#w=1080:h=1080:dithering=none:peak_detect=false:upscaler=ewa_robidouxsharp	0.9283976
+
+# BASELINE=VF=scale=540:540	0.927599
+#w=1080:h=1080:dithering=none:peak_detect=false:upscaler=ewa_robidoux	0.9209934
+
+# BASELINE=VF=scale=540:540	0.927599
+#w=1080:h=1080:dithering=none:peak_detect=false:upscaler=ewa_hanning	0.9259836
+
