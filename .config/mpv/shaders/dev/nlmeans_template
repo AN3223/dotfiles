@@ -439,6 +439,12 @@
 #define FAST_DIV 0
 #endif
 
+#ifdef LUMA_raw
+#define STORE_GUIDE 1
+#else
+#define STORE_GUIDE 0
+#endif
+
 // Force disable textureGather
 #ifdef LUMA_raw
 #define NG 0
@@ -774,14 +780,18 @@ const float hr_scale = 1.0/hr;
 
 #if defined(G_raw) && (defined(LUMA_raw) || D1W)
 #define GET_GUIDE_(off) sample(G_tex, G_pos, G_size, G_pt, off)
+#ifdef G_gather
 #define gather_offs(off, off_arr) (G_mul * vec4(textureGatherOffsets(G_raw, G_pos + vec2(off) * G_pt, off_arr)))
 #define gather(off) G_gather(G_pos + (off) * G_pt, 0)
+#endif
 #elif defined(GC_raw)
 #define GET_GUIDE_(off) sample(GC_tex, GC_pos, GC_size, GC_pt, off)
 #else
 #define GET_GUIDE_(off) GET_(off)
+#if defined(HOOKED_gather) && defined(LUMA_raw)
 #define gather_offs(off, off_arr) (HOOKED_mul * vec4(textureGatherOffsets(HOOKED_raw, HOOKED_pos + vec2(off) * HOOKED_pt, off_arr)))
 #define gather(off) HOOKED_gather(HOOKED_pos + (off)*HOOKED_pt, 0)
+#endif
 #endif
 
 #if T
@@ -866,10 +876,23 @@ val_guide range(val_guide pdiff_sq)
 	return RK(pdiff_sq);
 }
 
-#define GATHER (PD == 0 && NG == 0 && SAMPLE == 0) // never textureGather if any of these conditions are false
+#if STORE_GUIDE
+#define GUIDE_COORDS2IDX(v) int((v.x + guide_radius) + (v.y + guide_radius) * (guide_sz + 1))
+#define GUIDE_IDX2COORDS(i) (vec2(i % guide_sz, int(i/guide_sz)) - guide_radius)
+#define GET_GUIDE_CACHED(v) val_guide_unpack(all_guide_pixels[GUIDE_COORDS2IDX(v)])
+#if SKIP_PATCH
+const int guide_sz = R;
+#else
+const int guide_sz = R+P;
+#endif
+const int guide_radius = guide_sz/2;
+val_packed all_guide_pixels[POW2(guide_sz)];
+#endif
+
+#define GATHER (PD == 0 && NG == 0 && SAMPLE == 0 && STORE_GUIDE == 0) // never textureGather if any of these conditions are false
 #define REGULAR_ROTATIONS (RI == 0 || RI == 1 || RI == 3 || RI == 7)
 
-#if (defined(LUMA_gather) || D1W) && ((PS == 0 || ((PS == 3 || PS == 7) && RI != 7) || PS == 8) && P == 3) && REGULAR_ROTATIONS && GATHER
+#if defined(gather) && ((PS == 0 || ((PS == 3 || PS == 7) && RI != 7) || PS == 8) && P == 3) && REGULAR_ROTATIONS && GATHER
 // 3x3 diamond/plus or square patch_comparison_gather
 const ivec2 offsets_adj[4] = { ivec2(0,-1), ivec2(1,0), ivec2(0,1), ivec2(-1,0) };
 const ivec2 offsets_adj_sf[4] = { ivec2(0,-1) * SF, ivec2(1,0) * SF, ivec2(0,1) * SF, ivec2(-1,0) * SF };
@@ -960,7 +983,7 @@ float patch_comparison_gather(vec3 r)
 	float center_diff = poi2.x - GET_GUIDE(r).x;
 	return normalize_p(POW2(center_diff) + min_rot, max(EPSILON,total_weight));
 }
-#elif (defined(LUMA_gather) || D1W) && PS == 4 && P == 3 && RI == 0 && RFI == 0 && GATHER
+#elif defined(gather) && PS == 4 && P == 3 && RI == 0 && RFI == 0 && GATHER
 const ivec2 offsets[4] = { ivec2(0,-1), ivec2(-1,0), ivec2(0,0), ivec2(1,0) };
 const ivec2 offsets_sf[4] = { ivec2(0,-1) * SF, ivec2(-1,0) * SF, ivec2(0,0) * SF, ivec2(1,0) * SF };
 vec4 poi_patch = gather_offs(0, offsets);
@@ -973,7 +996,7 @@ float patch_comparison_gather(vec3 r)
 		dot(spatial_p_weights, vec4(1))
 	);
 }
-#elif (defined(LUMA_gather) || D1W) && PS == 6 && RI == 0 && RFI == 0 && GATHER
+#elif defined(gather) && PS == 6 && RI == 0 && RFI == 0 && GATHER
 // tiled even square patch_comparison_gather
 // XXX extend to support odd square?
 float patch_comparison_gather(vec3 r)
@@ -996,8 +1019,10 @@ float patch_comparison_gather(vec3 r)
 }
 #else
 #define patch_comparison_gather patch_comparison
+#if !STORE_GUIDE
 #define STORE_POI_PATCH 1
 val_guide poi_patch[p_area];
+#endif
 #endif
 
 val_guide patch_comparison(vec3 r)
@@ -1011,13 +1036,19 @@ val_guide patch_comparison(vec3 r)
 
 		int p_index = 0;
 		FOR_PATCH(p) {
-#ifdef STORE_POI_PATCH
+#if defined(GET_GUIDE_CACHED)
+			val_guide poi_p = GET_GUIDE_CACHED(p);
+#elif defined(STORE_POI_PATCH)
 			val_guide poi_p = poi_patch[p_index++];
 #else
 			val_guide poi_p = GET_GUIDE(p);
 #endif
 			vec3 transformed_p = SF * vec3(ref(rot(p.xy, ri), rfi), p.z);
+#if defined(GET_GUIDE_CACHED)
+			val_guide diff_sq = poi_p - GET_GUIDE_CACHED(transformed_p + r);
+#else
 			val_guide diff_sq = poi_p - GET_GUIDE(transformed_p + r);
+#endif
 			diff_sq *= diff_sq;
 
 			float weight = spatial_p(p.xy);
@@ -1061,6 +1092,23 @@ vec4 hook()
 #define STORE_WEIGHTS 0
 #endif
 
+#if STORE_GUIDE && defined(gather)
+	for (r.y = -guide_radius; r.y <= guide_radius; r.y += 2)
+	for (r.x = -guide_radius; r.x <= guide_radius; r.x += 2) {
+		vec4 pixels = gather(r.xy);
+		all_guide_pixels[GUIDE_COORDS2IDX(r.xy + vec2(0,0))] = val_pack(pixels.w);
+		all_guide_pixels[GUIDE_COORDS2IDX(r.xy + vec2(1,0))] = val_pack(pixels.z);
+		all_guide_pixels[GUIDE_COORDS2IDX(r.xy + vec2(0,1))] = val_pack(pixels.x);
+		all_guide_pixels[GUIDE_COORDS2IDX(r.xy + vec2(1,1))] = val_pack(pixels.y);
+	}
+#elif STORE_GUIDE
+	int guide_index = 0;
+	for (r.y = -guide_radius; r.y <= guide_radius; r.y++)
+	for (r.x = -guide_radius; r.x <= guide_radius; r.x++)
+		all_guide_pixels[guide_index++] = val_pack(GET_GUIDE(r));
+#endif
+
+// XXX reuse guide pixels when applicable
 #if STORE_WEIGHTS
 	int r_index = 0;
 	val_guide_packed all_weights[r_area];
@@ -1111,6 +1159,7 @@ vec4 hook()
 
 		val px = GET(tr);
 
+// XXX use P == 0 instead?
 #if SKIP_PATCH
 		val weight = val(1);
 #else
