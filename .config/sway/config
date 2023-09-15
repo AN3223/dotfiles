@@ -52,6 +52,7 @@ output * bg $bg solid_color
 #######################################################################
 
 bindsym Mod4+l exec swaylock --color 282828
+bindsym Mod4+semicolon exec swaylock --color 282828
 bindsym Mod4+c exec snotify -d
 
 # Screenshot currently focused screen
