@@ -120,7 +120,7 @@ NLM_HQ_DESC=Slow, but higher quality.
 ../HQ/nlmeans_light_temporal_sharpen_denoise.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_HQ_DESC) $(NLM_TEMPORAL_DESC) $(NLM_SHARPEN_DENOISE_DESC) $(NLM_LIGHT_DESC)" OPTS="$(NLM_TEMPORAL):`./optimums/latest.sh optimums/HQ/nlmeans/light/sharpen_denoise/chroma.optim`" OPTS_LUMA="$(NLM_TEMPORAL_LUMA):`./optimums/latest.sh optimums/HQ/nlmeans/light/sharpen_denoise/luma.optim`" nlmeans_template > $@
 
-nlmeans_experimental: experimental/nlmeans_2x.glsl experimental/nlmeans_lgc.glsl experimental/nlmeans_ffmpeg_eqv.glsl experimental/nlmeans_2x_chroma.glsl experimental/nlmeans_simple_sharpen_only.glsl experimental/nlmeans_simple_2x.glsl experimental/nlmeans_simple_2x_chroma.glsl experimental/nlmeans_less_simple_sharpen_only.glsl
+nlmeans_experimental: experimental/nlmeans_2x.glsl experimental/nlmeans_lgc.glsl experimental/nlmeans_ffmpeg_eqv.glsl experimental/nlmeans_2x_chroma.glsl experimental/nlmeans_simple_sharpen_only.glsl experimental/nlmeans_simple_2x.glsl experimental/nlmeans_simple_2x_chroma.glsl experimental/nlmeans_less_simple_sharpen_only.glsl experimental/nlmeans_simple_strong_sharpen_only.glsl experimental/nlmeans_less_simple_strong_sharpen_only.glsl
 
 NLM_2X_DESC=Experimental upscaler
 NLM_SIMPLE_SHARPEN_DESC=Sharpen without regard to noise and without actually running the NLM algorithm
@@ -135,6 +135,10 @@ experimental/nlmeans_simple_sharpen_only.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_SIMPLE_SHARPEN_DESC)" OPTS="`./optimums/latest.sh optimums/experimental/nlmeans_simple_sharpen_only/chroma.optim`" OPTS_LUMA="`./optimums/latest.sh optimums/experimental/nlmeans_simple_sharpen_only/luma.optim`" nlmeans_template > $@
 experimental/nlmeans_less_simple_sharpen_only.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_LESS_SIMPLE_SHARPEN_DESC)" OPTS="`./optimums/latest.sh optimums/experimental/nlmeans_less_simple_sharpen_only/chroma.optim`" OPTS_LUMA="`./optimums/latest.sh optimums/experimental/nlmeans_less_simple_sharpen_only/luma.optim`" nlmeans_template > $@
+experimental/nlmeans_simple_strong_sharpen_only.glsl: nlmeans_template
+	./shader_cfg DESC="$@: $(NLM_SIMPLE_SHARPEN_DESC)" OPTS="`./optimums/latest.sh optimums/experimental/nlmeans_simple_strong_sharpen_only/chroma.optim`" OPTS_LUMA="`./optimums/latest.sh optimums/experimental/nlmeans_simple_strong_sharpen_only/luma.optim`" nlmeans_template > $@
+experimental/nlmeans_less_simple_strong_sharpen_only.glsl: nlmeans_template
+	./shader_cfg DESC="$@: $(NLM_LESS_SIMPLE_SHARPEN_DESC)" OPTS="`./optimums/latest.sh optimums/experimental/nlmeans_less_simple_strong_sharpen_only/chroma.optim`" OPTS_LUMA="`./optimums/latest.sh optimums/experimental/nlmeans_less_simple_strong_sharpen_only/luma.optim`" nlmeans_template > $@
 experimental/nlmeans_simple_2x.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_SIMPLE_2X_DESC)" OPTS="CFG_HOOKS=LUMA:`./optimums/latest.sh optimums/experimental/nlmeans_simple_2x/luma.optim`" nlmeans_template > $@
 experimental/nlmeans_simple_2x_chroma.glsl: nlmeans_template
@@ -169,7 +173,7 @@ optimums/DEFAULT/nlmeans: optimums/DEFAULT/nlmeans/luma.optim optimums/DEFAULT/n
 
 optimums/HQ/nlmeans: optimums/HQ/nlmeans/luma.optim optimums/HQ/nlmeans/chroma.optim optimums/HQ/nlmeans/light/luma.optim optimums/HQ/nlmeans/light/chroma.optim optimums/HQ/nlmeans/sharpen_only/luma.optim optimums/HQ/nlmeans/sharpen_only/chroma.optim optimums/HQ/nlmeans/light/sharpen_only/luma.optim optimums/HQ/nlmeans/light/sharpen_only/chroma.optim optimums/HQ/nlmeans/sharpen_denoise/luma.optim optimums/HQ/nlmeans/sharpen_denoise/chroma.optim optimums/HQ/nlmeans/light/sharpen_denoise/luma.optim optimums/HQ/nlmeans/light/sharpen_denoise/chroma.optim 
 
-optimize_nlmeans_experimental: optimums/experimental/nlmeans_lgc/chroma.optim optimums/experimental/nlmeans_simple_sharpen_only/luma.optim optimums/experimental/nlmeans_simple_sharpen_only/chroma.optim optimums/experimental/nlmeans_simple_2x/luma.optim optimums/experimental/nlmeans_simple_2x/chroma.optim optimums/experimental/nlmeans_2x/chroma.optim optimums/experimental/nlmeans_less_simple_sharpen_only/luma.optim optimums/experimental/nlmeans_less_simple_sharpen_only/chroma.optim
+optimize_nlmeans_experimental: optimums/experimental/nlmeans_lgc/chroma.optim optimums/experimental/nlmeans_simple_sharpen_only/luma.optim optimums/experimental/nlmeans_simple_sharpen_only/chroma.optim optimums/experimental/nlmeans_simple_2x/luma.optim optimums/experimental/nlmeans_simple_2x/chroma.optim optimums/experimental/nlmeans_2x/chroma.optim optimums/experimental/nlmeans_less_simple_sharpen_only/luma.optim optimums/experimental/nlmeans_less_simple_sharpen_only/chroma.optim optimums/experimental/nlmeans_simple_strong_sharpen_only/luma.optim optimums/experimental/nlmeans_simple_strong_sharpen_only/chroma.optim optimums/experimental/nlmeans_less_simple_strong_sharpen_only/luma.optim optimums/experimental/nlmeans_less_simple_strong_sharpen_only/chroma.optim
 
 # XXX test against lossy codecs
 # XXX test against different noise levels
@@ -182,6 +186,8 @@ OPT_NOISE_LIGHT_VF=noise=alls=5
 OPT_NOISE_LIGHT=NOISE=5:10
 OPT_BLUR_VF=gblur=0.75
 OPT_BLUR=VF=$(OPT_BLUR_VF)
+OPT_STRONG_BLUR_VF=gblur=1.00
+OPT_STRONG_BLUR=VF=$(OPT_STRONG_BLUR_VF)
 OPT_2X_VF=scale=540:540
 OPT_2X=VF=$(OPT_2X_VF)
 OPT_YUV420=VF=format=yuv420p,OUTOPTS='pix_fmt yuv420p'
@@ -275,6 +281,14 @@ optimums/experimental/nlmeans_less_simple_sharpen_only/luma.optim:
 	./shader_test --corruption=$(OPT_BLUR) --auto-max --optimum=$@ --no-stats images/ >> $@
 optimums/experimental/nlmeans_less_simple_sharpen_only/chroma.optim:
 	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR) --auto-max --optimum=$@ --no-stats images/ >> $@
+optimums/experimental/nlmeans_simple_strong_sharpen_only/luma.optim:
+	./shader_test --corruption=$(OPT_STRONG_BLUR) --auto-max --optimum=$@ --no-stats images/ >> $@
+optimums/experimental/nlmeans_simple_strong_sharpen_only/chroma.optim:
+	./shader_test --plane=CHROMA --corruption=$(OPT_STRONG_BLUR) --auto-max --optimum=$@ --no-stats images/ >> $@
+optimums/experimental/nlmeans_less_simple_strong_sharpen_only/luma.optim:
+	./shader_test --corruption=$(OPT_STRONG_BLUR) --auto-max --optimum=$@ --no-stats images/ >> $@
+optimums/experimental/nlmeans_less_simple_strong_sharpen_only/chroma.optim:
+	./shader_test --plane=CHROMA --corruption=$(OPT_STRONG_BLUR) --auto-max --optimum=$@ --no-stats images/ >> $@
 optimums/experimental/nlmeans_simple_2x/luma.optim:
 	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats images/ >> $@
 optimums/experimental/nlmeans_simple_2x/chroma.optim:
