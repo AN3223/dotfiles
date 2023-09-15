@@ -120,10 +120,11 @@ NLM_HQ_DESC=Slow, but higher quality.
 ../HQ/nlmeans_light_temporal_sharpen_denoise.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_HQ_DESC) $(NLM_TEMPORAL_DESC) $(NLM_SHARPEN_DENOISE_DESC) $(NLM_LIGHT_DESC)" OPTS="$(NLM_TEMPORAL):`./optimums/latest.sh optimums/HQ/nlmeans/light/sharpen_denoise/chroma.optim`" OPTS_LUMA="$(NLM_TEMPORAL_LUMA):`./optimums/latest.sh optimums/HQ/nlmeans/light/sharpen_denoise/luma.optim`" nlmeans_template > $@
 
-nlmeans_experimental: experimental/nlmeans_2x.glsl experimental/nlmeans_lgc.glsl experimental/nlmeans_ffmpeg_eqv.glsl experimental/nlmeans_2x_chroma.glsl experimental/nlmeans_simple_sharpen_only.glsl experimental/nlmeans_simple_2x.glsl experimental/nlmeans_simple_2x_chroma.glsl
+nlmeans_experimental: experimental/nlmeans_2x.glsl experimental/nlmeans_lgc.glsl experimental/nlmeans_ffmpeg_eqv.glsl experimental/nlmeans_2x_chroma.glsl experimental/nlmeans_simple_sharpen_only.glsl experimental/nlmeans_simple_2x.glsl experimental/nlmeans_simple_2x_chroma.glsl experimental/nlmeans_less_simple_sharpen_only.glsl
 
 NLM_2X_DESC=Experimental upscaler
-NLM_SIMPLE_SHARPEN_DESC=Sharpen without actually running the NLM algorithm
+NLM_SIMPLE_SHARPEN_DESC=Sharpen without regard to noise and without actually running the NLM algorithm
+NLM_LESS_SIMPLE_SHARPEN_DESC=Sharpen without regard to noise
 NLM_SIMPLE_2X_DESC=Upscale without actually running the NLM algorithm
 
 experimental/nlmeans_2x.glsl: nlmeans_template
@@ -132,6 +133,8 @@ experimental/nlmeans_2x_chroma.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_2X_DESC)" OPTS="`./optimums/latest.sh optimums/experimental/nlmeans_2x/chroma.optim`" nlmeans_template > $@
 experimental/nlmeans_simple_sharpen_only.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_SIMPLE_SHARPEN_DESC)" OPTS="`./optimums/latest.sh optimums/experimental/nlmeans_simple_sharpen_only/chroma.optim`" OPTS_LUMA="`./optimums/latest.sh optimums/experimental/nlmeans_simple_sharpen_only/luma.optim`" nlmeans_template > $@
+experimental/nlmeans_less_simple_sharpen_only.glsl: nlmeans_template
+	./shader_cfg DESC="$@: $(NLM_LESS_SIMPLE_SHARPEN_DESC)" OPTS="`./optimums/latest.sh optimums/experimental/nlmeans_less_simple_sharpen_only/chroma.optim`" OPTS_LUMA="`./optimums/latest.sh optimums/experimental/nlmeans_less_simple_sharpen_only/luma.optim`" nlmeans_template > $@
 experimental/nlmeans_simple_2x.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_SIMPLE_2X_DESC)" OPTS="CFG_HOOKS=LUMA:`./optimums/latest.sh optimums/experimental/nlmeans_simple_2x/luma.optim`" nlmeans_template > $@
 experimental/nlmeans_simple_2x_chroma.glsl: nlmeans_template
@@ -166,7 +169,7 @@ optimums/DEFAULT/nlmeans: optimums/DEFAULT/nlmeans/luma.optim optimums/DEFAULT/n
 
 optimums/HQ/nlmeans: optimums/HQ/nlmeans/luma.optim optimums/HQ/nlmeans/chroma.optim optimums/HQ/nlmeans/light/luma.optim optimums/HQ/nlmeans/light/chroma.optim optimums/HQ/nlmeans/sharpen_only/luma.optim optimums/HQ/nlmeans/sharpen_only/chroma.optim optimums/HQ/nlmeans/light/sharpen_only/luma.optim optimums/HQ/nlmeans/light/sharpen_only/chroma.optim optimums/HQ/nlmeans/sharpen_denoise/luma.optim optimums/HQ/nlmeans/sharpen_denoise/chroma.optim optimums/HQ/nlmeans/light/sharpen_denoise/luma.optim optimums/HQ/nlmeans/light/sharpen_denoise/chroma.optim 
 
-optimize_nlmeans_experimental: optimums/experimental/nlmeans_lgc/chroma.optim optimums/experimental/nlmeans_simple_sharpen_only/luma.optim optimums/experimental/nlmeans_simple_sharpen_only/chroma.optim optimums/experimental/nlmeans_simple_2x/luma.optim optimums/experimental/nlmeans_2x/chroma.optim
+optimize_nlmeans_experimental: optimums/experimental/nlmeans_lgc/chroma.optim optimums/experimental/nlmeans_simple_sharpen_only/luma.optim optimums/experimental/nlmeans_simple_sharpen_only/chroma.optim optimums/experimental/nlmeans_simple_2x/luma.optim optimums/experimental/nlmeans_simple_2x/chroma.optim optimums/experimental/nlmeans_2x/chroma.optim optimums/experimental/nlmeans_less_simple_sharpen_only/luma.optim optimums/experimental/nlmeans_less_simple_sharpen_only/chroma.optim
 
 # XXX test against lossy codecs
 # XXX test against different noise levels
@@ -268,6 +271,10 @@ optimums/experimental/nlmeans_simple_sharpen_only/luma.optim:
 	./shader_test --corruption=$(OPT_BLUR) --auto-max --optimum=$@ --no-stats images/ >> $@
 optimums/experimental/nlmeans_simple_sharpen_only/chroma.optim:
 	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR) --auto-max --optimum=$@ --no-stats images/ >> $@
+optimums/experimental/nlmeans_less_simple_sharpen_only/luma.optim:
+	./shader_test --corruption=$(OPT_BLUR) --auto-max --optimum=$@ --no-stats images/ >> $@
+optimums/experimental/nlmeans_less_simple_sharpen_only/chroma.optim:
+	./shader_test --plane=CHROMA --corruption=$(OPT_BLUR) --auto-max --optimum=$@ --no-stats images/ >> $@
 optimums/experimental/nlmeans_simple_2x/luma.optim:
 	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats images/ >> $@
 optimums/experimental/nlmeans_simple_2x/chroma.optim:
@@ -341,7 +348,7 @@ comparisons: optimums/2x.comparisons optimums/sharpen.comparisons
 upscalers=optimums/third_party/FSR_2x/luma.optim optimums/third_party/FSRCNNX_16/luma.optim optimums/third_party/FSRCNNX_8/luma.optim optimums/experimental/nlmeans_simple_2x/luma.optim optimums/experimental/nlmeans_2x/luma.optim optimums/third_party/CAS_2x/luma.optim optimums/third_party/NVScaler/luma.optim optimums/third_party/ffmpeg_lanczos/luma.optim optimums/third_party/libplacebo/luma.optim optimums/third_party/avisynth_2x/luma.optim
 optimums/2x.comparisons: $(upscalers)
 	./optimums/latest.sh $(upscalers) | sort -n -r -k 3 > $@
-sharpeners=optimums/third_party/FSR_sharpen/luma.optim optimums/third_party/CAS/luma.optim optimums/experimental/nlmeans_simple_sharpen_only/luma.optim optimums/third_party/NVSharpen/luma.optim optimums/third_party/LumaSharpenHook/luma.optim optimums/third_party/adaptive-sharpen/luma.optim
+sharpeners=optimums/third_party/FSR_sharpen/luma.optim optimums/third_party/CAS/luma.optim optimums/experimental/nlmeans_simple_sharpen_only/luma.optim optimums/third_party/NVSharpen/luma.optim optimums/third_party/LumaSharpenHook/luma.optim optimums/third_party/adaptive-sharpen/luma.optim optimums/experimental/nlmeans_less_simple_sharpen_only/luma.optim
 optimums/sharpen.comparisons: $(sharpeners)
 	./optimums/latest.sh $(sharpeners) | sort -n -r -k 3 > $@
 

@@ -19,12 +19,12 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: experimental/nlmeans_simple_sharpen_only.glsl: Sharpen without regard to noise and without actually running the NLM algorithm
+// Description: experimental/nlmeans_less_simple_sharpen_only.glsl: Sharpen without regard to noise
 
 //!HOOK LUMA
 //!HOOK CHROMA
 //!BIND HOOKED
-//!DESC Non-local means (experimental/nlmeans_simple_sharpen_only.glsl)
+//!DESC Non-local means (experimental/nlmeans_less_simple_sharpen_only.glsl)
 
 
 
@@ -35,9 +35,9 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 1.0
+#define S 0.43128948401843625
 #else
-#define S 1.0
+#define S 1.2748141896841152
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -56,17 +56,17 @@
  */
 #ifdef LUMA_raw
 #define AS 2
-#define ASF 3.3442593371692317
-#define ASA 0.35884840939691126
-#define ASP 0.975577607282041
-#define ASS 0.07851280931090128
+#define ASF 1.0738432835491263
+#define ASA 0.4455272006300555
+#define ASP 0.9691968775119794
+#define ASS 0.15725985151856484
 #define ASI 0
 #else
 #define AS 2
-#define ASF 3.586600345617341
-#define ASA 0.17933602919162123
-#define ASP 0.9420436343810481
-#define ASS 0.02509840989580633
+#define ASF 1.6787190456244587
+#define ASA 0.20206136828104262
+#define ASP 1.2028164807455064
+#define ASS 0.0306173018008775
 #define ASI 0
 #endif
 
@@ -93,13 +93,13 @@
  * PST: enables intra-patch spatial kernel if P>=PST, 0 fully disables
  */
 #ifdef LUMA_raw
-#define SST 0
-#define SS 0.7523364290526154
+#define SST 1
+#define SS 0.7386691898818744
 #define PST 0
 #define PSS 0.0
 #else
-#define SST 0
-#define SS 0.0
+#define SST 1
+#define SS 1.3741534655703371
 #define PST 0
 #define PSS 0.0
 #endif
@@ -459,9 +459,9 @@
 
 // Skip patch comparison
 #ifdef LUMA_raw
-#define SKIP_PATCH 1
+#define SKIP_PATCH 0
 #else
-#define SKIP_PATCH 1
+#define SKIP_PATCH 0
 #endif
 
 // Shader code
