@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: LQ/nlmeans_sharpen_only.glsl: Faster, but lower quality. Sharpen without denoising.
+// Description: LQ/nlmeans_sharpen_only.glsl: Faster, but lower quality. Noise resistant sharpening without denoising.
 
 //!HOOK LUMA
 //!HOOK CHROMA

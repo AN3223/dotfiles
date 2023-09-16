@@ -35,7 +35,7 @@ nlmeans: nlmeans_default nlmeans_lq nlmeans_hq nlmeans_experimental
 
 NLM_NO_ROTATE=RI=0:RFI=0
 
-NLM_SHARPEN_ONLY_DESC=Sharpen without denoising.
+NLM_SHARPEN_ONLY_DESC=Noise resistant sharpening without denoising.
 NLM_SHARPEN_ONLY=AS=2
 
 NLM_SHARPEN_DENOISE_DESC=Sharpen and denoise.
@@ -165,7 +165,7 @@ hdeband: ../hdeband.glsl ../LQ/hdeband.glsl
 
 optimize: optimize_nlmeans optimize_hdeband optimize_third_party
 
-optimize_nlmeans: optimums/LQ/nlmeans optimums/DEFAULT/nlmeans optimums/HQ/nlmeans optimums/experimental/nlmeans_2x/luma.optim optimums/experimental/nlmeans_2x/chroma.optim optimize_nlmeans_experimental
+optimize_nlmeans: optimums/LQ/nlmeans optimums/DEFAULT/nlmeans optimums/HQ/nlmeans optimize_nlmeans_experimental
 
 optimums/LQ/nlmeans: optimums/LQ/nlmeans/luma.optim optimums/LQ/nlmeans/chroma.optim optimums/LQ/nlmeans/light/luma.optim optimums/LQ/nlmeans/light/chroma.optim optimums/LQ/nlmeans/sharpen_only/luma.optim optimums/LQ/nlmeans/sharpen_only/chroma.optim optimums/LQ/nlmeans/light/sharpen_only/luma.optim optimums/LQ/nlmeans/light/sharpen_only/chroma.optim optimums/LQ/nlmeans/sharpen_denoise/luma.optim optimums/LQ/nlmeans/sharpen_denoise/chroma.optim optimums/LQ/nlmeans/light/sharpen_denoise/luma.optim optimums/LQ/nlmeans/light/sharpen_denoise/chroma.optim 
 
@@ -173,7 +173,7 @@ optimums/DEFAULT/nlmeans: optimums/DEFAULT/nlmeans/luma.optim optimums/DEFAULT/n
 
 optimums/HQ/nlmeans: optimums/HQ/nlmeans/luma.optim optimums/HQ/nlmeans/chroma.optim optimums/HQ/nlmeans/light/luma.optim optimums/HQ/nlmeans/light/chroma.optim optimums/HQ/nlmeans/sharpen_only/luma.optim optimums/HQ/nlmeans/sharpen_only/chroma.optim optimums/HQ/nlmeans/light/sharpen_only/luma.optim optimums/HQ/nlmeans/light/sharpen_only/chroma.optim optimums/HQ/nlmeans/sharpen_denoise/luma.optim optimums/HQ/nlmeans/sharpen_denoise/chroma.optim optimums/HQ/nlmeans/light/sharpen_denoise/luma.optim optimums/HQ/nlmeans/light/sharpen_denoise/chroma.optim 
 
-optimize_nlmeans_experimental: optimums/experimental/nlmeans_lgc/chroma.optim optimums/experimental/nlmeans_simple_sharpen_only/luma.optim optimums/experimental/nlmeans_simple_sharpen_only/chroma.optim optimums/experimental/nlmeans_simple_2x/luma.optim optimums/experimental/nlmeans_simple_2x/chroma.optim optimums/experimental/nlmeans_2x/chroma.optim optimums/experimental/nlmeans_less_simple_sharpen_only/luma.optim optimums/experimental/nlmeans_less_simple_sharpen_only/chroma.optim optimums/experimental/nlmeans_simple_strong_sharpen_only/luma.optim optimums/experimental/nlmeans_simple_strong_sharpen_only/chroma.optim optimums/experimental/nlmeans_less_simple_strong_sharpen_only/luma.optim optimums/experimental/nlmeans_less_simple_strong_sharpen_only/chroma.optim
+optimize_nlmeans_experimental: optimums/experimental/nlmeans_2x/luma.optim optimums/experimental/nlmeans_2x/chroma.optim optimums/experimental/nlmeans_lgc/chroma.optim optimums/experimental/nlmeans_simple_sharpen_only/luma.optim optimums/experimental/nlmeans_simple_sharpen_only/chroma.optim optimums/experimental/nlmeans_less_simple_sharpen_only/luma.optim optimums/experimental/nlmeans_less_simple_sharpen_only/chroma.optim optimums/experimental/nlmeans_simple_strong_sharpen_only/luma.optim optimums/experimental/nlmeans_simple_strong_sharpen_only/chroma.optim optimums/experimental/nlmeans_less_simple_strong_sharpen_only/luma.optim optimums/experimental/nlmeans_less_simple_strong_sharpen_only/chroma.optim optimums/experimental/nlmeans_simple_2x/luma.optim optimums/experimental/nlmeans_simple_2x/chroma.optim 
 
 # XXX test against lossy codecs
 # XXX test against different noise levels

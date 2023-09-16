@@ -19,7 +19,7 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-// Description: HQ/nlmeans_light_sharpen_only.glsl: Slow, but higher quality. Sharpen without denoising. Tuned for light noise.
+// Description: HQ/nlmeans_light_sharpen_only.glsl: Slow, but higher quality. Noise resistant sharpening without denoising. Tuned for light noise.
 
 // The following is shader code injected from ./nlmeans_template
 /* vi: ft=c
