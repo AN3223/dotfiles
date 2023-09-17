@@ -330,7 +330,6 @@ sub MAIN(
 	Str :$cfgopts = "", #= Arguments passed to the dispatched _cfg script, if dispatched
 	Str :$colorspace = "bt709", #= Colorspace used for everything
 	Str :$corruption = "NOISE=10:10", #= Corruption type, NOISE/OUTOPTS/VF
-	Bool :$eval = False, #= Run eval on --cfgopts, tests every permutation of each list
 	Bool :$force = False, #= Force overwrite the stats file
 	Str :$max = "", #= Optimizer settings: OPTION=START=STEP (all optional, multiple can be chained with colons)
 	Bool :$auto-max = False, #= Pass all floating point --cfgopts to --max
@@ -455,9 +454,13 @@ sub MAIN(
 	die 'invalid cfgopts' if @flatopts.elems && not @flatopts.elems %% 2;
 	my @opts = @flatopts[0,2...*].unique(:with({ $^x === $^y && die 'duplicate opt' }));
 	my @values = @flatopts[1,3...*];
-	if $eval && @opts.elems != 0 {
+	if @opts {
+		# eval opt values when they are prefixed with $
+		# this enables list values, every permutation will be tested
+
 		use MONKEY-SEE-NO-EVAL;
-		@values .= map(&EVAL);
+		my &eval = { $_ ~~ /^\$/ ?? EVAL($_.subst(/^\$/)) !! $_ };
+		@values .= map(&eval);
 
 		@cfgopts = do given @opts.elems {
 			when 1 { @values[0].map({ "@opts[0]=$_" }) }
@@ -466,10 +469,8 @@ sub MAIN(
 										==> map({ $_>>.map(&msafe)>>.join('=').join(':') }) # stringify
 			}
 		}
-	} elsif @opts.elems == 0 {
-		@cfgopts = ("");
 	} else {
-		@cfgopts = $cfgopts_;
+		@cfgopts = ("");
 	}
 	if $auto-max {
 		for zip(@opts, @values) -> ($opt, $val) {
