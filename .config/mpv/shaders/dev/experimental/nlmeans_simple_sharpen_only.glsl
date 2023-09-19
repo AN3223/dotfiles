@@ -56,17 +56,17 @@
  */
 #ifdef LUMA_raw
 #define AS 2
-#define ASF 3.3442593371692317
-#define ASA 0.35884840939691126
-#define ASP 0.975577607282041
-#define ASS 0.07851280931090128
+#define ASF 3.408886014534536
+#define ASA 0.4315270899003266
+#define ASP 1.1192522537488863
+#define ASS 0.059285993837156964
 #define ASI 0
 #else
 #define AS 2
-#define ASF 3.586600345617341
-#define ASA 0.17933602919162123
-#define ASP 0.9420436343810481
-#define ASS 0.02509840989580633
+#define ASF 3.1776036344234164
+#define ASA 0.13330226463387307
+#define ASP 1.3303184190179174
+#define ASS 0.013737675951924424
 #define ASI 0
 #endif
 
@@ -93,13 +93,13 @@
  * PST: enables intra-patch spatial kernel if P>=PST, 0 fully disables
  */
 #ifdef LUMA_raw
-#define SST 0
-#define SS 0.7523364290526154
+#define SST 1
+#define SS 1.3161574521999384
 #define PST 0
 #define PSS 0.0
 #else
-#define SST 0
-#define SS 0.0
+#define SST 1
+#define SS 0.8098044124268505
 #define PST 0
 #define PSS 0.0
 #endif
@@ -345,9 +345,9 @@
 #define WDK is_zero
 #define WD1TK gaussian
 #else
-#define SK gaussian
+#define SK ffexp
 #define RK gaussian
-#define ASK sphinx_
+#define ASK gaussian
 #define ASAK gaussian
 #define PSK gaussian
 #define WDK is_zero
@@ -361,10 +361,10 @@
  * ffexp: K0
  */
 #ifdef LUMA_raw
-#define K0 1.0
+#define K0 1.212820441607251
 #define K1 1.0
 #else
-#define K0 1.0
+#define K0 1.212820441607251
 #define K1 1.0
 #endif
 

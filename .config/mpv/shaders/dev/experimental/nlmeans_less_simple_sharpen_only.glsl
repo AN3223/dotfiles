@@ -35,9 +35,9 @@
 
 // Denoising factor (sigma, higher means more blur)
 #ifdef LUMA_raw
-#define S 0.43128948401843625
+#define S 0.4189074436016427
 #else
-#define S 1.2748141896841152
+#define S 0.6562995618368771
 #endif
 
 /* Noise resistant adaptive sharpening
@@ -56,17 +56,17 @@
  */
 #ifdef LUMA_raw
 #define AS 2
-#define ASF 1.0738432835491263
-#define ASA 0.4455272006300555
-#define ASP 0.9691968775119794
-#define ASS 0.15725985151856484
+#define ASF 1.3054115308322862
+#define ASA 0.41718113558714925
+#define ASP 1.0160411442433022
+#define ASS 0.16158734076134496
 #define ASI 0
 #else
 #define AS 2
-#define ASF 1.6787190456244587
-#define ASA 0.20206136828104262
-#define ASP 1.2028164807455064
-#define ASS 0.0306173018008775
+#define ASF 1.3378331889444863
+#define ASA 0.2809314302919963
+#define ASP 1.1604359604903645
+#define ASS 0.03903534864423825
 #define ASI 0
 #endif
 
@@ -94,12 +94,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 0.7386691898818744
+#define SS 0.7472732706292142
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 1.3741534655703371
+#define SS 0.6169521949258273
 #define PST 0
 #define PSS 0.0
 #endif
@@ -339,15 +339,15 @@
 #ifdef LUMA_raw
 #define SK gaussian
 #define RK gaussian
-#define ASK sinc
+#define ASK gaussian
 #define ASAK gaussian
 #define PSK gaussian
 #define WDK is_zero
 #define WD1TK gaussian
 #else
-#define SK gaussian
+#define SK ffexp
 #define RK gaussian
-#define ASK sphinx_
+#define ASK jinc
 #define ASAK gaussian
 #define PSK gaussian
 #define WDK is_zero
@@ -361,10 +361,10 @@
  * ffexp: K0
  */
 #ifdef LUMA_raw
-#define K0 1.0
+#define K0 0.8815447377586284
 #define K1 1.0
 #else
-#define K0 1.0
+#define K0 0.8815447377586284
 #define K1 1.0
 #endif
 
