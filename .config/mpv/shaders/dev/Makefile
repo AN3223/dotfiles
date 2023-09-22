@@ -144,9 +144,9 @@ experimental/nlmeans_simple_2x.glsl: nlmeans_template
 experimental/nlmeans_simple_2x_chroma.glsl: nlmeans_template
 	./shader_cfg DESC="$@: $(NLM_SIMPLE_2X_DESC)" OPTS="CFG_HOOKS=CHROMA:`./optimums/latest.sh optimums/experimental/nlmeans_simple_2x/chroma.optim`" nlmeans_template > $@
 experimental/nlmeans_simple_1_5x.glsl: nlmeans_template
-	./shader_cfg DESC="$@: $(NLM_SIMPLE_2X_DESC)" OPTS="CFG_HOOKS=LUMA:`./optimums/latest.sh optimums/experimental/nlmeans_simple_2x/nlmeans_simple_1_5x/luma.optim`" nlmeans_template > $@
+	./shader_cfg DESC="$@: $(NLM_SIMPLE_2X_DESC)" OPTS="CFG_HOOKS=LUMA:`./optimums/latest.sh optimums/experimental/nlmeans_simple_2x/1_5x/luma.optim`" nlmeans_template > $@
 experimental/nlmeans_simple_1_5x_chroma.glsl: nlmeans_template
-	./shader_cfg DESC="$@: $(NLM_SIMPLE_2X_DESC)" OPTS="CFG_HOOKS=CHROMA:`./optimums/latest.sh optimums/experimental/nlmeans_simple_2x/nlmeans_simple_1_5x/chroma.optim`" nlmeans_template > $@
+	./shader_cfg DESC="$@: $(NLM_SIMPLE_2X_DESC)" OPTS="CFG_HOOKS=CHROMA:`./optimums/latest.sh optimums/experimental/nlmeans_simple_2x/1_5x/chroma.optim`" nlmeans_template > $@
 
 NLM_LGC_DESC=Experimental luma-guided chroma denoising, kinda similar to KrigBilateral
 NLM_LGC=`./optimums/latest.sh optimums/experimental/nlmeans_lgc/chroma.optim`
@@ -275,9 +275,9 @@ optimums/experimental/nlmeans_2x/luma.optim:
 	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats images/ >> $@
 optimums/experimental/nlmeans_2x/chroma.optim:
 	./shader_test --plane=CHROMA --corruption=$(OPT_YUV420) --auto-max --optimum=$@ --no-stats images/ >> $@
-optimums/experimental/nlmeans_2x/1_5x/luma.optim:
+optimums/experimental/nlmeans_2x/1_5x/luma.optim: optimums/experimental/nlmeans_2x/luma.optim
 	./shader_test --corruption=$(OPT_1_5X) --auto-max --optimum=$@ --cfgopts='CFG_SIZE=1.5*:G=1.5*' --no-stats images/ >> $@
-optimums/experimental/nlmeans_2x/1_5x/chroma.optim:
+optimums/experimental/nlmeans_2x/1_5x/chroma.optim: optimums/experimental/nlmeans_2x/chroma.optim
 	./shader_test --plane=CHROMA --corruption=$(OPT_1_5X) --auto-max --optimum=$@ --cfgopts='CFG_SIZE=1.5*:GC=1.5*' --no-stats images/ >> $@
 optimums/experimental/nlmeans_lgc/chroma.optim:
 	./shader_test --plane=CHROMA --corruption=$(OPT_YUV420) --auto-max --optimum=$@ --no-stats images/ >> $@
@@ -293,9 +293,9 @@ optimums/experimental/nlmeans_simple_2x/luma.optim:
 	./shader_test --corruption=$(OPT_2X) --auto-max --optimum=$@ --no-stats images/ >> $@
 optimums/experimental/nlmeans_simple_2x/chroma.optim:
 	./shader_test --plane=CHROMA --corruption=$(OPT_YUV420) --auto-max --optimum=$@ --no-stats images/ >> $@
-optimums/experimental/nlmeans_simple_2x/nlmeans_simple_1_5x/luma.optim:
+optimums/experimental/nlmeans_simple_2x/1_5x/luma.optim: optimums/experimental/nlmeans_simple_2x/chroma.optim
 	./shader_test --corruption=$(OPT_1_5X) --auto-max --optimum=$@ --cfgopts='CFG_SIZE=1.5*:G=1.5*' --no-stats images/ >> $@
-optimums/experimental/nlmeans_simple_2x/nlmeans_simple_1_5x/chroma.optim:
+optimums/experimental/nlmeans_simple_2x/1_5x/chroma.optim: optimums/experimental/nlmeans_simple_2x/chroma.optim
 	./shader_test --plane=CHROMA --corruption=$(OPT_1_5X) --auto-max --optimum=$@ --cfgopts='CFG_SIZE=1.5*:GC=1.5*' --no-stats images/ >> $@
 
 optimize_hdeband: optimums/LQ/hdeband/luma.optim optimums/LQ/hdeband/chroma.optim optimums/DEFAULT/hdeband/luma.optim optimums/DEFAULT/hdeband/chroma.optim

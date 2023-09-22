@@ -70,17 +70,17 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.3729673771581144
-#define ASA 0.10713005282619335
-#define ASP 1.0391833532808348
-#define ASS 0.20738030818023498
+#define ASF 0.3937162349114866
+#define ASA 0.1186689389637971
+#define ASP 1.0659899222910567
+#define ASS 0.23279515386146854
 #define ASI 0
 #else
 #define AS 1
-#define ASF 0.3729673771581144
-#define ASA 0.10713005282619335
-#define ASP 1.0391833532808348
-#define ASS 0.20738030818023498
+#define ASF 0.3937162349114866
+#define ASA 0.1186689389637971
+#define ASP 1.0659899222910567
+#define ASS 0.23279515386146854
 #define ASI 0
 #endif
 
@@ -108,12 +108,12 @@ vec4 hook()
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.1946246995501186
+#define SS 1.191002111683223
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 1.1946246995501186
+#define SS 1.191002111683223
 #define PST 0
 #define PSS 0.0
 #endif
@@ -327,7 +327,8 @@ vec4 hook()
  * List of available kernels:
  *
  * bicubic
- * cos
+ * cosine
+ * cosine_
  * ffexp
  * gaussian
  * ginseng
@@ -353,7 +354,7 @@ vec4 hook()
 #ifdef LUMA_raw
 #define SK jinc3
 #define RK gaussian
-#define ASK jinc3
+#define ASK cosine
 #define ASAK gaussian
 #define PSK gaussian
 #define WDK is_zero
@@ -361,7 +362,7 @@ vec4 hook()
 #else
 #define SK jinc3
 #define RK gaussian
-#define ASK jinc3
+#define ASK cosine
 #define ASAK gaussian
 #define PSK gaussian
 #define WDK is_zero
@@ -536,6 +537,8 @@ vec4 hook()
 // XXX sinc/jinc/sphinx: 1e-3 was selected tentatively; not sure what the correct value should be (1e-8 is too low, x is never considered to be lower than it for some reason)
 #define bicubic(x) bicubic_(clamp(x, 0.0, 2.0))
 #define bicubic_(x) ((1.0/6.0) * (POW3((x)+2) - 4 * POW3((x)+1) + 6 * POW3(x) - 4 * POW3(max((x)-1, 0))))
+#define cosine(x) cos(clamp(x, 0, M_PI_2))
+#define cosine_ cos
 #define ffexp(x) (POW(cos(max(EPSILON, clamp(x, 0.0, 1.0) * M_PI)), K0) * 0.5 + 0.5) // "experimental" scaler from ffmpeg
 #define gaussian(x) exp(-1 * POW2(x))
 #define ginseng(x) ginseng_(clamp(x, 0.0, 3.0))

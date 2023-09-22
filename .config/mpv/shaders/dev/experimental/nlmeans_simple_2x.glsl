@@ -57,17 +57,17 @@
  */
 #ifdef LUMA_raw
 #define AS 1
-#define ASF 0.4363707993321702
-#define ASA 0.1128364846920806
-#define ASP 0.9950627987610664
-#define ASS 0.23459555861764878
+#define ASF 0.4215179700800826
+#define ASA 0.11139109663979724
+#define ASP 0.997566801716902
+#define ASS 0.23278062314850376
 #define ASI 0
 #else
 #define AS 1
-#define ASF 0.4363707993321702
-#define ASA 0.1128364846920806
-#define ASP 0.9950627987610664
-#define ASS 0.23459555861764878
+#define ASF 0.4215179700800826
+#define ASA 0.11139109663979724
+#define ASP 0.997566801716902
+#define ASS 0.23278062314850376
 #define ASI 0
 #endif
 
@@ -95,12 +95,12 @@
  */
 #ifdef LUMA_raw
 #define SST 1
-#define SS 1.22130356016583
+#define SS 1.2168504130936253
 #define PST 0
 #define PSS 0.0
 #else
 #define SST 1
-#define SS 1.22130356016583
+#define SS 1.2168504130936253
 #define PST 0
 #define PSS 0.0
 #endif
@@ -314,7 +314,8 @@
  * List of available kernels:
  *
  * bicubic
- * cos
+ * cosine
+ * cosine_
  * ffexp
  * gaussian
  * ginseng
@@ -340,7 +341,7 @@
 #ifdef LUMA_raw
 #define SK jinc3
 #define RK gaussian
-#define ASK jinc3
+#define ASK cosine
 #define ASAK gaussian
 #define PSK gaussian
 #define WDK is_zero
@@ -348,7 +349,7 @@
 #else
 #define SK jinc3
 #define RK gaussian
-#define ASK jinc3
+#define ASK cosine
 #define ASAK gaussian
 #define PSK gaussian
 #define WDK is_zero
@@ -523,6 +524,8 @@
 // XXX sinc/jinc/sphinx: 1e-3 was selected tentatively; not sure what the correct value should be (1e-8 is too low, x is never considered to be lower than it for some reason)
 #define bicubic(x) bicubic_(clamp(x, 0.0, 2.0))
 #define bicubic_(x) ((1.0/6.0) * (POW3((x)+2) - 4 * POW3((x)+1) + 6 * POW3(x) - 4 * POW3(max((x)-1, 0))))
+#define cosine(x) cos(clamp(x, 0, M_PI_2))
+#define cosine_ cos
 #define ffexp(x) (POW(cos(max(EPSILON, clamp(x, 0.0, 1.0) * M_PI)), K0) * 0.5 + 0.5) // "experimental" scaler from ffmpeg
 #define gaussian(x) exp(-1 * POW2(x))
 #define ginseng(x) ginseng_(clamp(x, 0.0, 3.0))
