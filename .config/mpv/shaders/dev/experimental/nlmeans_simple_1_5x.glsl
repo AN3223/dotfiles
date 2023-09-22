@@ -371,16 +371,22 @@ vec4 hook()
 
 /* Kernel parameters
  *
- * The following kernels take parameters:
+ * The following kernels take these parameters:
  *
  * ffexp: K0
+ * ginseng: KWS
+ * jincjinc3: KWS
+ * jincjinc: KWS
+ * lanczos: KWS
  */
 #ifdef LUMA_raw
 #define K0 1.0
 #define K1 1.0
+#define KWS 1.0
 #else
 #define K0 1.0
 #define K1 1.0
+#define KWS 1.0
 #endif
 
 /* Negative kernel parameter offsets
@@ -542,17 +548,17 @@ vec4 hook()
 #define ffexp(x) (POW(cos(max(EPSILON, clamp(x, 0.0, 1.0) * M_PI)), K0) * 0.5 + 0.5) // "experimental" scaler from ffmpeg
 #define gaussian(x) exp(-1 * POW2(x))
 #define ginseng(x) ginseng_(clamp(x, 0.0, 3.0))
-#define ginseng_(x) (jinc(x) * sinc(x))
+#define ginseng_(x) (jinc(x) * sinc(x*KWS))
 #define is_zero(x) int((x) == 0)
 #define jinc(x) jinc_(clamp(x, 0.0, 1.2196698912665045))
 #define jinc3(x) jinc_(clamp(x, 0.0, 3.2383154841662362))
 #define jinc_(x) TERNARY(step(x, 1e-3), 1.0, DIV(2 * j1((x)*M_PI), (x)*M_PI))
 #define jincjinc(x) jincjinc_(clamp(x, 0.0, 3.2383154841662362))
 #define jincjinc3(x) jincjinc3_(clamp(x, 0.0, 3.2383154841662362))
-#define jincjinc3_(x) (jinc(x) * jinc3(x))
-#define jincjinc_(x) (jinc(x) * jinc(x))
+#define jincjinc3_(x) (jinc(x) * jinc3(x*KWS))
+#define jincjinc_(x) (jinc(x) * jinc(x*KWS))
 #define lanczos(x) lanczos_(clamp(x, 0.0, 3.0))
-#define lanczos_(x) (sinc3(x) * sinc(x))
+#define lanczos_(x) (sinc3(x) * sinc(x*KWS))
 #define quadratic(x) quadratic_(clamp(x, 0.0, 1.5))
 #define quadratic_(x) TERNARY(step(x, 0.5), 0.75 - POW2(x), 0.5 * POW2((x) - 1.5))
 #define sinc(x) sinc_(clamp(x, 0.0, 1.0))
