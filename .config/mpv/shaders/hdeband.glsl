@@ -33,30 +33,30 @@
 
 // Lower numbers increase blur over longer distances
 #ifdef LUMA_raw
-#define S 0.05524310785314737
+#define S 0.1982435659905377
 #else
-#define S 0.002696173399589819
+#define S 0.00199622719747791
 #endif
 
 // Lower numbers blur more when intensity varies more between bands
 #ifdef LUMA_raw
-#define SI 16.478758230945054
+#define SI 28.155560834938424
 #else
-#define SI 12.212103618953341
+#define SI 49.302773514165764
 #endif
 
 // Higher numbers reduce blur for shorter runs
 #ifdef LUMA_raw
-#define SR 0.0023908901992404715
+#define SR 0.0060430015618129496
 #else
-#define SR 0.008556441369342112
+#define SR 0.003342537475519068
 #endif
 
 // Starting weight, lower values give less weight to the input image
 #ifdef LUMA_raw
-#define SW 2.1963706027862955
+#define SW 4.489932810831584
 #else
-#define SW 0.013626875640323126
+#define SW 0.0299799979796159
 #endif
 
 // Bigger numbers search further, but slower

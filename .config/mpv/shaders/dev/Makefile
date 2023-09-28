@@ -300,12 +300,7 @@ optimums/experimental/nlmeans_simple_2x/1_5x/chroma.optim: optimums/experimental
 
 optimize_hdeband: optimums/LQ/hdeband/luma.optim optimums/LQ/hdeband/chroma.optim optimums/DEFAULT/hdeband/luma.optim optimums/DEFAULT/hdeband/chroma.optim
 
-# ideally 255 should be cleanly divisible by this, higher is more banding
-OPT_BAND_PARAM=15.0
-# parenthesis are only escaped for make
-OPT_BAND_EXPR=round\(p\(X\,Y\)/$(OPT_BAND_PARAM)\)*$(OPT_BAND_PARAM)
-OPT_BAND_VF=geq='$(OPT_BAND_EXPR):$(OPT_BAND_EXPR):$(OPT_BAND_EXPR)'
-OPT_BAND=VF=$(OPT_BAND_VF)
+OPT_BAND=OUTOPTS='-qp 30 -c:v libx264 -x264opts no-deblock'
 
 optimums/LQ/hdeband/luma.optim:
 	./shader_test --corruption=$(OPT_BAND) --auto-max --optimum=$@ --shader=hdeband_template --no-stats images/ >> $@
