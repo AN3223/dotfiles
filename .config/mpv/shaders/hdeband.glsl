@@ -33,30 +33,30 @@
 
 // Lower numbers increase blur over longer distances
 #ifdef LUMA_raw
-#define S 0.039716259676045834
+#define S 0.05524310785314737
 #else
-#define S 0.00245792863046567
+#define S 0.002696173399589819
 #endif
 
 // Lower numbers blur more when intensity varies more between bands
 #ifdef LUMA_raw
-#define SI 13.401712932601427
+#define SI 16.478758230945054
 #else
-#define SI 10.923402488160853
+#define SI 12.212103618953341
 #endif
 
 // Higher numbers reduce blur for shorter runs
 #ifdef LUMA_raw
-#define SR 0.003446736773092952
+#define SR 0.0023908901992404715
 #else
-#define SR 0.012925109858034363
+#define SR 0.008556441369342112
 #endif
 
 // Starting weight, lower values give less weight to the input image
 #ifdef LUMA_raw
-#define SW 0.43999145467432316
+#define SW 2.1963706027862955
 #else
-#define SW 0.009466672829458444
+#define SW 0.013626875640323126
 #endif
 
 // Bigger numbers search further, but slower
@@ -86,13 +86,6 @@
 #define TOLERANCE 0.001
 #else
 #define TOLERANCE 0.001
-#endif
-
-// 0 for avg, 1 for min, 2 for max
-#ifdef LUMA_raw
-#define M 0
-#else
-#define M 0
 #endif
 
 // Shader code
@@ -168,13 +161,7 @@ val poi = val_swizz(poi_);
 vec4 hook()
 {
 	val sum = val(poi * SW);
-#if M == 1 // min
-	val total_weight = val(RADIUS);
-#elif M == 2 // max
-	val total_weight = val(0);
-#else // avg
 	val total_weight = val(SW);
-#endif
 
 	for (int dir = 0; dir < DIRECTIONS; dir++) {
 		vec2 direction;
@@ -191,11 +178,9 @@ vec4 hook()
 
 		val prev_px = poi;
 		val prev_was_run = val(0);
-		val prev_weight = val(1);
+		val prev_weight = val(0);
 		val not_done = val(1);
 		val run = val(1);
-		val dir_sum = poi * SW;
-		val dir_total_weight = val(SW);
 		for (int i = 1; i <= RADIUS; i++) {
 			float sparsity = floor(i * SPARSITY);
 			val px = val_swizz(HOOKED_texOff((i + sparsity) * direction));
@@ -218,23 +203,13 @@ vec4 hook()
 
 			weight *= gaussian((run += is_run) * SR);
 
-			dir_sum += prev_px * weight * not_done;
-			dir_total_weight += weight * not_done;
+			sum += prev_px * weight * not_done;
+			total_weight += weight * not_done;
 
 			prev_px = TERNARY(is_run, prev_px, px);
 			prev_was_run = is_run;
 			prev_weight = weight;
 		}
-#if M == 1
-		sum = TERNARY(step(dir_total_weight, total_weight), dir_sum, sum);
-		total_weight = min(dir_total_weight, total_weight);
-#elif M == 2
-		sum = TERNARY(step(total_weight, dir_total_weight), dir_sum, sum);
-		total_weight = max(dir_total_weight, total_weight);
-#else
-		sum += dir_sum;
-		total_weight += dir_total_weight;
-#endif
 	}
 
 	val result = sum / total_weight;
