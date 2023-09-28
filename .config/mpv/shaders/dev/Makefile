@@ -163,9 +163,9 @@ experimental/nlmeans_ffmpeg_eqv.glsl: nlmeans_template
 hdeband: ../hdeband.glsl ../LQ/hdeband.glsl
 
 ../hdeband.glsl: hdeband_template
-	./shader_cfg OPTS="`./optimums/latest.sh optimums/DEFAULT/hdeband/chroma.optim`" OPTS_LUMA="`./optimums/latest.sh optimums/DEFAULT/hdeband/luma.optim`" $? > $@
+	./shader_cfg OPTS="" OPTS_LUMA="" $? > $@
 ../LQ/hdeband.glsl: hdeband_template
-	./shader_cfg OPTS="`./optimums/latest.sh optimums/LQ/hdeband/chroma.optim`" OPTS_LUMA="`./optimums/latest.sh optimums/LQ/hdeband/luma.optim`" $? > $@
+	./shader_cfg OPTS="RADIUS=4:DIRECTIONS=3" OPTS_LUMA="RADIUS=4:DIRECTIONS=3" $? > $@
 
 optimize: optimize_nlmeans optimize_hdeband optimize_third_party
 

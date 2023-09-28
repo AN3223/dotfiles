@@ -33,30 +33,30 @@
 
 // Lower numbers increase blur over longer distances
 #ifdef LUMA_raw
-#define S 0.3498103204438094
+#define S 0.0
 #else
-#define S 0.0018216816119757898
+#define S 0.0
 #endif
 
 // Lower numbers blur more when intensity varies more between bands
 #ifdef LUMA_raw
-#define SI 22.06198700265633
+#define SI 10.0
 #else
-#define SI 30.60381815188536
+#define SI 10.0
 #endif
 
 // Higher numbers reduce blur for shorter runs
 #ifdef LUMA_raw
-#define SR 0.004621730149531325
+#define SR 0.1
 #else
-#define SR 0.003913497400692171
+#define SR 0.1
 #endif
 
 // Starting weight, lower values give less weight to the input image
 #ifdef LUMA_raw
-#define SW 0.04639556491000208
+#define SW 1.0
 #else
-#define SW 0.03502110455524975
+#define SW 1.0
 #endif
 
 // Bigger numbers search further, but slower
@@ -83,9 +83,9 @@
 
 // A region is considered a run if it varies less than this
 #ifdef LUMA_raw
-#define TOLERANCE 0.001
+#define TOLERANCE 0.0
 #else
-#define TOLERANCE 0.001
+#define TOLERANCE 0.0
 #endif
 
 // Shader code

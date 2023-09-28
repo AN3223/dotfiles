@@ -33,37 +33,37 @@
 
 // Lower numbers increase blur over longer distances
 #ifdef LUMA_raw
-#define S 0.1875
+#define S 0.0
 #else
-#define S 0.1875
+#define S 0.0
 #endif
 
 // Lower numbers blur more when intensity varies more between bands
 #ifdef LUMA_raw
-#define SI 200.0
+#define SI 10.0
 #else
-#define SI 200.0
+#define SI 10.0
 #endif
 
 // Higher numbers reduce blur for shorter runs
 #ifdef LUMA_raw
-#define SR 1.0
+#define SR 0.1
 #else
-#define SR 1.0
+#define SR 0.1
 #endif
 
 // Starting weight, lower values give less weight to the input image
 #ifdef LUMA_raw
-#define SW 0.15
+#define SW 1.0
 #else
-#define SW 0.15
+#define SW 1.0
 #endif
 
 // Bigger numbers search further, but slower
 #ifdef LUMA_raw
-#define RADIUS 16
+#define RADIUS 8
 #else
-#define RADIUS 16
+#define RADIUS 8
 #endif
 
 // Bigger numbers search further, but less accurate
@@ -76,16 +76,16 @@
 // Bigger numbers search in more directions, slower (max 8)
 // Only 4 and 8 are symmetrical, everything else blurs directionally
 #ifdef LUMA_raw
-#define DIRECTIONS 4
+#define DIRECTIONS 8
 #else
-#define DIRECTIONS 4
+#define DIRECTIONS 8
 #endif
 
 // A region is considered a run if it varies less than this
 #ifdef LUMA_raw
-#define TOLERANCE 0.001
+#define TOLERANCE 0.0
 #else
-#define TOLERANCE 0.001
+#define TOLERANCE 0.0
 #endif
 
 // Shader code
