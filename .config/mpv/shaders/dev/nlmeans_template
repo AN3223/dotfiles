@@ -53,6 +53,7 @@
  * ASA: Anti-ringing, higher numbers increase strength
  * ASP: Power, lower numbers increase sharpening on lower frequency detail
  * ASS: Equivalent to SS but for ASK instead of SK
+ * ASR: Multiply ASK by ASRK to reduce ringing
  * ASI:
  *  - 0: don't sharpen noise
  *  - 1: sharpen noise
@@ -63,6 +64,8 @@
 #define ASA 0.0
 #define ASP 0.0
 #define ASS 0.0
+#define ASR 0
+#define ASRS 1.0
 #define ASI 0
 #else
 #define AS 0
@@ -70,6 +73,8 @@
 #define ASA 0.0
 #define ASP 0.0
 #define ASS 0.0
+#define ASR 0
+#define ASRS 1.0
 #define ASI 0
 #endif
 
@@ -344,6 +349,7 @@
 #define SK gaussian
 #define RK gaussian
 #define ASK sinc
+#define ASRK gaussian
 #define ASAK gaussian
 #define PSK gaussian
 #define WDK is_zero
@@ -352,6 +358,7 @@
 #define SK gaussian
 #define RK gaussian
 #define ASK sphinx_
+#define ASRK gaussian
 #define ASAK gaussian
 #define PSK gaussian
 #define WDK is_zero
@@ -890,6 +897,15 @@ float spatial_as(vec3 v)
 }
 #endif
 
+#if ASR
+const float pdiff_scale_as = 1.0/max(EPSILON,POW2(ASRS*0.013));
+val_guide range_as(val_guide pdiff_sq)
+{
+	pdiff_sq = sqrt(abs(pdiff_sq - max(EPSILON, RO)) * pdiff_scale_as);
+	return ASRK(pdiff_sq);
+}
+#endif
+
 #if PST && P >= PST
 #define spatial_p(v) PSK(length(v)*PSS)
 #define normalize_p(x,expr) DIV((x), (expr))
@@ -1169,6 +1185,9 @@ vec4 hook()
 
 #if AS
 		float spatial_as_weight = spatial_as(tr);
+#if ASR
+		spatial_as_weight *= range_as(pdiff_sq);
+#endif
 		sum_as += px * spatial_as_weight;
 		total_weight_as += spatial_as_weight;
 #endif
