@@ -152,7 +152,6 @@ val poi = val_swizz(poi_);
  *       - Decreasing SW increases the amount of blur
  *     - For step 5, multiply the weight by the gaussian of the Euclidean norm of the pixel coordinates
  *   - For step 4, a parameter (SPARSITY) is taken which directs pixels to be skipped at a specified interval
- *     - If the pixel after a skipped pixel has the same value as the previous unskipped pixel then its weight is doubled
  *     - This works well in big flat banded areas but may result in artifacts elsewhere
  *   - For step 5 and SW, pixels are considered to have the same value if their absolute difference is within a threshold
  *   - The number of directions in step 3 are user configurable
@@ -177,37 +176,33 @@ vec4 hook()
 		}
 
 		val prev_px = poi;
-		val prev_was_run = val(0);
+		val prev_is_run = val(0);
 		val prev_weight = val(0);
 		val not_done = val(1);
-		val run = val(1);
 		for (int i = 1; i <= RADIUS; i++) {
-			float sparsity = floor(i * SPARSITY);
-			val px = val_swizz(HOOKED_texOff((i + sparsity) * direction));
+			vec2 coord = (i + floor(i * SPARSITY)) * direction;
+			val px = val_swizz(HOOKED_texOff(coord));
 			val is_run = step(abs(prev_px - px), val(TOLERANCE));
+			val weight = val(gaussian(length(coord) * max(0.0,S)));
 
 			// reduce blur after discovering 1px runs
 			not_done *= max(val(clamp(SR, 0.0, 1.0)),
-			                step(val(1), prev_was_run + is_run));
-
-			// consider skipped pixels as runs if their neighbors are both runs
-			float sparsity_delta = sparsity - floor((i - 1) * SPARSITY);
-			float prev_sparsity = floor((i - 1) * SPARSITY);
-			val weight = val(gaussian(length((i + sparsity) * direction) * max(0.0,S)));
-			weight = is_run * weight + is_run * prev_weight * sparsity_delta;
-
-			// run's 2nd pixel has weight increased to compensate for 1st pixel's weight of 0
-			// XXX doesn't account for sparsity
-			weight += prev_weight * NOT(prev_was_run);
+			            clamp(prev_is_run + is_run, 0.0, 1.0));
 
 			weight *= gaussian(abs(poi - px) * max(0.0,SI));
 
-			sum += prev_px * weight * not_done;
-			total_weight += weight * not_done;
-
-			prev_px = TERNARY(is_run, prev_px, px);
-			prev_was_run = is_run;
+			// for compensating for skipping the first pixel of each run
+			val prev_weight_compensate = NOT(prev_is_run) * prev_weight;
+			// update previous state
+			prev_px = px;
+			prev_is_run = is_run;
 			prev_weight = weight;
+			// finally compensate
+			weight += prev_weight_compensate;
+			weight *= is_run;
+
+			sum += px * weight * not_done;
+			total_weight += weight * not_done;
 		}
 	}
 
