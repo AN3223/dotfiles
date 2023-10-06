@@ -40,9 +40,9 @@
 
 // Lower numbers blur more when intensity varies more between bands
 #ifdef LUMA_raw
-#define SI 10.0
+#define SI 50.0
 #else
-#define SI 10.0
+#define SI 50.0
 #endif
 
 // Higher numbers reduce penalty for 1px runs, 1.0 fully ignores homogeneity
@@ -54,9 +54,9 @@
 
 // Starting weight, lower values give less weight to the input image
 #ifdef LUMA_raw
-#define SW 1.0
+#define SW 4.0
 #else
-#define SW 1.0
+#define SW 4.0
 #endif
 
 // Bigger numbers search further, but slower
@@ -79,6 +79,14 @@
 #define DIRECTIONS 3
 #else
 #define DIRECTIONS 3
+#endif
+
+// If 0: Stop blur at POI if a run isn't found
+// If 1: Always blur with POI-adjacent pixels
+#ifdef LUMA_raw
+#define RUN_START 1
+#else
+#define RUN_START 1
 #endif
 
 // A region is considered a run if it varies less than this
@@ -176,7 +184,7 @@ vec4 hook()
 		}
 
 		val prev_px = poi;
-		val prev_is_run = val(0);
+		val prev_is_run = val(RUN_START);
 		val prev_weight = val(0);
 		val not_done = val(1);
 		for (int i = 1; i <= RADIUS; i++) {
