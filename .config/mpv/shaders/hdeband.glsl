@@ -45,11 +45,11 @@
 #define SI 10.0
 #endif
 
-// Higher numbers reduce blur for shorter runs
+// Higher numbers reduce penalty for 1px runs, 1.0 fully ignores homogeneity
 #ifdef LUMA_raw
-#define SR 0.1
+#define SR 0.0
 #else
-#define SR 0.1
+#define SR 0.0
 #endif
 
 // Starting weight, lower values give less weight to the input image
@@ -186,8 +186,9 @@ vec4 hook()
 			val px = val_swizz(HOOKED_texOff((i + sparsity) * direction));
 			val is_run = step(abs(prev_px - px), val(TOLERANCE));
 
-			// stop blurring after discovering a 1px run
-			not_done *= step(val(1), prev_was_run + is_run);
+			// reduce blur after discovering 1px runs
+			not_done *= max(val(clamp(SR, 0.0, 1.0)),
+			                step(val(1), prev_was_run + is_run));
 
 			// consider skipped pixels as runs if their neighbors are both runs
 			float sparsity_delta = sparsity - floor((i - 1) * SPARSITY);
@@ -200,8 +201,6 @@ vec4 hook()
 			weight += prev_weight * NOT(prev_was_run);
 
 			weight *= gaussian(abs(poi - px) * max(0.0,SI));
-
-			weight *= gaussian((run += is_run) * max(0.0,SR));
 
 			sum += prev_px * weight * not_done;
 			total_weight += weight * not_done;
