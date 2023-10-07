@@ -68,9 +68,9 @@
 
 // Bigger numbers search further, but less accurate
 #ifdef LUMA_raw
-#define SPARSITY 0.0
+#define SPARSITY 2.0
 #else
-#define SPARSITY 0.0
+#define SPARSITY 2.0
 #endif
 
 // Bigger numbers search in more directions, slower (max 8)
