@@ -53,6 +53,7 @@ output * bg $bg solid_color
 
 bindsym Mod4+l exec swaylock --color 282828
 bindsym Mod4+semicolon exec swaylock --color 282828
+bindsym Mod4+p exec swaymsg output - power toggle
 bindsym Mod4+c exec snotify -d
 
 # Screenshot currently focused screen
@@ -248,8 +249,8 @@ exec swayidle                                  \
     timeout 240   'wl-copy --clear'            \
     timeout 240   'wl-copy -p --clear'         \
     timeout 500   'swaylock -c 282828'         \
-    timeout 600   'swaymsg "output * dpms off"'\
-    resume        'swaymsg "output * dpms on"'
+    timeout 600   'swaymsg "output * power off"'\
+    resume        'swaymsg "output * power on"'
 
 exec foot -s
 exec dbus-launch --exit-with-session pipewire
