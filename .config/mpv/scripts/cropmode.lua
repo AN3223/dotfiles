@@ -72,7 +72,13 @@ local function decrari() ari=(ari==1 and #ars or ari-1); showaspect() end
 local function applyaspect()
 	local w_ = h/ars[ari][2]*ars[ari][1]
 	local h_ = w/ars[ari][1]*ars[ari][2]
-	if w_ <= w then w = w_ else h = h_ end
+	if w_ <= w then
+		x = x + (w - w_)/2
+		w = w_
+	else
+		y = y + (h - h_)/2
+		h = h_
+	end
 	showaspect()
 	update()
 end
