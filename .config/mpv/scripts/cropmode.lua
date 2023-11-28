@@ -51,6 +51,7 @@ local function bound()
 end
 
 local function filter() return "crop="..w..":"..h..":"..x..":"..y end
+local function jpegtran() return "jpegtran -crop "..w.."x"..h.."+"..x.."+"..y end
 local function update() bound(); mp.commandv("vf", "add", "@crop:"..filter()) end
 
 local function addw() w=w+step; x=x-step/2; update() end
@@ -141,6 +142,7 @@ local function cropmode()
 		mp.add_forced_key_binding("Ctrl+RIGHT",  "addx",    addx)
 	else
 		mode_on = false
+		print(jpegtran()); mp.commandv("show-text", jpegtran());
 		print(filter()); mp.commandv("show-text", filter());
 		mp.commandv("vf", "remove", "@crop")
 
