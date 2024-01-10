@@ -2,7 +2,7 @@
 # This file is sourced by .shrc
 
 # Update packages
-alias update='doas apk upgrade -Ui'
+alias update='doas apk upgrade -Uai'
 
 alias sw='startw'
 alias sx='startx'
