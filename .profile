@@ -30,6 +30,9 @@ else
 	export EDITOR='vi'
 fi
 
+export NNN_TRASH=1
+export NNN_OPTS=Ac
+
 if less --help 2>&1 | head -n 1 | grep -qi busybox; then
 	export PAGER='less -RI'
 else
