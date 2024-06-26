@@ -4,7 +4,7 @@
 # Update packages
 alias update='doas apk upgrade -Uai'
 
-alias sw='startw'
+alias sw='dbus-launch startw'
 alias sx='startx'
 
 alias :q='exit'

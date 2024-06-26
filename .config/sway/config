@@ -80,6 +80,7 @@ input * {
 # workaround for dying L key
 #bindsym $mod+semicolon exec wlrctl keyboard type l
 #bindsym $mod+colon exec wlrctl keyboard type L
+#bindsym Ctrl+bracketleft exec wlrctl keyboard type 
 
 bindsym $mod+n bar mode dock
 bindsym $mod+Shift+n bar mode hide
@@ -253,7 +254,7 @@ exec swayidle                                  \
     resume        'swaymsg "output * power on"'
 
 exec foot -s
-exec dbus-launch --exit-with-session pipewire
+exec pipewire
 exec gammastep
 exec ln -fs "$SWAYSOCK" .swaysock
 
