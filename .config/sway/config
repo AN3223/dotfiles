@@ -21,6 +21,7 @@ font Fira Code 9
 default_border pixel 1
 smart_borders on
 
+# gruvbox dark
 set $fg  #ebdbb2
 set $bg  #282828
 set $hl1 #d79921
