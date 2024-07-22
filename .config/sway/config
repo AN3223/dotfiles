@@ -64,11 +64,17 @@ bindsym Print exec grim -o \"$(swaymsg -t get_outputs | jq -r '.[] | select(.foc
 bindsym XF86AudioLowerVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 3%- unmute
 bindsym XF86AudioRaiseVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 3%+ unmute
 bindsym XF86AudioMute        exec amixer -Mq set ${ALSA_MASTER:-Master} toggle
-
+bindsym $mod+F2              exec amixer -Mq set ${ALSA_MASTER:-Master} 3%- unmute
+bindsym $mod+F3              exec amixer -Mq set ${ALSA_MASTER:-Master} 3%+ unmute
+bindsym $mod+F4              exec amixer -Mq set ${ALSA_MASTER:-Master} toggle
 bindsym XF86AudioStop exec mpvctl stop
 bindsym XF86AudioPrev exec mpvctl previous
 bindsym XF86AudioPlay exec mpvctl play-pause
 bindsym XF86AudioNext exec mpvctl next
+bindsym $mod+F5 exec mpvctl stop
+#bindsym $mod+F6 exec mpvctl previous
+bindsym $mod+F7 exec mpvctl play-pause
+#bindsym $mod+F8 exec mpvctl next
 
 # man 5 sway-input
 input * {
