@@ -10,6 +10,13 @@ local function save()
 	end
 end
 
+local function save_on_file_loaded()
+	if mp.get_property_number("playlist-pos") == 0 then
+		return -- no point saving here
+	end
+	save()
+end
+
 local function save_if_pause(_, pause)
 	if pause then save() end
 end
@@ -63,4 +70,5 @@ mp.observe_property("pause", "bool", pause_timer_while_paused)
 
 mp.observe_property("pause", "bool", save_if_pause)
 mp.register_event("file-loaded", delete_watch_later)
+mp.register_event("file-loaded", save_on_file_loaded)
 
