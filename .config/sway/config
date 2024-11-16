@@ -82,6 +82,7 @@ input * {
     accel_profile flat
     pointer_accel -0.8
     xkb_options grp:menu_toggle
+    xkb_layout "us,fr(us)"
 }
 
 # workaround for dying L key
