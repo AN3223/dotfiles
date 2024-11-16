@@ -66,6 +66,7 @@ autocmd FileType python setl textwidth=79
 autocmd FileType json setl expandtab
 "autocmd FileType raku NoMatchParen " workaround for https://github.com/vim/vim/issues/12168
 autocmd FileType raku syntax off " workaround for https://github.com/vim/vim/issues/12168
+let g:zig_fmt_autosave = 0
 
 "- MISC -"
 
