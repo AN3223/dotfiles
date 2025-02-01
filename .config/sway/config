@@ -61,12 +61,12 @@ bindsym Mod4+c exec snotify -d
 bindsym Print exec grim -o \"$(swaymsg -t get_outputs | jq -r '.[] | select(.focused) | .name')" \"$HOME/shots/$(date +%c).png"
 
 # Media keys
-bindsym XF86AudioLowerVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 3%- unmute
-bindsym XF86AudioRaiseVolume exec amixer -Mq set ${ALSA_MASTER:-Master} 3%+ unmute
-bindsym XF86AudioMute        exec amixer -Mq set ${ALSA_MASTER:-Master} toggle
-bindsym $mod+F2              exec amixer -Mq set ${ALSA_MASTER:-Master} 3%- unmute
-bindsym $mod+F3              exec amixer -Mq set ${ALSA_MASTER:-Master} 3%+ unmute
-bindsym $mod+F4              exec amixer -Mq set ${ALSA_MASTER:-Master} toggle
+bindsym XF86AudioLowerVolume exec pactl set-sink-volume 0 -1%
+bindsym XF86AudioRaiseVolume exec pactl set-sink-volume 0 +1%
+bindsym XF86AudioMute        exec pactl set-sink-mute 0 toggle
+bindsym $mod+F2              exec pactl set-sink-volume 0 -1%
+bindsym $mod+F3              exec pactl set-sink-volume 0 +1%
+bindsym $mod+F4              exec pactl set-sink-mute 0 toggle
 bindsym XF86AudioStop exec mpvctl stop
 bindsym XF86AudioPrev exec mpvctl previous
 bindsym XF86AudioPlay exec mpvctl play-pause
@@ -82,12 +82,13 @@ input * {
     accel_profile flat
     pointer_accel -0.8
     xkb_options grp:menu_toggle
-    xkb_layout "us,fr(us)"
+    xkb_layout "us,fr(us),us(altgr-intl)"
 }
 
 # workaround for dying L key
 #bindsym $mod+semicolon exec wlrctl keyboard type l
 #bindsym $mod+colon exec wlrctl keyboard type L
+# for cataclysmdda
 #bindsym Ctrl+bracketleft exec wlrctl keyboard type 
 
 bindsym $mod+n bar mode dock
@@ -197,6 +198,8 @@ bindsym $mod+Shift+minus move scratchpad
 # If there are multiple scratchpad windows, this command cycles through them.
 bindsym $mod+minus scratchpad show
 
+bindsym Pause exec pkill numen || numen
+
 #
 # Resizing containers:
 #
@@ -262,7 +265,8 @@ exec swayidle                                  \
     resume        'swaymsg "output * power on"'
 
 exec foot -s
-exec pipewire
+exec /usr/libexec/pipewire-launcher
+exec dbus-update-activation-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
 exec gammastep
 exec ln -fs "$SWAYSOCK" .swaysock
 
