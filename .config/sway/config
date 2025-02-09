@@ -59,6 +59,8 @@ bindsym Mod4+c exec snotify -d
 
 # Screenshot currently focused screen
 bindsym Print exec grim -o \"$(swaymsg -t get_outputs | jq -r '.[] | select(.focused) | .name')" \"$HOME/shots/$(date +%c).png"
+bindsym $mod+Print exec grim -g \"$(slurp)" \"$HOME/shots/$(date +%c).jpg"
+bindsym Ctrl+Print exec grim -g \"$(slurp)" - | wl-copy
 
 # Media keys
 bindsym XF86AudioLowerVolume exec pactl set-sink-volume 0 -1%
