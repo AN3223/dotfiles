@@ -1,6 +1,7 @@
 "- AESTHETIC -"
 
-set bg=dark scrolloff=15
+set scrolloff=15
+autocmd vimenter * ++nested colorscheme gruvbox
 
 " Different cursor shapes in different modes
 let &t_SI = "\<Esc>[4 q" | let &t_SR = &t_SI
