@@ -271,4 +271,6 @@ exec /usr/libexec/pipewire-launcher
 exec dbus-update-activation-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=sway
 exec gammastep
 exec ln -fs "$SWAYSOCK" .swaysock
+exec kdeconnectd
+exec dunst
 
