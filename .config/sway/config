@@ -53,6 +53,7 @@ output * bg $bg solid_color
 #######################################################################
 
 bindsym Mod4+l exec swaylock --color 282828
+bindsym Mod4+Shift+l exec sleep 1 && pkill -USR1 swayidle
 bindsym Mod4+semicolon exec swaylock --color 282828
 bindsym Mod4+p exec swaymsg output - power toggle
 bindsym Mod4+c exec snotify -d
