@@ -70,14 +70,14 @@ bindsym XF86AudioMute        exec pactl set-sink-mute 0 toggle
 bindsym $mod+F2              exec pactl set-sink-volume 0 -1%
 bindsym $mod+F3              exec pactl set-sink-volume 0 +1%
 bindsym $mod+F4              exec pactl set-sink-mute 0 toggle
-bindsym XF86AudioStop exec mpvctl stop
-bindsym XF86AudioPrev exec mpvctl previous
-bindsym XF86AudioPlay exec mpvctl play-pause
-bindsym XF86AudioNext exec mpvctl next
-bindsym $mod+F5 exec mpvctl stop
-#bindsym $mod+F6 exec mpvctl previous
-bindsym $mod+F7 exec mpvctl play-pause
-#bindsym $mod+F8 exec mpvctl next
+bindsym XF86AudioStop exec mpvctl stop && playerctl -a stop
+bindsym XF86AudioPrev exec mpvctl previous && playerctl -a previous
+bindsym XF86AudioPlay exec mpvctl play-pause && playerctl -a play-pause
+bindsym XF86AudioNext exec mpvctl next && playerctl -a next
+bindsym $mod+F5 exec mpvctl stop && playerctl -a stop
+#bindsym $mod+F6 exec mpvctl previous && playerctl -a previous
+bindsym $mod+F7 exec mpvctl play-pause && playerctl -a play-pause
+#bindsym $mod+F8 exec mpvctl next && playerctl -a next
 
 # man 5 sway-input
 input * {
