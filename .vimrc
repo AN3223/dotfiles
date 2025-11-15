@@ -27,6 +27,8 @@ au BufReadPost * if line("'\"") && line("'\"") <= line("$") && &ft !~# 'commit'
 	\ | exe "normal! g`\""
 	\ | endif
 
+set dir=~/.vimswap
+
 "- WAYLAND -"
 
 " Writes the contents of @w into the clipboard when @w is updated
