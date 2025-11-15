@@ -24,7 +24,9 @@ export MCO_HANDLER="$HOME/.mcohandler"
 export ALSA_MASTER='Master'
 export ALSA_CARD='CODEC'
 
-if command -v vim > /dev/null 2>&1; then
+if command -v nvim > /dev/null 2>&1; then
+	export EDITOR='vim'
+elif command -v vim > /dev/null 2>&1; then
 	export EDITOR='vim'
 else
 	export EDITOR='vi'
