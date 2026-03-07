@@ -1,7 +1,7 @@
 # vi: ft=sh
 # This file is read each time a login shell is started.
 
-export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
+export PATH="$HOME/bin:$HOME/.local/bin:/snap/bin:$PATH"
 
 export TZ='America/Chicago'
 
@@ -25,7 +25,7 @@ export ALSA_MASTER='Master'
 export ALSA_CARD='CODEC'
 
 if command -v nvim > /dev/null 2>&1; then
-	export EDITOR='vim'
+	export EDITOR='nvim'
 elif command -v vim > /dev/null 2>&1; then
 	export EDITOR='vim'
 else
@@ -47,6 +47,8 @@ export SUDO='doas'
 export SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS=0
 
 export GOPATH="$HOME/.local"
+
+export CHROME_EXECUTABLE=chromium
 
 # needed for sway w/o elogind
 [ "$XDG_RUNTIME_DIR" ] || export XDG_RUNTIME_DIR=$(mktemp -d /tmp/runtime-dir-XXXXXX)
