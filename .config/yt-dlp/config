@@ -1,4 +1,5 @@
-# smallest audio stream
+--cookies-from-browser=firefox
+--mark-watched
 --format-sort res~1080
 --no-check-certificate
 --no-mtime
