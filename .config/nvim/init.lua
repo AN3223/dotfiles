@@ -27,17 +27,14 @@ vim.opt.dir = vim.fn.expand("~/.vimswap")
 -- READLINE
 --
 
-vim.keymap.set('i', '<C-a>', '<Home>', { noremap = true })
-vim.keymap.set('c', '<C-a>', '<Home>', { noremap = true })
+vim.keymap.set('!', '<C-a>', '<Home>', { noremap = true })
 vim.keymap.set('i', '<C-e>', '<End>', { noremap = true })
-vim.keymap.set('i', '<C-d>', '<Delete>', { noremap = true })
-vim.keymap.set('c', '<C-d>', '<Delete>', { noremap = true })
-vim.keymap.set('i', '<C-f>', '<Right>', { noremap = true })
-vim.keymap.set('c', '<C-f>', '<Right>', { noremap = true })
-vim.keymap.set('i', '<C-b>', '<Left>', { noremap = true })
-vim.keymap.set('c', '<C-b>', '<Left>', { noremap = true })
+vim.keymap.set('!', '<C-d>', '<Delete>', { noremap = true })
+vim.keymap.set('!', '<C-f>', '<Right>', { noremap = true })
+vim.keymap.set('!', '<C-b>', '<Left>', { noremap = true })
 vim.keymap.set('c', '<C-p>', '<Up>', { noremap = true })
 vim.keymap.set('c', '<C-n>', '<Down>', { noremap = true })
+vim.keymap.set('!', '<C-k>', '<C-\\><C-N>lC', { noremap = true })
 
 --
 -- FORMATTING
